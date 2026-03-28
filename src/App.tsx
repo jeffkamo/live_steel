@@ -631,6 +631,13 @@ function conditionStateTitle(state: ConditionState): string | undefined {
   return undefined
 }
 
+function conditionPillShellClass(state: ConditionState): string {
+  if (state === 'neutral') {
+    return 'border border-zinc-600/85 bg-zinc-800/95'
+  }
+  return 'border border-amber-500/80 bg-amber-500/15'
+}
+
 function ConditionPills({
   conditions,
   onRemove,
@@ -650,6 +657,14 @@ function ConditionPills({
     <div className="flex w-full flex-wrap content-center items-center justify-start gap-2">
       {conditions.map((c, i) => {
         const abbrev = conditionStateAbbrev(c.state)
+        const shell = conditionPillShellClass(c.state)
+        const labelTone = c.state === 'neutral' ? 'text-zinc-100' : 'text-amber-100'
+        const abbrevTone =
+          c.state === 'neutral' ? 'text-zinc-400' : 'text-amber-200/90'
+        const removeBtnClass =
+          c.state === 'neutral'
+            ? 'text-zinc-400 transition-colors hover:bg-zinc-700/90 hover:text-zinc-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-amber-600/70'
+            : 'text-amber-300/85 transition-colors hover:bg-amber-500/25 hover:text-amber-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-amber-600/70'
         if (onRemove) {
           const pillHover =
             onCycleState != null
@@ -658,7 +673,7 @@ function ConditionPills({
           return (
             <div
               key={`${i}-${c.label}`}
-              className={`inline-flex max-w-full items-center gap-0 rounded-full bg-zinc-100 py-0.5 pl-0 pr-0.5 ${pillText} font-medium ${pillHover}`}
+              className={`inline-flex max-w-full items-center gap-0 rounded-full py-0.5 pl-0 pr-0.5 ${pillText} font-medium ${shell} ${pillHover}`}
               onClick={(e) => e.stopPropagation()}
             >
               {onCycleState ? (
@@ -668,10 +683,10 @@ function ConditionPills({
                   aria-label={`${c.label}, ${conditionStateSpoken(c.state)}. Cycle duration`}
                   className="inline-flex min-w-0 max-w-full cursor-pointer items-baseline gap-0 rounded-l-full py-0.5 pl-2.5 pr-1 text-left transition-colors focus-visible:z-10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-amber-600/70"
                 >
-                  <span className="min-w-0 truncate font-medium text-zinc-950">{c.label}</span>
+                  <span className={`min-w-0 truncate font-medium ${labelTone}`}>{c.label}</span>
                   {abbrev ? (
                     <span
-                      className={`ml-1 shrink-0 font-normal text-zinc-500/80 ${pillText}`}
+                      className={`ml-1 shrink-0 font-normal ${abbrevTone} ${pillText}`}
                       title={conditionStateTitle(c.state)}
                       aria-hidden
                     >
@@ -680,11 +695,13 @@ function ConditionPills({
                   ) : null}
                 </button>
               ) : (
-                <span className="inline-flex min-w-0 max-w-full items-baseline py-0.5 pl-2.5 pr-1">
-                  <span className="min-w-0 truncate font-medium text-zinc-950">{c.label}</span>
+                <span
+                  className={`inline-flex min-w-0 max-w-full items-baseline py-0.5 pl-2.5 pr-1 ${labelTone}`}
+                >
+                  <span className={`min-w-0 truncate font-medium ${labelTone}`}>{c.label}</span>
                   {abbrev ? (
                     <span
-                      className={`ml-1 shrink-0 font-normal text-zinc-500/80 ${pillText}`}
+                      className={`ml-1 shrink-0 font-normal ${abbrevTone} ${pillText}`}
                       title={conditionStateTitle(c.state)}
                       aria-hidden
                     >
@@ -697,7 +714,7 @@ function ConditionPills({
                 type="button"
                 onClick={() => onRemove(i)}
                 aria-label={`Remove ${c.label}`}
-                className="flex size-4 shrink-0 cursor-pointer items-center justify-center rounded-full text-[0.7rem] leading-none text-zinc-500 transition-colors hover:bg-zinc-300/90 hover:text-zinc-950 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-amber-600/70"
+                className={`flex size-4 shrink-0 cursor-pointer items-center justify-center rounded-full text-[0.7rem] leading-none ${removeBtnClass}`}
               >
                 <span aria-hidden>×</span>
               </button>
@@ -707,12 +724,12 @@ function ConditionPills({
         return (
           <span
             key={`${i}-${c.label}`}
-            className={`inline-flex max-w-full items-baseline rounded-full bg-zinc-100 px-2.5 py-0.5 ${pillText} font-medium`}
+            className={`inline-flex max-w-full items-baseline rounded-full px-2.5 py-0.5 ${pillText} font-medium ${shell} ${labelTone}`}
           >
-            <span className="min-w-0 truncate font-medium text-zinc-950">{c.label}</span>
+            <span className={`min-w-0 truncate font-medium ${labelTone}`}>{c.label}</span>
             {abbrev ? (
               <span
-                className={`ml-1 shrink-0 font-normal text-zinc-500/80 ${pillText}`}
+                className={`ml-1 shrink-0 font-normal ${abbrevTone} ${pillText}`}
                 title={conditionStateTitle(c.state)}
                 aria-hidden
               >
