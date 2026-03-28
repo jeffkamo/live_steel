@@ -1,3 +1,5 @@
+import { useCallback, useState } from 'react'
+
 type Marip = readonly [number, number, number, number, number]
 
 type Monster = {
@@ -133,9 +135,12 @@ const ROSTER_GRID_TEMPLATE =
 
 const terrainGridClass = 'grid grid-cols-[minmax(0,1.35fr)_minmax(4.5rem,6.5rem)_minmax(0,1.2fr)]'
 
-function TitleRule() {
+function TitleRule({ flushBelow = false }: { flushBelow?: boolean } = {}) {
   return (
-    <div className="flex w-full items-center gap-0 px-1 py-3" aria-hidden>
+    <div
+      className={`flex w-full items-center gap-0 px-1 ${flushBelow ? 'pt-2 pb-0' : 'py-2'}`}
+      aria-hidden
+    >
       <div className="h-px flex-1 bg-zinc-400/65" />
       <div
         className="mx-2 size-2 shrink-0 rotate-45 border border-zinc-400/75 bg-zinc-950"
@@ -241,14 +246,58 @@ function ConditionPills({ labels }: { labels: readonly string[] }) {
   )
 }
 
-function MonsterRowCells({ monster, row }: { monster: Monster; row: number }) {
+function TurnColumnCell({
+  acted,
+  onToggle,
+  label,
+  gridRowSpan,
+}: {
+  acted: boolean
+  onToggle: () => void
+  label: string
+  gridRowSpan: number
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      aria-pressed={acted}
+      aria-label={label}
+      style={{ gridColumn: 1, gridRow: `1 / span ${gridRowSpan}` }}
+      className={`flex h-full min-h-0 w-full min-w-0 flex-col items-center justify-center gap-2 px-2 py-3 text-center transition-[opacity,background-color] duration-200 ease-out motion-reduce:transition-none hover:bg-zinc-800/35 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-amber-500/70 sm:px-3 sm:py-4 ${
+        acted ? 'opacity-[0.52]' : 'opacity-100'
+      }`}
+    >
+      <span className="text-[0.65rem] uppercase tracking-wide text-zinc-300">Turn</span>
+      <span
+        className={`inline-block size-2 shrink-0 rotate-45 border border-zinc-400/75 transition-colors ${
+          acted ? 'bg-zinc-400/80' : 'bg-zinc-950'
+        }`}
+        aria-hidden
+      />
+    </button>
+  )
+}
+
+function MonsterRowCells({
+  monster,
+  row,
+  turnComplete,
+}: {
+  monster: Monster
+  row: number
+  turnComplete: boolean
+}) {
   const [sc, sm] = monster.stamina
   const bodyCell =
     'flex h-full min-h-[3.75rem] items-center p-3 sm:min-h-[4rem] sm:p-3.5'
+  const rowTone =
+    'transition-opacity duration-200 ease-out motion-reduce:transition-none ' +
+    (turnComplete ? 'opacity-[0.52]' : 'opacity-100')
 
   return (
     <>
-      <div className={bodyCell} style={{ gridColumn: 2, gridRow: row }}>
+      <div className={`${bodyCell} ${rowTone}`} style={{ gridColumn: 2, gridRow: row }}>
         <div className="flex w-full items-center gap-3">
           <div
             className="flex size-9 shrink-0 items-center justify-center rounded-full border-2 border-amber-500/85 text-[0.55rem] font-semibold tabular-nums text-zinc-100 sm:size-10"
@@ -262,17 +311,17 @@ function MonsterRowCells({ monster, row }: { monster: Monster; row: number }) {
           </div>
         </div>
       </div>
-      <div className={`${bodyCell} justify-center`} style={{ gridColumn: 3, gridRow: row }}>
+      <div className={`${bodyCell} justify-center ${rowTone}`} style={{ gridColumn: 3, gridRow: row }}>
         <StaminaCell current={sc} max={sm} />
       </div>
-      <div className={`${bodyCell} justify-center`} style={{ gridColumn: 4, gridRow: row }}>
+      <div className={`${bodyCell} justify-center ${rowTone}`} style={{ gridColumn: 4, gridRow: row }}>
         <MaripCluster values={monster.marip} />
       </div>
-      <div className={`${bodyCell} justify-center`} style={{ gridColumn: 5, gridRow: row }}>
+      <div className={`${bodyCell} justify-center ${rowTone}`} style={{ gridColumn: 5, gridRow: row }}>
         <StatCluster fs={monster.fs} dist={monster.dist} stab={monster.stab} />
       </div>
       <div
-        className="flex h-full min-h-[3.75rem] w-full items-center justify-start p-3 sm:min-h-[4rem] sm:p-3.5"
+        className={`flex h-full min-h-[3.75rem] w-full items-center justify-start p-3 sm:min-h-[4rem] sm:p-3.5 ${rowTone}`}
         style={{ gridColumn: 6, gridRow: row }}
       >
         <ConditionPills labels={monster.conditions} />
@@ -281,7 +330,19 @@ function MonsterRowCells({ monster, row }: { monster: Monster; row: number }) {
   )
 }
 
-function GroupSection({ group, groupKey }: { group: EncounterGroup; groupKey: string }) {
+function GroupSection({
+  group,
+  groupKey,
+  turnActed,
+  onToggleTurn,
+  turnAriaLabel,
+}: {
+  group: EncounterGroup
+  groupKey: string
+  turnActed: boolean
+  onToggleTurn: () => void
+  turnAriaLabel: string
+}) {
   const n = group.monsters.length
 
   return (
@@ -292,21 +353,18 @@ function GroupSection({ group, groupKey }: { group: EncounterGroup; groupKey: st
         gridTemplateRows: `repeat(${n}, minmax(0, auto))`,
       }}
     >
-      <div
-        className="flex flex-col items-center justify-center gap-2 px-3 py-4 text-center"
-        style={{ gridColumn: 1, gridRow: `1 / span ${n}` }}
-      >
-        <span className="text-[0.65rem] uppercase tracking-wide text-zinc-300">Turn</span>
-        <span
-          className="inline-block size-2 rotate-45 border border-zinc-400/70 bg-zinc-950"
-          aria-hidden
-        />
-      </div>
+      <TurnColumnCell
+        acted={turnActed}
+        onToggle={onToggleTurn}
+        label={turnAriaLabel}
+        gridRowSpan={n}
+      />
       {group.monsters.map((monster, i) => (
         <MonsterRowCells
           key={`${groupKey}-${monster.name}-${i}`}
           monster={monster}
           row={i + 1}
+          turnComplete={turnActed}
         />
       ))}
     </div>
@@ -332,6 +390,22 @@ function TerrainRow({ row }: { row: (typeof TERRAIN_ROWS)[number] }) {
 }
 
 function App() {
+  const [groupTurnActed, setGroupTurnActed] = useState(() =>
+    ENCOUNTER_GROUPS.map(() => false),
+  )
+
+  const toggleGroupTurn = useCallback((gi: number) => {
+    setGroupTurnActed((prev) => {
+      const next = [...prev]
+      next[gi] = !next[gi]
+      return next
+    })
+  }, [])
+
+  const resetAllTurns = useCallback(() => {
+    setGroupTurnActed(ENCOUNTER_GROUPS.map(() => false))
+  }, [])
+
   return (
     <div className="min-h-svh bg-zinc-950 p-4 font-serif text-zinc-100 antialiased md:p-8">
       <div className="mx-auto max-w-6xl">
@@ -339,15 +413,33 @@ function App() {
           <h1 className="text-lg font-normal tracking-[0.2em] text-white md:text-xl">
             ENCOUNTER ROSTER
           </h1>
-          <TitleRule />
+          <TitleRule flushBelow />
         </header>
 
-        <section aria-label="Creature tracker" className="mt-6 flex flex-col gap-3 px-0 md:mt-8">
+        <section aria-label="Creature tracker" className="mt-0 flex flex-col gap-2 px-0">
+          <div
+            className="grid w-full min-w-0 items-center"
+            style={{ gridTemplateColumns: ROSTER_GRID_TEMPLATE }}
+          >
+            <div className="flex justify-center py-1.5" style={{ gridColumn: 1 }}>
+              <button
+                type="button"
+                onClick={resetAllTurns}
+                aria-label="Reset all encounter group turn diamonds to pending"
+                className="min-h-10 min-w-[5.25rem] rounded-md px-4 py-2 font-sans text-xs tracking-wide text-zinc-400 transition-colors hover:bg-zinc-900 hover:text-zinc-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500/60"
+              >
+                Reset
+              </button>
+            </div>
+          </div>
           {ENCOUNTER_GROUPS.map((group, gi) => (
             <GroupSection
               key={`encounter-group-${gi}`}
               group={group}
               groupKey={`g${gi}`}
+              turnActed={groupTurnActed[gi] ?? false}
+              onToggleTurn={() => toggleGroupTurn(gi)}
+              turnAriaLabel={`Encounter group ${gi + 1}: turn ${groupTurnActed[gi] ? 'acted' : 'pending'}`}
             />
           ))}
         </section>
