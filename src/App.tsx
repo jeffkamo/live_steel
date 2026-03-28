@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useId, useRef, useState } from 'react'
+import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 
 type Marip = readonly [number, number, number, number, number]
 
@@ -21,8 +22,117 @@ type Monster = {
   conditions: readonly ConditionEntry[]
 }
 
+type GroupColorId =
+  | 'red'
+  | 'orange'
+  | 'yellow'
+  | 'green'
+  | 'blue'
+  | 'purple'
+  | 'pink'
+  | 'white'
+  | 'grey'
+  | 'black'
+
+const GROUP_COLOR_ORDER: readonly GroupColorId[] = [
+  'red',
+  'orange',
+  'yellow',
+  'green',
+  'blue',
+  'purple',
+  'pink',
+  'white',
+  'grey',
+  'black',
+] as const
+
+const GROUP_COLOR_LABEL: Record<GroupColorId, string> = {
+  red: 'Red',
+  orange: 'Orange',
+  yellow: 'Yellow',
+  green: 'Green',
+  blue: 'Blue',
+  purple: 'Purple',
+  pink: 'Pink',
+  white: 'White',
+  grey: 'Grey',
+  black: 'Black',
+}
+
+/** Tailwind class bundles for creature ordinal rings (full strings for the compiler). */
+const GROUP_COLOR_BADGE: Record<
+  GroupColorId,
+  { border: string; bg: string; text: string }
+> = {
+  red: {
+    border: 'border-red-500/90',
+    bg: 'bg-red-950/55',
+    text: 'text-red-100',
+  },
+  orange: {
+    border: 'border-orange-500/90',
+    bg: 'bg-orange-950/55',
+    text: 'text-orange-100',
+  },
+  yellow: {
+    border: 'border-yellow-400/90',
+    bg: 'bg-yellow-950/45',
+    text: 'text-yellow-100',
+  },
+  green: {
+    border: 'border-emerald-500/90',
+    bg: 'bg-emerald-950/55',
+    text: 'text-emerald-100',
+  },
+  blue: {
+    border: 'border-sky-500/90',
+    bg: 'bg-sky-950/55',
+    text: 'text-sky-100',
+  },
+  purple: {
+    border: 'border-violet-500/90',
+    bg: 'bg-violet-950/55',
+    text: 'text-violet-100',
+  },
+  pink: {
+    border: 'border-pink-500/90',
+    bg: 'bg-pink-950/55',
+    text: 'text-pink-100',
+  },
+  white: {
+    border: 'border-zinc-100/90',
+    bg: 'bg-zinc-100/15',
+    text: 'text-zinc-50',
+  },
+  grey: {
+    border: 'border-zinc-400/90',
+    bg: 'bg-zinc-800/65',
+    text: 'text-zinc-200',
+  },
+  black: {
+    border: 'border-zinc-600/95',
+    bg: 'bg-black/80',
+    text: 'text-zinc-300',
+  },
+}
+
+const GROUP_COLOR_PREVIEW_HEX: Record<GroupColorId, string> = {
+  red: '#ef4444',
+  orange: '#f97316',
+  yellow: '#eab308',
+  green: '#22c55e',
+  blue: '#0ea5e9',
+  purple: '#8b5cf6',
+  pink: '#ec4899',
+  white: '#f4f4f5',
+  grey: '#a1a1aa',
+  black: '#18181b',
+}
+
 type EncounterGroup = {
   monsters: Monster[]
+  color: GroupColorId
 }
 
 /** Static encounter data uses plain condition names; clone maps them to {@link ConditionEntry}. */
@@ -157,7 +267,8 @@ function conditionEntryFromLabel(label: string): ConditionEntry {
 }
 
 function cloneEncounterGroups(): EncounterGroup[] {
-  return ENCOUNTER_GROUPS.map((group) => ({
+  return ENCOUNTER_GROUPS.map((group, groupIndex) => ({
+    color: GROUP_COLOR_ORDER[groupIndex % GROUP_COLOR_ORDER.length]!,
     monsters: group.monsters.map((m) => ({
       name: m.name,
       subtitle: m.subtitle,
@@ -749,6 +860,224 @@ const conditionPickerRowBtn =
 const conditionPickerDurationPill =
   'shrink-0 rounded-full border px-1.5 py-0.5 font-sans text-[0.58rem] font-semibold tabular-nums transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-amber-600/70'
 
+const groupColorPickerRowBtn =
+  'flex w-full min-w-0 items-center gap-2 rounded-md px-2 py-1.5 text-left font-sans text-[0.72rem] font-medium text-zinc-100 transition-colors hover:bg-zinc-800/80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-amber-600/70'
+
+function GroupColorPreview({ colorId }: { colorId: GroupColorId }) {
+  return (
+    <span
+      className="size-3.5 shrink-0 rounded-sm border border-zinc-600/90 shadow-inner shadow-black/30"
+      style={{ backgroundColor: GROUP_COLOR_PREVIEW_HEX[colorId] }}
+      aria-hidden
+    />
+  )
+}
+
+function GroupColorSwapIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.75}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      aria-hidden
+    >
+      <path d="M7.5 21 3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
+    </svg>
+  )
+}
+
+function otherGroupIndexForColor(
+  colorId: GroupColorId,
+  encounterGroupColors: readonly GroupColorId[],
+  thisGroupIndex: number,
+): number | null {
+  const idx = encounterGroupColors.findIndex((c, i) => i !== thisGroupIndex && c === colorId)
+  return idx >= 0 ? idx : null
+}
+
+type GroupColorMenuState = {
+  open: boolean
+  anchor: HTMLElement | null
+  monsterIndex: number | null
+}
+
+function GroupColorPickerPopover({
+  open,
+  anchor,
+  groupKey,
+  groupNumber,
+  thisGroupIndex,
+  encounterGroupColors,
+  currentColor,
+  onSelectColor,
+  onClose,
+}: {
+  open: boolean
+  anchor: HTMLElement | null
+  groupKey: string
+  groupNumber: number
+  thisGroupIndex: number
+  encounterGroupColors: readonly GroupColorId[]
+  currentColor: GroupColorId
+  onSelectColor: (color: GroupColorId) => void
+  onClose: () => void
+}) {
+  const menuRef = useRef<HTMLDivElement>(null)
+  const [coords, setCoords] = useState<{ top: number; left: number } | null>(null)
+  const [hoverRowColorId, setHoverRowColorId] = useState<GroupColorId | null>(null)
+
+  useLayoutEffect(() => {
+    if (!open || !anchor) {
+      setCoords(null)
+      return
+    }
+    const place = () => {
+      const r = anchor.getBoundingClientRect()
+      setCoords({ top: r.bottom + 4, left: r.left + r.width / 2 })
+    }
+    place()
+    window.addEventListener('scroll', place, true)
+    window.addEventListener('resize', place)
+    return () => {
+      window.removeEventListener('scroll', place, true)
+      window.removeEventListener('resize', place)
+    }
+  }, [open, anchor])
+
+  useEffect(() => {
+    if (!open) {
+      return
+    }
+    const onDocMouseDown = (e: MouseEvent) => {
+      const el = e.target as HTMLElement
+      if (menuRef.current?.contains(el)) {
+        return
+      }
+      if (el.closest(`[data-group-color-trigger="${groupKey}"]`)) {
+        return
+      }
+      onClose()
+    }
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose()
+      }
+    }
+    document.addEventListener('mousedown', onDocMouseDown)
+    document.addEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('mousedown', onDocMouseDown)
+      document.removeEventListener('keydown', onKey)
+    }
+  }, [open, groupKey, onClose])
+
+  useEffect(() => {
+    if (!open) {
+      setHoverRowColorId(null)
+    }
+  }, [open])
+
+  if (!open || !coords) {
+    return null
+  }
+
+  const otherOwnerOfHovered =
+    hoverRowColorId !== null
+      ? otherGroupIndexForColor(hoverRowColorId, encounterGroupColors, thisGroupIndex)
+      : null
+  const hoverWouldSwap =
+    hoverRowColorId !== null &&
+    hoverRowColorId !== currentColor &&
+    otherOwnerOfHovered !== null
+
+  return createPortal(
+    <div
+      ref={menuRef}
+      data-group-color-picker
+      style={{
+        position: 'fixed',
+        top: coords.top,
+        left: coords.left,
+        transform: 'translateX(-50%)',
+        zIndex: 200,
+      }}
+      className="w-[min(15.5rem,calc(100vw-2rem))] max-h-[min(20rem,50vh)] overflow-y-auto rounded-lg border border-zinc-500/75 bg-zinc-900 py-1.5 pl-2 pr-1.5 shadow-xl shadow-black/50 ring-1 ring-black/25"
+      role="dialog"
+      aria-label={`Choose color for encounter group ${groupNumber}`}
+      onClick={(e) => e.stopPropagation()}
+    >
+      <ul className="flex flex-col gap-0.5" role="list">
+        {GROUP_COLOR_ORDER.map((id) => {
+          const selected = id === currentColor
+          const otherOwner = otherGroupIndexForColor(id, encounterGroupColors, thisGroupIndex)
+          const inUseElsewhere = otherOwner !== null
+          const ownerGroupNumber = otherOwner !== null ? otherOwner + 1 : null
+          const showSwapIcon =
+            hoverWouldSwap && (id === hoverRowColorId || id === currentColor)
+          const conflictingGroupNumber =
+            otherOwnerOfHovered !== null ? otherOwnerOfHovered + 1 : null
+
+          let rowTitle: string | undefined
+          if (hoverWouldSwap && id === hoverRowColorId && conflictingGroupNumber !== null) {
+            rowTitle = `Swap with group ${conflictingGroupNumber}: they receive ${GROUP_COLOR_LABEL[currentColor]}, you receive ${GROUP_COLOR_LABEL[id]}.`
+          } else if (hoverWouldSwap && id === currentColor && conflictingGroupNumber !== null) {
+            rowTitle = `${GROUP_COLOR_LABEL[currentColor]} would move to group ${conflictingGroupNumber}.`
+          } else if (inUseElsewhere && ownerGroupNumber !== null) {
+            rowTitle = `Used by group ${ownerGroupNumber}. Click to swap colors.`
+          }
+
+          return (
+            <li
+              key={id}
+              onMouseEnter={() => setHoverRowColorId(id)}
+              onMouseLeave={() => setHoverRowColorId(null)}
+            >
+              <button
+                type="button"
+                title={rowTitle}
+                className={`${groupColorPickerRowBtn} relative ${selected ? 'bg-zinc-800/90' : ''} ${
+                  showSwapIcon ? 'bg-amber-950/35 ring-1 ring-amber-500/45' : ''
+                }`}
+                onClick={() => {
+                  onSelectColor(id)
+                  onClose()
+                }}
+              >
+                <GroupColorPreview colorId={id} />
+                <span className="min-w-0 flex-1">{GROUP_COLOR_LABEL[id]}</span>
+                {inUseElsewhere && ownerGroupNumber !== null ? (
+                  <span
+                    className="shrink-0 rounded border border-zinc-600/70 px-1 py-px font-sans text-[0.55rem] font-semibold tabular-nums uppercase tracking-wide text-zinc-500"
+                    aria-label={`Color in use by group ${ownerGroupNumber}`}
+                  >
+                    G{ownerGroupNumber}
+                  </span>
+                ) : null}
+                {showSwapIcon ? (
+                  <span
+                    className="flex size-5 shrink-0 items-center justify-center text-amber-400/95"
+                    title="Swap colors"
+                  >
+                    <GroupColorSwapIcon className="size-4" />
+                  </span>
+                ) : (
+                  <span className="size-5 shrink-0" aria-hidden />
+                )}
+              </button>
+            </li>
+          )
+        })}
+      </ul>
+    </div>,
+    document.body,
+  )
+}
+
 function CreatureConditionCell({
   monsterName,
   conditions,
@@ -892,12 +1221,10 @@ function TurnColumnCell({
   acted,
   onToggle,
   label,
-  gridRowSpan,
 }: {
   acted: boolean
   onToggle: () => void
   label: string
-  gridRowSpan: number
 }) {
   return (
     <button
@@ -905,8 +1232,7 @@ function TurnColumnCell({
       onClick={onToggle}
       aria-pressed={acted}
       aria-label={label}
-      style={{ gridColumn: 1, gridRow: `1 / span ${gridRowSpan}` }}
-      className={`flex h-full min-h-0 w-full min-w-0 flex-col items-center justify-center gap-2 px-2 py-3 text-center transition-[opacity,background-color] duration-200 ease-out motion-reduce:transition-none hover:bg-zinc-800/35 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-amber-500/70 sm:px-3 sm:py-4 ${
+      className={`flex min-h-0 w-full min-w-0 flex-1 flex-col items-center justify-center gap-2 px-2 py-3 text-center transition-[opacity,background-color] duration-200 ease-out motion-reduce:transition-none hover:bg-zinc-800/35 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-amber-500/70 sm:px-3 sm:py-4 ${
         acted ? 'opacity-[0.52]' : 'opacity-100'
       }`}
     >
@@ -921,9 +1247,39 @@ function TurnColumnCell({
   )
 }
 
+function GroupTurnColumn({
+  gridRowSpan,
+  acted,
+  onToggle,
+  turnAriaLabel,
+}: {
+  gridRowSpan: number
+  acted: boolean
+  onToggle: () => void
+  turnAriaLabel: string
+}) {
+  return (
+    <div
+      style={{ gridColumn: 1, gridRow: `1 / span ${gridRowSpan}` }}
+      className="flex min-h-0 w-full min-w-0 flex-col overflow-visible"
+    >
+      <TurnColumnCell acted={acted} onToggle={onToggle} label={turnAriaLabel} />
+    </div>
+  )
+}
+
 function MonsterRowCells({
   monster,
   row,
+  ordinal,
+  monsterIndex,
+  monsterCount,
+  groupKey,
+  groupNumber,
+  groupColor,
+  colorMenuOpen,
+  colorMenuMonsterIndex,
+  onGroupColorOrdinalClick,
   turnComplete,
   onStaminaChange,
   onConditionRemove,
@@ -932,6 +1288,15 @@ function MonsterRowCells({
 }: {
   monster: Monster
   row: number
+  ordinal: number
+  monsterIndex: number
+  monsterCount: number
+  groupKey: string
+  groupNumber: number
+  groupColor: GroupColorId
+  colorMenuOpen: boolean
+  colorMenuMonsterIndex: number | null
+  onGroupColorOrdinalClick: (monsterIndex: number, anchor: HTMLElement) => void
   turnComplete: boolean
   onStaminaChange: (next: [number, number]) => void
   onConditionRemove: (conditionIndex: number) => void
@@ -939,6 +1304,8 @@ function MonsterRowCells({
   onConditionAddOrSet: (label: string, state: ConditionState) => void
 }) {
   const [sc, sm] = monster.stamina
+  const badge = GROUP_COLOR_BADGE[groupColor]
+  const colorLabel = GROUP_COLOR_LABEL[groupColor]
   const bodyCell =
     'flex h-full min-h-[3.75rem] items-center p-3 sm:min-h-[4rem] sm:p-3.5'
   const rowTone =
@@ -949,12 +1316,17 @@ function MonsterRowCells({
     <>
       <div className={`${bodyCell} ${rowTone}`} style={{ gridColumn: 2, gridRow: row }}>
         <div className="flex w-full items-center gap-3">
-          <div
-            className="flex size-9 shrink-0 items-center justify-center rounded-full border-2 border-amber-500/85 text-[0.55rem] font-semibold tabular-nums text-zinc-100 sm:size-10"
-            aria-hidden
+          <button
+            type="button"
+            data-group-color-trigger={groupKey}
+            aria-label={`Encounter group ${groupNumber}: creature ${ordinal} of ${monsterCount}. Group color ${colorLabel}. Activate to change group color.`}
+            aria-expanded={colorMenuOpen && colorMenuMonsterIndex === monsterIndex}
+            aria-haspopup="dialog"
+            className={`flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-full border-2 text-sm font-semibold tabular-nums leading-none outline-none transition-[filter,transform] duration-150 ease-out motion-reduce:transition-none hover:brightness-110 focus-visible:ring-2 focus-visible:ring-amber-500/45 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950 active:scale-[0.97] sm:size-10 sm:text-base ${badge.border} ${badge.bg} ${badge.text}`}
+            onClick={(e) => onGroupColorOrdinalClick(monsterIndex, e.currentTarget)}
           >
-            {monster.initials}
-          </div>
+            {ordinal}
+          </button>
           <div className="min-w-0 flex-1">
             <p className="font-medium leading-tight text-zinc-50">{monster.name}</p>
             <p className="mt-1 text-[0.7rem] leading-snug text-zinc-400">{monster.subtitle}</p>
@@ -998,9 +1370,13 @@ function MonsterRowCells({
 function GroupSection({
   group,
   groupKey,
+  groupNumber,
+  thisGroupIndex,
+  encounterGroupColors,
   turnActed,
   onToggleTurn,
   turnAriaLabel,
+  onGroupColorChange,
   onMonsterStaminaChange,
   onMonsterConditionRemove,
   onMonsterConditionCycleState,
@@ -1008,15 +1384,40 @@ function GroupSection({
 }: {
   group: EncounterGroup
   groupKey: string
+  groupNumber: number
+  thisGroupIndex: number
+  encounterGroupColors: readonly GroupColorId[]
   turnActed: boolean
   onToggleTurn: () => void
   turnAriaLabel: string
+  onGroupColorChange: (color: GroupColorId) => void
   onMonsterStaminaChange: (monsterIndex: number, stamina: [number, number]) => void
   onMonsterConditionRemove: (monsterIndex: number, conditionIndex: number) => void
   onMonsterConditionCycleState: (monsterIndex: number, conditionIndex: number) => void
   onMonsterConditionAddOrSet: (monsterIndex: number, label: string, state: ConditionState) => void
 }) {
   const n = group.monsters.length
+  const [colorMenu, setColorMenu] = useState<GroupColorMenuState>({
+    open: false,
+    anchor: null,
+    monsterIndex: null,
+  })
+
+  const closeColorMenu = useCallback(() => {
+    setColorMenu({ open: false, anchor: null, monsterIndex: null })
+  }, [])
+
+  const onGroupColorOrdinalClick = useCallback(
+    (monsterIndex: number, anchor: HTMLElement) => {
+      setColorMenu((m) => {
+        if (m.open && m.monsterIndex === monsterIndex) {
+          return { open: false, anchor: null, monsterIndex: null }
+        }
+        return { open: true, anchor, monsterIndex }
+      })
+    },
+    [],
+  )
 
   return (
     <div
@@ -1026,17 +1427,37 @@ function GroupSection({
         gridTemplateRows: `repeat(${n}, minmax(0, auto))`,
       }}
     >
-      <TurnColumnCell
+      <GroupTurnColumn
+        gridRowSpan={n}
         acted={turnActed}
         onToggle={onToggleTurn}
-        label={turnAriaLabel}
-        gridRowSpan={n}
+        turnAriaLabel={turnAriaLabel}
+      />
+      <GroupColorPickerPopover
+        open={colorMenu.open}
+        anchor={colorMenu.anchor}
+        groupKey={groupKey}
+        groupNumber={groupNumber}
+        thisGroupIndex={thisGroupIndex}
+        encounterGroupColors={encounterGroupColors}
+        currentColor={group.color}
+        onSelectColor={onGroupColorChange}
+        onClose={closeColorMenu}
       />
       {group.monsters.map((monster, i) => (
         <MonsterRowCells
           key={`${groupKey}-${monster.name}-${i}`}
           monster={monster}
           row={i + 1}
+          ordinal={i + 1}
+          monsterIndex={i}
+          monsterCount={n}
+          groupKey={groupKey}
+          groupNumber={groupNumber}
+          groupColor={group.color}
+          colorMenuOpen={colorMenu.open}
+          colorMenuMonsterIndex={colorMenu.monsterIndex}
+          onGroupColorOrdinalClick={onGroupColorOrdinalClick}
           turnComplete={turnActed}
           onStaminaChange={(st) => onMonsterStaminaChange(i, st)}
           onConditionRemove={(ci) => onMonsterConditionRemove(i, ci)}
@@ -1198,6 +1619,28 @@ function App() {
     )
   }, [])
 
+  const patchGroupColor = useCallback((groupIndex: number, newColor: GroupColorId) => {
+    setEncounterGroups((prev) => {
+      const otherIdx = prev.findIndex((g, i) => i !== groupIndex && g.color === newColor)
+      if (otherIdx < 0) {
+        return prev.map((g, i) => (i === groupIndex ? { ...g, color: newColor } : g))
+      }
+      const oldColor = prev[groupIndex]?.color
+      if (oldColor === undefined) {
+        return prev
+      }
+      return prev.map((g, i) => {
+        if (i === groupIndex) {
+          return { ...g, color: newColor }
+        }
+        if (i === otherIdx) {
+          return { ...g, color: oldColor }
+        }
+        return g
+      })
+    })
+  }, [])
+
   const toggleGroupTurn = useCallback((gi: number) => {
     setGroupTurnActed((prev) => {
       const next = [...prev]
@@ -1244,9 +1687,13 @@ function App() {
               key={`encounter-group-${gi}`}
               group={group}
               groupKey={`g${gi}`}
+              groupNumber={gi + 1}
+              thisGroupIndex={gi}
+              encounterGroupColors={encounterGroups.map((g) => g.color)}
               turnActed={groupTurnActed[gi] ?? false}
               onToggleTurn={() => toggleGroupTurn(gi)}
               turnAriaLabel={`Encounter group ${gi + 1}: turn ${groupTurnActed[gi] ? 'acted' : 'pending'}`}
+              onGroupColorChange={(c) => patchGroupColor(gi, c)}
               onMonsterStaminaChange={(mi, st) => patchMonsterStamina(gi, mi, st)}
               onMonsterConditionRemove={(mi, ci) => patchMonsterConditionRemove(gi, mi, ci)}
               onMonsterConditionCycleState={(mi, ci) => patchMonsterConditionCycleState(gi, mi, ci)}

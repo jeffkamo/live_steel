@@ -43,7 +43,9 @@ describe('App', () => {
       expect(scope.getAllByText(letter).length).toBeGreaterThanOrEqual(1)
     }
     expect(scope.getAllByText('-2').length).toBeGreaterThanOrEqual(1)
-    expect(scope.getByText('2')).toBeInTheDocument()
+    const firstMarip = scope.getAllByRole('group', { name: /^Characteristics \(MARIP\)$/i })[0]
+    expect(firstMarip).toBeTruthy()
+    expect(within(firstMarip as HTMLElement).getByText('2')).toBeInTheDocument()
   })
 
   it('shows placeholder stamina and MARIP characteristics for reserve slot', () => {
