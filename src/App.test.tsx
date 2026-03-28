@@ -62,6 +62,56 @@ describe('App', () => {
     expect(within(groupGrid as HTMLElement).getByText('No active conditions')).toBeInTheDocument()
   })
 
+  it('removes a creature condition when its pill remove control is clicked', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    const nameEl = screen.getByText('Goblin Assassin 1', { exact: true })
+    const groupGrid = nameEl.closest('div.grid.items-stretch.rounded-lg')
+    expect(groupGrid).toBeTruthy()
+    const scope = within(groupGrid as HTMLElement)
+    expect(scope.getByText('Winded', { exact: true })).toBeInTheDocument()
+    expect(scope.getByText('Slowed', { exact: true })).toBeInTheDocument()
+
+    await user.click(scope.getByRole('button', { name: /^Remove Winded$/i }))
+
+    expect(scope.queryByText('Winded', { exact: true })).not.toBeInTheDocument()
+    expect(scope.getByText('Slowed', { exact: true })).toBeInTheDocument()
+  })
+
+  it('cycles creature condition duration neutral → EoT → SE when the label is clicked', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    const nameEl = screen.getByText('Goblin Assassin 1', { exact: true })
+    const groupGrid = nameEl.closest('div.grid.items-stretch.rounded-lg')
+    expect(groupGrid).toBeTruthy()
+    const scope = within(groupGrid as HTMLElement)
+
+    await user.click(
+      scope.getByRole('button', { name: /^Slowed, neutral\. Cycle duration$/i }),
+    )
+    expect(
+      scope.getByRole('button', { name: /^Slowed, end of turn\. Cycle duration$/i }),
+    ).toBeInTheDocument()
+    expect(scope.getByText(/EoT/)).toBeInTheDocument()
+
+    await user.click(
+      scope.getByRole('button', { name: /^Slowed, end of turn\. Cycle duration$/i }),
+    )
+    expect(
+      scope.getByRole('button', { name: /^Slowed, save ends\. Cycle duration$/i }),
+    ).toBeInTheDocument()
+    expect(scope.getByText(/SE/)).toBeInTheDocument()
+
+    await user.click(
+      scope.getByRole('button', { name: /^Slowed, save ends\. Cycle duration$/i }),
+    )
+    expect(
+      scope.getByRole('button', { name: /^Slowed, neutral\. Cycle duration$/i }),
+    ).toBeInTheDocument()
+    const slowedCycle = scope.getByRole('button', { name: /^Slowed, neutral\. Cycle duration$/i })
+    expect(within(slowedCycle).queryByText(/EoT/)).not.toBeInTheDocument()
+  })
+
   it('renders terrain objects, notes, stamina, and condition pills', () => {
     render(<App />)
     const terrain = screen.getByRole('region', { name: 'Dynamic terrain' })

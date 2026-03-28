@@ -2,6 +2,13 @@ import { useCallback, useEffect, useId, useState } from 'react'
 
 type Marip = readonly [number, number, number, number, number]
 
+type ConditionState = 'neutral' | 'eot' | 'se'
+
+type ConditionEntry = {
+  label: string
+  state: ConditionState
+}
+
 type Monster = {
   name: string
   subtitle: string
@@ -11,21 +18,30 @@ type Monster = {
   fs: number
   dist: number
   stab: number
-  conditions: readonly string[]
+  conditions: readonly ConditionEntry[]
 }
 
 type EncounterGroup = {
   monsters: Monster[]
 }
 
+/** Static encounter data uses plain condition names; clone maps them to {@link ConditionEntry}. */
+type MonsterSeed = Omit<Monster, 'conditions'> & { conditions: readonly string[] }
+
+type EncounterGroupSeed = {
+  monsters: readonly MonsterSeed[]
+}
+
 type TerrainRowState = {
   object: string
   stamina: [number, number]
   note: string
-  conditions: readonly string[]
+  conditions: readonly ConditionEntry[]
 }
 
-const ENCOUNTER_GROUPS: readonly EncounterGroup[] = [
+type TerrainRowSeed = Omit<TerrainRowState, 'conditions'> & { conditions: readonly string[] }
+
+const ENCOUNTER_GROUPS: readonly EncounterGroupSeed[] = [
   {
     monsters: [
       {
@@ -121,7 +137,7 @@ const ENCOUNTER_GROUPS: readonly EncounterGroup[] = [
   },
 ] as const
 
-const TERRAIN_ROWS = [
+const TERRAIN_ROWS: readonly TerrainRowSeed[] = [
   {
     object: 'Toppled barricade — light cover along the eastern lane.',
     stamina: [6, 8] as const,
@@ -136,6 +152,10 @@ const TERRAIN_ROWS = [
   },
 ] as const
 
+function conditionEntryFromLabel(label: string): ConditionEntry {
+  return { label, state: 'neutral' }
+}
+
 function cloneEncounterGroups(): EncounterGroup[] {
   return ENCOUNTER_GROUPS.map((group) => ({
     monsters: group.monsters.map((m) => ({
@@ -147,7 +167,7 @@ function cloneEncounterGroups(): EncounterGroup[] {
       fs: m.fs,
       dist: m.dist,
       stab: m.stab,
-      conditions: [...m.conditions],
+      conditions: m.conditions.map(conditionEntryFromLabel),
     })),
   }))
 }
@@ -157,7 +177,7 @@ function cloneTerrainRows(): TerrainRowState[] {
     object: r.object,
     stamina: [r.stamina[0], r.stamina[1]] as [number, number],
     note: r.note,
-    conditions: [...r.conditions],
+    conditions: r.conditions.map(conditionEntryFromLabel),
   }))
 }
 
@@ -548,22 +568,136 @@ function StatCluster({ fs, dist, stab }: { fs: number; dist: number; stab: numbe
   )
 }
 
-function ConditionPills({ labels }: { labels: readonly string[] }) {
-  if (labels.length === 0) {
+function nextConditionState(state: ConditionState): ConditionState {
+  if (state === 'neutral') {
+    return 'eot'
+  }
+  if (state === 'eot') {
+    return 'se'
+  }
+  return 'neutral'
+}
+
+function conditionStateAbbrev(state: ConditionState): string | null {
+  if (state === 'eot') {
+    return 'EoT'
+  }
+  if (state === 'se') {
+    return 'SE'
+  }
+  return null
+}
+
+function conditionStateSpoken(state: ConditionState): string {
+  if (state === 'neutral') {
+    return 'neutral'
+  }
+  if (state === 'eot') {
+    return 'end of turn'
+  }
+  return 'save ends'
+}
+
+function conditionStateTitle(state: ConditionState): string | undefined {
+  if (state === 'eot') {
+    return 'End of turn'
+  }
+  if (state === 'se') {
+    return 'Save ends'
+  }
+  return undefined
+}
+
+function ConditionPills({
+  conditions,
+  onRemove,
+  onCycleState,
+}: {
+  conditions: readonly ConditionEntry[]
+  onRemove?: (index: number) => void
+  onCycleState?: (index: number) => void
+}) {
+  if (conditions.length === 0) {
     return (
       <p className="w-full text-left font-sans text-[0.7rem] italic text-zinc-400">No active conditions</p>
     )
   }
+  const pillText = 'font-sans text-[0.65rem] tracking-tight'
   return (
     <div className="flex w-full flex-wrap content-center items-center justify-start gap-2">
-      {labels.map((c) => (
-        <span
-          key={c}
-          className="rounded-full bg-zinc-100 px-2.5 py-0.5 text-center font-sans text-[0.65rem] font-medium tracking-tight text-zinc-950"
-        >
-          {c}
-        </span>
-      ))}
+      {conditions.map((c, i) => {
+        const abbrev = conditionStateAbbrev(c.state)
+        if (onRemove) {
+          const pillHover =
+            onCycleState != null
+              ? 'motion-reduce:transition-none transition-[outline-color] duration-150 ease-out outline outline-2 outline-transparent outline-offset-1 hover:outline-amber-500/60'
+              : ''
+          return (
+            <div
+              key={`${i}-${c.label}`}
+              className={`inline-flex max-w-full items-center gap-0 rounded-full bg-zinc-100 py-0.5 pl-0 pr-0.5 ${pillText} font-medium ${pillHover}`}
+            >
+              {onCycleState ? (
+                <button
+                  type="button"
+                  onClick={() => onCycleState(i)}
+                  aria-label={`${c.label}, ${conditionStateSpoken(c.state)}. Cycle duration`}
+                  className="inline-flex min-w-0 max-w-full cursor-pointer items-baseline gap-0 rounded-l-full py-0.5 pl-2.5 pr-1 text-left transition-colors focus-visible:z-10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-amber-600/70"
+                >
+                  <span className="min-w-0 truncate font-medium text-zinc-950">{c.label}</span>
+                  {abbrev ? (
+                    <span
+                      className={`ml-1 shrink-0 font-normal text-zinc-500/80 ${pillText}`}
+                      title={conditionStateTitle(c.state)}
+                      aria-hidden
+                    >
+                      · {abbrev}
+                    </span>
+                  ) : null}
+                </button>
+              ) : (
+                <span className="inline-flex min-w-0 max-w-full items-baseline py-0.5 pl-2.5 pr-1">
+                  <span className="min-w-0 truncate font-medium text-zinc-950">{c.label}</span>
+                  {abbrev ? (
+                    <span
+                      className={`ml-1 shrink-0 font-normal text-zinc-500/80 ${pillText}`}
+                      title={conditionStateTitle(c.state)}
+                      aria-hidden
+                    >
+                      · {abbrev}
+                    </span>
+                  ) : null}
+                </span>
+              )}
+              <button
+                type="button"
+                onClick={() => onRemove(i)}
+                aria-label={`Remove ${c.label}`}
+                className="flex size-4 shrink-0 cursor-pointer items-center justify-center rounded-full text-[0.7rem] leading-none text-zinc-500 transition-colors hover:bg-zinc-300/90 hover:text-zinc-950 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-amber-600/70"
+              >
+                <span aria-hidden>×</span>
+              </button>
+            </div>
+          )
+        }
+        return (
+          <span
+            key={`${i}-${c.label}`}
+            className={`inline-flex max-w-full items-baseline rounded-full bg-zinc-100 px-2.5 py-0.5 ${pillText} font-medium`}
+          >
+            <span className="min-w-0 truncate font-medium text-zinc-950">{c.label}</span>
+            {abbrev ? (
+              <span
+                className={`ml-1 shrink-0 font-normal text-zinc-500/80 ${pillText}`}
+                title={conditionStateTitle(c.state)}
+                aria-hidden
+              >
+                · {abbrev}
+              </span>
+            ) : null}
+          </span>
+        )
+      })}
     </div>
   )
 }
@@ -606,11 +740,15 @@ function MonsterRowCells({
   row,
   turnComplete,
   onStaminaChange,
+  onConditionRemove,
+  onConditionCycleState,
 }: {
   monster: Monster
   row: number
   turnComplete: boolean
   onStaminaChange: (next: [number, number]) => void
+  onConditionRemove: (conditionIndex: number) => void
+  onConditionCycleState: (conditionIndex: number) => void
 }) {
   const [sc, sm] = monster.stamina
   const bodyCell =
@@ -656,7 +794,11 @@ function MonsterRowCells({
         className={`flex h-full min-h-[3.75rem] w-full items-center justify-start p-3 sm:min-h-[4rem] sm:p-3.5 ${rowTone}`}
         style={{ gridColumn: 6, gridRow: row }}
       >
-        <ConditionPills labels={monster.conditions} />
+        <ConditionPills
+          conditions={monster.conditions}
+          onRemove={onConditionRemove}
+          onCycleState={onConditionCycleState}
+        />
       </div>
     </>
   )
@@ -669,6 +811,8 @@ function GroupSection({
   onToggleTurn,
   turnAriaLabel,
   onMonsterStaminaChange,
+  onMonsterConditionRemove,
+  onMonsterConditionCycleState,
 }: {
   group: EncounterGroup
   groupKey: string
@@ -676,6 +820,8 @@ function GroupSection({
   onToggleTurn: () => void
   turnAriaLabel: string
   onMonsterStaminaChange: (monsterIndex: number, stamina: [number, number]) => void
+  onMonsterConditionRemove: (monsterIndex: number, conditionIndex: number) => void
+  onMonsterConditionCycleState: (monsterIndex: number, conditionIndex: number) => void
 }) {
   const n = group.monsters.length
 
@@ -700,6 +846,8 @@ function GroupSection({
           row={i + 1}
           turnComplete={turnActed}
           onStaminaChange={(st) => onMonsterStaminaChange(i, st)}
+          onConditionRemove={(ci) => onMonsterConditionRemove(i, ci)}
+          onConditionCycleState={(ci) => onMonsterConditionCycleState(i, ci)}
         />
       ))}
     </div>
@@ -729,7 +877,7 @@ function TerrainRow({
       </div>
       <div className="flex h-full min-h-[3.75rem] flex-col justify-center gap-3 p-3 sm:min-h-[4rem] sm:p-3.5">
         <p className="text-[0.75rem] leading-snug text-zinc-400">{row.note}</p>
-        <ConditionPills labels={row.conditions} />
+        <ConditionPills conditions={row.conditions} />
       </div>
     </div>
   )
@@ -755,6 +903,58 @@ function App() {
             monsters: g.monsters.map((m, mi) =>
               mi === monsterIndex ? { ...m, stamina: [stamina[0], stamina[1]] } : m,
             ),
+          }
+        }),
+      )
+    },
+    [],
+  )
+
+  const patchMonsterConditionRemove = useCallback(
+    (groupIndex: number, monsterIndex: number, conditionIndex: number) => {
+      setEncounterGroups((prev) =>
+        prev.map((g, gi) => {
+          if (gi !== groupIndex) {
+            return g
+          }
+          return {
+            ...g,
+            monsters: g.monsters.map((m, mi) => {
+              if (mi !== monsterIndex) {
+                return m
+              }
+              return {
+                ...m,
+                conditions: m.conditions.filter((_, ci) => ci !== conditionIndex),
+              }
+            }),
+          }
+        }),
+      )
+    },
+    [],
+  )
+
+  const patchMonsterConditionCycleState = useCallback(
+    (groupIndex: number, monsterIndex: number, conditionIndex: number) => {
+      setEncounterGroups((prev) =>
+        prev.map((g, gi) => {
+          if (gi !== groupIndex) {
+            return g
+          }
+          return {
+            ...g,
+            monsters: g.monsters.map((m, mi) => {
+              if (mi !== monsterIndex) {
+                return m
+              }
+              return {
+                ...m,
+                conditions: m.conditions.map((c, ci) =>
+                  ci === conditionIndex ? { ...c, state: nextConditionState(c.state) } : c,
+                ),
+              }
+            }),
           }
         }),
       )
@@ -820,6 +1020,8 @@ function App() {
               onToggleTurn={() => toggleGroupTurn(gi)}
               turnAriaLabel={`Encounter group ${gi + 1}: turn ${groupTurnActed[gi] ? 'acted' : 'pending'}`}
               onMonsterStaminaChange={(mi, st) => patchMonsterStamina(gi, mi, st)}
+              onMonsterConditionRemove={(mi, ci) => patchMonsterConditionRemove(gi, mi, ci)}
+              onMonsterConditionCycleState={(mi, ci) => patchMonsterConditionCycleState(gi, mi, ci)}
             />
           ))}
         </section>
