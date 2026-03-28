@@ -125,4 +125,22 @@ describe('App', () => {
       'false',
     )
   })
+
+  it('shows stamina editor on hover and applies +1 from the step control', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    const staminaGroup = screen.getByRole('group', { name: /^Edit stamina for Goblin Assassin 1$/i })
+    const dialog = within(staminaGroup).getByRole('dialog', {
+      name: /Edit stamina for Goblin Assassin 1 — adjust values/i,
+    })
+    expect(dialog).toHaveClass('opacity-0')
+
+    await user.hover(staminaGroup)
+
+    await user.click(
+      within(staminaGroup).getByRole('button', { name: /^Increase stamina by 1$/i }),
+    )
+    expect(screen.getByText('6 / 15')).toBeInTheDocument()
+  })
 })

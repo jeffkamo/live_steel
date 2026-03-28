@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useId, useState } from 'react'
 
 type Marip = readonly [number, number, number, number, number]
 
@@ -6,7 +6,7 @@ type Monster = {
   name: string
   subtitle: string
   initials: string
-  stamina: readonly [number, number]
+  stamina: [number, number]
   marip: Marip | null
   fs: number
   dist: number
@@ -15,7 +15,14 @@ type Monster = {
 }
 
 type EncounterGroup = {
-  monsters: readonly Monster[]
+  monsters: Monster[]
+}
+
+type TerrainRowState = {
+  object: string
+  stamina: [number, number]
+  note: string
+  conditions: readonly string[]
 }
 
 const ENCOUNTER_GROUPS: readonly EncounterGroup[] = [
@@ -129,6 +136,31 @@ const TERRAIN_ROWS = [
   },
 ] as const
 
+function cloneEncounterGroups(): EncounterGroup[] {
+  return ENCOUNTER_GROUPS.map((group) => ({
+    monsters: group.monsters.map((m) => ({
+      name: m.name,
+      subtitle: m.subtitle,
+      initials: m.initials,
+      stamina: [m.stamina[0], m.stamina[1]] as [number, number],
+      marip: m.marip === null ? null : ([...m.marip] as unknown as Marip),
+      fs: m.fs,
+      dist: m.dist,
+      stab: m.stab,
+      conditions: [...m.conditions],
+    })),
+  }))
+}
+
+function cloneTerrainRows(): TerrainRowState[] {
+  return TERRAIN_ROWS.map((r) => ({
+    object: r.object,
+    stamina: [r.stamina[0], r.stamina[1]] as [number, number],
+    note: r.note,
+    conditions: [...r.conditions],
+  }))
+}
+
 /** 6 columns: group | creatures | stamina | M A R I P | FS/Dist/Stab | conditions */
 const ROSTER_GRID_TEMPLATE =
   '5.5rem minmax(0,1.25fr) minmax(5.25rem,7rem) minmax(5.75rem,7.25rem) 7.25rem minmax(0,1.05fr)'
@@ -155,29 +187,191 @@ function StaminaIcon({ className }: { className?: string }) {
   return (
     <svg
       className={className}
-      viewBox="0 0 20 20"
+      viewBox="0 0 24 24"
       fill="currentColor"
       aria-hidden
     >
-      <path d="M10 17.5c-.35 0-.68-.12-.95-.35l-4.1-3.65A5.62 5.62 0 0 1 3.25 10c0-3.1 2.52-5.62 5.62-5.62 1.45 0 2.8.55 3.82 1.45l.33.3.33-.3A5.58 5.58 0 0 1 13.38 4.4c3.1 0 5.62 2.52 5.62 5.62 0 1.45-.55 2.8-1.55 3.82l-4.15 3.68c-.27.23-.6.35-.95.35Z" />
+      <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5C2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3C19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
     </svg>
   )
 }
 
-function StaminaCell({ current, max }: { current: number; max: number }) {
+function normalizeStamina(cur: number, max: number): [number, number] {
+  const m = Math.max(0, Math.round(max))
+  if (m === 0) {
+    return [0, 0]
+  }
+  const c = Math.min(m, Math.max(0, Math.round(cur)))
+  return [c, m]
+}
+
+function applyStaminaDelta(current: number, max: number, delta: number): [number, number] {
+  if (max === 0 && current === 0) {
+    if (delta <= 0) {
+      return [0, 0]
+    }
+    const v = Math.abs(delta)
+    return [v, v]
+  }
+  if (max === 0) {
+    return [0, 0]
+  }
+  return normalizeStamina(current + delta, max)
+}
+
+const staminaBumpMinusClass =
+  'flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-zinc-500/75 bg-zinc-800/40 font-sans text-[0.58rem] font-semibold tabular-nums text-zinc-300 transition-colors hover:border-zinc-400 hover:bg-zinc-800/80 hover:text-zinc-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500/60 active:bg-zinc-900 sm:h-9 sm:w-9 sm:text-[0.62rem]'
+
+const staminaBumpPlusClass =
+  'flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-zinc-200/85 bg-zinc-800/30 font-sans text-[0.58rem] font-semibold tabular-nums text-zinc-50 transition-colors hover:border-white hover:bg-zinc-700/50 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500/60 active:bg-zinc-900 sm:h-9 sm:w-9 sm:text-[0.62rem]'
+
+const staminaInlineInputClass =
+  'w-9 min-w-[2.25rem] max-w-[3.5rem] rounded border-0 bg-transparent py-0.5 text-center font-sans text-xs font-medium tabular-nums text-zinc-950 outline-none ring-0 focus:ring-0 [appearance:textfield] sm:text-sm [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none'
+
+function EditableStaminaCell({
+  current,
+  max,
+  onChange,
+  ariaLabel,
+}: {
+  current: number
+  max: number
+  onChange: (next: [number, number]) => void
+  ariaLabel: string
+}) {
+  const curFieldId = useId()
+  const maxFieldId = useId()
+  const [draftCur, setDraftCur] = useState(String(current))
+  const [draftMax, setDraftMax] = useState(String(max))
+
+  useEffect(() => {
+    setDraftCur(String(current))
+    setDraftMax(String(max))
+  }, [current, max])
+
+  const commitDraft = useCallback(() => {
+    const c = Number.parseInt(draftCur, 10)
+    const m = Number.parseInt(draftMax, 10)
+    if (Number.isNaN(c) || Number.isNaN(m)) {
+      setDraftCur(String(current))
+      setDraftMax(String(max))
+      return
+    }
+    onChange(normalizeStamina(c, m))
+  }, [draftCur, draftMax, current, max, onChange])
+
+  const bump = (delta: number) => {
+    onChange(applyStaminaDelta(current, max, delta))
+  }
+
   const empty = max === 0 && current === 0
+
+  const baseTextClass =
+    'pointer-events-none flex min-h-[2.5rem] w-full items-center justify-center px-1 text-center transition-opacity duration-150 group-hover:opacity-0 group-focus-within:opacity-0'
+
+  const editorOverlayClass =
+    'pointer-events-none absolute left-1/2 top-1/2 z-50 w-max max-w-[min(22rem,calc(100vw-1.25rem))] -translate-x-1/2 -translate-y-1/2 opacity-0 transition-opacity duration-150 group-hover:pointer-events-auto group-hover:opacity-100 group-focus-within:pointer-events-auto group-focus-within:opacity-100'
+
   return (
-    <div className="flex w-full items-center justify-center text-center">
-      {empty ? (
-        <span className="text-sm text-zinc-400">—</span>
-      ) : (
-        <div className="flex items-center justify-center gap-1.5 tabular-nums">
-          <span className="text-sm text-zinc-50">
-            {current} / {max}
-          </span>
-          <StaminaIcon className="size-4 shrink-0 text-rose-300" />
+    <div
+      className="group relative isolate flex w-full min-h-[2.5rem] justify-center rounded-md outline-none focus-within:ring-2 focus-within:ring-amber-500/45 focus-within:ring-offset-2 focus-within:ring-offset-zinc-950"
+      aria-label={ariaLabel}
+      role="group"
+    >
+      <div className={baseTextClass}>
+        {empty ? (
+          <span className="text-sm text-zinc-400">—</span>
+        ) : (
+          <div className="flex items-center justify-center gap-1.5 tabular-nums">
+            <span className="text-sm text-zinc-50">
+              {current} / {max}
+            </span>
+            <StaminaIcon className="size-4 shrink-0 text-rose-300" />
+          </div>
+        )}
+      </div>
+      <div role="dialog" aria-label={`${ariaLabel} — adjust values`} className={editorOverlayClass}>
+        <div className="flex flex-nowrap items-center gap-2 rounded-lg border border-zinc-500/80 bg-zinc-900 py-1.5 pl-2 pr-2 shadow-xl shadow-black/50 ring-1 ring-black/20">
+          <div className="flex shrink-0 items-center gap-1">
+            <button
+              type="button"
+              className={staminaBumpMinusClass}
+              aria-label="Decrease stamina by 10"
+              onClick={() => bump(-10)}
+            >
+              −10
+            </button>
+            <button
+              type="button"
+              className={staminaBumpMinusClass}
+              aria-label="Decrease stamina by 1"
+              onClick={() => bump(-1)}
+            >
+              −1
+            </button>
+          </div>
+          <div className="flex shrink-0 items-center gap-1 rounded-md bg-zinc-100 px-2 py-1 shadow-inner shadow-zinc-300/30">
+            <label className="sr-only" htmlFor={curFieldId}>
+              Current stamina
+            </label>
+            <input
+              id={curFieldId}
+              type="number"
+              inputMode="numeric"
+              min={0}
+              className={staminaInlineInputClass}
+              value={draftCur}
+              onChange={(e) => setDraftCur(e.target.value)}
+              onBlur={commitDraft}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.currentTarget.blur()
+                }
+              }}
+            />
+            <span className="select-none text-sm text-zinc-500" aria-hidden>
+              /
+            </span>
+            <label className="sr-only" htmlFor={maxFieldId}>
+              Max stamina
+            </label>
+            <input
+              id={maxFieldId}
+              type="number"
+              inputMode="numeric"
+              min={0}
+              className={staminaInlineInputClass}
+              value={draftMax}
+              onChange={(e) => setDraftMax(e.target.value)}
+              onBlur={commitDraft}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.currentTarget.blur()
+                }
+              }}
+            />
+            <StaminaIcon className="ml-0.5 size-4 shrink-0 text-rose-400" aria-hidden />
+          </div>
+          <div className="flex shrink-0 items-center gap-1">
+            <button
+              type="button"
+              className={staminaBumpPlusClass}
+              aria-label="Increase stamina by 1"
+              onClick={() => bump(1)}
+            >
+              +1
+            </button>
+            <button
+              type="button"
+              className={staminaBumpPlusClass}
+              aria-label="Increase stamina by 10"
+              onClick={() => bump(10)}
+            >
+              +10
+            </button>
+          </div>
         </div>
-      )}
+      </div>
     </div>
   )
 }
@@ -283,10 +477,12 @@ function MonsterRowCells({
   monster,
   row,
   turnComplete,
+  onStaminaChange,
 }: {
   monster: Monster
   row: number
   turnComplete: boolean
+  onStaminaChange: (next: [number, number]) => void
 }) {
   const [sc, sm] = monster.stamina
   const bodyCell =
@@ -311,8 +507,16 @@ function MonsterRowCells({
           </div>
         </div>
       </div>
-      <div className={`${bodyCell} justify-center ${rowTone}`} style={{ gridColumn: 3, gridRow: row }}>
-        <StaminaCell current={sc} max={sm} />
+      <div
+        className={`${bodyCell} relative z-0 justify-center overflow-visible hover:z-20 focus-within:z-20 ${rowTone}`}
+        style={{ gridColumn: 3, gridRow: row }}
+      >
+        <EditableStaminaCell
+          current={sc}
+          max={sm}
+          onChange={onStaminaChange}
+          ariaLabel={`Edit stamina for ${monster.name}`}
+        />
       </div>
       <div className={`${bodyCell} justify-center ${rowTone}`} style={{ gridColumn: 4, gridRow: row }}>
         <MaripCluster values={monster.marip} />
@@ -336,18 +540,20 @@ function GroupSection({
   turnActed,
   onToggleTurn,
   turnAriaLabel,
+  onMonsterStaminaChange,
 }: {
   group: EncounterGroup
   groupKey: string
   turnActed: boolean
   onToggleTurn: () => void
   turnAriaLabel: string
+  onMonsterStaminaChange: (monsterIndex: number, stamina: [number, number]) => void
 }) {
   const n = group.monsters.length
 
   return (
     <div
-      className="grid items-stretch rounded-lg bg-zinc-900/80"
+      className="grid items-stretch overflow-visible rounded-lg bg-zinc-900/80"
       style={{
         gridTemplateColumns: ROSTER_GRID_TEMPLATE,
         gridTemplateRows: `repeat(${n}, minmax(0, auto))`,
@@ -365,21 +571,33 @@ function GroupSection({
           monster={monster}
           row={i + 1}
           turnComplete={turnActed}
+          onStaminaChange={(st) => onMonsterStaminaChange(i, st)}
         />
       ))}
     </div>
   )
 }
 
-function TerrainRow({ row }: { row: (typeof TERRAIN_ROWS)[number] }) {
+function TerrainRow({
+  row,
+  onStaminaChange,
+}: {
+  row: TerrainRowState
+  onStaminaChange: (next: [number, number]) => void
+}) {
   const [tc, tm] = row.stamina
   return (
-    <div className={`${terrainGridClass} rounded-lg bg-zinc-900/80`}>
+    <div className={`${terrainGridClass} overflow-visible rounded-lg bg-zinc-900/80`}>
       <div className="flex h-full min-h-[3.75rem] items-center p-3 sm:min-h-[4rem] sm:p-3.5">
         <p className="text-[0.8rem] leading-relaxed text-zinc-100">{row.object}</p>
       </div>
-      <div className="flex h-full min-h-[3.75rem] items-center justify-center p-3 sm:min-h-[4rem] sm:p-3.5">
-        <StaminaCell current={tc} max={tm} />
+      <div className="relative z-0 flex h-full min-h-[3.75rem] items-center justify-center overflow-visible p-3 hover:z-20 focus-within:z-20 sm:min-h-[4rem] sm:p-3.5">
+        <EditableStaminaCell
+          current={tc}
+          max={tm}
+          onChange={onStaminaChange}
+          ariaLabel={`Edit stamina for terrain: ${row.object.slice(0, 48)}${row.object.length > 48 ? '…' : ''}`}
+        />
       </div>
       <div className="flex h-full min-h-[3.75rem] flex-col justify-center gap-3 p-3 sm:min-h-[4rem] sm:p-3.5">
         <p className="text-[0.75rem] leading-snug text-zinc-400">{row.note}</p>
@@ -390,9 +608,39 @@ function TerrainRow({ row }: { row: (typeof TERRAIN_ROWS)[number] }) {
 }
 
 function App() {
+  const [encounterGroups, setEncounterGroups] = useState(cloneEncounterGroups)
+  const [terrainRows, setTerrainRows] = useState(cloneTerrainRows)
+
   const [groupTurnActed, setGroupTurnActed] = useState(() =>
     ENCOUNTER_GROUPS.map(() => false),
   )
+
+  const patchMonsterStamina = useCallback(
+    (groupIndex: number, monsterIndex: number, stamina: [number, number]) => {
+      setEncounterGroups((prev) =>
+        prev.map((g, gi) => {
+          if (gi !== groupIndex) {
+            return g
+          }
+          return {
+            ...g,
+            monsters: g.monsters.map((m, mi) =>
+              mi === monsterIndex ? { ...m, stamina: [stamina[0], stamina[1]] } : m,
+            ),
+          }
+        }),
+      )
+    },
+    [],
+  )
+
+  const patchTerrainStamina = useCallback((rowIndex: number, stamina: [number, number]) => {
+    setTerrainRows((prev) =>
+      prev.map((r, ri) =>
+        ri === rowIndex ? { ...r, stamina: [stamina[0], stamina[1]] } : r,
+      ),
+    )
+  }, [])
 
   const toggleGroupTurn = useCallback((gi: number) => {
     setGroupTurnActed((prev) => {
@@ -435,7 +683,7 @@ function App() {
               </button>
             </div>
           </div>
-          {ENCOUNTER_GROUPS.map((group, gi) => (
+          {encounterGroups.map((group, gi) => (
             <GroupSection
               key={`encounter-group-${gi}`}
               group={group}
@@ -443,6 +691,7 @@ function App() {
               turnActed={groupTurnActed[gi] ?? false}
               onToggleTurn={() => toggleGroupTurn(gi)}
               turnAriaLabel={`Encounter group ${gi + 1}: turn ${groupTurnActed[gi] ? 'acted' : 'pending'}`}
+              onMonsterStaminaChange={(mi, st) => patchMonsterStamina(gi, mi, st)}
             />
           ))}
         </section>
@@ -454,8 +703,8 @@ function App() {
             </h2>
             <TitleRule />
           </header>
-          {TERRAIN_ROWS.map((row, i) => (
-            <TerrainRow key={i} row={row} />
+          {terrainRows.map((row, i) => (
+            <TerrainRow key={i} row={row} onStaminaChange={(st) => patchTerrainStamina(i, st)} />
           ))}
         </section>
       </div>
