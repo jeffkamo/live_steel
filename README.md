@@ -6,7 +6,7 @@ An inspiration for the app is [Forge Steel](https://forgesteel.net). Steel Roste
 
 ## What it does
 
-- **Creature tracker** — Lists each encounter group and its creatures with the stats you need during combat: stamina, the **MARIP** line, **free strike / distance / stability**, and **conditions**. Names and roles (horde, solo, elite, etc.) stay visible so you remember who is on the field.
+- **Creature tracker** — Lists each encounter group and its creatures with what you need during combat: stamina, **characteristics (MARIP)**, **free strike / distance / stability**, and **conditions**. Names and roles (horde, solo, elite, etc.) stay visible so you remember who is on the field.
 - **Turn markers** — Each group has a **Turn** control so you can mark whether that side has acted this round. **Reset** clears every group back to “pending” when a new round starts (or when you want a clean slate).
 - **Dynamic terrain** — Separate rows for **objects and zones** on the map: what they are, any **stamina** or durability you track, notes for how they behave, and tags such as hazards or difficult ground.
 

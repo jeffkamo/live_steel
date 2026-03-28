@@ -21,7 +21,7 @@ describe('App', () => {
     expect(screen.getByRole('region', { name: 'Dynamic terrain' })).toBeInTheDocument()
   })
 
-  it('shows roster rows with names, stamina, stats, and conditions', () => {
+  it('shows roster rows with names, stamina, characteristics, and conditions', () => {
     render(<App />)
     expect(screen.getByText('Goblin Assassin 1', { exact: true })).toBeInTheDocument()
     expect(screen.getByText('Level 1 Horde · Ambusher')).toBeInTheDocument()
@@ -32,7 +32,7 @@ describe('App', () => {
     expect(screen.getByText('Bleeding')).toBeInTheDocument()
   })
 
-  it('renders MARIP headers and numeric row for the first creature in its group', () => {
+  it('renders MARIP characteristic headers and numeric row for the first creature in its group', () => {
     render(<App />)
     const nameEl = screen.getByText('Goblin Assassin 1', { exact: true })
     const groupGrid = nameEl.closest('div.grid.items-stretch.rounded-lg')
@@ -45,7 +45,7 @@ describe('App', () => {
     expect(scope.getByText('2')).toBeInTheDocument()
   })
 
-  it('shows placeholder stamina and MARIP for reserve slot', () => {
+  it('shows placeholder stamina and MARIP characteristics for reserve slot', () => {
     render(<App />)
     const nameEl = screen.getByText('Reserve slot', { exact: true })
     const groupGrid = nameEl.closest('div.grid.items-stretch.rounded-lg')
