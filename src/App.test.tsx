@@ -23,13 +23,14 @@ describe('App', () => {
 
   it('shows roster rows with names, stamina, characteristics, and conditions', () => {
     render(<App />)
+    const tracker = screen.getByRole('region', { name: 'Creature tracker' })
     expect(screen.getByText('Goblin Assassin 1', { exact: true })).toBeInTheDocument()
     expect(screen.getByText('Level 1 Horde · Ambusher')).toBeInTheDocument()
     expect(screen.getByText('5 / 15')).toBeInTheDocument()
-    expect(screen.getByText('Winded')).toBeInTheDocument()
-    expect(screen.getByText('Slowed')).toBeInTheDocument()
+    expect(within(tracker).getByText('Weakened')).toBeInTheDocument()
+    expect(within(tracker).getByText('Slowed')).toBeInTheDocument()
     expect(screen.getByText('Ironwood Sentinel', { exact: true })).toBeInTheDocument()
-    expect(screen.getByText('Bleeding')).toBeInTheDocument()
+    expect(within(tracker).getByText('Bleeding')).toBeInTheDocument()
   })
 
   it('renders MARIP characteristic headers and numeric row for the first creature in its group', () => {
@@ -69,12 +70,12 @@ describe('App', () => {
     const groupGrid = nameEl.closest('div.grid.items-stretch.rounded-lg')
     expect(groupGrid).toBeTruthy()
     const scope = within(groupGrid as HTMLElement)
-    expect(scope.getByText('Winded', { exact: true })).toBeInTheDocument()
+    expect(scope.getByText('Weakened', { exact: true })).toBeInTheDocument()
     expect(scope.getByText('Slowed', { exact: true })).toBeInTheDocument()
 
-    await user.click(scope.getByRole('button', { name: /^Remove Winded$/i }))
+    await user.click(scope.getByRole('button', { name: /^Remove Weakened$/i }))
 
-    expect(scope.queryByText('Winded', { exact: true })).not.toBeInTheDocument()
+    expect(scope.queryByText('Weakened', { exact: true })).not.toBeInTheDocument()
     expect(scope.getByText('Slowed', { exact: true })).toBeInTheDocument()
   })
 
@@ -124,14 +125,14 @@ describe('App', () => {
     expect(
       within(terrain).getByText('Burning; end of round 1d4 to adjacent.', { exact: true }),
     ).toBeInTheDocument()
-    expect(within(terrain).getByText('Hazard')).toBeInTheDocument()
-    expect(within(terrain).getByText('Difficult')).toBeInTheDocument()
+    expect(within(terrain).getByText('Slowed')).toBeInTheDocument()
+    expect(within(terrain).getByText('Weakened')).toBeInTheDocument()
     expect(
       within(terrain).getByText('Ritual circle (inactive). Chalk smeared, runes still warm.', {
         exact: true,
       }),
     ).toBeInTheDocument()
-    expect(within(terrain).getByText('Zone')).toBeInTheDocument()
+    expect(within(terrain).getByText('Marked')).toBeInTheDocument()
   })
 
   it('toggles per-group turn diamond via Turn column and updates aria state', async () => {
@@ -192,5 +193,62 @@ describe('App', () => {
       within(staminaGroup).getByRole('button', { name: /^Increase stamina by 1$/i }),
     )
     expect(screen.getByText('6 / 15')).toBeInTheDocument()
+  })
+
+  it('opens add-condition dialog from empty cell and adds neutral condition from name', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    const nameEl = screen.getByText('Reserve slot', { exact: true })
+    const groupGrid = nameEl.closest('div.grid.items-stretch.rounded-lg')
+    expect(groupGrid).toBeTruthy()
+    const scope = within(groupGrid as HTMLElement)
+    const reserveConditions = scope.getByRole('group', { name: /^Conditions for Reserve slot/i })
+
+    expect(within(reserveConditions).getByText('No active conditions')).toBeInTheDocument()
+    await user.click(reserveConditions)
+
+    const picker = await screen.findByRole('dialog', { name: /^Add condition to Reserve slot$/i })
+    // Frightened — avoids clashing with Dazed on Ironwood Sentinel in the same encounter group.
+    await user.click(within(picker).getByRole('button', { name: /^Frightened$/i }))
+
+    expect(within(reserveConditions).queryByText('No active conditions')).not.toBeInTheDocument()
+    expect(
+      within(reserveConditions).getByRole('button', {
+        name: /^Frightened, neutral\. Cycle duration$/i,
+      }),
+    ).toBeInTheDocument()
+  })
+
+  it('adds EoT and SE from picker duration controls', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    const nameEl = screen.getByText('Reserve slot', { exact: true })
+    const groupGrid = nameEl.closest('div.grid.items-stretch.rounded-lg')
+    expect(groupGrid).toBeTruthy()
+    const scope = within(groupGrid as HTMLElement)
+
+    await user.click(scope.getByRole('group', { name: /^Conditions for Reserve slot/i }))
+    let picker = screen.getByRole('dialog', { name: /^Add condition to Reserve slot$/i })
+    await user.click(
+      within(picker).getByRole('button', { name: /^Add Marked as end of turn on Reserve slot$/i }),
+    )
+
+    expect(
+      scope.getByRole('button', { name: /^Marked, end of turn\. Cycle duration$/i }),
+    ).toBeInTheDocument()
+
+    await user.click(scope.getByRole('group', { name: /^Conditions for Reserve slot/i }))
+    picker = screen.getByRole('dialog', { name: /^Add condition to Reserve slot$/i })
+    const markedEot = within(picker).getByRole('button', {
+      name: /^Add Marked as end of turn on Reserve slot$/i,
+    })
+    expect(markedEot.className).toMatch(/amber/)
+
+    await user.click(
+      within(picker).getByRole('button', { name: /^Add Prone as save ends on Reserve slot$/i }),
+    )
+    expect(
+      scope.getByRole('button', { name: /^Prone, save ends\. Cycle duration$/i }),
+    ).toBeInTheDocument()
   })
 })

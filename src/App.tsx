@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useId, useState } from 'react'
+import { useCallback, useEffect, useId, useRef, useState } from 'react'
 
 type Marip = readonly [number, number, number, number, number]
 
@@ -53,7 +53,7 @@ const ENCOUNTER_GROUPS: readonly EncounterGroupSeed[] = [
         fs: -1,
         dist: 4,
         stab: 0,
-        conditions: ['Winded', 'Slowed'],
+        conditions: ['Weakened', 'Slowed'],
       },
       {
         name: 'Goblin Raider',
@@ -64,7 +64,7 @@ const ENCOUNTER_GROUPS: readonly EncounterGroupSeed[] = [
         fs: 0,
         dist: 5,
         stab: 0,
-        conditions: ['Flanked'],
+        conditions: ['Grabbed'],
       },
     ],
   },
@@ -94,7 +94,7 @@ const ENCOUNTER_GROUPS: readonly EncounterGroupSeed[] = [
         fs: 0,
         dist: 3,
         stab: 0,
-        conditions: ['Covering fire'],
+        conditions: ['Taunted'],
       },
     ],
   },
@@ -120,7 +120,7 @@ const ENCOUNTER_GROUPS: readonly EncounterGroupSeed[] = [
         fs: 3,
         dist: 6,
         stab: -1,
-        conditions: ['Silenced'],
+        conditions: ['Restrained'],
       },
       {
         name: 'Reserve slot',
@@ -142,13 +142,13 @@ const TERRAIN_ROWS: readonly TerrainRowSeed[] = [
     object: 'Toppled barricade — light cover along the eastern lane.',
     stamina: [6, 8] as const,
     note: 'Burning; end of round 1d4 to adjacent.',
-    conditions: ['Hazard', 'Difficult'],
+    conditions: ['Slowed', 'Weakened'],
   },
   {
     object: 'Ritual circle (inactive). Chalk smeared, runes still warm.',
     stamina: [0, 0] as const,
     note: 'Anyone ending turn inside tests Stability (15+).',
-    conditions: ['Zone'],
+    conditions: ['Marked'],
   },
 ] as const
 
@@ -179,6 +179,29 @@ function cloneTerrainRows(): TerrainRowState[] {
     note: r.note,
     conditions: r.conditions.map(conditionEntryFromLabel),
   }))
+}
+
+/** Master list for the add-condition picker (sorted for stable UI). */
+const CONDITION_CATALOG: readonly string[] = [
+  'Bleeding',
+  'Dazed',
+  'Frightened',
+  'Grabbed',
+  'Judged',
+  'Marked',
+  'Prone',
+  'Restrained',
+  'Slowed',
+  'Surprised',
+  'Taunted',
+  'Weakened',
+].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }))
+
+function findConditionOnMonster(
+  conditions: readonly ConditionEntry[],
+  label: string,
+): ConditionEntry | undefined {
+  return conditions.find((c) => c.label === label)
 }
 
 /** 6 columns: group | creatures | stamina | characteristics (MARIP) | FS/Dist/Stab | conditions */
@@ -636,6 +659,7 @@ function ConditionPills({
             <div
               key={`${i}-${c.label}`}
               className={`inline-flex max-w-full items-center gap-0 rounded-full bg-zinc-100 py-0.5 pl-0 pr-0.5 ${pillText} font-medium ${pillHover}`}
+              onClick={(e) => e.stopPropagation()}
             >
               {onCycleState ? (
                 <button
@@ -702,6 +726,151 @@ function ConditionPills({
   )
 }
 
+const conditionPickerRowBtn =
+  'rounded-md px-2 py-1.5 text-left font-sans text-[0.72rem] font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-amber-600/70'
+
+const conditionPickerDurationPill =
+  'shrink-0 rounded-full border px-1.5 py-0.5 font-sans text-[0.58rem] font-semibold tabular-nums transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-amber-600/70'
+
+function CreatureConditionCell({
+  monsterName,
+  conditions,
+  onRemove,
+  onCycleState,
+  onAddOrSetCondition,
+  turnComplete,
+}: {
+  monsterName: string
+  conditions: readonly ConditionEntry[]
+  onRemove: (index: number) => void
+  onCycleState: (index: number) => void
+  onAddOrSetCondition: (label: string, state: ConditionState) => void
+  turnComplete: boolean
+}) {
+  const [open, setOpen] = useState(false)
+  const cellRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!open) {
+      return
+    }
+    const onDocMouseDown = (e: MouseEvent) => {
+      const el = cellRef.current
+      if (el && !el.contains(e.target as Node)) {
+        setOpen(false)
+      }
+    }
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', onDocMouseDown)
+    document.addEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('mousedown', onDocMouseDown)
+      document.removeEventListener('keydown', onKey)
+    }
+  }, [open])
+
+  const rowTone =
+    'transition-opacity duration-200 ease-out motion-reduce:transition-none ' +
+    (turnComplete ? 'opacity-[0.52]' : 'opacity-100')
+
+  return (
+    <div
+      ref={cellRef}
+      className={`relative flex h-full min-h-0 w-full min-w-0 cursor-pointer flex-col justify-center rounded-md p-3 outline-none transition-[background-color] duration-200 ease-out motion-reduce:transition-none hover:bg-zinc-800/35 focus-visible:ring-2 focus-visible:ring-amber-500/45 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950 sm:p-3.5 ${rowTone}`}
+      role="group"
+      tabIndex={0}
+      aria-expanded={open}
+      aria-haspopup="dialog"
+      aria-label={`Conditions for ${monsterName}. Activate to add a condition.`}
+      onClick={() => setOpen((o) => !o)}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault()
+          setOpen((o) => !o)
+        }
+      }}
+    >
+      <div className="flex w-full min-w-0 flex-col justify-center">
+        <ConditionPills
+          conditions={conditions}
+          onRemove={onRemove}
+          onCycleState={onCycleState}
+        />
+      </div>
+      {open ? (
+        <div
+          data-condition-picker
+          className="absolute left-0 top-full z-50 mt-1 w-[min(20rem,calc(100vw-2rem))] max-h-[min(22rem,55vh)] overflow-y-auto rounded-lg border border-zinc-500/75 bg-zinc-900 py-1.5 pl-2 pr-1.5 shadow-xl shadow-black/50 ring-1 ring-black/25"
+          role="dialog"
+          aria-label={`Add condition to ${monsterName}`}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <ul className="flex flex-col gap-0.5" role="list">
+            {CONDITION_CATALOG.map((label) => {
+              const active = findConditionOnMonster(conditions, label)
+              const dimmed = active !== undefined
+              return (
+                <li key={label}>
+                  <div
+                    className={`flex items-center gap-1.5 rounded-md py-0.5 pl-1 pr-0.5 ${dimmed ? 'opacity-50' : ''}`}
+                  >
+                    <button
+                      type="button"
+                      className={`${conditionPickerRowBtn} min-w-0 flex-1 truncate text-zinc-100 hover:bg-zinc-800/80 ${dimmed ? 'text-zinc-400' : ''}`}
+                      onClick={() => {
+                        onAddOrSetCondition(label, 'neutral')
+                        setOpen(false)
+                      }}
+                    >
+                      {label}
+                    </button>
+                    <button
+                      type="button"
+                      title="End of turn"
+                      aria-label={`Add ${label} as end of turn on ${monsterName}`}
+                      className={`${conditionPickerDurationPill} ${
+                        active?.state === 'eot'
+                          ? 'border-amber-500/80 bg-amber-500/15 text-amber-200'
+                          : 'border-zinc-600/90 text-zinc-400 hover:border-zinc-500 hover:bg-zinc-800/60 hover:text-zinc-200'
+                      }`}
+                      onClick={() => {
+                        onAddOrSetCondition(label, 'eot')
+                        setOpen(false)
+                      }}
+                    >
+                      EoT
+                    </button>
+                    <button
+                      type="button"
+                      title="Save ends"
+                      aria-label={`Add ${label} as save ends on ${monsterName}`}
+                      className={`${conditionPickerDurationPill} ${
+                        active?.state === 'se'
+                          ? 'border-amber-500/80 bg-amber-500/15 text-amber-200'
+                          : 'border-zinc-600/90 text-zinc-400 hover:border-zinc-500 hover:bg-zinc-800/60 hover:text-zinc-200'
+                      }`}
+                      onClick={() => {
+                        onAddOrSetCondition(label, 'se')
+                        setOpen(false)
+                      }}
+                    >
+                      SE
+                    </button>
+                  </div>
+                </li>
+              )
+            })}
+          </ul>
+        </div>
+      ) : null}
+    </div>
+  )
+}
+
 function TurnColumnCell({
   acted,
   onToggle,
@@ -742,6 +911,7 @@ function MonsterRowCells({
   onStaminaChange,
   onConditionRemove,
   onConditionCycleState,
+  onConditionAddOrSet,
 }: {
   monster: Monster
   row: number
@@ -749,6 +919,7 @@ function MonsterRowCells({
   onStaminaChange: (next: [number, number]) => void
   onConditionRemove: (conditionIndex: number) => void
   onConditionCycleState: (conditionIndex: number) => void
+  onConditionAddOrSet: (label: string, state: ConditionState) => void
 }) {
   const [sc, sm] = monster.stamina
   const bodyCell =
@@ -791,13 +962,16 @@ function MonsterRowCells({
         <StatCluster fs={monster.fs} dist={monster.dist} stab={monster.stab} />
       </div>
       <div
-        className={`flex h-full min-h-[3.75rem] w-full items-center justify-start p-3 sm:min-h-[4rem] sm:p-3.5 ${rowTone}`}
+        className="relative z-0 flex h-full min-h-[3.75rem] w-full items-stretch overflow-visible hover:z-20 focus-within:z-20 has-[[data-condition-picker]]:z-[100] sm:min-h-[4rem]"
         style={{ gridColumn: 6, gridRow: row }}
       >
-        <ConditionPills
+        <CreatureConditionCell
+          monsterName={monster.name}
           conditions={monster.conditions}
           onRemove={onConditionRemove}
           onCycleState={onConditionCycleState}
+          onAddOrSetCondition={onConditionAddOrSet}
+          turnComplete={turnComplete}
         />
       </div>
     </>
@@ -813,6 +987,7 @@ function GroupSection({
   onMonsterStaminaChange,
   onMonsterConditionRemove,
   onMonsterConditionCycleState,
+  onMonsterConditionAddOrSet,
 }: {
   group: EncounterGroup
   groupKey: string
@@ -822,6 +997,7 @@ function GroupSection({
   onMonsterStaminaChange: (monsterIndex: number, stamina: [number, number]) => void
   onMonsterConditionRemove: (monsterIndex: number, conditionIndex: number) => void
   onMonsterConditionCycleState: (monsterIndex: number, conditionIndex: number) => void
+  onMonsterConditionAddOrSet: (monsterIndex: number, label: string, state: ConditionState) => void
 }) {
   const n = group.monsters.length
 
@@ -848,6 +1024,7 @@ function GroupSection({
           onStaminaChange={(st) => onMonsterStaminaChange(i, st)}
           onConditionRemove={(ci) => onMonsterConditionRemove(i, ci)}
           onConditionCycleState={(ci) => onMonsterConditionCycleState(i, ci)}
+          onConditionAddOrSet={(label, state) => onMonsterConditionAddOrSet(i, label, state)}
         />
       ))}
     </div>
@@ -962,6 +1139,40 @@ function App() {
     [],
   )
 
+  const patchMonsterConditionAddOrSet = useCallback(
+    (groupIndex: number, monsterIndex: number, label: string, state: ConditionState) => {
+      setEncounterGroups((prev) =>
+        prev.map((g, gi) => {
+          if (gi !== groupIndex) {
+            return g
+          }
+          return {
+            ...g,
+            monsters: g.monsters.map((m, mi) => {
+              if (mi !== monsterIndex) {
+                return m
+              }
+              const idx = m.conditions.findIndex((c) => c.label === label)
+              if (idx >= 0) {
+                return {
+                  ...m,
+                  conditions: m.conditions.map((c, ci) =>
+                    ci === idx ? { ...c, state } : c,
+                  ),
+                }
+              }
+              return {
+                ...m,
+                conditions: [...m.conditions, { label, state }],
+              }
+            }),
+          }
+        }),
+      )
+    },
+    [],
+  )
+
   const patchTerrainStamina = useCallback((rowIndex: number, stamina: [number, number]) => {
     setTerrainRows((prev) =>
       prev.map((r, ri) =>
@@ -1022,6 +1233,9 @@ function App() {
               onMonsterStaminaChange={(mi, st) => patchMonsterStamina(gi, mi, st)}
               onMonsterConditionRemove={(mi, ci) => patchMonsterConditionRemove(gi, mi, ci)}
               onMonsterConditionCycleState={(mi, ci) => patchMonsterConditionCycleState(gi, mi, ci)}
+              onMonsterConditionAddOrSet={(mi, label, state) =>
+                patchMonsterConditionAddOrSet(gi, mi, label, state)
+              }
             />
           ))}
         </section>
