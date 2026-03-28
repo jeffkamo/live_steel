@@ -224,9 +224,6 @@ describe('App', () => {
 
     expect(scope.getByTitle('Marked (End of turn)')).toBeInTheDocument()
 
-    reserveConditions.focus()
-    await user.keyboard('{Enter}')
-    picker = screen.getByRole('dialog', { name: /^Add condition to Reserve slot$/i })
     const markedEot = within(picker).getByRole('button', {
       name: /^Add Marked as end of turn on Reserve slot$/i,
     })
@@ -401,13 +398,10 @@ describe('App', () => {
 
     reserveConditions.focus()
     await user.keyboard('{Enter}')
-    let picker = screen.getByRole('dialog', { name: /^Add condition to Reserve slot$/i })
+    const picker = screen.getByRole('dialog', { name: /^Add condition to Reserve slot$/i })
     await user.click(within(picker).getByRole('button', { name: /^Bleeding$/i }))
     expect(within(reserveConditions).getByTitle('Bleeding (neutral)')).toBeInTheDocument()
 
-    reserveConditions.focus()
-    await user.keyboard('{Enter}')
-    picker = screen.getByRole('dialog', { name: /^Add condition to Reserve slot$/i })
     await user.click(within(picker).getByRole('button', { name: /^Surprised$/i }))
     expect(within(reserveConditions).getByTitle('Surprised (neutral)')).toBeInTheDocument()
     expect(within(reserveConditions).getByTitle('Bleeding (neutral)')).toBeInTheDocument()
@@ -581,13 +575,10 @@ describe('App', () => {
 
     reserveConditions.focus()
     await user.keyboard('{Enter}')
-    let picker = screen.getByRole('dialog', { name: /^Add condition to Reserve slot$/i })
+    const picker = screen.getByRole('dialog', { name: /^Add condition to Reserve slot$/i })
     await user.click(within(picker).getByRole('button', { name: /^Add Dazed as end of turn on Reserve slot$/i }))
     expect(within(reserveConditions).getByTitle('Dazed (End of turn)')).toBeInTheDocument()
 
-    reserveConditions.focus()
-    await user.keyboard('{Enter}')
-    picker = screen.getByRole('dialog', { name: /^Add condition to Reserve slot$/i })
     await user.click(within(picker).getByRole('button', { name: /^Add Dazed as save ends on Reserve slot$/i }))
     expect(within(reserveConditions).getByTitle('Dazed (Save ends)')).toBeInTheDocument()
   })

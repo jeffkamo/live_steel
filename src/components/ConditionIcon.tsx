@@ -155,5 +155,8 @@ export function conditionIconShellClass(isActive: boolean, state: ConditionState
   if (state === 'neutral') {
     return `${base} border-zinc-600/80 bg-zinc-800/90 text-zinc-100 opacity-100`
   }
+  if (state === 'se') {
+    return `${base} border-purple-500/75 bg-purple-500/15 text-purple-100 opacity-100 ring-1 ring-purple-500/45`
+  }
   return `${base} border-amber-500/75 bg-amber-500/15 text-amber-100 opacity-100 ring-1 ring-amber-500/45`
 }

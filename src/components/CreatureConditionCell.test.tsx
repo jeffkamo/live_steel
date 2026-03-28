@@ -143,7 +143,7 @@ describe('CreatureConditionCell', () => {
     expect(onAddOrSet).toHaveBeenCalledWith('Bleeding', 'se')
   })
 
-  it('closes picker after selecting a condition name', async () => {
+  it('keeps picker open after selecting a condition name', async () => {
     const user = userEvent.setup()
     renderCell()
     const cell = screen.getByRole('group', { name: /^Conditions for Test Monster/i })
@@ -151,10 +151,10 @@ describe('CreatureConditionCell', () => {
     await user.keyboard('{Enter}')
     const picker = screen.getByRole('dialog', { name: /^Add condition to Test Monster$/i })
     await user.click(within(picker).getByRole('button', { name: /^Bleeding$/i }))
-    expect(screen.queryByRole('dialog', { name: /^Add condition to Test Monster$/i })).toBeNull()
+    expect(screen.getByRole('dialog', { name: /^Add condition to Test Monster$/i })).toBeInTheDocument()
   })
 
-  it('closes picker after selecting EoT duration', async () => {
+  it('keeps picker open after selecting EoT duration', async () => {
     const user = userEvent.setup()
     renderCell()
     const cell = screen.getByRole('group', { name: /^Conditions for Test Monster/i })
@@ -162,7 +162,7 @@ describe('CreatureConditionCell', () => {
     await user.keyboard('{Enter}')
     const picker = screen.getByRole('dialog', { name: /^Add condition to Test Monster$/i })
     await user.click(within(picker).getByRole('button', { name: /^Add Bleeding as end of turn on Test Monster$/i }))
-    expect(screen.queryByRole('dialog', { name: /^Add condition to Test Monster$/i })).toBeNull()
+    expect(screen.getByRole('dialog', { name: /^Add condition to Test Monster$/i })).toBeInTheDocument()
   })
 
   it('highlights active EoT duration pill with amber styling', async () => {
@@ -177,7 +177,7 @@ describe('CreatureConditionCell', () => {
     expect(eotBtn.className).toContain('amber')
   })
 
-  it('dims already-active condition rows in picker', async () => {
+  it('dims inactive condition rows and keeps active ones normal in picker', async () => {
     const user = userEvent.setup()
     const conditions: ConditionEntry[] = [{ label: 'Bleeding', state: 'neutral' }]
     renderCell(conditions)
@@ -186,8 +186,12 @@ describe('CreatureConditionCell', () => {
     await user.keyboard('{Enter}')
     const picker = screen.getByRole('dialog', { name: /^Add condition to Test Monster$/i })
     const bleedingBtn = within(picker).getByRole('button', { name: /^Bleeding$/i })
-    const row = bleedingBtn.closest('[class*="opacity-50"]')
-    expect(row).toBeTruthy()
+    const activeRow = bleedingBtn.closest('[class*="opacity-50"]')
+    expect(activeRow).toBeFalsy()
+
+    const dazedBtn = within(picker).getByRole('button', { name: /^Dazed$/i })
+    const inactiveRow = dazedBtn.closest('[class*="opacity-50"]')
+    expect(inactiveRow).toBeTruthy()
   })
 
   it('applies reduced opacity when turnComplete is true', () => {

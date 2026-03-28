@@ -49,6 +49,7 @@ describe('conditionIconShellClass', () => {
 
   it('returns duration active class for se', () => {
     const cls = conditionIconShellClass(true, 'se')
-    expect(cls).toContain('border-amber-500/75')
+    expect(cls).toContain('border-purple-500/75')
+    expect(cls).toContain('ring-1')
   })
 })

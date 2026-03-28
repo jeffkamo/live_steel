@@ -95,7 +95,7 @@ export function CreatureConditionCell({
           <ul className="flex flex-col gap-0.5" role="list">
             {CONDITION_CATALOG.map((label) => {
               const active = findConditionOnMonster(conditions, label)
-              const dimmed = active !== undefined
+              const dimmed = active === undefined
               return (
                 <li key={label}>
                   <div
@@ -106,7 +106,6 @@ export function CreatureConditionCell({
                       className={`${conditionPickerRowBtn} flex min-w-0 flex-1 items-center gap-2 truncate text-zinc-100 hover:bg-zinc-800/80 ${dimmed ? 'text-zinc-400' : ''}`}
                       onClick={() => {
                         onAddOrSetCondition(label, 'neutral')
-                        setOpen(false)
                       }}
                     >
                       <ConditionIcon label={label} className="size-3.5 shrink-0 opacity-90" />
@@ -123,7 +122,6 @@ export function CreatureConditionCell({
                       }`}
                       onClick={() => {
                         onAddOrSetCondition(label, 'eot')
-                        setOpen(false)
                       }}
                     >
                       EoT
@@ -134,12 +132,11 @@ export function CreatureConditionCell({
                       aria-label={`Add ${label} as save ends on ${monsterName}`}
                       className={`${conditionPickerDurationPill} ${
                         active?.state === 'se'
-                          ? 'border-amber-500/80 bg-amber-500/15 text-amber-200'
+                          ? 'border-purple-500/80 bg-purple-500/15 text-purple-200'
                           : 'border-zinc-600/90 text-zinc-400 hover:border-zinc-500 hover:bg-zinc-800/60 hover:text-zinc-200'
                       }`}
                       onClick={() => {
                         onAddOrSetCondition(label, 'se')
-                        setOpen(false)
                       }}
                     >
                       SE
