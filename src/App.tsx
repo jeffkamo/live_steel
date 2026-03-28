@@ -206,7 +206,7 @@ function App() {
       <div className="mx-auto max-w-6xl">
         <header className="px-4 pt-5 pb-0 text-center">
           <h1 className="text-lg font-normal tracking-[0.2em] text-white md:text-xl">
-            Steel Roster
+            Live Steel
           </h1>
           <p className="mt-1.5 text-[0.65rem] font-normal uppercase tracking-[0.28em] text-zinc-400">
             Encounter roster

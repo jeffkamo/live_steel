@@ -10,7 +10,7 @@ const turnButton = (n: number, state: 'pending' | 'acted') =>
 describe('App', () => {
   it('renders app name, encounter roster tagline, and terrain section title', () => {
     render(<App />)
-    expect(screen.getByRole('heading', { level: 1, name: /^Steel Roster$/i })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 1, name: /^Live Steel$/i })).toBeInTheDocument()
     expect(screen.getByText(/^Encounter roster$/i)).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: /dynamic terrain/i })).toBeInTheDocument()
   })

@@ -1,6 +1,6 @@
 {
-  "name": "drawsteel",
-  "description": "Steel Roster — digital encounter roster for table play",
+  "name": "live_steel",
+  "description": "Live Steel — digital encounter roster for table play",
   "private": true,
   "version": "0.0.0",
   "type": "module",

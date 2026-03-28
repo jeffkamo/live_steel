@@ -1,8 +1,8 @@
-# Steel Roster
+# Live Steel
 
-**Steel Roster** is a **digital encounter roster** for running combat at the table. It is meant for whoever is running the scene (typically the GM): one screen shows the enemies and environmental pieces that matter in play, so you are not flipping paper stat blocks mid-fight.
+**Live Steel** is a **digital encounter roster** for running combat at the table. It is meant for whoever is running the scene (typically the GM): one screen shows the enemies and environmental pieces that matter in play, so you are not flipping paper stat blocks mid-fight.
 
-An inspiration for the app is [Forge Steel](https://forgesteel.net). Steel Roster is not affiliated with or endorsed by that project; the link is simply a nod to what sparked the idea.
+An inspiration for the app is [Forge Steel](https://forgesteel.net). Live Steel is not affiliated with or endorsed by that project; the link is simply a nod to what sparked the idea.
 
 ## What it does
 
@@ -23,4 +23,4 @@ npm run test:run # unit tests (Vitest + Testing Library)
 
 ## License
 
-> Steel Roster is an independent product published under the DRAW STEEL Creator License and is not affiliated with MCDM Productions, LLC. DRAW STEEL © 2024 MCDM Productions, LLC.
+> Live Steel is an independent product published under the DRAW STEEL Creator License and is not affiliated with MCDM Productions, LLC. DRAW STEEL © 2024 MCDM Productions, LLC.
