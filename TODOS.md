@@ -13,3 +13,9 @@ Ideas and enhancements tracked for future work (not committed to a roadmap).
 ## Conditions
 
 - [ ] **Bulk apply conditions** — Apply one or more conditions to several creatures at once (exact UX TBD: multi-select, group targeting, template, etc.).
+
+## Accessibility
+
+- [ ] **Keyboard-only pass** — Walk the app with keyboard only; ensure focus states are visible and that activating controls with Enter/Space matches pointer behavior.
+
+- [ ] **Dropdown keyboard access** — After opening a dropdown, options remain reachable and activatable from the keyboard (focus trap/restore, arrow keys, Escape, etc. as appropriate).
