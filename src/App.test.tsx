@@ -27,10 +27,10 @@ describe('App', () => {
     expect(screen.getByText('Goblin Assassin 1', { exact: true })).toBeInTheDocument()
     expect(screen.getByText('Level 1 Horde · Ambusher')).toBeInTheDocument()
     expect(screen.getByText('5 / 15')).toBeInTheDocument()
-    expect(within(tracker).getByText('Weakened')).toBeInTheDocument()
-    expect(within(tracker).getByText('Slowed')).toBeInTheDocument()
+    expect(within(tracker).getByRole('button', { name: /^Remove Weakened$/i })).toBeInTheDocument()
+    expect(within(tracker).getByRole('button', { name: /^Remove Slowed$/i })).toBeInTheDocument()
     expect(screen.getByText('Ironwood Sentinel', { exact: true })).toBeInTheDocument()
-    expect(within(tracker).getByText('Bleeding')).toBeInTheDocument()
+    expect(within(tracker).getByRole('button', { name: /^Remove Bleeding$/i })).toBeInTheDocument()
   })
 
   it('renders MARIP characteristic headers and numeric row for the first creature in its group', () => {
@@ -57,65 +57,53 @@ describe('App', () => {
     expect(scope.getAllByText('—').length).toBeGreaterThanOrEqual(1)
   })
 
-  it('shows “No active conditions” when a creature has none', () => {
+  it('shows all condition icons dimmed when a creature has none active', () => {
     render(<App />)
     const nameEl = screen.getByText('Reserve slot', { exact: true })
     const groupGrid = nameEl.closest('div.grid.items-stretch.rounded-lg')
     expect(groupGrid).toBeTruthy()
-    expect(within(groupGrid as HTMLElement).getByText('No active conditions')).toBeInTheDocument()
+    const scope = within(groupGrid as HTMLElement)
+    const reserveConditions = scope.getByRole('group', { name: /^Conditions for Reserve slot/i })
+    expect(within(reserveConditions).getByRole('button', { name: /^Add Weakened$/i })).toHaveAttribute(
+      'aria-pressed',
+      'false',
+    )
+    expect(within(reserveConditions).getByTitle('Weakened (inactive)')).toBeInTheDocument()
   })
 
-  it('removes a creature condition when its pill remove control is clicked', async () => {
+  it('removes a creature condition when its icon is clicked while active', async () => {
     const user = userEvent.setup()
     render(<App />)
-    const nameEl = screen.getByText('Goblin Assassin 1', { exact: true })
-    const groupGrid = nameEl.closest('div.grid.items-stretch.rounded-lg')
-    expect(groupGrid).toBeTruthy()
-    const scope = within(groupGrid as HTMLElement)
-    expect(scope.getByText('Weakened', { exact: true })).toBeInTheDocument()
-    expect(scope.getByText('Slowed', { exact: true })).toBeInTheDocument()
+    const goblinConditions = screen.getByRole('group', {
+      name: /^Conditions for Goblin Assassin 1\./i,
+    })
+    const scope = within(goblinConditions)
+    expect(scope.getByRole('button', { name: /^Remove Weakened$/i })).toBeInTheDocument()
+    expect(scope.getByRole('button', { name: /^Remove Slowed$/i })).toBeInTheDocument()
 
     await user.click(scope.getByRole('button', { name: /^Remove Weakened$/i }))
 
-    expect(scope.queryByText('Weakened', { exact: true })).not.toBeInTheDocument()
-    expect(scope.getByText('Slowed', { exact: true })).toBeInTheDocument()
+    expect(scope.getByRole('button', { name: /^Add Weakened$/i })).toBeInTheDocument()
+    expect(scope.getByRole('button', { name: /^Remove Slowed$/i })).toBeInTheDocument()
   })
 
-  it('cycles creature condition duration neutral → EoT → SE when the label is clicked', async () => {
+  it('toggles creature condition on icon click (inactive adds neutral, active removes)', async () => {
     const user = userEvent.setup()
     render(<App />)
-    const nameEl = screen.getByText('Goblin Assassin 1', { exact: true })
-    const groupGrid = nameEl.closest('div.grid.items-stretch.rounded-lg')
-    expect(groupGrid).toBeTruthy()
-    const scope = within(groupGrid as HTMLElement)
+    const goblinConditions = screen.getByRole('group', {
+      name: /^Conditions for Goblin Assassin 1\./i,
+    })
+    const scope = within(goblinConditions)
 
-    await user.click(
-      scope.getByRole('button', { name: /^Slowed, neutral\. Cycle duration$/i }),
-    )
-    expect(
-      scope.getByRole('button', { name: /^Slowed, end of turn\. Cycle duration$/i }),
-    ).toBeInTheDocument()
-    expect(scope.getByText(/EoT/)).toBeInTheDocument()
+    await user.click(scope.getByRole('button', { name: /^Remove Slowed$/i }))
+    expect(scope.getByRole('button', { name: /^Add Slowed$/i })).toBeInTheDocument()
 
-    await user.click(
-      scope.getByRole('button', { name: /^Slowed, end of turn\. Cycle duration$/i }),
-    )
-    expect(
-      scope.getByRole('button', { name: /^Slowed, save ends\. Cycle duration$/i }),
-    ).toBeInTheDocument()
-    expect(scope.getByText(/SE/)).toBeInTheDocument()
-
-    await user.click(
-      scope.getByRole('button', { name: /^Slowed, save ends\. Cycle duration$/i }),
-    )
-    expect(
-      scope.getByRole('button', { name: /^Slowed, neutral\. Cycle duration$/i }),
-    ).toBeInTheDocument()
-    const slowedCycle = scope.getByRole('button', { name: /^Slowed, neutral\. Cycle duration$/i })
-    expect(within(slowedCycle).queryByText(/EoT/)).not.toBeInTheDocument()
+    await user.click(scope.getByRole('button', { name: /^Add Slowed$/i }))
+    expect(scope.getByRole('button', { name: /^Remove Slowed$/i })).toBeInTheDocument()
+    expect(scope.getByTitle('Slowed (neutral)')).toBeInTheDocument()
   })
 
-  it('renders terrain objects, notes, stamina, and condition pills', () => {
+  it('renders terrain objects, notes, stamina, and condition icon strip', () => {
     render(<App />)
     const terrain = screen.getByRole('region', { name: 'Dynamic terrain' })
     expect(
@@ -127,14 +115,14 @@ describe('App', () => {
     expect(
       within(terrain).getByText('Burning; end of round 1d4 to adjacent.', { exact: true }),
     ).toBeInTheDocument()
-    expect(within(terrain).getByText('Slowed')).toBeInTheDocument()
-    expect(within(terrain).getByText('Weakened')).toBeInTheDocument()
+    expect(within(terrain).getByTitle('Slowed (neutral)')).toBeInTheDocument()
+    expect(within(terrain).getByTitle('Weakened (neutral)')).toBeInTheDocument()
     expect(
       within(terrain).getByText('Ritual circle (inactive). Chalk smeared, runes still warm.', {
         exact: true,
       }),
     ).toBeInTheDocument()
-    expect(within(terrain).getByText('Marked')).toBeInTheDocument()
+    expect(within(terrain).getByTitle('Marked (neutral)')).toBeInTheDocument()
   })
 
   it('toggles per-group turn diamond via Turn column and updates aria state', async () => {
@@ -197,7 +185,7 @@ describe('App', () => {
     expect(screen.getByText('6 / 15')).toBeInTheDocument()
   })
 
-  it('opens add-condition dialog from empty cell and adds neutral condition from name', async () => {
+  it('opens add-condition dialog from cell keyboard and adds neutral condition from name', async () => {
     const user = userEvent.setup()
     render(<App />)
     const nameEl = screen.getByText('Reserve slot', { exact: true })
@@ -206,19 +194,16 @@ describe('App', () => {
     const scope = within(groupGrid as HTMLElement)
     const reserveConditions = scope.getByRole('group', { name: /^Conditions for Reserve slot/i })
 
-    expect(within(reserveConditions).getByText('No active conditions')).toBeInTheDocument()
-    await user.click(reserveConditions)
+    expect(within(reserveConditions).getByRole('button', { name: /^Add Frightened$/i })).toBeInTheDocument()
+    reserveConditions.focus()
+    await user.keyboard('{Enter}')
 
     const picker = await screen.findByRole('dialog', { name: /^Add condition to Reserve slot$/i })
     // Frightened — avoids clashing with Dazed on Ironwood Sentinel in the same encounter group.
     await user.click(within(picker).getByRole('button', { name: /^Frightened$/i }))
 
-    expect(within(reserveConditions).queryByText('No active conditions')).not.toBeInTheDocument()
-    expect(
-      within(reserveConditions).getByRole('button', {
-        name: /^Frightened, neutral\. Cycle duration$/i,
-      }),
-    ).toBeInTheDocument()
+    expect(within(reserveConditions).getByRole('button', { name: /^Remove Frightened$/i })).toBeInTheDocument()
+    expect(within(reserveConditions).getByTitle('Frightened (neutral)')).toBeInTheDocument()
   })
 
   it('adds EoT and SE from picker duration controls', async () => {
@@ -228,18 +213,19 @@ describe('App', () => {
     const groupGrid = nameEl.closest('div.grid.items-stretch.rounded-lg')
     expect(groupGrid).toBeTruthy()
     const scope = within(groupGrid as HTMLElement)
+    const reserveConditions = scope.getByRole('group', { name: /^Conditions for Reserve slot/i })
 
-    await user.click(scope.getByRole('group', { name: /^Conditions for Reserve slot/i }))
+    reserveConditions.focus()
+    await user.keyboard('{Enter}')
     let picker = screen.getByRole('dialog', { name: /^Add condition to Reserve slot$/i })
     await user.click(
       within(picker).getByRole('button', { name: /^Add Marked as end of turn on Reserve slot$/i }),
     )
 
-    expect(
-      scope.getByRole('button', { name: /^Marked, end of turn\. Cycle duration$/i }),
-    ).toBeInTheDocument()
+    expect(scope.getByTitle('Marked (End of turn)')).toBeInTheDocument()
 
-    await user.click(scope.getByRole('group', { name: /^Conditions for Reserve slot/i }))
+    reserveConditions.focus()
+    await user.keyboard('{Enter}')
     picker = screen.getByRole('dialog', { name: /^Add condition to Reserve slot$/i })
     const markedEot = within(picker).getByRole('button', {
       name: /^Add Marked as end of turn on Reserve slot$/i,
@@ -249,8 +235,6 @@ describe('App', () => {
     await user.click(
       within(picker).getByRole('button', { name: /^Add Prone as save ends on Reserve slot$/i }),
     )
-    expect(
-      scope.getByRole('button', { name: /^Prone, save ends\. Cycle duration$/i }),
-    ).toBeInTheDocument()
+    expect(scope.getByTitle('Prone (Save ends)')).toBeInTheDocument()
   })
 })

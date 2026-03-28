@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 
@@ -317,7 +318,7 @@ function findConditionOnMonster(
 
 /** 6 columns: group | creatures | stamina | characteristics (MARIP) | FS/Dist/Stab | conditions */
 const ROSTER_GRID_TEMPLATE =
-  '5.5rem minmax(0,1.25fr) minmax(5.25rem,7rem) minmax(5.75rem,7.25rem) 7.25rem minmax(0,1.05fr)'
+  '5.5rem minmax(0,1.35fr) minmax(5.25rem,7rem) minmax(5.75rem,7.25rem) 7.25rem minmax(0,1.15fr)'
 
 const terrainGridClass = 'grid grid-cols-[minmax(0,1.35fr)_minmax(4.5rem,6.5rem)_minmax(0,1.2fr)]'
 
@@ -702,36 +703,6 @@ function StatCluster({ fs, dist, stab }: { fs: number; dist: number; stab: numbe
   )
 }
 
-function nextConditionState(state: ConditionState): ConditionState {
-  if (state === 'neutral') {
-    return 'eot'
-  }
-  if (state === 'eot') {
-    return 'se'
-  }
-  return 'neutral'
-}
-
-function conditionStateAbbrev(state: ConditionState): string | null {
-  if (state === 'eot') {
-    return 'EoT'
-  }
-  if (state === 'se') {
-    return 'SE'
-  }
-  return null
-}
-
-function conditionStateSpoken(state: ConditionState): string {
-  if (state === 'neutral') {
-    return 'neutral'
-  }
-  if (state === 'eot') {
-    return 'end of turn'
-  }
-  return 'save ends'
-}
-
 function conditionStateTitle(state: ConditionState): string | undefined {
   if (state === 'eot') {
     return 'End of turn'
@@ -742,111 +713,217 @@ function conditionStateTitle(state: ConditionState): string | undefined {
   return undefined
 }
 
-function conditionPillShellClass(state: ConditionState): string {
-  if (state === 'neutral') {
-    return 'border border-zinc-600/85 bg-zinc-800/95'
+function conditionCatalogTooltip(label: string, active: ConditionEntry | undefined): string {
+  if (active === undefined) {
+    return `${label} (inactive)`
   }
-  return 'border border-amber-500/80 bg-amber-500/15'
+  if (active.state === 'neutral') {
+    return `${label} (neutral)`
+  }
+  const dur = conditionStateTitle(active.state)
+  return dur ? `${label} (${dur})` : label
 }
 
-function ConditionPills({
+/** Stroke glyphs aligned with Lucide icon shapes (lucide.dev, ISC). */
+function conditionIconSvg(className: string | undefined, children: ReactNode) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.75}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      aria-hidden
+    >
+      {children}
+    </svg>
+  )
+}
+
+function ConditionIcon({ label, className }: { label: string; className?: string }) {
+  switch (label) {
+    case 'Bleeding':
+      return conditionIconSvg(
+        className,
+        <path d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z" />,
+      )
+    case 'Dazed':
+      return conditionIconSvg(
+        className,
+        <>
+          <path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z" />
+          <path d="M20 3v4" />
+          <path d="M22 5h-4" />
+          <path d="M4 17v2" />
+          <path d="M5 18H3" />
+        </>,
+      )
+    case 'Frightened':
+      return conditionIconSvg(
+        className,
+        <>
+          <path d="M9 10h.01" />
+          <path d="M15 10h.01" />
+          <path d="M12 2a8 8 0 0 0-8 8v12l3-3 2.5 2.5L12 19l2.5 2.5L17 19l3 3V10a8 8 0 0 0-8-8z" />
+        </>,
+      )
+    case 'Grabbed':
+      return conditionIconSvg(
+        className,
+        <>
+          <path d="M18 11.5V9a2 2 0 0 0-2-2a2 2 0 0 0-2 2v1.4" />
+          <path d="M14 10V8a2 2 0 0 0-2-2a2 2 0 0 0-2 2v2" />
+          <path d="M10 9.9V9a2 2 0 0 0-2-2a2 2 0 0 0-2 2v5" />
+          <path d="M6 14a2 2 0 0 0-2-2a2 2 0 0 0-2 2" />
+          <path d="M18 11a2 2 0 1 1 4 0v3a8 8 0 0 1-8 8h-4a8 8 0 0 1-8-8 2 2 0 1 1 4 0" />
+        </>,
+      )
+    case 'Judged':
+      return conditionIconSvg(
+        className,
+        <>
+          <path d="m14.5 12.5-8 8a2.119 2.119 0 1 1-3-3l8-8" />
+          <path d="m16 16 6-6" />
+          <path d="m8 8 6-6" />
+          <path d="m9 7 8 8" />
+          <path d="m21 11-8-8" />
+        </>,
+      )
+    case 'Marked':
+      return conditionIconSvg(
+        className,
+        <>
+          <circle cx="12" cy="12" r="10" />
+          <line x1="22" x2="18" y1="12" y2="12" />
+          <line x1="6" x2="2" y1="12" y2="12" />
+          <line x1="12" x2="12" y1="6" y2="2" />
+          <line x1="12" x2="12" y1="22" y2="18" />
+        </>,
+      )
+    case 'Prone':
+      return conditionIconSvg(
+        className,
+        <>
+          <path d="M2 4v16" />
+          <path d="M2 8h18a2 2 0 0 1 2 2v10" />
+          <path d="M2 17h20" />
+          <path d="M6 8v9" />
+        </>,
+      )
+    case 'Restrained':
+      return conditionIconSvg(
+        className,
+        <>
+          <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+          <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+        </>,
+      )
+    case 'Slowed':
+      return conditionIconSvg(
+        className,
+        <>
+          <path d="M2 13a6 6 0 1 0 12 0 4 4 0 1 0-8 0 2 2 0 0 0 4 0" />
+          <circle cx="10" cy="13" r="8" />
+          <path d="M2 21h12c4.4 0 8-3.6 8-8V7a2 2 0 1 0-4 0v6" />
+          <path d="M18 3 19.1 5.2" />
+          <path d="M22 3 20.9 5.2" />
+        </>,
+      )
+    case 'Surprised':
+      return conditionIconSvg(
+        className,
+        <>
+          <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3" />
+          <path d="M12 9v4" />
+          <path d="M12 17h.01" />
+        </>,
+      )
+    case 'Taunted':
+      return conditionIconSvg(
+        className,
+        <>
+          <circle cx="12" cy="12" r="10" />
+          <path d="M16 16s-1.5-2-4-2-4 2-4 2" />
+          <path d="M7.5 8 10 9" />
+          <path d="m14 9 2.5-1" />
+          <path d="M9 10h.01" />
+          <path d="M15 10h.01" />
+        </>,
+      )
+    case 'Weakened':
+      return conditionIconSvg(
+        className,
+        <>
+          <polyline points="22 17 13.5 8.5 8.5 13.5 2 7" />
+          <polyline points="16 17 22 17 22 11" />
+        </>,
+      )
+    default:
+      return null
+  }
+}
+
+const conditionIconHoverOutline =
+  'motion-reduce:transition-none transition-[outline-color,outline-width] duration-150 hover:z-[1] hover:outline hover:outline-2 hover:outline-offset-0 hover:outline-amber-500/65'
+
+function conditionIconShellClass(isActive: boolean, state: ConditionState | null): string {
+  const base =
+    'flex size-5 shrink-0 items-center justify-center rounded-full border transition-[opacity,colors,box-shadow,outline-color] motion-reduce:transition-none'
+  if (!isActive) {
+    return `${base} border-transparent text-zinc-500 opacity-[0.32]`
+  }
+  if (state === 'neutral') {
+    return `${base} border-zinc-600/80 bg-zinc-800/90 text-zinc-100 opacity-100`
+  }
+  return `${base} border-amber-500/75 bg-amber-500/15 text-amber-100 opacity-100 ring-1 ring-amber-500/45`
+}
+
+function ConditionCatalogIconStrip({
   conditions,
-  onRemove,
-  onCycleState,
+  interactive,
+  onToggleLabel,
 }: {
   conditions: readonly ConditionEntry[]
-  onRemove?: (index: number) => void
-  onCycleState?: (index: number) => void
+  interactive: boolean
+  onToggleLabel?: (label: string) => void
 }) {
-  if (conditions.length === 0) {
-    return (
-      <p className="w-full text-left font-sans text-[0.7rem] italic text-zinc-400">No active conditions</p>
-    )
-  }
-  const pillText = 'font-sans text-[0.65rem] tracking-tight'
   return (
-    <div className="flex w-full flex-wrap content-center items-center justify-start gap-2">
-      {conditions.map((c, i) => {
-        const abbrev = conditionStateAbbrev(c.state)
-        const shell = conditionPillShellClass(c.state)
-        const labelTone = c.state === 'neutral' ? 'text-zinc-100' : 'text-amber-100'
-        const abbrevTone =
-          c.state === 'neutral' ? 'text-zinc-400' : 'text-amber-200/90'
-        const removeBtnClass =
-          c.state === 'neutral'
-            ? 'text-zinc-400 transition-colors hover:bg-zinc-700/90 hover:text-zinc-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-amber-600/70'
-            : 'text-amber-300/85 transition-colors hover:bg-amber-500/25 hover:text-amber-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-amber-600/70'
-        if (onRemove) {
-          const pillHover =
-            onCycleState != null
-              ? 'motion-reduce:transition-none transition-[outline-color] duration-150 ease-out outline outline-2 outline-transparent outline-offset-1 hover:outline-amber-500/60'
-              : ''
+    <div className="flex w-full min-w-0 flex-nowrap items-center justify-start gap-0.5 overflow-x-auto pb-px [-ms-overflow-style:none] [scrollbar-width:thin] [&::-webkit-scrollbar]:h-1 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-zinc-600/80">
+      {CONDITION_CATALOG.map((label) => {
+        const active = findConditionOnMonster(conditions, label)
+        const tip = conditionCatalogTooltip(label, active)
+        const shell = conditionIconShellClass(active !== undefined, active?.state ?? null)
+        if (interactive && onToggleLabel) {
           return (
-            <div
-              key={`${i}-${c.label}`}
-              className={`inline-flex max-w-full items-center gap-0 rounded-full py-0.5 pl-0 pr-0.5 ${pillText} font-medium ${shell} ${pillHover}`}
-              onClick={(e) => e.stopPropagation()}
+            <button
+              key={label}
+              type="button"
+              data-condition-toggle
+              title={tip}
+              aria-label={active ? `Remove ${label}` : `Add ${label}`}
+              aria-pressed={active !== undefined}
+              onClick={(e) => {
+                e.stopPropagation()
+                onToggleLabel(label)
+              }}
+              className={`${shell} ${conditionIconHoverOutline} cursor-pointer outline-none hover:brightness-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-600/70`}
             >
-              {onCycleState ? (
-                <button
-                  type="button"
-                  onClick={() => onCycleState(i)}
-                  aria-label={`${c.label}, ${conditionStateSpoken(c.state)}. Cycle duration`}
-                  className="inline-flex min-w-0 max-w-full cursor-pointer items-baseline gap-0 rounded-l-full py-0.5 pl-2.5 pr-1 text-left transition-colors focus-visible:z-10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-amber-600/70"
-                >
-                  <span className={`min-w-0 truncate font-medium ${labelTone}`}>{c.label}</span>
-                  {abbrev ? (
-                    <span
-                      className={`ml-1 shrink-0 font-normal ${abbrevTone} ${pillText}`}
-                      title={conditionStateTitle(c.state)}
-                      aria-hidden
-                    >
-                      · {abbrev}
-                    </span>
-                  ) : null}
-                </button>
-              ) : (
-                <span
-                  className={`inline-flex min-w-0 max-w-full items-baseline py-0.5 pl-2.5 pr-1 ${labelTone}`}
-                >
-                  <span className={`min-w-0 truncate font-medium ${labelTone}`}>{c.label}</span>
-                  {abbrev ? (
-                    <span
-                      className={`ml-1 shrink-0 font-normal ${abbrevTone} ${pillText}`}
-                      title={conditionStateTitle(c.state)}
-                      aria-hidden
-                    >
-                      · {abbrev}
-                    </span>
-                  ) : null}
-                </span>
-              )}
-              <button
-                type="button"
-                onClick={() => onRemove(i)}
-                aria-label={`Remove ${c.label}`}
-                className={`flex size-4 shrink-0 cursor-pointer items-center justify-center rounded-full text-[0.7rem] leading-none ${removeBtnClass}`}
-              >
-                <span aria-hidden>×</span>
-              </button>
-            </div>
+              <ConditionIcon label={label} className="size-[0.7rem] shrink-0" />
+            </button>
           )
         }
         return (
           <span
-            key={`${i}-${c.label}`}
-            className={`inline-flex max-w-full items-baseline rounded-full px-2.5 py-0.5 ${pillText} font-medium ${shell} ${labelTone}`}
+            key={label}
+            title={tip}
+            aria-label={tip}
+            role="img"
+            className={`${shell} ${conditionIconHoverOutline}`}
           >
-            <span className={`min-w-0 truncate font-medium ${labelTone}`}>{c.label}</span>
-            {abbrev ? (
-              <span
-                className={`ml-1 shrink-0 font-normal ${abbrevTone} ${pillText}`}
-                title={conditionStateTitle(c.state)}
-                aria-hidden
-              >
-                · {abbrev}
-              </span>
-            ) : null}
+            <ConditionIcon label={label} className="size-[0.7rem] shrink-0" />
           </span>
         )
       })}
@@ -1082,14 +1159,12 @@ function CreatureConditionCell({
   monsterName,
   conditions,
   onRemove,
-  onCycleState,
   onAddOrSetCondition,
   turnComplete,
 }: {
   monsterName: string
   conditions: readonly ConditionEntry[]
   onRemove: (index: number) => void
-  onCycleState: (index: number) => void
   onAddOrSetCondition: (label: string, state: ConditionState) => void
   turnComplete: boolean
 }) {
@@ -1131,7 +1206,7 @@ function CreatureConditionCell({
       tabIndex={0}
       aria-expanded={open}
       aria-haspopup="dialog"
-      aria-label={`Conditions for ${monsterName}. Activate to add a condition.`}
+      aria-label={`Conditions for ${monsterName}. Click outside the condition icons to open advanced options (duration). Click an icon to add or remove that condition.`}
       onClick={() => setOpen((o) => !o)}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {
@@ -1141,10 +1216,17 @@ function CreatureConditionCell({
       }}
     >
       <div className="flex w-full min-w-0 flex-col justify-center">
-        <ConditionPills
+        <ConditionCatalogIconStrip
           conditions={conditions}
-          onRemove={onRemove}
-          onCycleState={onCycleState}
+          interactive
+          onToggleLabel={(label) => {
+            const idx = conditions.findIndex((c) => c.label === label)
+            if (idx >= 0) {
+              onRemove(idx)
+            } else {
+              onAddOrSetCondition(label, 'neutral')
+            }
+          }}
         />
       </div>
       {open ? (
@@ -1166,13 +1248,14 @@ function CreatureConditionCell({
                   >
                     <button
                       type="button"
-                      className={`${conditionPickerRowBtn} min-w-0 flex-1 truncate text-zinc-100 hover:bg-zinc-800/80 ${dimmed ? 'text-zinc-400' : ''}`}
+                      className={`${conditionPickerRowBtn} flex min-w-0 flex-1 items-center gap-2 truncate text-zinc-100 hover:bg-zinc-800/80 ${dimmed ? 'text-zinc-400' : ''}`}
                       onClick={() => {
                         onAddOrSetCondition(label, 'neutral')
                         setOpen(false)
                       }}
                     >
-                      {label}
+                      <ConditionIcon label={label} className="size-3.5 shrink-0 opacity-90" />
+                      <span className="min-w-0 truncate">{label}</span>
                     </button>
                     <button
                       type="button"
@@ -1283,7 +1366,6 @@ function MonsterRowCells({
   turnComplete,
   onStaminaChange,
   onConditionRemove,
-  onConditionCycleState,
   onConditionAddOrSet,
 }: {
   monster: Monster
@@ -1300,7 +1382,6 @@ function MonsterRowCells({
   turnComplete: boolean
   onStaminaChange: (next: [number, number]) => void
   onConditionRemove: (conditionIndex: number) => void
-  onConditionCycleState: (conditionIndex: number) => void
   onConditionAddOrSet: (label: string, state: ConditionState) => void
 }) {
   const [sc, sm] = monster.stamina
@@ -1314,8 +1395,8 @@ function MonsterRowCells({
 
   return (
     <>
-      <div className={`${bodyCell} ${rowTone}`} style={{ gridColumn: 2, gridRow: row }}>
-        <div className="flex w-full items-center gap-3">
+      <div className={`${bodyCell} min-w-0 ${rowTone}`} style={{ gridColumn: 2, gridRow: row }}>
+        <div className="flex w-full min-w-0 items-center gap-3">
           <button
             type="button"
             data-group-color-trigger={groupKey}
@@ -1328,8 +1409,8 @@ function MonsterRowCells({
             {ordinal}
           </button>
           <div className="min-w-0 flex-1">
-            <p className="font-medium leading-tight text-zinc-50">{monster.name}</p>
-            <p className="mt-1 text-[0.7rem] leading-snug text-zinc-400">{monster.subtitle}</p>
+            <p className="truncate font-medium leading-tight text-zinc-50">{monster.name}</p>
+            <p className="mt-1 truncate text-[0.7rem] leading-snug text-zinc-400">{monster.subtitle}</p>
           </div>
         </div>
       </div>
@@ -1358,7 +1439,6 @@ function MonsterRowCells({
           monsterName={monster.name}
           conditions={monster.conditions}
           onRemove={onConditionRemove}
-          onCycleState={onConditionCycleState}
           onAddOrSetCondition={onConditionAddOrSet}
           turnComplete={turnComplete}
         />
@@ -1379,7 +1459,6 @@ function GroupSection({
   onGroupColorChange,
   onMonsterStaminaChange,
   onMonsterConditionRemove,
-  onMonsterConditionCycleState,
   onMonsterConditionAddOrSet,
 }: {
   group: EncounterGroup
@@ -1393,7 +1472,6 @@ function GroupSection({
   onGroupColorChange: (color: GroupColorId) => void
   onMonsterStaminaChange: (monsterIndex: number, stamina: [number, number]) => void
   onMonsterConditionRemove: (monsterIndex: number, conditionIndex: number) => void
-  onMonsterConditionCycleState: (monsterIndex: number, conditionIndex: number) => void
   onMonsterConditionAddOrSet: (monsterIndex: number, label: string, state: ConditionState) => void
 }) {
   const n = group.monsters.length
@@ -1461,7 +1539,6 @@ function GroupSection({
           turnComplete={turnActed}
           onStaminaChange={(st) => onMonsterStaminaChange(i, st)}
           onConditionRemove={(ci) => onMonsterConditionRemove(i, ci)}
-          onConditionCycleState={(ci) => onMonsterConditionCycleState(i, ci)}
           onConditionAddOrSet={(label, state) => onMonsterConditionAddOrSet(i, label, state)}
         />
       ))}
@@ -1492,7 +1569,7 @@ function TerrainRow({
       </div>
       <div className="flex h-full min-h-[3.75rem] flex-col justify-center gap-3 p-3 sm:min-h-[4rem] sm:p-3.5">
         <p className="text-[0.75rem] leading-snug text-zinc-400">{row.note}</p>
-        <ConditionPills conditions={row.conditions} />
+        <ConditionCatalogIconStrip conditions={row.conditions} interactive={false} />
       </div>
     </div>
   )
@@ -1541,33 +1618,6 @@ function App() {
               return {
                 ...m,
                 conditions: m.conditions.filter((_, ci) => ci !== conditionIndex),
-              }
-            }),
-          }
-        }),
-      )
-    },
-    [],
-  )
-
-  const patchMonsterConditionCycleState = useCallback(
-    (groupIndex: number, monsterIndex: number, conditionIndex: number) => {
-      setEncounterGroups((prev) =>
-        prev.map((g, gi) => {
-          if (gi !== groupIndex) {
-            return g
-          }
-          return {
-            ...g,
-            monsters: g.monsters.map((m, mi) => {
-              if (mi !== monsterIndex) {
-                return m
-              }
-              return {
-                ...m,
-                conditions: m.conditions.map((c, ci) =>
-                  ci === conditionIndex ? { ...c, state: nextConditionState(c.state) } : c,
-                ),
               }
             }),
           }
@@ -1696,7 +1746,6 @@ function App() {
               onGroupColorChange={(c) => patchGroupColor(gi, c)}
               onMonsterStaminaChange={(mi, st) => patchMonsterStamina(gi, mi, st)}
               onMonsterConditionRemove={(mi, ci) => patchMonsterConditionRemove(gi, mi, ci)}
-              onMonsterConditionCycleState={(mi, ci) => patchMonsterConditionCycleState(gi, mi, ci)}
               onMonsterConditionAddOrSet={(mi, label, state) =>
                 patchMonsterConditionAddOrSet(gi, mi, label, state)
               }
