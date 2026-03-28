@@ -1,73 +1,26 @@
-# React + TypeScript + Vite
+# Steel Roster
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+**Steel Roster** is a **digital encounter roster** for running combat at the table. It is meant for whoever is running the scene (typically the GM): one screen shows the enemies and environmental pieces that matter in play, so you are not flipping paper stat blocks mid-fight.
 
-Currently, two official plugins are available:
+An inspiration for the app is [Forge Steel](https://forgesteel.net). Steel Roster is not affiliated with or endorsed by that project; the link is simply a nod to what sparked the idea.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## What it does
 
-## React Compiler
+- **Creature tracker** — Lists each encounter group and its creatures with the stats you need during combat: stamina, the **MARIP** line, **free strike / distance / stability**, and **conditions**. Names and roles (horde, solo, elite, etc.) stay visible so you remember who is on the field.
+- **Turn markers** — Each group has a **Turn** control so you can mark whether that side has acted this round. **Reset** clears every group back to “pending” when a new round starts (or when you want a clean slate).
+- **Dynamic terrain** — Separate rows for **objects and zones** on the map: what they are, any **stamina** or durability you track, notes for how they behave, and tags such as hazards or difficult ground.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+The app does not roll dice or enforce rules; it is a **readable control panel** for the encounter you have prepared. Data in the UI is sample content until you wire in your own encounters.
 
-## Expanding the ESLint configuration
+## Development
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm install
+npm run dev      # local dev server
+npm run build    # production build
+npm run test:run # unit tests (Vitest + Testing Library)
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## License
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+> Steel Roster is an independent product published under the DRAW STEEL Creator License and is not affiliated with MCDM Productions, LLC. DRAW STEEL © 2024 MCDM Productions, LLC.
