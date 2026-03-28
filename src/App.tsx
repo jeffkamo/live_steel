@@ -1,5 +1,3 @@
-import { Fragment } from 'react'
-
 type Marip = readonly [number, number, number, number, number]
 
 type Monster = {
@@ -133,9 +131,6 @@ const TERRAIN_ROWS = [
 const ROSTER_GRID_TEMPLATE =
   '5.5rem minmax(0,1.25fr) minmax(5.25rem,7rem) minmax(5.75rem,7.25rem) 7.25rem minmax(0,1.05fr)'
 
-const rosterGridClass =
-  'grid grid-cols-[5.5rem_minmax(0,1.25fr)_minmax(5.25rem,7rem)_minmax(5.75rem,7.25rem)_7.25rem_minmax(0,1.05fr)]'
-
 const terrainGridClass = 'grid grid-cols-[minmax(0,1.35fr)_minmax(4.5rem,6.5rem)_minmax(0,1.2fr)]'
 
 function TitleRule() {
@@ -246,28 +241,14 @@ function ConditionPills({ labels }: { labels: readonly string[] }) {
   )
 }
 
-function MonsterRowCells({
-  monster,
-  rowIndex,
-  globalMonsterIndex,
-  showRowDivider,
-}: {
-  monster: Monster
-  rowIndex: number
-  globalMonsterIndex: number
-  showRowDivider: boolean
-}) {
-  const stripe = globalMonsterIndex % 2 === 0 ? 'bg-zinc-900/65' : 'bg-zinc-950'
+function MonsterRowCells({ monster, row }: { monster: Monster; row: number }) {
   const [sc, sm] = monster.stamina
-  const row = rowIndex + 1
-  const between = showRowDivider ? 'border-t border-zinc-600/80' : ''
-  const shared = `${stripe} ${between}`
   const bodyCell =
-    'flex h-full min-h-[3.75rem] items-center border-r border-zinc-600/50 p-3 sm:min-h-[4rem] sm:p-3.5'
+    'flex h-full min-h-[3.75rem] items-center p-3 sm:min-h-[4rem] sm:p-3.5'
 
   return (
-    <Fragment>
-      <div className={`${bodyCell} ${shared}`} style={{ gridColumn: 2, gridRow: row }}>
+    <>
+      <div className={bodyCell} style={{ gridColumn: 2, gridRow: row }}>
         <div className="flex w-full items-center gap-3">
           <div
             className="flex size-9 shrink-0 items-center justify-center rounded-full border-2 border-amber-500/85 text-[0.55rem] font-semibold tabular-nums text-zinc-100 sm:size-10"
@@ -281,55 +262,38 @@ function MonsterRowCells({
           </div>
         </div>
       </div>
-      <div
-        className={`${bodyCell} justify-center ${shared}`}
-        style={{ gridColumn: 3, gridRow: row }}
-      >
+      <div className={`${bodyCell} justify-center`} style={{ gridColumn: 3, gridRow: row }}>
         <StaminaCell current={sc} max={sm} />
       </div>
-      <div
-        className={`${bodyCell} justify-center ${shared}`}
-        style={{ gridColumn: 4, gridRow: row }}
-      >
+      <div className={`${bodyCell} justify-center`} style={{ gridColumn: 4, gridRow: row }}>
         <MaripCluster values={monster.marip} />
       </div>
-      <div
-        className={`${bodyCell} justify-center ${shared}`}
-        style={{ gridColumn: 5, gridRow: row }}
-      >
+      <div className={`${bodyCell} justify-center`} style={{ gridColumn: 5, gridRow: row }}>
         <StatCluster fs={monster.fs} dist={monster.dist} stab={monster.stab} />
       </div>
       <div
-        className={`flex h-full min-h-[3.75rem] w-full items-center justify-start p-3 sm:min-h-[4rem] sm:p-3.5 ${shared}`}
+        className="flex h-full min-h-[3.75rem] w-full items-center justify-start p-3 sm:min-h-[4rem] sm:p-3.5"
         style={{ gridColumn: 6, gridRow: row }}
       >
         <ConditionPills labels={monster.conditions} />
       </div>
-    </Fragment>
+    </>
   )
 }
 
-function GroupSection({
-  group,
-  groupKey,
-  globalStartIndex,
-}: {
-  group: EncounterGroup
-  groupKey: string
-  globalStartIndex: number
-}) {
+function GroupSection({ group, groupKey }: { group: EncounterGroup; groupKey: string }) {
   const n = group.monsters.length
 
   return (
     <div
-      className="grid items-stretch border-t border-zinc-600/80"
+      className="grid items-stretch rounded-lg bg-zinc-900/80"
       style={{
         gridTemplateColumns: ROSTER_GRID_TEMPLATE,
         gridTemplateRows: `repeat(${n}, minmax(0, auto))`,
       }}
     >
       <div
-        className="flex flex-col items-center justify-center gap-2 border-r border-zinc-600/50 bg-zinc-900/40 px-3 py-4 text-center"
+        className="flex flex-col items-center justify-center gap-2 px-3 py-4 text-center"
         style={{ gridColumn: 1, gridRow: `1 / span ${n}` }}
       >
         <span className="text-[0.65rem] uppercase tracking-wide text-zinc-300">Turn</span>
@@ -338,35 +302,25 @@ function GroupSection({
           aria-hidden
         />
       </div>
-
       {group.monsters.map((monster, i) => (
         <MonsterRowCells
           key={`${groupKey}-${monster.name}-${i}`}
           monster={monster}
-          rowIndex={i}
-          globalMonsterIndex={globalStartIndex + i}
-          showRowDivider={i > 0}
+          row={i + 1}
         />
       ))}
     </div>
   )
 }
 
-function TerrainRow({
-  row,
-  index,
-}: {
-  row: (typeof TERRAIN_ROWS)[number]
-  index: number
-}) {
-  const stripe = index % 2 === 0 ? 'bg-zinc-900/65' : 'bg-zinc-950'
+function TerrainRow({ row }: { row: (typeof TERRAIN_ROWS)[number] }) {
   const [tc, tm] = row.stamina
   return (
-    <div className={`${terrainGridClass} border-t border-zinc-600/80 ${stripe}`}>
-      <div className="flex h-full min-h-[3.75rem] items-center border-r border-zinc-600/50 p-3 sm:min-h-[4rem] sm:p-3.5">
+    <div className={`${terrainGridClass} rounded-lg bg-zinc-900/80`}>
+      <div className="flex h-full min-h-[3.75rem] items-center p-3 sm:min-h-[4rem] sm:p-3.5">
         <p className="text-[0.8rem] leading-relaxed text-zinc-100">{row.object}</p>
       </div>
-      <div className="flex h-full min-h-[3.75rem] items-center justify-center border-r border-zinc-600/50 p-3 sm:min-h-[4rem] sm:p-3.5">
+      <div className="flex h-full min-h-[3.75rem] items-center justify-center p-3 sm:min-h-[4rem] sm:p-3.5">
         <StaminaCell current={tc} max={tm} />
       </div>
       <div className="flex h-full min-h-[3.75rem] flex-col justify-center gap-3 p-3 sm:min-h-[4rem] sm:p-3.5">
@@ -380,74 +334,33 @@ function TerrainRow({
 function App() {
   return (
     <div className="min-h-svh bg-zinc-950 p-4 font-serif text-zinc-100 antialiased md:p-8">
-      <div className="mx-auto max-w-6xl border border-zinc-600/90 shadow-[0_0_0_1px_rgba(0,0,0,0.35)]">
-        <header className="border-b border-zinc-600/80 px-4 pt-5 pb-0 text-center">
+      <div className="mx-auto max-w-6xl">
+        <header className="px-4 pt-5 pb-0 text-center">
           <h1 className="text-lg font-normal tracking-[0.2em] text-white md:text-xl">
             ENCOUNTER ROSTER
           </h1>
           <TitleRule />
         </header>
 
-        <section aria-label="Creature tracker">
-          <div
-            className={`${rosterGridClass} border-b border-zinc-600/80 bg-zinc-900/40 text-[0.65rem] font-normal uppercase tracking-wide text-zinc-300`}
-          >
-            <div className="flex items-center justify-center border-r border-zinc-600/50 px-3 py-3 text-center sm:py-3.5">
-              Group
-            </div>
-            <div className="flex items-center border-r border-zinc-600/50 px-3 py-3 sm:py-3.5">
-              Creatures
-            </div>
-            <div className="flex items-center justify-center border-r border-zinc-600/50 px-3 py-3 text-center leading-tight sm:py-3.5">
-              Stamina
-            </div>
-            <div className="flex items-center border-r border-zinc-600/50 px-3 py-3 sm:py-3.5">
-              <div className="grid w-full grid-cols-5 gap-x-0.5 text-center text-[0.55rem] leading-tight sm:text-[0.6rem]">
-                {MARIP_HEADERS.map((letter) => (
-                  <span key={letter}>{letter}</span>
-                ))}
-              </div>
-            </div>
-            <div className="flex items-center border-r border-zinc-600/50 px-3 py-3 sm:py-3.5">
-              <div className="grid w-full grid-cols-3 gap-x-1 text-center text-[0.6rem] leading-tight">
-                <span title="Free strike">FS</span>
-                <span title="Distance">Dist</span>
-                <span title="Stability">Stab</span>
-              </div>
-            </div>
-            <div className="flex items-center px-3 py-3 sm:py-3.5">Conditions</div>
-          </div>
-
-          {ENCOUNTER_GROUPS.map((group, gi) => {
-            const globalStartIndex = ENCOUNTER_GROUPS.slice(0, gi).reduce(
-              (n, g) => n + g.monsters.length,
-              0,
-            )
-            return (
-              <GroupSection
-                key={`encounter-group-${gi}`}
-                group={group}
-                groupKey={`g${gi}`}
-                globalStartIndex={globalStartIndex}
-              />
-            )
-          })}
+        <section aria-label="Creature tracker" className="mt-6 flex flex-col gap-3 px-0 md:mt-8">
+          {ENCOUNTER_GROUPS.map((group, gi) => (
+            <GroupSection
+              key={`encounter-group-${gi}`}
+              group={group}
+              groupKey={`g${gi}`}
+            />
+          ))}
         </section>
 
-        <section aria-label="Dynamic terrain" className="border-t border-zinc-600/80">
-          <div
-            className={`${terrainGridClass} border-b border-zinc-600/80 bg-zinc-900/40 text-[0.65rem] uppercase tracking-wide text-zinc-300`}
-          >
-            <div className="flex items-center border-r border-zinc-600/50 px-3 py-3 sm:py-3.5">
-              Dynamic Terrain Objects
-            </div>
-            <div className="flex items-center justify-center border-r border-zinc-600/50 px-3 py-3 text-center sm:py-3.5">
-              Stamina
-            </div>
-            <div className="flex items-center px-3 py-3 sm:py-3.5">Notes / Conditions</div>
-          </div>
+        <section aria-label="Dynamic terrain" className="mt-8 flex flex-col gap-2 md:mt-10">
+          <header className="px-4 pt-2 pb-0 text-center md:pt-3">
+            <h2 className="text-lg font-normal tracking-[0.2em] text-white md:text-xl">
+              DYNAMIC TERRAIN
+            </h2>
+            <TitleRule />
+          </header>
           {TERRAIN_ROWS.map((row, i) => (
-            <TerrainRow key={i} row={row} index={i} />
+            <TerrainRow key={i} row={row} />
           ))}
         </section>
       </div>
