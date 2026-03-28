@@ -96,6 +96,69 @@ function App() {
     [],
   )
 
+  const patchMinionConditionRemove = useCallback(
+    (groupIndex: number, monsterIndex: number, minionIndex: number, conditionIndex: number) => {
+      setEncounterGroups((prev) =>
+        prev.map((g, gi) => {
+          if (gi !== groupIndex) return g
+          return {
+            ...g,
+            monsters: g.monsters.map((m, mi) => {
+              if (mi !== monsterIndex || !m.minions) return m
+              return {
+                ...m,
+                minions: m.minions.map((minion, mni) => {
+                  if (mni !== minionIndex) return minion
+                  return {
+                    ...minion,
+                    conditions: minion.conditions.filter((_, ci) => ci !== conditionIndex),
+                  }
+                }),
+              }
+            }),
+          }
+        }),
+      )
+    },
+    [],
+  )
+
+  const patchMinionConditionAddOrSet = useCallback(
+    (groupIndex: number, monsterIndex: number, minionIndex: number, label: string, state: ConditionState) => {
+      setEncounterGroups((prev) =>
+        prev.map((g, gi) => {
+          if (gi !== groupIndex) return g
+          return {
+            ...g,
+            monsters: g.monsters.map((m, mi) => {
+              if (mi !== monsterIndex || !m.minions) return m
+              return {
+                ...m,
+                minions: m.minions.map((minion, mni) => {
+                  if (mni !== minionIndex) return minion
+                  const idx = minion.conditions.findIndex((c) => c.label === label)
+                  if (idx >= 0) {
+                    return {
+                      ...minion,
+                      conditions: minion.conditions.map((c, ci) =>
+                        ci === idx ? { ...c, state } : c,
+                      ),
+                    }
+                  }
+                  return {
+                    ...minion,
+                    conditions: [...minion.conditions, { label, state }],
+                  }
+                }),
+              }
+            }),
+          }
+        }),
+      )
+    },
+    [],
+  )
+
   const patchTerrainStamina = useCallback((rowIndex: number, stamina: [number, number]) => {
     setTerrainRows((prev) =>
       prev.map((r, ri) =>
@@ -183,6 +246,12 @@ function App() {
               onMonsterConditionRemove={(mi, ci) => patchMonsterConditionRemove(gi, mi, ci)}
               onMonsterConditionAddOrSet={(mi, label, state) =>
                 patchMonsterConditionAddOrSet(gi, mi, label, state)
+              }
+              onMinionConditionRemove={(mi, mni, ci) =>
+                patchMinionConditionRemove(gi, mi, mni, ci)
+              }
+              onMinionConditionAddOrSet={(mi, mni, label, state) =>
+                patchMinionConditionAddOrSet(gi, mi, mni, label, state)
               }
             />
           ))}

@@ -4,6 +4,7 @@ import type {
   EncounterGroupSeed,
   GroupColorId,
   Marip,
+  MinionEntry,
   TerrainRowSeed,
   TerrainRowState,
 } from './types'
@@ -158,6 +159,12 @@ export const ENCOUNTER_GROUPS: readonly EncounterGroupSeed[] = [
         dist: 3,
         stab: 0,
         conditions: ['Taunted'],
+        minions: [
+          { name: 'Goblin Spinecleaver 1', initials: 'GS1', conditions: [] },
+          { name: 'Goblin Spinecleaver 2', initials: 'GS2', conditions: ['Bleeding'] },
+          { name: 'Goblin Spinecleaver 3', initials: 'GS3', conditions: [] },
+          { name: 'Goblin Spinecleaver 4', initials: 'GS4', conditions: [] },
+        ],
       },
     ],
   },
@@ -249,6 +256,16 @@ export function conditionEntryFromLabel(label: string): ConditionEntry {
   return { label, state: 'neutral' }
 }
 
+export function cloneMinionEntries(
+  seeds: readonly { name: string; initials: string; conditions: readonly string[] }[],
+): MinionEntry[] {
+  return seeds.map((s) => ({
+    name: s.name,
+    initials: s.initials,
+    conditions: s.conditions.map(conditionEntryFromLabel),
+  }))
+}
+
 export function cloneEncounterGroups(): EncounterGroup[] {
   return ENCOUNTER_GROUPS.map((group, groupIndex) => ({
     color: GROUP_COLOR_ORDER[groupIndex % GROUP_COLOR_ORDER.length]!,
@@ -262,6 +279,7 @@ export function cloneEncounterGroups(): EncounterGroup[] {
       dist: m.dist,
       stab: m.stab,
       conditions: m.conditions.map(conditionEntryFromLabel),
+      ...(m.minions ? { minions: cloneMinionEntries(m.minions) } : {}),
     })),
   }))
 }

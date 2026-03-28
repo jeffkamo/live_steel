@@ -17,6 +17,13 @@ export type Monster = {
   dist: number
   stab: number
   conditions: readonly ConditionEntry[]
+  minions?: MinionEntry[]
+}
+
+export type MinionEntry = {
+  name: string
+  initials: string
+  conditions: readonly ConditionEntry[]
 }
 
 export type GroupColorId =
@@ -36,8 +43,17 @@ export type EncounterGroup = {
   color: GroupColorId
 }
 
+export type MinionEntrySeed = {
+  name: string
+  initials: string
+  conditions: readonly string[]
+}
+
 /** Static encounter data uses plain condition names; clone maps them to {@link ConditionEntry}. */
-export type MonsterSeed = Omit<Monster, 'conditions'> & { conditions: readonly string[] }
+export type MonsterSeed = Omit<Monster, 'conditions' | 'minions'> & {
+  conditions: readonly string[]
+  minions?: readonly MinionEntrySeed[]
+}
 
 export type EncounterGroupSeed = {
   monsters: readonly MonsterSeed[]
