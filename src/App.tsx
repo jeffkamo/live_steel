@@ -316,9 +316,9 @@ function findConditionOnMonster(
   return conditions.find((c) => c.label === label)
 }
 
-/** 6 columns: group | creatures | stamina | characteristics (MARIP) | FS/Dist/Stab | conditions */
+/** 6 columns: group | creatures (shrinks first) | stamina | MARIP | FS/Dist/Stab | conditions (width = icon row) */
 const ROSTER_GRID_TEMPLATE =
-  '5.5rem minmax(0,1.35fr) minmax(5.25rem,7rem) minmax(5.75rem,7.25rem) 7.25rem minmax(0,1.15fr)'
+  '5.5rem minmax(0,1fr) minmax(5.25rem,7rem) minmax(5.75rem,7.25rem) 7.25rem max-content'
 
 const terrainGridClass = 'grid grid-cols-[minmax(0,1.35fr)_minmax(4.5rem,6.5rem)_minmax(0,1.2fr)]'
 
@@ -732,7 +732,7 @@ function conditionIconSvg(className: string | undefined, children: ReactNode) {
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
-      strokeWidth={1.75}
+      strokeWidth={1.875}
       strokeLinecap="round"
       strokeLinejoin="round"
       className={className}
@@ -867,19 +867,23 @@ function ConditionIcon({ label, className }: { label: string; className?: string
 }
 
 const conditionIconHoverOutline =
-  'motion-reduce:transition-none transition-[outline-color,outline-width] duration-150 hover:z-[1] hover:outline hover:outline-2 hover:outline-offset-0 hover:outline-amber-500/65'
+  'motion-reduce:transition-none outline outline-2 outline-transparent outline-offset-0 transition-[outline-color,outline-offset,z-index] duration-150 hover:z-[1] hover:outline-amber-500/70 hover:outline-offset-0'
 
 function conditionIconShellClass(isActive: boolean, state: ConditionState | null): string {
   const base =
-    'flex size-5 shrink-0 items-center justify-center rounded-full border transition-[opacity,colors,box-shadow,outline-color] motion-reduce:transition-none'
+    'flex size-[1.625rem] shrink-0 items-center justify-center rounded-full border transition-[opacity,colors,box-shadow,outline-color] motion-reduce:transition-none'
   if (!isActive) {
-    return `${base} border-transparent text-zinc-500 opacity-[0.32]`
+    return `${base} border-zinc-600/45 text-zinc-300 opacity-[0.58]`
   }
   if (state === 'neutral') {
     return `${base} border-zinc-600/80 bg-zinc-800/90 text-zinc-100 opacity-100`
   }
   return `${base} border-amber-500/75 bg-amber-500/15 text-amber-100 opacity-100 ring-1 ring-amber-500/45`
 }
+
+const conditionStripOutlinePad = 'py-1.5 -my-1.5 px-1.5 -mx-1.5'
+const conditionStripScrollbar =
+  'pb-px [-ms-overflow-style:none] [scrollbar-width:thin] [&::-webkit-scrollbar]:h-1 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-zinc-600/80'
 
 function ConditionCatalogIconStrip({
   conditions,
@@ -890,43 +894,57 @@ function ConditionCatalogIconStrip({
   interactive: boolean
   onToggleLabel?: (label: string) => void
 }) {
+  const iconRow = CONDITION_CATALOG.map((label) => {
+    const active = findConditionOnMonster(conditions, label)
+    const tip = conditionCatalogTooltip(label, active)
+    const shell = conditionIconShellClass(active !== undefined, active?.state ?? null)
+    if (interactive && onToggleLabel) {
+      return (
+        <button
+          key={label}
+          type="button"
+          data-condition-toggle
+          title={tip}
+          aria-label={active ? `Remove ${label}` : `Add ${label}`}
+          aria-pressed={active !== undefined}
+          onClick={(e) => {
+            e.stopPropagation()
+            onToggleLabel(label)
+          }}
+          className={`${shell} ${conditionIconHoverOutline} cursor-pointer hover:brightness-110 focus-visible:z-[1] focus-visible:outline-amber-600/80 focus-visible:outline-offset-2`}
+        >
+          <ConditionIcon label={label} className="size-[0.875rem] shrink-0" />
+        </button>
+      )
+    }
+    return (
+      <span
+        key={label}
+        title={tip}
+        aria-label={tip}
+        role="img"
+        className={`${shell} ${conditionIconHoverOutline}`}
+      >
+        <ConditionIcon label={label} className="size-[0.875rem] shrink-0" />
+      </span>
+    )
+  })
+
+  if (interactive) {
+    return (
+      <div
+        className={`inline-flex max-w-full flex-nowrap items-center justify-start gap-[0.1875rem] ${conditionStripOutlinePad}`}
+      >
+        {iconRow}
+      </div>
+    )
+  }
+
   return (
-    <div className="flex w-full min-w-0 flex-nowrap items-center justify-start gap-0.5 overflow-x-auto pb-px [-ms-overflow-style:none] [scrollbar-width:thin] [&::-webkit-scrollbar]:h-1 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-zinc-600/80">
-      {CONDITION_CATALOG.map((label) => {
-        const active = findConditionOnMonster(conditions, label)
-        const tip = conditionCatalogTooltip(label, active)
-        const shell = conditionIconShellClass(active !== undefined, active?.state ?? null)
-        if (interactive && onToggleLabel) {
-          return (
-            <button
-              key={label}
-              type="button"
-              data-condition-toggle
-              title={tip}
-              aria-label={active ? `Remove ${label}` : `Add ${label}`}
-              aria-pressed={active !== undefined}
-              onClick={(e) => {
-                e.stopPropagation()
-                onToggleLabel(label)
-              }}
-              className={`${shell} ${conditionIconHoverOutline} cursor-pointer outline-none hover:brightness-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-600/70`}
-            >
-              <ConditionIcon label={label} className="size-[0.7rem] shrink-0" />
-            </button>
-          )
-        }
-        return (
-          <span
-            key={label}
-            title={tip}
-            aria-label={tip}
-            role="img"
-            className={`${shell} ${conditionIconHoverOutline}`}
-          >
-            <ConditionIcon label={label} className="size-[0.7rem] shrink-0" />
-          </span>
-        )
-      })}
+    <div
+      className={`max-w-full min-w-0 overflow-x-auto ${conditionStripOutlinePad} ${conditionStripScrollbar}`}
+    >
+      <div className="inline-flex flex-nowrap items-center justify-start gap-[0.1875rem]">{iconRow}</div>
     </div>
   )
 }
@@ -1201,7 +1219,7 @@ function CreatureConditionCell({
   return (
     <div
       ref={cellRef}
-      className={`relative flex h-full min-h-0 w-full min-w-0 cursor-pointer flex-col justify-center rounded-md p-3 outline-none transition-[background-color] duration-200 ease-out motion-reduce:transition-none hover:bg-zinc-800/35 focus-visible:ring-2 focus-visible:ring-amber-500/45 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950 sm:p-3.5 ${rowTone}`}
+      className={`relative flex h-full min-h-0 w-full cursor-pointer flex-col justify-center rounded-md p-3 outline-none transition-[background-color] duration-200 ease-out motion-reduce:transition-none hover:bg-zinc-800/35 focus-visible:ring-2 focus-visible:ring-amber-500/45 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950 sm:p-3.5 ${rowTone}`}
       role="group"
       tabIndex={0}
       aria-expanded={open}
@@ -1215,7 +1233,7 @@ function CreatureConditionCell({
         }
       }}
     >
-      <div className="flex w-full min-w-0 flex-col justify-center">
+      <div className="flex w-full flex-col justify-center">
         <ConditionCatalogIconStrip
           conditions={conditions}
           interactive
