@@ -94,7 +94,7 @@ export function GroupSection({
     monsterRows.push({ monsterIndex: i, startRow: currentRow, rowCount: count })
     currentRow += count
   }
-  const totalGridRows = currentRow - 1
+  const totalGridRows = Math.max(currentRow - 1, 1)
 
   return (
     <div

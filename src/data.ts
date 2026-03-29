@@ -413,3 +413,8 @@ export function otherGroupIndexForColor(
   const idx = encounterGroupColors.findIndex((c, i) => i !== thisGroupIndex && c === colorId)
   return idx >= 0 ? idx : null
 }
+
+export function nextAvailableColor(usedColors: readonly GroupColorId[]): GroupColorId {
+  const unused = GROUP_COLOR_ORDER.find((c) => !usedColors.includes(c))
+  return unused ?? GROUP_COLOR_ORDER[usedColors.length % GROUP_COLOR_ORDER.length]!
+}

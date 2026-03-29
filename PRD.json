@@ -168,7 +168,7 @@
         "Write specs covering group creation and initial empty state",
         "Run the specs, fix any failures until all pass"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "DATA-003",

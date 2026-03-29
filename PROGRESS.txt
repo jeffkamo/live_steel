@@ -254,3 +254,24 @@ Add monsters to existing group — "Add monster" button per group, opens searcha
 - src/components/GroupSection.tsx
 - src/App.test.tsx
 - PRD.json
+
+
+[DATA-002]
+
+Create new blank encounter group — "Add group" button below encounter groups, creates empty group with auto-assigned color and turn state
+
+**Key decisions:**
+- nextAvailableColor() in data.ts picks first unused color from GROUP_COLOR_ORDER; wraps modulo when all 10 exhausted
+- addNewGroup callback in App.tsx atomically appends empty group to encounterGroups and false to groupTurnActed
+- GroupSection handles empty group (0 monsters) by clamping totalGridRows to min 1 so turn column renders
+- "Add group" button styled with dashed border + plus icon, consistent with AddMonsterButton pattern
+- resetAllTurns fixed: was using static ENCOUNTER_GROUPS.length, now uses prev.map(() => false) to handle dynamic group count
+- 8 new App integration tests + 4 nextAvailableColor unit tests
+
+**Files changed:**
+- src/data.ts
+- src/data.test.ts
+- src/App.tsx
+- src/components/GroupSection.tsx
+- src/App.test.tsx
+- PRD.json

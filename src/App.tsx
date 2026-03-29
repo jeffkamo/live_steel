@@ -4,6 +4,7 @@ import {
   cloneEncounterGroups,
   cloneTerrainRows,
   ENCOUNTER_GROUPS,
+  nextAvailableColor,
   ROSTER_GRID_TEMPLATE,
 } from './data'
 import { TitleRule } from './components/TitleRule'
@@ -222,6 +223,14 @@ function App() {
     [],
   )
 
+  const addNewGroup = useCallback(() => {
+    setEncounterGroups((prev) => {
+      const color = nextAvailableColor(prev.map((g) => g.color))
+      return [...prev, { monsters: [], color }]
+    })
+    setGroupTurnActed((prev) => [...prev, false])
+  }, [])
+
   const patchMinionConditionAddOrSet = useCallback(
     (groupIndex: number, monsterIndex: number, minionIndex: number, label: string, state: ConditionState) => {
       setEncounterGroups((prev) =>
@@ -297,7 +306,7 @@ function App() {
   }, [])
 
   const resetAllTurns = useCallback(() => {
-    setGroupTurnActed(ENCOUNTER_GROUPS.map(() => false))
+    setGroupTurnActed((prev) => prev.map(() => false))
   }, [])
 
   return (
@@ -363,6 +372,17 @@ function App() {
               onAddMonster={(monster) => addMonsterToGroup(gi, monster)}
             />
           ))}
+          <button
+            type="button"
+            onClick={addNewGroup}
+            aria-label="Add new encounter group"
+            className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-zinc-700 px-4 py-3 font-sans text-sm tracking-wide text-zinc-400 transition-colors hover:border-zinc-500 hover:bg-zinc-900/60 hover:text-zinc-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500/60"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+              <path d="M10.75 4.75a.75.75 0 0 0-1.5 0v4.5h-4.5a.75.75 0 0 0 0 1.5h4.5v4.5a.75.75 0 0 0 1.5 0v-4.5h4.5a.75.75 0 0 0 0-1.5h-4.5v-4.5Z" />
+            </svg>
+            Add group
+          </button>
         </section>
 
         <section aria-label="Dynamic terrain" className="mt-8 flex flex-col gap-2 md:mt-10">

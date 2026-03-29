@@ -9,6 +9,7 @@ import {
   normalizeStamina,
   applyStaminaDelta,
   otherGroupIndexForColor,
+  nextAvailableColor,
   monsterFromBestiary,
   CONDITION_CATALOG,
   GROUP_COLOR_ORDER,
@@ -226,6 +227,25 @@ describe('CONDITION_CATALOG', () => {
 describe('MARIP_HEADERS', () => {
   it('has 5 entries for M, A, R, I, P', () => {
     expect(MARIP_HEADERS.map((h) => h.letter)).toEqual(['M', 'A', 'R', 'I', 'P'])
+  })
+})
+
+describe('nextAvailableColor', () => {
+  it('returns the first color when none are used', () => {
+    expect(nextAvailableColor([])).toBe(GROUP_COLOR_ORDER[0])
+  })
+
+  it('skips already-used colors', () => {
+    expect(nextAvailableColor(['red', 'orange', 'yellow', 'green'])).toBe('blue')
+  })
+
+  it('wraps around when all colors are used', () => {
+    const allColors = [...GROUP_COLOR_ORDER]
+    expect(nextAvailableColor(allColors)).toBe(GROUP_COLOR_ORDER[0])
+  })
+
+  it('returns the first unused color in order', () => {
+    expect(nextAvailableColor(['red', 'blue'])).toBe('orange')
   })
 })
 

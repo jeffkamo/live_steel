@@ -1369,6 +1369,93 @@ describe('App', () => {
     await user.click(within(dialog).getByRole('button', { name: /^Decrease stamina by 1$/i }))
   })
 
+  // --- Create new blank group (DATA-002) ---
+
+  it('shows an "Add new encounter group" button', () => {
+    render(<App />)
+    expect(screen.getByRole('button', { name: /Add new encounter group/i })).toBeInTheDocument()
+  })
+
+  it('clicking "Add group" creates a new empty encounter group', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    expect(screen.queryByRole('button', { name: turnButton(5, 'pending') })).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: /Add new encounter group/i }))
+
+    expect(screen.getByRole('button', { name: turnButton(5, 'pending') })).toBeInTheDocument()
+  })
+
+  it('new empty group has an "Add monster" button', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    await user.click(screen.getByRole('button', { name: /Add new encounter group/i }))
+    const addButtons = screen.getAllByRole('button', { name: /Add monster to group/i })
+    expect(addButtons.length).toBe(5)
+  })
+
+  it('new group gets a distinct color not used by existing groups', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    await user.click(screen.getByRole('button', { name: /Add new encounter group/i }))
+    const badge5 = screen.getByRole('button', { name: turnButton(5, 'pending') })
+    expect(badge5).toBeInTheDocument()
+  })
+
+  it('adding a monster to the new empty group makes it fully functional', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    await user.click(screen.getByRole('button', { name: /Add new encounter group/i }))
+
+    const addButtons = screen.getAllByRole('button', { name: /Add monster to group/i })
+    const newGroupAddBtn = addButtons[addButtons.length - 1]!
+    await user.click(newGroupAddBtn)
+    const input = screen.getByRole('textbox', { name: /Search bestiary/i })
+    await user.type(input, 'Troll Whelp')
+    const listbox = screen.getByRole('listbox', { name: /Available monsters/i })
+    const option = within(listbox).getAllByRole('option').find(
+      (el) => el.textContent === 'Troll Whelp',
+    )
+    expect(option).toBeTruthy()
+    await user.click(within(option!).getByRole('button'))
+
+    expect(screen.getByText('Troll Whelp', { exact: true })).toBeInTheDocument()
+  })
+
+  it('new group turn toggle works independently', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    await user.click(screen.getByRole('button', { name: /Add new encounter group/i }))
+
+    const g5 = screen.getByRole('button', { name: turnButton(5, 'pending') })
+    await user.click(g5)
+    expect(screen.getByRole('button', { name: turnButton(5, 'acted') })).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByRole('button', { name: turnButton(1, 'pending') })).toHaveAttribute('aria-pressed', 'false')
+  })
+
+  it('reset clears turn state of newly added groups too', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    await user.click(screen.getByRole('button', { name: /Add new encounter group/i }))
+    const g5 = screen.getByRole('button', { name: turnButton(5, 'pending') })
+    await user.click(g5)
+    expect(screen.getByRole('button', { name: turnButton(5, 'acted') })).toHaveAttribute('aria-pressed', 'true')
+
+    await user.click(screen.getByRole('button', { name: /Reset all encounter group turn diamonds to pending/i }))
+
+    expect(screen.getByRole('button', { name: turnButton(5, 'pending') })).toHaveAttribute('aria-pressed', 'false')
+  })
+
+  it('multiple new groups can be created', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    await user.click(screen.getByRole('button', { name: /Add new encounter group/i }))
+    await user.click(screen.getByRole('button', { name: /Add new encounter group/i }))
+
+    expect(screen.getByRole('button', { name: turnButton(5, 'pending') })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: turnButton(6, 'pending') })).toBeInTheDocument()
+  })
+
   it('shows "Revive" cue when minions are dead but stamina is restored', async () => {
     const user = userEvent.setup()
     render(<App />)
