@@ -45,11 +45,11 @@ describe('App', () => {
     render(<App />)
     const tracker = screen.getByRole('region', { name: 'Creature tracker' })
     expect(screen.getByText('Goblin Assassin 1', { exact: true })).toBeInTheDocument()
-    expect(screen.getByText('Level 1 Horde · Ambusher')).toBeInTheDocument()
+    expect(screen.getByText('Level 1 · Horde Ambusher')).toBeInTheDocument()
     expect(screen.getByText('5 / 15')).toBeInTheDocument()
     expect(within(tracker).getByRole('button', { name: /^Remove Weakened$/i })).toBeInTheDocument()
     expect(within(tracker).getByRole('button', { name: /^Remove Slowed$/i })).toBeInTheDocument()
-    expect(screen.getByText('Ironwood Sentinel', { exact: true })).toBeInTheDocument()
+    expect(screen.getByText('Minotaur Sunderer', { exact: true })).toBeInTheDocument()
     expect(within(tracker).getByRole('button', { name: /^Remove Bleeding$/i })).toBeInTheDocument()
   })
 
@@ -68,22 +68,19 @@ describe('App', () => {
     expect(within(firstMarip as HTMLElement).getByText('2')).toBeInTheDocument()
   })
 
-  it('shows placeholder stamina and MARIP characteristics for reserve slot', () => {
+  it('shows stamina from bestiary for Goblin Stinker', () => {
     render(<App />)
-    const nameEl = screen.getByText('Reserve slot', { exact: true })
-    const groupGrid = nameEl.closest('div.grid.items-stretch.rounded-lg')
-    expect(groupGrid).toBeTruthy()
-    const scope = within(groupGrid as HTMLElement)
-    expect(scope.getAllByText('—').length).toBeGreaterThanOrEqual(1)
+    const staminaGroup = screen.getByRole('group', { name: /^Edit stamina for Goblin Stinker$/i })
+    expect(within(staminaGroup).getByText('10 / 10')).toBeInTheDocument()
   })
 
   it('shows all condition icons dimmed when a creature has none active', () => {
     render(<App />)
-    const nameEl = screen.getByText('Reserve slot', { exact: true })
+    const nameEl = screen.getByText('Goblin Stinker', { exact: true })
     const groupGrid = nameEl.closest('div.grid.items-stretch.rounded-lg')
     expect(groupGrid).toBeTruthy()
     const scope = within(groupGrid as HTMLElement)
-    const reserveConditions = scope.getByRole('group', { name: /^Conditions for Reserve slot/i })
+    const reserveConditions = scope.getByRole('group', { name: /^Conditions for Goblin Stinker/i })
     expect(within(reserveConditions).getByRole('button', { name: /^Add Weakened$/i })).toHaveAttribute(
       'aria-pressed',
       'false',
@@ -208,18 +205,18 @@ describe('App', () => {
   it('opens add-condition dialog from cell keyboard and adds neutral condition from name', async () => {
     const user = userEvent.setup()
     render(<App />)
-    const nameEl = screen.getByText('Reserve slot', { exact: true })
+    const nameEl = screen.getByText('Goblin Stinker', { exact: true })
     const groupGrid = nameEl.closest('div.grid.items-stretch.rounded-lg')
     expect(groupGrid).toBeTruthy()
     const scope = within(groupGrid as HTMLElement)
-    const reserveConditions = scope.getByRole('group', { name: /^Conditions for Reserve slot/i })
+    const reserveConditions = scope.getByRole('group', { name: /^Conditions for Goblin Stinker/i })
 
     expect(within(reserveConditions).getByRole('button', { name: /^Add Frightened$/i })).toBeInTheDocument()
     reserveConditions.focus()
     await user.keyboard('{Enter}')
 
-    const picker = await screen.findByRole('dialog', { name: /^Add condition to Reserve slot$/i })
-    // Frightened — avoids clashing with Dazed on Ironwood Sentinel in the same encounter group.
+    const picker = await screen.findByRole('dialog', { name: /^Add condition to Goblin Stinker$/i })
+    // Frightened — avoids clashing with Dazed on Minotaur Sunderer in the same encounter group.
     await user.click(within(picker).getByRole('button', { name: /^Frightened$/i }))
 
     expect(within(reserveConditions).getByRole('button', { name: /^Remove Frightened$/i })).toBeInTheDocument()
@@ -229,28 +226,28 @@ describe('App', () => {
   it('adds EoT and SE from picker duration controls', async () => {
     const user = userEvent.setup()
     render(<App />)
-    const nameEl = screen.getByText('Reserve slot', { exact: true })
+    const nameEl = screen.getByText('Goblin Stinker', { exact: true })
     const groupGrid = nameEl.closest('div.grid.items-stretch.rounded-lg')
     expect(groupGrid).toBeTruthy()
     const scope = within(groupGrid as HTMLElement)
-    const reserveConditions = scope.getByRole('group', { name: /^Conditions for Reserve slot/i })
+    const reserveConditions = scope.getByRole('group', { name: /^Conditions for Goblin Stinker/i })
 
     reserveConditions.focus()
     await user.keyboard('{Enter}')
-    const picker = screen.getByRole('dialog', { name: /^Add condition to Reserve slot$/i })
+    const picker = screen.getByRole('dialog', { name: /^Add condition to Goblin Stinker$/i })
     await user.click(
-      within(picker).getByRole('button', { name: /^Add Marked as end of turn on Reserve slot$/i }),
+      within(picker).getByRole('button', { name: /^Add Marked as end of turn on Goblin Stinker$/i }),
     )
 
     expect(scope.getByTitle('Marked (End of turn)')).toBeInTheDocument()
 
     const markedEot = within(picker).getByRole('button', {
-      name: /^Add Marked as end of turn on Reserve slot$/i,
+      name: /^Add Marked as end of turn on Goblin Stinker$/i,
     })
     expect(markedEot.className).toMatch(/amber/)
 
     await user.click(
-      within(picker).getByRole('button', { name: /^Add Prone as save ends on Reserve slot$/i }),
+      within(picker).getByRole('button', { name: /^Add Prone as save ends on Goblin Stinker$/i }),
     )
     expect(scope.getByTitle('Prone (Save ends)')).toBeInTheDocument()
   })
@@ -293,7 +290,7 @@ describe('App', () => {
     const staminaGroup = screen.getByRole('group', { name: /^Edit stamina for Goblin Assassin 1$/i })
     await user.hover(staminaGroup)
     await user.click(within(staminaGroup).getByRole('button', { name: /^Increase stamina by 10$/i }))
-    expect(screen.getByText('15 / 15')).toBeInTheDocument()
+    expect(within(staminaGroup).getByText('15 / 15')).toBeInTheDocument()
   })
 
   it('caps stamina at max even with +1 when already at max', async () => {
@@ -302,7 +299,7 @@ describe('App', () => {
     const staminaGroup = screen.getByRole('group', { name: /^Edit stamina for Goblin Underboss$/i })
     await user.hover(staminaGroup)
     await user.click(within(staminaGroup).getByRole('button', { name: /^Increase stamina by 1$/i }))
-    expect(screen.getByText('22 / 22')).toBeInTheDocument()
+    expect(within(staminaGroup).getByText('15 / 15')).toBeInTheDocument()
   })
 
   // --- Stamina glyph states ---
@@ -331,9 +328,12 @@ describe('App', () => {
     expect(skulls.length).toBeGreaterThanOrEqual(1)
   })
 
-  it('shows dash for zero/zero stamina (reserve slot)', () => {
+  it('shows dash for zero/zero stamina on terrain with no pool', () => {
     render(<App />)
-    const staminaGroup = screen.getByRole('group', { name: /^Edit stamina for Reserve slot$/i })
+    const terrain = screen.getByRole('region', { name: 'Dynamic terrain' })
+    const staminaGroup = within(terrain).getByRole('group', {
+      name: /^Edit stamina for terrain: Ritual circle/i,
+    })
     expect(within(staminaGroup).getByText('—')).toBeInTheDocument()
     expect(within(staminaGroup).queryByRole('img', { name: /Healthy|Winded|Dead/i })).toBeNull()
   })
@@ -341,10 +341,13 @@ describe('App', () => {
   it('positive delta on 0/0 stamina creates new max equal to delta', async () => {
     const user = userEvent.setup()
     render(<App />)
-    const staminaGroup = screen.getByRole('group', { name: /^Edit stamina for Reserve slot$/i })
+    const terrain = screen.getByRole('region', { name: 'Dynamic terrain' })
+    const staminaGroup = within(terrain).getByRole('group', {
+      name: /^Edit stamina for terrain: Ritual circle/i,
+    })
     await user.hover(staminaGroup)
     await user.click(within(staminaGroup).getByRole('button', { name: /^Increase stamina by 10$/i }))
-    expect(screen.getByText('10 / 10')).toBeInTheDocument()
+    expect(within(staminaGroup).getByText('10 / 10')).toBeInTheDocument()
   })
 
   // --- Turn diamonds: group independence ---
@@ -393,17 +396,17 @@ describe('App', () => {
   it('closes the condition picker dialog on Escape', async () => {
     const user = userEvent.setup()
     render(<App />)
-    const nameEl = screen.getByText('Reserve slot', { exact: true })
+    const nameEl = screen.getByText('Goblin Stinker', { exact: true })
     const groupGrid = nameEl.closest('div.grid.items-stretch.rounded-lg') as HTMLElement
     const scope = within(groupGrid)
-    const reserveConditions = scope.getByRole('group', { name: /^Conditions for Reserve slot/i })
+    const reserveConditions = scope.getByRole('group', { name: /^Conditions for Goblin Stinker/i })
 
     reserveConditions.focus()
     await user.keyboard('{Enter}')
-    expect(screen.getByRole('dialog', { name: /^Add condition to Reserve slot$/i })).toBeInTheDocument()
+    expect(screen.getByRole('dialog', { name: /^Add condition to Goblin Stinker$/i })).toBeInTheDocument()
 
     await user.keyboard('{Escape}')
-    expect(screen.queryByRole('dialog', { name: /^Add condition to Reserve slot$/i })).toBeNull()
+    expect(screen.queryByRole('dialog', { name: /^Add condition to Goblin Stinker$/i })).toBeNull()
   })
 
   // --- Condition picker: re-opening and selecting a second condition ---
@@ -411,14 +414,14 @@ describe('App', () => {
   it('adds a condition via picker name button (neutral), then adds a second via another open', async () => {
     const user = userEvent.setup()
     render(<App />)
-    const nameEl = screen.getByText('Reserve slot', { exact: true })
+    const nameEl = screen.getByText('Goblin Stinker', { exact: true })
     const groupGrid = nameEl.closest('div.grid.items-stretch.rounded-lg') as HTMLElement
     const scope = within(groupGrid)
-    const reserveConditions = scope.getByRole('group', { name: /^Conditions for Reserve slot/i })
+    const reserveConditions = scope.getByRole('group', { name: /^Conditions for Goblin Stinker/i })
 
     reserveConditions.focus()
     await user.keyboard('{Enter}')
-    const picker = screen.getByRole('dialog', { name: /^Add condition to Reserve slot$/i })
+    const picker = screen.getByRole('dialog', { name: /^Add condition to Goblin Stinker$/i })
     await user.click(within(picker).getByRole('button', { name: /^Bleeding$/i }))
     expect(within(reserveConditions).getByTitle('Bleeding (neutral)')).toBeInTheDocument()
 
@@ -448,10 +451,10 @@ describe('App', () => {
   it('removing a condition on one creature does not affect another in the same group', async () => {
     const user = userEvent.setup()
     render(<App />)
-    const sentinelGrid = screen.getByText('Ironwood Sentinel', { exact: true }).closest('div.grid.items-stretch.rounded-lg') as HTMLElement
+    const sentinelGrid = screen.getByText('Minotaur Sunderer', { exact: true }).closest('div.grid.items-stretch.rounded-lg') as HTMLElement
     const sentinelScope = within(sentinelGrid)
-    const sentinelConditions = sentinelScope.getByRole('group', { name: /^Conditions for Ironwood Sentinel\./i })
-    const echoConditions = sentinelScope.getByRole('group', { name: /^Conditions for Arcane Echo\./i })
+    const sentinelConditions = sentinelScope.getByRole('group', { name: /^Conditions for Minotaur Sunderer\./i })
+    const echoConditions = sentinelScope.getByRole('group', { name: /^Conditions for Gnoll Cackler\./i })
 
     expect(within(sentinelConditions).getByRole('button', { name: /^Remove Bleeding$/i })).toBeInTheDocument()
     expect(within(echoConditions).getByRole('button', { name: /^Remove Restrained$/i })).toBeInTheDocument()
@@ -494,8 +497,8 @@ describe('App', () => {
   it('renders all expected creature names across all encounter groups', () => {
     render(<App />)
     const expectedNames = [
-      'Goblin Assassin 1', 'Goblin Raider', 'Goblin Underboss',
-      'Minions', 'Ironwood Sentinel', 'Arcane Echo', 'Reserve slot',
+      'Goblin Assassin 1', 'Goblin Warrior', 'Goblin Underboss',
+      'Minions', 'Minotaur Sunderer', 'Gnoll Cackler', 'Goblin Stinker',
     ]
     for (const name of expectedNames) {
       expect(screen.getByText(name, { exact: true })).toBeInTheDocument()
@@ -504,11 +507,12 @@ describe('App', () => {
 
   it('renders creature subtitles', () => {
     render(<App />)
-    expect(screen.getByText('Level 1 Horde · Ambusher')).toBeInTheDocument()
-    expect(screen.getByText('Level 2 Solo · Commander')).toBeInTheDocument()
-    expect(screen.getByText('Level 3 Elite · Bruiser')).toBeInTheDocument()
-    expect(screen.getByText('Level 2 Horde · Caster')).toBeInTheDocument()
-    expect(screen.getByText('Drop-in threat or hazard')).toBeInTheDocument()
+    expect(screen.getByText('Level 1 · Horde Ambusher')).toBeInTheDocument()
+    expect(screen.getByText('Level 1 · Horde Harrier')).toBeInTheDocument()
+    expect(screen.getByText('Level 1 · Horde Support')).toBeInTheDocument()
+    expect(screen.getByText('Level 3 · Elite Brute')).toBeInTheDocument()
+    expect(screen.getByText('Level 2 · Horde Hexer')).toBeInTheDocument()
+    expect(screen.getByText('Level 1 · Horde Controller')).toBeInTheDocument()
   })
 
   it('renders FS/Dist/Stab stat headers', () => {
@@ -520,9 +524,9 @@ describe('App', () => {
 
   // --- MARIP characteristics for multiple creatures ---
 
-  it('renders MARIP values for Ironwood Sentinel (2, -1, 0, 1, 2)', () => {
+  it('renders MARIP values for Minotaur Sunderer (2, 1, 0, 2, -1)', () => {
     render(<App />)
-    const nameEl = screen.getByText('Ironwood Sentinel', { exact: true })
+    const nameEl = screen.getByText('Minotaur Sunderer', { exact: true })
     const groupGrid = nameEl.closest('div.grid.items-stretch.rounded-lg') as HTMLElement
     const scope = within(groupGrid)
     const maripGroups = scope.getAllByRole('group', { name: /^Characteristics \(MARIP\)$/i })
@@ -538,14 +542,15 @@ describe('App', () => {
   it('transitions from healthy to winded heart when stamina drops to half', async () => {
     const user = userEvent.setup()
     render(<App />)
-    const staminaGroup = screen.getByRole('group', { name: /^Edit stamina for Goblin Raider$/i })
+    const staminaGroup = screen.getByRole('group', { name: /^Edit stamina for Goblin Warrior$/i })
     expect(within(staminaGroup).getAllByRole('img', { name: /Healthy/i }).length).toBeGreaterThanOrEqual(1)
 
     await user.hover(staminaGroup)
     const minus1 = within(staminaGroup).getByRole('button', { name: /^Decrease stamina by 1$/i })
-    await user.click(minus1)
-    await user.click(minus1)
-    expect(screen.getByText('6 / 12')).toBeInTheDocument()
+    for (let i = 0; i < 8; i++) {
+      await user.click(minus1)
+    }
+    expect(screen.getByText('7 / 15')).toBeInTheDocument()
     expect(within(staminaGroup).getAllByRole('img', { name: /Winded/i }).length).toBeGreaterThanOrEqual(1)
   })
 
@@ -588,18 +593,18 @@ describe('App', () => {
   it('changing condition duration from EoT to SE via picker updates the display', async () => {
     const user = userEvent.setup()
     render(<App />)
-    const nameEl = screen.getByText('Reserve slot', { exact: true })
+    const nameEl = screen.getByText('Goblin Stinker', { exact: true })
     const groupGrid = nameEl.closest('div.grid.items-stretch.rounded-lg') as HTMLElement
     const scope = within(groupGrid)
-    const reserveConditions = scope.getByRole('group', { name: /^Conditions for Reserve slot/i })
+    const reserveConditions = scope.getByRole('group', { name: /^Conditions for Goblin Stinker/i })
 
     reserveConditions.focus()
     await user.keyboard('{Enter}')
-    const picker = screen.getByRole('dialog', { name: /^Add condition to Reserve slot$/i })
-    await user.click(within(picker).getByRole('button', { name: /^Add Dazed as end of turn on Reserve slot$/i }))
+    const picker = screen.getByRole('dialog', { name: /^Add condition to Goblin Stinker$/i })
+    await user.click(within(picker).getByRole('button', { name: /^Add Dazed as end of turn on Goblin Stinker$/i }))
     expect(within(reserveConditions).getByTitle('Dazed (End of turn)')).toBeInTheDocument()
 
-    await user.click(within(picker).getByRole('button', { name: /^Add Dazed as save ends on Reserve slot$/i }))
+    await user.click(within(picker).getByRole('button', { name: /^Add Dazed as save ends on Goblin Stinker$/i }))
     expect(within(reserveConditions).getByTitle('Dazed (Save ends)')).toBeInTheDocument()
   })
 
@@ -608,10 +613,10 @@ describe('App', () => {
   it('sets aria-expanded on the condition cell when picker opens and closes', async () => {
     const user = userEvent.setup()
     render(<App />)
-    const nameEl = screen.getByText('Reserve slot', { exact: true })
+    const nameEl = screen.getByText('Goblin Stinker', { exact: true })
     const groupGrid = nameEl.closest('div.grid.items-stretch.rounded-lg') as HTMLElement
     const scope = within(groupGrid)
-    const reserveConditions = scope.getByRole('group', { name: /^Conditions for Reserve slot/i })
+    const reserveConditions = scope.getByRole('group', { name: /^Conditions for Goblin Stinker/i })
 
     expect(reserveConditions).toHaveAttribute('aria-expanded', 'false')
 
@@ -628,14 +633,14 @@ describe('App', () => {
   it('opens condition picker with Space key', async () => {
     const user = userEvent.setup()
     render(<App />)
-    const nameEl = screen.getByText('Reserve slot', { exact: true })
+    const nameEl = screen.getByText('Goblin Stinker', { exact: true })
     const groupGrid = nameEl.closest('div.grid.items-stretch.rounded-lg') as HTMLElement
     const scope = within(groupGrid)
-    const reserveConditions = scope.getByRole('group', { name: /^Conditions for Reserve slot/i })
+    const reserveConditions = scope.getByRole('group', { name: /^Conditions for Goblin Stinker/i })
 
     reserveConditions.focus()
     await user.keyboard(' ')
-    expect(screen.getByRole('dialog', { name: /^Add condition to Reserve slot$/i })).toBeInTheDocument()
+    expect(screen.getByRole('dialog', { name: /^Add condition to Goblin Stinker$/i })).toBeInTheDocument()
   })
 
   // --- Group color picker opens ---
@@ -711,19 +716,20 @@ describe('App', () => {
     expect(dialog).toHaveClass('opacity-0')
   })
 
-  // --- Goblin Raider initial stamina ---
+  // --- Goblin Warrior initial stamina ---
 
-  it('shows correct initial stamina for Goblin Raider', () => {
+  it('shows correct initial stamina for Goblin Warrior', () => {
     render(<App />)
-    expect(screen.getByText('8 / 12')).toBeInTheDocument()
+    const staminaGroup = screen.getByRole('group', { name: /^Edit stamina for Goblin Warrior$/i })
+    expect(within(staminaGroup).getByText('15 / 15')).toBeInTheDocument()
   })
 
-  // --- Arcane Echo initial conditions ---
+  // --- Gnoll Cackler initial conditions ---
 
-  it('shows Restrained condition active on Arcane Echo', () => {
+  it('shows Restrained condition active on Gnoll Cackler', () => {
     render(<App />)
-    const sentinelGrid = screen.getByText('Arcane Echo', { exact: true }).closest('div.grid.items-stretch.rounded-lg') as HTMLElement
-    const echoConditions = within(sentinelGrid).getByRole('group', { name: /^Conditions for Arcane Echo\./i })
+    const sentinelGrid = screen.getByText('Gnoll Cackler', { exact: true }).closest('div.grid.items-stretch.rounded-lg') as HTMLElement
+    const echoConditions = within(sentinelGrid).getByRole('group', { name: /^Conditions for Gnoll Cackler\./i })
     expect(within(echoConditions).getByRole('button', { name: /^Remove Restrained$/i })).toBeInTheDocument()
     expect(within(echoConditions).getByTitle('Restrained (neutral)')).toBeInTheDocument()
   })
@@ -759,12 +765,12 @@ describe('App', () => {
     expect(within(conditions).getByRole('button', { name: /^Remove Taunted$/i })).toBeInTheDocument()
   })
 
-  // --- Ironwood Sentinel has both Bleeding and Dazed ---
+  // --- Minotaur Sunderer has both Bleeding and Dazed ---
 
-  it('Ironwood Sentinel has both Bleeding and Dazed conditions active', () => {
+  it('Minotaur Sunderer has both Bleeding and Dazed conditions active', () => {
     render(<App />)
-    const grid = screen.getByText('Ironwood Sentinel', { exact: true }).closest('div.grid.items-stretch.rounded-lg') as HTMLElement
-    const conditions = within(grid).getByRole('group', { name: /^Conditions for Ironwood Sentinel\./i })
+    const grid = screen.getByText('Minotaur Sunderer', { exact: true }).closest('div.grid.items-stretch.rounded-lg') as HTMLElement
+    const conditions = within(grid).getByRole('group', { name: /^Conditions for Minotaur Sunderer\./i })
     expect(within(conditions).getByRole('button', { name: /^Remove Bleeding$/i })).toBeInTheDocument()
     expect(within(conditions).getByRole('button', { name: /^Remove Dazed$/i })).toBeInTheDocument()
   })
@@ -830,7 +836,7 @@ describe('App', () => {
 
   it('group 4 shows ordinal badges 1, 2, 3 for its three creatures', () => {
     render(<App />)
-    const grid = screen.getByText('Ironwood Sentinel', { exact: true }).closest('div.grid.items-stretch.rounded-lg') as HTMLElement
+    const grid = screen.getByText('Minotaur Sunderer', { exact: true }).closest('div.grid.items-stretch.rounded-lg') as HTMLElement
     const scope = within(grid)
     expect(scope.getByRole('button', { name: /creature 1 of 3/i })).toBeInTheDocument()
     expect(scope.getByRole('button', { name: /creature 2 of 3/i })).toBeInTheDocument()
@@ -971,8 +977,10 @@ describe('App', () => {
 
   it('non-minion monsters still use standard stamina display', () => {
     render(<App />)
-    expect(screen.getByText('5 / 15')).toBeInTheDocument()
-    expect(screen.getByText('22 / 22')).toBeInTheDocument()
+    const assassinStam = screen.getByRole('group', { name: /^Edit stamina for Goblin Assassin 1$/i })
+    const warriorStam = screen.getByRole('group', { name: /^Edit stamina for Goblin Warrior$/i })
+    expect(within(assassinStam).getByText('5 / 15')).toBeInTheDocument()
+    expect(within(warriorStam).getByText('15 / 15')).toBeInTheDocument()
   })
 
   // --- Minion stamina popover with interval editor (MINION-005) ---
@@ -1051,11 +1059,11 @@ describe('App', () => {
     const dropdown = within(grid).getByRole('listbox', { name: /Select captain for Minions/i })
     expect(dropdown).toBeInTheDocument()
     expect(within(dropdown).getByText('Goblin Assassin 1')).toBeInTheDocument()
-    expect(within(dropdown).getByText('Goblin Raider')).toBeInTheDocument()
+    expect(within(dropdown).getByText('Goblin Warrior')).toBeInTheDocument()
     expect(within(dropdown).getByText('Goblin Underboss')).toBeInTheDocument()
-    expect(within(dropdown).getByText('Ironwood Sentinel')).toBeInTheDocument()
-    expect(within(dropdown).getByText('Arcane Echo')).toBeInTheDocument()
-    expect(within(dropdown).getByText('Reserve slot')).toBeInTheDocument()
+    expect(within(dropdown).getByText('Minotaur Sunderer')).toBeInTheDocument()
+    expect(within(dropdown).getByText('Gnoll Cackler')).toBeInTheDocument()
+    expect(within(dropdown).getByText('Goblin Stinker')).toBeInTheDocument()
     expect(within(dropdown).queryByText('Minions')).toBeNull()
   })
 
@@ -1103,8 +1111,8 @@ describe('App', () => {
     expect(within(grid).getByTestId('captain-pill')).toHaveTextContent('Goblin Assassin 1')
     await user.click(within(grid).getByRole('button', { name: /Change captain for Minions/i }))
     const dropdown = within(grid).getByRole('listbox', { name: /Select captain for Minions/i })
-    await user.click(within(dropdown).getByText('Ironwood Sentinel'))
-    expect(within(grid).getByTestId('captain-pill')).toHaveTextContent('Ironwood Sentinel')
+    await user.click(within(dropdown).getByText('Minotaur Sunderer'))
+    expect(within(grid).getByTestId('captain-pill')).toHaveTextContent('Minotaur Sunderer')
   })
 
   it('captain can be removed via the dropdown remove option', async () => {
@@ -1182,33 +1190,33 @@ describe('App', () => {
   it('each monster row has a delete button', () => {
     render(<App />)
     expect(screen.getByRole('button', { name: /^Delete Goblin Assassin 1$/i })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /^Delete Goblin Raider$/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /^Delete Goblin Warrior$/i })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /^Delete Goblin Underboss$/i })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /^Delete Minions$/i })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /^Delete Ironwood Sentinel$/i })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /^Delete Arcane Echo$/i })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /^Delete Reserve slot$/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /^Delete Minotaur Sunderer$/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /^Delete Gnoll Cackler$/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /^Delete Goblin Stinker$/i })).toBeInTheDocument()
   })
 
   it('clicking delete removes the monster from its group', async () => {
     const user = userEvent.setup()
     render(<App />)
-    expect(screen.getByText('Goblin Raider', { exact: true })).toBeInTheDocument()
-    await user.click(screen.getByRole('button', { name: /^Delete Goblin Raider$/i }))
-    expect(screen.queryByText('Goblin Raider', { exact: true })).not.toBeInTheDocument()
+    expect(screen.getByText('Goblin Warrior', { exact: true })).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: /^Delete Goblin Warrior$/i }))
+    expect(screen.queryByText('Goblin Warrior', { exact: true })).not.toBeInTheDocument()
     expect(screen.getByText('Goblin Assassin 1', { exact: true })).toBeInTheDocument()
   })
 
   it('deleting a monster updates ordinal badge counts for remaining monsters in the group', async () => {
     const user = userEvent.setup()
     render(<App />)
-    const group4grid = screen.getByText('Ironwood Sentinel', { exact: true })
+    const group4grid = screen.getByText('Minotaur Sunderer', { exact: true })
       .closest('div.grid.items-stretch.rounded-lg') as HTMLElement
     expect(within(group4grid).getByRole('button', { name: /creature 1 of 3/i })).toBeInTheDocument()
     expect(within(group4grid).getByRole('button', { name: /creature 2 of 3/i })).toBeInTheDocument()
     expect(within(group4grid).getByRole('button', { name: /creature 3 of 3/i })).toBeInTheDocument()
 
-    await user.click(screen.getByRole('button', { name: /^Delete Arcane Echo$/i }))
+    await user.click(screen.getByRole('button', { name: /^Delete Gnoll Cackler$/i }))
 
     expect(within(group4grid).getByRole('button', { name: /creature 1 of 2/i })).toBeInTheDocument()
     expect(within(group4grid).getByRole('button', { name: /creature 2 of 2/i })).toBeInTheDocument()
@@ -1247,25 +1255,25 @@ describe('App', () => {
     render(<App />)
     const minionGrid = getMinionGrid()
     await user.click(within(minionGrid).getByRole('button', { name: /Assign captain for Minions/i }))
-    await user.click(within(minionGrid).getByText('Goblin Raider'))
-    expect(within(minionGrid).getByTestId('captain-pill')).toHaveTextContent('Goblin Raider')
+    await user.click(within(minionGrid).getByText('Goblin Warrior'))
+    expect(within(minionGrid).getByTestId('captain-pill')).toHaveTextContent('Goblin Warrior')
 
     await user.click(screen.getByRole('button', { name: /^Delete Goblin Assassin 1$/i }))
 
-    expect(within(minionGrid).getByTestId('captain-pill')).toHaveTextContent('Goblin Raider')
+    expect(within(minionGrid).getByTestId('captain-pill')).toHaveTextContent('Goblin Warrior')
   })
 
   it('deleting a monster in another group does not affect the current group', async () => {
     const user = userEvent.setup()
     render(<App />)
     expect(screen.getByText('Goblin Assassin 1', { exact: true })).toBeInTheDocument()
-    expect(screen.getByText('Ironwood Sentinel', { exact: true })).toBeInTheDocument()
+    expect(screen.getByText('Minotaur Sunderer', { exact: true })).toBeInTheDocument()
 
-    await user.click(screen.getByRole('button', { name: /^Delete Arcane Echo$/i }))
+    await user.click(screen.getByRole('button', { name: /^Delete Gnoll Cackler$/i }))
 
     expect(screen.getByText('Goblin Assassin 1', { exact: true })).toBeInTheDocument()
-    expect(screen.getByText('Ironwood Sentinel', { exact: true })).toBeInTheDocument()
-    expect(screen.queryByText('Arcane Echo', { exact: true })).not.toBeInTheDocument()
+    expect(screen.getByText('Minotaur Sunderer', { exact: true })).toBeInTheDocument()
+    expect(screen.queryByText('Gnoll Cackler', { exact: true })).not.toBeInTheDocument()
   })
 
   it('deleting a minion group monster removes it and all its child minions', async () => {
@@ -1282,12 +1290,12 @@ describe('App', () => {
   it('other monsters remain functional after a deletion', async () => {
     const user = userEvent.setup()
     render(<App />)
-    await user.click(screen.getByRole('button', { name: /^Delete Reserve slot$/i }))
+    await user.click(screen.getByRole('button', { name: /^Delete Goblin Stinker$/i }))
 
-    const staminaGroup = screen.getByRole('group', { name: /^Edit stamina for Ironwood Sentinel$/i })
+    const staminaGroup = screen.getByRole('group', { name: /^Edit stamina for Minotaur Sunderer$/i })
     await user.hover(staminaGroup)
     await user.click(within(staminaGroup).getByRole('button', { name: /^Increase stamina by 1$/i }))
-    expect(screen.getByText('9 / 24')).toBeInTheDocument()
+    expect(screen.getByText('9 / 120')).toBeInTheDocument()
   })
 
   // --- Threshold mismatch cue (MINION-006) ---
@@ -1550,10 +1558,10 @@ describe('App', () => {
     const user = userEvent.setup()
     render(<App />)
 
-    const sentinelGrid = screen.getByText('Ironwood Sentinel', { exact: true })
+    const sentinelGrid = screen.getByText('Minotaur Sunderer', { exact: true })
       .closest('div.grid.items-stretch.rounded-lg') as HTMLElement
     const sentinelConditions = within(sentinelGrid).getByRole('group', {
-      name: /^Conditions for Ironwood Sentinel\./i,
+      name: /^Conditions for Minotaur Sunderer\./i,
     })
     expect(within(sentinelConditions).getByRole('button', { name: /^Remove Bleeding$/i })).toBeInTheDocument()
     expect(within(sentinelConditions).getByRole('button', { name: /^Remove Dazed$/i })).toBeInTheDocument()
@@ -1829,16 +1837,16 @@ describe('App', () => {
       within(picker1).getByRole('button', { name: /^Add Weakened as end of turn on Goblin Assassin 1$/i }),
     )
 
-    const sentinelGrid = screen.getByText('Ironwood Sentinel', { exact: true })
+    const sentinelGrid = screen.getByText('Minotaur Sunderer', { exact: true })
       .closest('div.grid.items-stretch.rounded-lg') as HTMLElement
     const sentinelConditions = within(sentinelGrid).getByRole('group', {
-      name: /^Conditions for Ironwood Sentinel\./i,
+      name: /^Conditions for Minotaur Sunderer\./i,
     })
     sentinelConditions.focus()
     await user.keyboard('{Enter}')
-    const picker4 = screen.getByRole('dialog', { name: /^Add condition to Ironwood Sentinel$/i })
+    const picker4 = screen.getByRole('dialog', { name: /^Add condition to Minotaur Sunderer$/i })
     await user.click(
-      within(picker4).getByRole('button', { name: /^Add Bleeding as end of turn on Ironwood Sentinel$/i }),
+      within(picker4).getByRole('button', { name: /^Add Bleeding as end of turn on Minotaur Sunderer$/i }),
     )
 
     await user.click(screen.getByRole('button', { name: turnButton(1, 'pending') }))
@@ -1867,16 +1875,16 @@ describe('App', () => {
       within(picker1).getByRole('button', { name: /^Add Weakened as end of turn on Goblin Assassin 1$/i }),
     )
 
-    const sentinelGrid = screen.getByText('Ironwood Sentinel', { exact: true })
+    const sentinelGrid = screen.getByText('Minotaur Sunderer', { exact: true })
       .closest('div.grid.items-stretch.rounded-lg') as HTMLElement
     const sentinelConditions = within(sentinelGrid).getByRole('group', {
-      name: /^Conditions for Ironwood Sentinel\./i,
+      name: /^Conditions for Minotaur Sunderer\./i,
     })
     sentinelConditions.focus()
     await user.keyboard('{Enter}')
-    const picker4 = screen.getByRole('dialog', { name: /^Add condition to Ironwood Sentinel$/i })
+    const picker4 = screen.getByRole('dialog', { name: /^Add condition to Minotaur Sunderer$/i })
     await user.click(
-      within(picker4).getByRole('button', { name: /^Add Bleeding as end of turn on Ironwood Sentinel$/i }),
+      within(picker4).getByRole('button', { name: /^Add Bleeding as end of turn on Minotaur Sunderer$/i }),
     )
 
     await user.click(screen.getByRole('button', { name: turnButton(1, 'pending') }))
@@ -2088,13 +2096,13 @@ describe('App', () => {
     const g1Grid = screen.getByText('Goblin Assassin 1', { exact: true })
       .closest('div.grid.items-stretch.rounded-lg') as HTMLElement
     const g1Cond2 = within(g1Grid).getByRole('group', {
-      name: /^Conditions for Goblin Raider\./i,
+      name: /^Conditions for Goblin Warrior\./i,
     })
     g1Cond2.focus()
     await user.keyboard('{Enter}')
-    const picker2 = screen.getByRole('dialog', { name: /^Add condition to Goblin Raider$/i })
+    const picker2 = screen.getByRole('dialog', { name: /^Add condition to Goblin Warrior$/i })
     await user.click(
-      within(picker2).getByRole('button', { name: /^Add Grabbed as end of turn on Goblin Raider$/i }),
+      within(picker2).getByRole('button', { name: /^Add Grabbed as end of turn on Goblin Warrior$/i }),
     )
 
     vi.useFakeTimers({ shouldAdvanceTime: true })
@@ -2120,16 +2128,16 @@ describe('App', () => {
       within(picker1).getByRole('button', { name: /^Add Weakened as end of turn on Goblin Assassin 1$/i }),
     )
 
-    const sentinelGrid = screen.getByText('Ironwood Sentinel', { exact: true })
+    const sentinelGrid = screen.getByText('Minotaur Sunderer', { exact: true })
       .closest('div.grid.items-stretch.rounded-lg') as HTMLElement
     const g4Cond = within(sentinelGrid).getByRole('group', {
-      name: /^Conditions for Ironwood Sentinel\./i,
+      name: /^Conditions for Minotaur Sunderer\./i,
     })
     g4Cond.focus()
     await user.keyboard('{Enter}')
-    const picker4 = screen.getByRole('dialog', { name: /^Add condition to Ironwood Sentinel$/i })
+    const picker4 = screen.getByRole('dialog', { name: /^Add condition to Minotaur Sunderer$/i })
     await user.click(
-      within(picker4).getByRole('button', { name: /^Add Bleeding as end of turn on Ironwood Sentinel$/i }),
+      within(picker4).getByRole('button', { name: /^Add Bleeding as end of turn on Minotaur Sunderer$/i }),
     )
 
     vi.useFakeTimers({ shouldAdvanceTime: true })
@@ -2250,7 +2258,7 @@ describe('App', () => {
     render(<App />)
     const groups = screen.getAllByTestId('encounter-group-drop-target')
     const g0 = groups[0]!
-    const raiderHandle = within(g0).getByLabelText('Reorder Goblin Raider within encounter')
+    const raiderHandle = within(g0).getByLabelText('Reorder Goblin Warrior within encounter')
     const assassinDrop = g0.querySelector('[data-testid="monster-drop-target"][data-monster-index="0"]')
     expect(assassinDrop).toBeTruthy()
     const dt = mockMonsterDataTransfer()
@@ -2259,7 +2267,7 @@ describe('App', () => {
     fireEvent.dragOver(assassinDrop!, { dataTransfer: dt })
     fireEvent.drop(assassinDrop!, { dataTransfer: dt })
     const rows = g0.querySelectorAll('[data-testid="monster-drop-target"]')
-    expect(rows[0]).toHaveTextContent('Goblin Raider')
+    expect(rows[0]).toHaveTextContent('Goblin Warrior')
     expect(rows[1]).toHaveTextContent('Goblin Assassin 1')
   })
 
@@ -2268,15 +2276,15 @@ describe('App', () => {
     const groups = screen.getAllByTestId('encounter-group-drop-target')
     const g0 = groups[0]!
     const g1 = groups[1]!
-    const raiderHandle = within(g0).getByLabelText('Reorder Goblin Raider within encounter')
+    const raiderHandle = within(g0).getByLabelText('Reorder Goblin Warrior within encounter')
     const underbossDrop = g1.querySelector('[data-testid="monster-drop-target"][data-monster-index="0"]')
     expect(underbossDrop).toBeTruthy()
     const dt = mockMonsterDataTransfer()
     fireEvent.dragStart(raiderHandle, { dataTransfer: dt })
     fireEvent.dragOver(underbossDrop!, { dataTransfer: dt })
     fireEvent.drop(underbossDrop!, { dataTransfer: dt })
-    expect(within(g1).getByText('Goblin Raider', { exact: true })).toBeInTheDocument()
-    expect(within(g0).queryByText('Goblin Raider', { exact: true })).not.toBeInTheDocument()
+    expect(within(g1).getByText('Goblin Warrior', { exact: true })).toBeInTheDocument()
+    expect(within(g0).queryByText('Goblin Warrior', { exact: true })).not.toBeInTheDocument()
   })
 
   it('drops a monster into an empty encounter group', async () => {
@@ -2286,12 +2294,12 @@ describe('App', () => {
     const groups = screen.getAllByTestId('encounter-group-drop-target')
     const last = groups[groups.length - 1]!
     const emptyZone = within(last).getByTestId('empty-group-monster-drop-target')
-    const raiderHandle = screen.getByLabelText('Reorder Goblin Raider within encounter')
+    const raiderHandle = screen.getByLabelText('Reorder Goblin Warrior within encounter')
     const dt = mockMonsterDataTransfer()
     fireEvent.dragStart(raiderHandle, { dataTransfer: dt })
     fireEvent.dragOver(emptyZone, { dataTransfer: dt })
     fireEvent.drop(emptyZone, { dataTransfer: dt })
-    expect(within(last).getByText('Goblin Raider', { exact: true })).toBeInTheDocument()
+    expect(within(last).getByText('Goblin Warrior', { exact: true })).toBeInTheDocument()
   })
 
   it('transfers an active condition to another monster via drag-and-drop', () => {
@@ -2307,7 +2315,7 @@ describe('App', () => {
     expect(dt.getData(CONDITION_DRAG_MIME)).toContain('Weakened')
     fireEvent.dragOver(raiderDrop!, { dataTransfer: dt })
     fireEvent.drop(raiderDrop!, { dataTransfer: dt })
-    const raiderConditions = within(g0).getByRole('group', { name: /^Conditions for Goblin Raider\./i })
+    const raiderConditions = within(g0).getByRole('group', { name: /^Conditions for Goblin Warrior\./i })
     expect(within(raiderConditions).getByRole('button', { name: /^Remove Weakened$/i })).toBeInTheDocument()
     expect(within(assassinConditions).queryByRole('button', { name: /^Remove Weakened$/i })).toBeNull()
   })

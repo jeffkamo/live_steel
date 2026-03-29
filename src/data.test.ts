@@ -343,10 +343,11 @@ describe('cloneEncounterGroups', () => {
     expect(b[0]!.monsters[0]!.marip![0]).not.toBe(999)
   })
 
-  it('preserves null marip for reserve slot', () => {
+  it('clones marip for Goblin Stinker from seed', () => {
     const groups = cloneEncounterGroups()
-    const reserve = groups[3]!.monsters[2]!
-    expect(reserve.marip).toBeNull()
+    const stinker = groups[3]!.monsters[2]!
+    expect(stinker.name).toBe('Goblin Stinker')
+    expect(stinker.marip).toEqual([-2, 1, 0, 0, 2])
   })
 })
 

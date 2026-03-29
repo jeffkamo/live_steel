@@ -7,7 +7,7 @@ import type { Monster } from '../types'
 function makeMonster(overrides: Partial<Monster> = {}): Monster {
   return {
     name: 'Test Goblin',
-    subtitle: 'Level 1 Horde · Ambusher',
+    subtitle: 'Level 1 · Horde Ambusher',
     initials: 'TG',
     stamina: [5, 15],
     marip: [-2, 2, 0, 0, -2],
@@ -50,7 +50,7 @@ describe('MonsterRowCells', () => {
   it('renders monster name and subtitle', () => {
     renderRow()
     expect(screen.getByText('Test Goblin')).toBeInTheDocument()
-    expect(screen.getByText('Level 1 Horde · Ambusher')).toBeInTheDocument()
+    expect(screen.getByText('Level 1 · Horde Ambusher')).toBeInTheDocument()
   })
 
   it('renders ordinal badge button with correct aria-label', () => {

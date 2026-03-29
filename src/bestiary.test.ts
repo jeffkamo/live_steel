@@ -316,11 +316,12 @@ describe('cloneEncounterGroups bestiary integration', () => {
     expect(minionGroup.features!.some((f) => f.name === 'Axe')).toBe(true)
   })
 
-  it('returns empty features for monsters not in bestiary without seed features', () => {
+  it('populates features from bestiary for Goblin Stinker in default encounter', () => {
     const groups = cloneEncounterGroups()
-    const reserve = groups[3]!.monsters[2]!
-    expect(reserve.name).toBe('Reserve slot')
-    expect(reserve.features).toEqual([])
+    const stinker = groups[3]!.monsters[2]!
+    expect(stinker.name).toBe('Goblin Stinker')
+    expect(stinker.features).toBeDefined()
+    expect(stinker.features!.some((f) => f.name === 'Toxic Winds')).toBe(true)
   })
 
   it('features from bestiary have correct MonsterFeature shape', () => {
@@ -429,7 +430,7 @@ describe('bestiarySubtitle', () => {
 describe('deriveInitials', () => {
   it('takes first letter of each word, max 3', () => {
     expect(deriveInitials('Goblin Assassin')).toBe('GA')
-    expect(deriveInitials('Ironwood Sentinel')).toBe('IS')
+    expect(deriveInitials('Minotaur Sunderer')).toBe('MS')
   })
 
   it('caps at 3 letters for long names', () => {
