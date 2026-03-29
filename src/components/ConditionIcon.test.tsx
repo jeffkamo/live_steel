@@ -52,4 +52,41 @@ describe('conditionIconShellClass', () => {
     expect(cls).toContain('border-purple-500/75')
     expect(cls).toContain('ring-1')
   })
+
+  it('adds animate-glow-eot when turnActed is true and state is eot', () => {
+    const cls = conditionIconShellClass(true, 'eot', true)
+    expect(cls).toContain('animate-glow-eot')
+  })
+
+  it('adds animate-glow-se when turnActed is true and state is se', () => {
+    const cls = conditionIconShellClass(true, 'se', true)
+    expect(cls).toContain('animate-glow-se')
+  })
+
+  it('does not add glow animation for eot when turnActed is false', () => {
+    const cls = conditionIconShellClass(true, 'eot', false)
+    expect(cls).not.toContain('animate-glow-eot')
+  })
+
+  it('does not add glow animation for se when turnActed is false', () => {
+    const cls = conditionIconShellClass(true, 'se', false)
+    expect(cls).not.toContain('animate-glow-se')
+  })
+
+  it('does not add glow animation for neutral state even when turnActed is true', () => {
+    const cls = conditionIconShellClass(true, 'neutral', true)
+    expect(cls).not.toContain('animate-glow')
+  })
+
+  it('does not add glow animation for inactive conditions even when turnActed is true', () => {
+    const cls = conditionIconShellClass(false, null, true)
+    expect(cls).not.toContain('animate-glow')
+  })
+
+  it('includes motion-reduce:animate-none alongside glow animation', () => {
+    const eotCls = conditionIconShellClass(true, 'eot', true)
+    expect(eotCls).toContain('motion-reduce:animate-none')
+    const seCls = conditionIconShellClass(true, 'se', true)
+    expect(seCls).toContain('motion-reduce:animate-none')
+  })
 })

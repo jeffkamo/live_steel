@@ -6,3 +6,21 @@
     @apply bg-zinc-950;
   }
 }
+
+@keyframes glow-eot {
+  0%, 100% { box-shadow: 0 0 4px 1px rgb(245 158 11 / 0.45); }
+  50%      { box-shadow: 0 0 10px 3px rgb(245 158 11 / 0.7); }
+}
+
+@keyframes glow-se {
+  0%, 100% { box-shadow: 0 0 4px 1px rgb(168 85 247 / 0.45); }
+  50%      { box-shadow: 0 0 10px 3px rgb(168 85 247 / 0.7); }
+}
+
+@utility animate-glow-eot {
+  animation: glow-eot 1.6s ease-in-out infinite;
+}
+
+@utility animate-glow-se {
+  animation: glow-se 1.6s ease-in-out infinite;
+}

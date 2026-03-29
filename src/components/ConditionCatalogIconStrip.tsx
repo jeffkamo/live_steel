@@ -10,15 +10,17 @@ export function ConditionCatalogIconStrip({
   conditions,
   interactive,
   onToggleLabel,
+  turnActed = false,
 }: {
   conditions: readonly ConditionEntry[]
   interactive: boolean
   onToggleLabel?: (label: string) => void
+  turnActed?: boolean
 }) {
   const iconRow = CONDITION_CATALOG.map((label) => {
     const active = findConditionOnMonster(conditions, label)
     const tip = conditionCatalogTooltip(label, active)
-    const shell = conditionIconShellClass(active !== undefined, active?.state ?? null)
+    const shell = conditionIconShellClass(active !== undefined, active?.state ?? null, turnActed)
     if (interactive && onToggleLabel) {
       return (
         <button

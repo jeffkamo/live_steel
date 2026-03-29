@@ -74,6 +74,7 @@ export function CreatureConditionCell({
         <ConditionCatalogIconStrip
           conditions={conditions}
           interactive
+          turnActed={turnComplete}
           onToggleLabel={(label) => {
             const idx = conditions.findIndex((c) => c.label === label)
             if (idx >= 0) {

@@ -82,4 +82,50 @@ describe('ConditionCatalogIconStrip', () => {
       expect(onToggle).toHaveBeenCalledWith('Bleeding')
     })
   })
+
+  describe('turnActed glow animation', () => {
+    const eotBleeding: ConditionEntry[] = [{ label: 'Bleeding', state: 'eot' }]
+    const seBleeding: ConditionEntry[] = [{ label: 'Bleeding', state: 'se' }]
+
+    it('applies animate-glow-eot to EoT condition icon when turnActed is true', () => {
+      const { container } = render(
+        <ConditionCatalogIconStrip conditions={eotBleeding} interactive={false} turnActed />,
+      )
+      const bleedingIcon = container.querySelector('[title="Bleeding (End of turn)"]')
+      expect(bleedingIcon?.className).toContain('animate-glow-eot')
+    })
+
+    it('applies animate-glow-se to SE condition icon when turnActed is true', () => {
+      const { container } = render(
+        <ConditionCatalogIconStrip conditions={seBleeding} interactive={false} turnActed />,
+      )
+      const bleedingIcon = container.querySelector('[title="Bleeding (Save ends)"]')
+      expect(bleedingIcon?.className).toContain('animate-glow-se')
+    })
+
+    it('does not apply glow animation when turnActed is false', () => {
+      const { container } = render(
+        <ConditionCatalogIconStrip conditions={eotBleeding} interactive={false} turnActed={false} />,
+      )
+      const bleedingIcon = container.querySelector('[title="Bleeding (End of turn)"]')
+      expect(bleedingIcon?.className).not.toContain('animate-glow')
+    })
+
+    it('does not apply glow to neutral conditions even when turnActed is true', () => {
+      const { container } = render(
+        <ConditionCatalogIconStrip conditions={withBleeding} interactive={false} turnActed />,
+      )
+      const bleedingIcon = container.querySelector('[title="Bleeding (neutral)"]')
+      expect(bleedingIcon?.className).not.toContain('animate-glow')
+    })
+
+    it('applies glow in interactive mode too', () => {
+      const onToggle = vi.fn()
+      const { container } = render(
+        <ConditionCatalogIconStrip conditions={eotBleeding} interactive onToggleLabel={onToggle} turnActed />,
+      )
+      const btn = screen.getByRole('button', { name: /^Remove Bleeding$/i })
+      expect(btn.className).toContain('animate-glow-eot')
+    })
+  })
 })

@@ -289,3 +289,26 @@ No condition changes when toggling group turn back to pending — verified exist
 **Files changed:**
 - src/App.test.tsx
 - PRD.json
+
+
+[TURN-001]
+
+Animate EoT/SE condition icons with pulsating glow when group turn set to acted — amber glow for EoT, purple glow for SE; animation stops when toggled back to pending
+
+**Key decisions:**
+- Custom CSS @keyframes (glow-eot, glow-se) in index.css with Tailwind v4 @utility directive for animate-glow-eot / animate-glow-se classes
+- conditionIconShellClass() gains optional turnActed param; appends animation class only for active eot/se conditions when true
+- turnActed threaded: App→GroupSection→MonsterRowCells/MinionGroupRow→CreatureConditionCell→ConditionCatalogIconStrip→conditionIconShellClass; reuses existing turnComplete prop
+- motion-reduce:animate-none included for reduced-motion accessibility
+- Neutral conditions never animate; inactive icons never animate; terrain strip unaffected (default turnActed=false)
+- 7 conditionIconShellClass unit tests, 5 ConditionCatalogIconStrip component tests, 6 App integration tests
+
+**Files changed:**
+- src/index.css
+- src/components/ConditionIcon.tsx
+- src/components/ConditionIcon.test.tsx
+- src/components/ConditionCatalogIconStrip.tsx
+- src/components/ConditionCatalogIconStrip.test.tsx
+- src/components/CreatureConditionCell.tsx
+- src/App.test.tsx
+- PRD.json

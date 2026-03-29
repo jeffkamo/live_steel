@@ -246,7 +246,7 @@
         "Write specs covering animation trigger on turn state change and animation lifecycle",
         "Run the specs, fix any failures until all pass"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "TURN-002",
