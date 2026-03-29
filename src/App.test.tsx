@@ -1678,6 +1678,139 @@ describe('App', () => {
     expect(eotIcon.className).toContain('animate-glow-eot')
   })
 
+  // --- Cancel animations on rapid acted→pending (TURN-005) ---
+
+  it('rapid acted→pending cancels EoT glow animation and preserves the condition', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    const goblinConditions = screen.getByRole('group', {
+      name: /^Conditions for Goblin Assassin 1\./i,
+    })
+
+    goblinConditions.focus()
+    await user.keyboard('{Enter}')
+    const picker = screen.getByRole('dialog', { name: /^Add condition to Goblin Assassin 1$/i })
+    await user.click(
+      within(picker).getByRole('button', { name: /^Add Weakened as end of turn on Goblin Assassin 1$/i }),
+    )
+
+    await user.click(screen.getByRole('button', { name: turnButton(1, 'pending') }))
+    const eotIcon = within(goblinConditions).getByTitle('Weakened (End of turn)')
+    expect(eotIcon.className).toContain('animate-glow-eot')
+
+    await user.click(screen.getByRole('button', { name: turnButton(1, 'acted') }))
+    expect(eotIcon.className).not.toContain('animate-glow-eot')
+    expect(within(goblinConditions).getByTitle('Weakened (End of turn)')).toBeInTheDocument()
+    expect(within(goblinConditions).getByRole('button', { name: /^Remove Weakened$/i })).toBeInTheDocument()
+  })
+
+  it('rapid acted→pending cancels SE glow animation and preserves the condition', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    const goblinConditions = screen.getByRole('group', {
+      name: /^Conditions for Goblin Assassin 1\./i,
+    })
+
+    goblinConditions.focus()
+    await user.keyboard('{Enter}')
+    const picker = screen.getByRole('dialog', { name: /^Add condition to Goblin Assassin 1$/i })
+    await user.click(
+      within(picker).getByRole('button', { name: /^Add Slowed as save ends on Goblin Assassin 1$/i }),
+    )
+
+    await user.click(screen.getByRole('button', { name: turnButton(1, 'pending') }))
+    const seIcon = within(goblinConditions).getByTitle('Slowed (Save ends)')
+    expect(seIcon.className).toContain('animate-glow-se')
+
+    await user.click(screen.getByRole('button', { name: turnButton(1, 'acted') }))
+    expect(seIcon.className).not.toContain('animate-glow-se')
+    expect(within(goblinConditions).getByTitle('Slowed (Save ends)')).toBeInTheDocument()
+    expect(within(goblinConditions).getByRole('button', { name: /^Remove Slowed$/i })).toBeInTheDocument()
+  })
+
+  it('rapid acted→pending preserves both EoT and SE conditions as active simultaneously', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    const goblinConditions = screen.getByRole('group', {
+      name: /^Conditions for Goblin Assassin 1\./i,
+    })
+
+    goblinConditions.focus()
+    await user.keyboard('{Enter}')
+    const picker = screen.getByRole('dialog', { name: /^Add condition to Goblin Assassin 1$/i })
+    await user.click(
+      within(picker).getByRole('button', { name: /^Add Weakened as end of turn on Goblin Assassin 1$/i }),
+    )
+    await user.click(
+      within(picker).getByRole('button', { name: /^Add Slowed as save ends on Goblin Assassin 1$/i }),
+    )
+
+    await user.click(screen.getByRole('button', { name: turnButton(1, 'pending') }))
+    await user.click(screen.getByRole('button', { name: turnButton(1, 'acted') }))
+
+    expect(within(goblinConditions).getByTitle('Weakened (End of turn)')).toBeInTheDocument()
+    expect(within(goblinConditions).getByTitle('Slowed (Save ends)')).toBeInTheDocument()
+    const eotIcon = within(goblinConditions).getByTitle('Weakened (End of turn)')
+    const seIcon = within(goblinConditions).getByTitle('Slowed (Save ends)')
+    expect(eotIcon.className).not.toContain('animate-glow')
+    expect(seIcon.className).not.toContain('animate-glow')
+  })
+
+  it('rapid acted→pending preserves stamina and neutral conditions alongside EoT/SE', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    const goblinConditions = screen.getByRole('group', {
+      name: /^Conditions for Goblin Assassin 1\./i,
+    })
+    expect(within(goblinConditions).getByTitle('Weakened (neutral)')).toBeInTheDocument()
+    expect(screen.getByText('5 / 15')).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: turnButton(1, 'pending') }))
+    await user.click(screen.getByRole('button', { name: turnButton(1, 'acted') }))
+
+    expect(within(goblinConditions).getByTitle('Weakened (neutral)')).toBeInTheDocument()
+    expect(within(goblinConditions).getByRole('button', { name: /^Remove Weakened$/i })).toBeInTheDocument()
+    expect(screen.getByText('5 / 15')).toBeInTheDocument()
+  })
+
+  it('rapid acted→pending on one group does not affect animation state in another group', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    const goblinConditions = screen.getByRole('group', {
+      name: /^Conditions for Goblin Assassin 1\./i,
+    })
+    goblinConditions.focus()
+    await user.keyboard('{Enter}')
+    const picker1 = screen.getByRole('dialog', { name: /^Add condition to Goblin Assassin 1$/i })
+    await user.click(
+      within(picker1).getByRole('button', { name: /^Add Weakened as end of turn on Goblin Assassin 1$/i }),
+    )
+
+    const sentinelGrid = screen.getByText('Ironwood Sentinel', { exact: true })
+      .closest('div.grid.items-stretch.rounded-lg') as HTMLElement
+    const sentinelConditions = within(sentinelGrid).getByRole('group', {
+      name: /^Conditions for Ironwood Sentinel\./i,
+    })
+    sentinelConditions.focus()
+    await user.keyboard('{Enter}')
+    const picker4 = screen.getByRole('dialog', { name: /^Add condition to Ironwood Sentinel$/i })
+    await user.click(
+      within(picker4).getByRole('button', { name: /^Add Bleeding as end of turn on Ironwood Sentinel$/i }),
+    )
+
+    await user.click(screen.getByRole('button', { name: turnButton(1, 'pending') }))
+    await user.click(screen.getByRole('button', { name: turnButton(4, 'pending') }))
+
+    await user.click(screen.getByRole('button', { name: turnButton(1, 'acted') }))
+
+    const g1EotIcon = within(goblinConditions).getByTitle('Weakened (End of turn)')
+    expect(g1EotIcon.className).not.toContain('animate-glow')
+
+    const g4EotIcon = within(sentinelConditions).getByTitle('Bleeding (End of turn)')
+    expect(g4EotIcon.className).toContain('animate-glow-eot')
+  })
+
   it('glow does not affect conditions in other groups', async () => {
     const user = userEvent.setup()
     render(<App />)

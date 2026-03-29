@@ -297,7 +297,7 @@
         "Write specs covering rapid acted-to-pending transition, animation cancellation, and timer cleanup",
         "Run the specs, fix any failures until all pass"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "A11Y-001",

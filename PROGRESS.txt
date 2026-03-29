@@ -312,3 +312,18 @@ Animate EoT/SE condition icons with pulsating glow when group turn set to acted 
 - src/components/CreatureConditionCell.tsx
 - src/App.test.tsx
 - PRD.json
+
+
+[TURN-005]
+
+Cancel condition animations on rapid acted→pending — no code changes needed; existing architecture already handles this correctly
+
+**Key decisions:**
+- Animations are purely CSS-class-driven via turnActed boolean prop; toggling to pending removes animation classes immediately
+- toggleGroupTurn only modifies groupTurnActed state, never touches encounterGroups — conditions stay active/unchanged by design
+- No 30-second timers exist yet (TURN-002/003), so no timer cleanup needed; when timers are added, they should check turnActed before firing
+- 5 new App integration tests: EoT glow cancellation + condition preserved, SE glow cancellation + condition preserved, both EoT+SE preserved simultaneously, stamina+neutral conditions preserved, cross-group isolation on rapid toggle
+
+**Files changed:**
+- src/App.test.tsx
+- PRD.json
