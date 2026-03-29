@@ -62,14 +62,14 @@ Core stats header in stat block — stamina, MARIP, speed, size, stability, free
 
 [MALICE-001]
 
-Suppress stat block rendering for malice creatures (those with Malice-cost features/effects) until design is finalized
+Filter malice abilities from stat blocks — monster stat blocks (core stats, non-malice abilities, traits) remain visible for all monsters
 
 **Key decisions:**
-- isMaliceCreature() in bestiary.ts checks feature.cost and effect.cost for /malice/i regex match
-- Guard applied at rendering layer (MonsterRowCells, MinionGroupRow, GroupSection) not data layer — features still populated, just not displayed
-- MinionGroupRow checks both parent name and first minion name for malice (mirrors resolveFeatures fallback pattern)
-- 262/416 bestiary monsters are malice creatures; includes Goblin Assassin and Goblin Underboss from seed data
-- 10 new tests: 6 for isMaliceCreature unit, 4 for component-level stat block suppression
+- Malice filtering moved from rendering layer to data layer: mapFeatures() in bestiary.ts now excludes features with malice cost and filters out malice-cost effects within features
+- isMaliceCreature() retained in bestiary.ts for potential future use but no longer referenced by components
+- Removed isMaliceCreature guard from MonsterRowCells, MinionGroupRow, GroupSection — all monsters now show stat block toggle when they have (non-malice) features
+- hasMaliceCost() helper moved above mapFeatures for forward reference
+- Updated tests: replaced 4 stat-block-suppression tests with 3 tests verifying malice creatures DO show stat blocks; added 4 new mapFeatures tests for malice filtering (feature-level and effect-level)
 
 **Files changed:**
 - src/bestiary.ts
@@ -78,7 +78,6 @@ Suppress stat block rendering for malice creatures (those with Malice-cost featu
 - src/components/MinionGroupRow.tsx
 - src/components/GroupSection.tsx
 - src/components/StatBlock.test.tsx
-- PRD.json
 
 
 [MINION-003]

@@ -1,6 +1,5 @@
 import type { ConditionState, GroupColorId, Monster } from '../types'
 import { GROUP_COLOR_BADGE, GROUP_COLOR_LABEL } from '../data'
-import { isMaliceCreature } from '../bestiary'
 import { EditableStaminaCell } from './EditableStaminaCell'
 import { MaripCluster } from './MaripCluster'
 import { StatCluster } from './StatCluster'
@@ -94,9 +93,7 @@ export function MinionGroupRow({
   const badge = GROUP_COLOR_BADGE[groupColor]
   const colorLabel = GROUP_COLOR_LABEL[groupColor]
   const minions = monster.minions ?? []
-  const malice = isMaliceCreature(monster.name) ||
-    (minions.length > 0 && isMaliceCreature(minions[0]!.name))
-  const hasFeatures = !malice && (monster.features?.length ?? 0) > 0
+  const hasFeatures = (monster.features?.length ?? 0) > 0
 
   const bodyCell =
     'flex h-full min-h-[3.75rem] items-center p-3 sm:min-h-[4rem] sm:p-3.5'

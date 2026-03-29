@@ -168,18 +168,64 @@ describe('mapFeatures', () => {
     expect(features[0]).not.toHaveProperty('cost')
   })
 
-  it('includes cost field when present', () => {
+  it('includes cost field when present and non-malice', () => {
     const raw = [
       {
         type: 'feature',
         feature_type: 'ability',
         name: 'Costly',
-        cost: '3 Malice',
+        cost: '3 Stamina',
         effects: [],
       },
     ]
     const features = mapFeatures(raw)
-    expect(features[0]!.cost).toBe('3 Malice')
+    expect(features[0]!.cost).toBe('3 Stamina')
+  })
+
+  it('filters out features with malice cost', () => {
+    const raw = [
+      { type: 'feature', feature_type: 'ability', name: 'Normal Strike', effects: [] },
+      { type: 'feature', feature_type: 'ability', name: 'Shadow Chains', cost: '3 Malice', effects: [] },
+    ]
+    const features = mapFeatures(raw)
+    expect(features).toHaveLength(1)
+    expect(features[0]!.name).toBe('Normal Strike')
+  })
+
+  it('filters out effects with malice cost within a feature', () => {
+    const raw = [
+      {
+        type: 'feature',
+        feature_type: 'ability',
+        name: 'Mixed Ability',
+        effects: [
+          { name: 'Normal', effect: 'Does damage.' },
+          { name: 'Malice Boost', cost: '5 Malice', effect: 'Extra damage.' },
+        ],
+      },
+    ]
+    const features = mapFeatures(raw)
+    expect(features).toHaveLength(1)
+    expect(features[0]!.effects).toHaveLength(1)
+    expect(features[0]!.effects![0]!.name).toBe('Normal')
+  })
+
+  it('keeps feature when only some effects are malice', () => {
+    const raw = [
+      {
+        type: 'feature',
+        feature_type: 'ability',
+        name: 'Sword Slash',
+        effects: [
+          { roll: 'Power Roll + 2', tier1: '4 damage', tier2: '6 damage', tier3: '7 damage' },
+          { name: 'Malice Effect', cost: '2 Malice', effect: 'Extra slash.' },
+        ],
+      },
+    ]
+    const features = mapFeatures(raw)
+    expect(features).toHaveLength(1)
+    expect(features[0]!.effects).toHaveLength(1)
+    expect(features[0]!.effects![0]!.roll).toBe('Power Roll + 2')
   })
 })
 

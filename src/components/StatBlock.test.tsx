@@ -375,8 +375,8 @@ describe('MonsterRowCells stat block toggle', () => {
   })
 })
 
-describe('Malice creature stat block suppression', () => {
-  const maliceRowProps = {
+describe('Malice creatures still show stat blocks', () => {
+  const rowProps = {
     row: 1,
     ordinal: 1,
     monsterIndex: 0,
@@ -393,21 +393,7 @@ describe('Malice creature stat block suppression', () => {
     onConditionAddOrSet: vi.fn(),
   }
 
-  const maliceGroupProps = {
-    groupKey: 'g0',
-    groupNumber: 1,
-    thisGroupIndex: 0,
-    encounterGroupColors: ['red'] as GroupColorId[],
-    turnActed: false,
-    onToggleTurn: vi.fn(),
-    turnAriaLabel: 'Encounter group 1: turn pending',
-    onGroupColorChange: vi.fn(),
-    onMonsterStaminaChange: vi.fn(),
-    onMonsterConditionRemove: vi.fn(),
-    onMonsterConditionAddOrSet: vi.fn(),
-  }
-
-  it('does not show stat block toggle for a malice creature in MonsterRowCells', () => {
+  it('shows stat block toggle for a malice creature with features in MonsterRowCells', () => {
     render(
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)' }}>
         <MonsterRowCells
@@ -423,18 +409,18 @@ describe('Malice creature stat block suppression', () => {
             conditions: [],
             features: [sampleAbility],
           }}
-          {...maliceRowProps}
+          {...rowProps}
           statBlockExpanded={false}
           onToggleStatBlock={vi.fn()}
         />
       </div>,
     )
     expect(
-      screen.queryByRole('button', { name: /stat block/i }),
-    ).not.toBeInTheDocument()
+      screen.getByRole('button', { name: /Expand stat block for Goblin Assassin/i }),
+    ).toBeInTheDocument()
   })
 
-  it('does not render stat block content even when expanded prop is true for malice creature', () => {
+  it('renders stat block content when expanded for malice creature', () => {
     render(
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)' }}>
         <MonsterRowCells
@@ -450,45 +436,18 @@ describe('Malice creature stat block suppression', () => {
             conditions: [],
             features: [sampleAbility],
           }}
-          {...maliceRowProps}
+          {...rowProps}
           statBlockExpanded={true}
           onToggleStatBlock={vi.fn()}
         />
       </div>,
     )
     expect(
-      screen.queryByRole('region', { name: /Stat block/i }),
-    ).not.toBeInTheDocument()
-  })
-
-  it('still shows stat block toggle for non-malice creature with features', () => {
-    render(
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)' }}>
-        <MonsterRowCells
-          monster={{
-            name: 'Goblin Spinecleaver 1',
-            subtitle: 'Level 1 Minion',
-            initials: 'GS',
-            stamina: [1, 1],
-            marip: [-1, 0, 0, 0, -1],
-            fs: 0,
-            dist: 3,
-            stab: 0,
-            conditions: [],
-            features: [sampleAbility],
-          }}
-          {...maliceRowProps}
-          statBlockExpanded={false}
-          onToggleStatBlock={vi.fn()}
-        />
-      </div>,
-    )
-    expect(
-      screen.getByRole('button', { name: /Expand stat block for Goblin Spinecleaver/i }),
+      screen.getByRole('region', { name: /Stat block for Goblin Assassin/i }),
     ).toBeInTheDocument()
   })
 
-  it('does not show stat block toggle for malice creature in GroupSection', () => {
+  it('shows stat block toggle for malice creature in GroupSection', () => {
     const group: EncounterGroup = {
       color: 'red',
       monsters: [
@@ -509,12 +468,22 @@ describe('Malice creature stat block suppression', () => {
     render(
       <GroupSection
         group={group}
-        {...maliceGroupProps}
+        groupKey="g0"
+        groupNumber={1}
+        thisGroupIndex={0}
+        encounterGroupColors={['red'] as GroupColorId[]}
+        turnActed={false}
+        onToggleTurn={vi.fn()}
+        turnAriaLabel="Encounter group 1: turn pending"
+        onGroupColorChange={vi.fn()}
+        onMonsterStaminaChange={vi.fn()}
+        onMonsterConditionRemove={vi.fn()}
+        onMonsterConditionAddOrSet={vi.fn()}
       />,
     )
     expect(
-      screen.queryByRole('button', { name: /stat block/i }),
-    ).not.toBeInTheDocument()
+      screen.getByRole('button', { name: /Expand stat block for Goblin Assassin/i }),
+    ).toBeInTheDocument()
   })
 })
 

@@ -78,6 +78,10 @@ export function statblockCount(): number {
   return bestiaryMap.size
 }
 
+function hasMaliceCost(cost: string | undefined): boolean {
+  return cost != null && /malice/i.test(cost)
+}
+
 function mapEffect(raw: RawEffect): PowerRollEffect {
   return {
     ...(raw.roll != null ? { roll: raw.roll } : {}),
@@ -93,21 +97,25 @@ export function mapFeatures(raw: RawFeature[] | undefined): MonsterFeature[] {
   if (!raw || raw.length === 0) return []
   return raw
     .filter((f) => f.feature_type === 'ability' || f.feature_type === 'trait')
-    .map((f) => ({
-      type: 'feature' as const,
-      feature_type: f.feature_type as 'ability' | 'trait',
-      name: f.name,
-      ...(f.icon != null ? { icon: f.icon } : {}),
-      ...(f.ability_type != null ? { ability_type: f.ability_type } : {}),
-      ...(f.keywords && f.keywords.length > 0 ? { keywords: f.keywords } : {}),
-      ...(f.usage != null ? { usage: f.usage } : {}),
-      ...(f.distance != null ? { distance: f.distance } : {}),
-      ...(f.target != null ? { target: f.target } : {}),
-      ...(f.cost != null ? { cost: f.cost } : {}),
-      ...(f.effects && f.effects.length > 0
-        ? { effects: f.effects.map(mapEffect) }
-        : {}),
-    }))
+    .filter((f) => !hasMaliceCost(f.cost))
+    .map((f) => {
+      const effects = f.effects?.filter((e) => !hasMaliceCost(e.cost))
+      return {
+        type: 'feature' as const,
+        feature_type: f.feature_type as 'ability' | 'trait',
+        name: f.name,
+        ...(f.icon != null ? { icon: f.icon } : {}),
+        ...(f.ability_type != null ? { ability_type: f.ability_type } : {}),
+        ...(f.keywords && f.keywords.length > 0 ? { keywords: f.keywords } : {}),
+        ...(f.usage != null ? { usage: f.usage } : {}),
+        ...(f.distance != null ? { distance: f.distance } : {}),
+        ...(f.target != null ? { target: f.target } : {}),
+        ...(f.cost != null ? { cost: f.cost } : {}),
+        ...(effects && effects.length > 0
+          ? { effects: effects.map(mapEffect) }
+          : {}),
+      }
+    })
 }
 
 export function featuresForMonster(encounterName: string): MonsterFeature[] | undefined {
@@ -128,8 +136,4 @@ export function isMaliceCreature(encounterName: string): boolean {
       hasMaliceCost(f.cost) ||
       (f.effects?.some((e) => hasMaliceCost(e.cost)) ?? false),
   )
-}
-
-function hasMaliceCost(cost: string | undefined): boolean {
-  return cost != null && /malice/i.test(cost)
 }
