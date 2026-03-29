@@ -97,6 +97,23 @@ export const GROUP_COLOR_BADGE: Record<
   },
 }
 
+/**
+ * Stat block card frame in the monster drawer: subtle perimeter + stronger left accent,
+ * keyed to encounter group color (matches ordinal badge hue).
+ */
+export const GROUP_COLOR_STAT_BLOCK_CARD: Record<GroupColorId, string> = {
+  red: 'border border-red-950/55 border-l-2 border-l-red-500/75',
+  orange: 'border border-orange-950/55 border-l-2 border-l-orange-500/75',
+  yellow: 'border border-yellow-950/50 border-l-2 border-l-yellow-400/80',
+  green: 'border border-emerald-950/55 border-l-2 border-l-emerald-500/75',
+  blue: 'border border-sky-950/55 border-l-2 border-l-sky-500/75',
+  purple: 'border border-violet-950/55 border-l-2 border-l-violet-500/75',
+  pink: 'border border-pink-950/55 border-l-2 border-l-pink-500/75',
+  white: 'border border-zinc-200/25 border-l-2 border-l-zinc-100/85',
+  grey: 'border border-zinc-700/70 border-l-2 border-l-zinc-400/80',
+  black: 'border border-zinc-950/80 border-l-2 border-l-zinc-500/80',
+}
+
 export const GROUP_COLOR_PREVIEW_HEX: Record<GroupColorId, string> = {
   red: '#ef4444',
   orange: '#f97316',

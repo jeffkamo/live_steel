@@ -1,6 +1,13 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import type { DragEvent } from 'react'
-import type { CaptainRef, ConditionState, EncounterGroup, GroupColorId, Monster } from '../types'
+import type {
+  CaptainRef,
+  ConditionState,
+  EncounterGroup,
+  GroupColorId,
+  Monster,
+  MonsterCardDrawerView,
+} from '../types'
 import { GROUP_COLOR_BADGE, GROUP_COLOR_LABEL } from '../data'
 import { EditableStaminaCell } from './EditableStaminaCell'
 import { MinionStaminaDisplay } from './MinionStaminaDisplay'
@@ -8,7 +15,6 @@ import { MinionStaminaEditor } from './MinionStaminaEditor'
 import { MaripCluster } from './MaripCluster'
 import { StatCluster } from './StatCluster'
 import { CreatureConditionCell, type CreatureConditionDnDBinding } from './CreatureConditionCell'
-import { StatBlock } from './StatBlock'
 import { focusRelativeIn, listFocusableIn, tabWrapKeyDown } from '../dropdownA11y'
 
 const chevronDown = (
@@ -67,8 +73,8 @@ export function MinionGroupRow({
   onMinionDeadChange,
   onMinionConditionRemove,
   onMinionConditionAddOrSet,
-  statBlockExpanded = false,
-  onToggleStatBlock,
+  statCardDrawerView = null,
+  onStatCardToggle,
   onDelete,
   onConfirmEot,
   isEotConfirmed,
@@ -103,8 +109,8 @@ export function MinionGroupRow({
     label: string,
     state: ConditionState,
   ) => void
-  statBlockExpanded?: boolean
-  onToggleStatBlock?: () => void
+  statCardDrawerView?: MonsterCardDrawerView | null
+  onStatCardToggle?: (view: MonsterCardDrawerView) => void
   onDelete?: () => void
   onConfirmEot?: (label: string, minionIndex?: number) => void
   isEotConfirmed?: (label: string, minionIndex?: number) => boolean
@@ -240,9 +246,20 @@ export function MinionGroupRow({
             <span className="sr-only">{ordinal}</span>
           </button>
           <div className="min-w-0 flex-1">
-            <p className="truncate font-medium leading-tight text-zinc-50">
-              {monster.name}
-            </p>
+            {hasFeatures && onStatCardToggle ? (
+              <button
+                type="button"
+                aria-expanded={statCardDrawerView?.kind === 'minionParent'}
+                aria-controls="monster-stat-card-drawer"
+                aria-label={`Stat card for ${monster.name}`}
+                onClick={() => onStatCardToggle({ kind: 'minionParent' })}
+                className="block w-full min-w-0 cursor-pointer rounded text-left outline-none transition-colors hover:text-amber-50/95 focus-visible:ring-2 focus-visible:ring-amber-500/45 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950"
+              >
+                <span className="block truncate font-medium leading-tight text-zinc-50">{monster.name}</span>
+              </button>
+            ) : (
+              <p className="truncate font-medium leading-tight text-zinc-50">{monster.name}</p>
+            )}
             <p className="mt-1 truncate text-[0.7rem] leading-snug text-zinc-400">
               {monster.subtitle}
             </p>
@@ -442,21 +459,6 @@ export function MinionGroupRow({
             isEotConfirmed={isEotConfirmed ? (label) => isEotConfirmed(label) : undefined}
             conditionDnD={conditionDnDParent}
           />
-          {hasFeatures && onToggleStatBlock && (
-            <button
-              type="button"
-              aria-expanded={statBlockExpanded}
-              aria-label={
-                statBlockExpanded
-                  ? `Collapse stat block for ${monster.name}`
-                  : `Expand stat block for ${monster.name}`
-              }
-              onClick={onToggleStatBlock}
-              className={`flex shrink-0 cursor-pointer items-center justify-center px-1 text-zinc-500 transition-colors hover:text-zinc-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-amber-500/70 ${rowTone}`}
-            >
-              {statBlockExpanded ? chevronUp : chevronDown}
-            </button>
-          )}
           <button
             type="button"
             aria-expanded={expanded}
@@ -497,22 +499,17 @@ export function MinionGroupRow({
               onConfirmEot={onConfirmEot ? (label) => onConfirmEot(label, mi) : undefined}
               isEotConfirmed={isEotConfirmed ? (label) => isEotConfirmed(label, mi) : undefined}
               conditionDnD={conditionDnDForMinion?.(mi)}
+              monsterCardDrawerOpen={
+                statCardDrawerView?.kind === 'minion' && statCardDrawerView.slot === mi
+              }
+              onMinionStatCardClick={
+                hasFeatures && onStatCardToggle
+                  ? () => onStatCardToggle({ kind: 'minion', slot: mi })
+                  : undefined
+              }
             />
           )
         })}
-
-      {/* --- stat block row --- */}
-      {statBlockExpanded && hasFeatures && (
-        <div
-          className="border-t border-zinc-800/50 px-4 pb-3"
-          style={{
-            gridColumn: '2 / -1',
-            gridRow: row + 1 + (expanded ? minions.length : 0),
-          }}
-        >
-          <StatBlock features={monster.features!} monsterName={monster.name} />
-        </div>
-      )}
     </>
   )
 }
@@ -533,6 +530,8 @@ function MinionChildRow({
   onConfirmEot,
   isEotConfirmed,
   conditionDnD,
+  monsterCardDrawerOpen = false,
+  onMinionStatCardClick,
 }: {
   minion: { name: string; initials: string; conditions: readonly import('../types').ConditionEntry[]; dead: boolean }
   minionIndex: number
@@ -549,6 +548,8 @@ function MinionChildRow({
   onConfirmEot?: (label: string) => void
   isEotConfirmed?: (label: string) => boolean
   conditionDnD?: CreatureConditionDnDBinding
+  monsterCardDrawerOpen?: boolean
+  onMinionStatCardClick?: () => void
 }) {
   const badge = GROUP_COLOR_BADGE[groupColor]
   const bodyCell =
@@ -572,9 +573,26 @@ function MinionChildRow({
             {minionIndex + 1}
           </span>
           <div className="min-w-0 flex-1">
-            <p className={`truncate text-sm font-medium leading-tight text-zinc-200 ${minion.dead ? 'line-through' : ''}`}>
-              {minion.name}
-            </p>
+            {onMinionStatCardClick ? (
+              <button
+                type="button"
+                aria-expanded={monsterCardDrawerOpen}
+                aria-controls="monster-stat-card-drawer"
+                aria-label={`Stat card for ${minion.name}`}
+                onClick={onMinionStatCardClick}
+                className="block w-full min-w-0 cursor-pointer rounded text-left outline-none transition-colors hover:text-amber-50/95 focus-visible:ring-2 focus-visible:ring-amber-500/45 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950"
+              >
+                <span
+                  className={`block truncate text-sm font-medium leading-tight text-zinc-200 ${minion.dead ? 'line-through' : ''}`}
+                >
+                  {minion.name}
+                </span>
+              </button>
+            ) : (
+              <p className={`truncate text-sm font-medium leading-tight text-zinc-200 ${minion.dead ? 'line-through' : ''}`}>
+                {minion.name}
+              </p>
+            )}
           </div>
         </div>
       </div>

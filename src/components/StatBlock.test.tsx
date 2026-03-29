@@ -1,10 +1,18 @@
+import { useState, type ComponentProps } from 'react'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import { StatBlock } from './StatBlock'
 import { MonsterRowCells } from './MonsterRowCells'
 import { GroupSection } from './GroupSection'
-import type { EncounterGroup, GroupColorId, MonsterFeature } from '../types'
+import type {
+  EncounterGroup,
+  GroupColorId,
+  MonsterCardDrawerState,
+  MonsterCardDrawerView,
+  MonsterFeature,
+} from '../types'
+import { monsterCardDrawerViewEquals } from '../types'
 
 const sampleAbility: MonsterFeature = {
   type: 'feature',
@@ -259,7 +267,7 @@ describe('StatBlock Draw Steel glyphs (STAT-002)', () => {
   })
 })
 
-describe('MonsterRowCells stat block toggle', () => {
+describe('MonsterRowCells stat card name control', () => {
   const baseProps = {
     row: 1,
     ordinal: 1,
@@ -278,7 +286,7 @@ describe('MonsterRowCells stat block toggle', () => {
     onConditionAddOrSet: vi.fn(),
   }
 
-  it('shows stat block toggle when monster has features', () => {
+  it('shows stat card trigger on name when monster has features', () => {
     render(
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)' }}>
         <MonsterRowCells
@@ -295,17 +303,15 @@ describe('MonsterRowCells stat block toggle', () => {
             features: [sampleAbility],
           }}
           {...baseProps}
-          statBlockExpanded={false}
-          onToggleStatBlock={vi.fn()}
+          monsterCardDrawerOpen={false}
+          onMonsterCardNameClick={vi.fn()}
         />
       </div>,
     )
-    expect(
-      screen.getByRole('button', { name: /Expand stat block for Goblin/i }),
-    ).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /^Stat card for Goblin$/i })).toBeInTheDocument()
   })
 
-  it('does not show stat block toggle when monster has no features', () => {
+  it('keeps plain name text when monster has no features', () => {
     render(
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)' }}>
         <MonsterRowCells
@@ -321,19 +327,16 @@ describe('MonsterRowCells stat block toggle', () => {
             conditions: [],
           }}
           {...baseProps}
-          statBlockExpanded={false}
-          onToggleStatBlock={vi.fn()}
         />
       </div>,
     )
-    expect(
-      screen.queryByRole('button', { name: /stat block/i }),
-    ).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /^Stat card for Goblin$/i })).not.toBeInTheDocument()
+    expect(screen.getByText('Goblin')).toBeInTheDocument()
   })
 
-  it('calls onToggleStatBlock when toggle is clicked', async () => {
+  it('calls onMonsterCardNameClick when name control is activated', async () => {
     const user = userEvent.setup()
-    const onToggle = vi.fn()
+    const onClick = vi.fn()
     render(
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)' }}>
         <MonsterRowCells
@@ -350,16 +353,16 @@ describe('MonsterRowCells stat block toggle', () => {
             features: [sampleAbility],
           }}
           {...baseProps}
-          statBlockExpanded={false}
-          onToggleStatBlock={onToggle}
+          monsterCardDrawerOpen={false}
+          onMonsterCardNameClick={onClick}
         />
       </div>,
     )
-    await user.click(screen.getByRole('button', { name: /Expand stat block for Goblin/i }))
-    expect(onToggle).toHaveBeenCalledOnce()
+    await user.click(screen.getByRole('button', { name: /^Stat card for Goblin$/i }))
+    expect(onClick).toHaveBeenCalledOnce()
   })
 
-  it('renders stat block content when expanded', () => {
+  it('sets aria-expanded on name control from drawer open state', () => {
     render(
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)' }}>
         <MonsterRowCells
@@ -376,69 +379,18 @@ describe('MonsterRowCells stat block toggle', () => {
             features: [sampleAbility, sampleTrait],
           }}
           {...baseProps}
-          statBlockExpanded={true}
-          onToggleStatBlock={vi.fn()}
+          monsterCardDrawerOpen={true}
+          onMonsterCardNameClick={vi.fn()}
         />
       </div>,
     )
-    expect(screen.getByRole('region', { name: 'Stat block for Goblin' })).toBeInTheDocument()
-    expect(screen.getByText('Sword Stab')).toBeInTheDocument()
-    expect(screen.getByText('Crafty')).toBeInTheDocument()
-  })
-
-  it('does not render stat block content when collapsed', () => {
-    render(
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)' }}>
-        <MonsterRowCells
-          monster={{
-            name: 'Goblin',
-            subtitle: 'L1 Horde',
-            initials: 'G',
-            stamina: [5, 15],
-            marip: [0, 0, 0, 0, 0],
-            fs: 0,
-            dist: 5,
-            stab: 0,
-            conditions: [],
-            features: [sampleAbility, sampleTrait],
-          }}
-          {...baseProps}
-          statBlockExpanded={false}
-          onToggleStatBlock={vi.fn()}
-        />
-      </div>,
-    )
-    expect(screen.queryByRole('region', { name: /Stat block/i })).not.toBeInTheDocument()
-  })
-
-  it('shows aria-expanded=true on toggle when stat block is expanded', () => {
-    render(
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)' }}>
-        <MonsterRowCells
-          monster={{
-            name: 'Goblin',
-            subtitle: 'L1 Horde',
-            initials: 'G',
-            stamina: [5, 15],
-            marip: [0, 0, 0, 0, 0],
-            fs: 0,
-            dist: 5,
-            stab: 0,
-            conditions: [],
-            features: [sampleAbility],
-          }}
-          {...baseProps}
-          statBlockExpanded={true}
-          onToggleStatBlock={vi.fn()}
-        />
-      </div>,
-    )
-    const btn = screen.getByRole('button', { name: /Collapse stat block for Goblin/i })
+    const btn = screen.getByRole('button', { name: /^Stat card for Goblin$/i })
     expect(btn).toHaveAttribute('aria-expanded', 'true')
+    expect(btn).toHaveAttribute('aria-controls', 'monster-stat-card-drawer')
   })
 })
 
-describe('Malice creatures still show stat blocks', () => {
+describe('Malice creatures stat card name control', () => {
   const rowProps = {
     row: 1,
     ordinal: 1,
@@ -457,7 +409,7 @@ describe('Malice creatures still show stat blocks', () => {
     onConditionAddOrSet: vi.fn(),
   }
 
-  it('shows stat block toggle for a malice creature with features in MonsterRowCells', () => {
+  it('shows stat card trigger on name for a malice creature with features in MonsterRowCells', () => {
     render(
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)' }}>
         <MonsterRowCells
@@ -474,86 +426,62 @@ describe('Malice creatures still show stat blocks', () => {
             features: [sampleAbility],
           }}
           {...rowProps}
-          statBlockExpanded={false}
-          onToggleStatBlock={vi.fn()}
+          monsterCardDrawerOpen={false}
+          onMonsterCardNameClick={vi.fn()}
         />
       </div>,
     )
     expect(
-      screen.getByRole('button', { name: /Expand stat block for Goblin Assassin/i }),
-    ).toBeInTheDocument()
-  })
-
-  it('renders stat block content when expanded for malice creature', () => {
-    render(
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)' }}>
-        <MonsterRowCells
-          monster={{
-            name: 'Goblin Assassin 1',
-            subtitle: 'L1 Horde · Ambusher',
-            initials: 'GA',
-            stamina: [5, 15],
-            marip: [-2, 2, 0, 0, -2],
-            fs: -1,
-            dist: 4,
-            stab: 0,
-            conditions: [],
-            features: [sampleAbility],
-          }}
-          {...rowProps}
-          statBlockExpanded={true}
-          onToggleStatBlock={vi.fn()}
-        />
-      </div>,
-    )
-    expect(
-      screen.getByRole('region', { name: /Stat block for Goblin Assassin/i }),
-    ).toBeInTheDocument()
-  })
-
-  it('shows stat block toggle for malice creature in GroupSection', () => {
-    const group: EncounterGroup = {
-      id: 'statblock-test-g',
-      color: 'red',
-      monsters: [
-        {
-          name: 'Goblin Assassin 1',
-          subtitle: 'L1 Horde · Ambusher',
-          initials: 'GA',
-          stamina: [5, 15],
-          marip: [-2, 2, 0, 0, -2],
-          fs: -1,
-          dist: 4,
-          stab: 0,
-          conditions: [],
-          features: [sampleAbility],
-        },
-      ],
-    }
-    render(
-      <GroupSection
-        group={group}
-        groupKey="g0"
-        groupNumber={1}
-        thisGroupIndex={0}
-        encounterGroupColors={['red'] as GroupColorId[]}
-        turnActed={false}
-        seActPhaseGlow={false}
-        onToggleTurn={vi.fn()}
-        turnAriaLabel="Encounter group 1: turn pending"
-        onGroupColorChange={vi.fn()}
-        onMonsterStaminaChange={vi.fn()}
-        onMonsterConditionRemove={vi.fn()}
-        onMonsterConditionAddOrSet={vi.fn()}
-      />,
-    )
-    expect(
-      screen.getByRole('button', { name: /Expand stat block for Goblin Assassin/i }),
+      screen.getByRole('button', { name: /^Stat card for Goblin Assassin 1$/i }),
     ).toBeInTheDocument()
   })
 })
 
-describe('GroupSection stat block integration', () => {
+function GroupSectionWithDrawerHarness(
+  props: Omit<ComponentProps<typeof GroupSection>, 'monsterCardDrawer' | 'onToggleMonsterCard'>,
+) {
+  const [drawer, setDrawer] = useState<MonsterCardDrawerState | null>(null)
+  const { group, thisGroupIndex, ...rest } = props
+  const toggle = (monsterIndex: number, view: MonsterCardDrawerView) => {
+    const m = group.monsters[monsterIndex]
+    if (!m || (m.features?.length ?? 0) === 0) return
+    if (view.kind === 'minion') {
+      if (!m.minions || view.slot < 0 || view.slot >= m.minions.length) return
+    }
+    if (view.kind === 'minionParent' && (!m.minions || m.minions.length === 0)) return
+    setDrawer((prev) => {
+      if (
+        prev != null &&
+        prev.groupIndex === thisGroupIndex &&
+        prev.monsterIndex === monsterIndex &&
+        monsterCardDrawerViewEquals(prev.view, view)
+      ) {
+        return null
+      }
+      return { groupIndex: thisGroupIndex, monsterIndex, view }
+    })
+  }
+  const openMonster =
+    drawer != null ? group.monsters[drawer.monsterIndex] : undefined
+  return (
+    <div className="flex font-serif">
+      <GroupSection
+        {...rest}
+        group={group}
+        thisGroupIndex={thisGroupIndex}
+        monsterCardDrawer={drawer}
+        onToggleMonsterCard={toggle}
+      />
+      <aside id="monster-stat-card-drawer" className="w-80 shrink-0 overflow-auto">
+        {openMonster && (openMonster.features?.length ?? 0) > 0 && (
+          <StatBlock features={openMonster.features!} monsterName={openMonster.name} />
+        )}
+      </aside>
+    </div>
+  )
+}
+
+describe('GroupSection stat card drawer integration', () => {
   function makeGroupWithFeatures(): EncounterGroup {
     return {
       id: 'statblock-features-g',
@@ -601,33 +529,32 @@ describe('GroupSection stat block integration', () => {
     onMonsterConditionAddOrSet: vi.fn(),
   }
 
-  it('toggles stat block expand/collapse on monster with features', async () => {
+  it('toggles stat card in harness when clicking creature name with features', async () => {
     const user = userEvent.setup()
     const group = makeGroupWithFeatures()
-    render(<GroupSection group={group} {...groupBaseProps} />)
+    render(<GroupSectionWithDrawerHarness group={group} {...groupBaseProps} />)
 
     expect(screen.queryByRole('region', { name: /Stat block for Goblin A/i })).not.toBeInTheDocument()
 
-    const expandBtn = screen.getByRole('button', { name: /Expand stat block for Goblin A/i })
-    await user.click(expandBtn)
+    const nameBtn = screen.getByRole('button', { name: /^Stat card for Goblin A$/i })
+    await user.click(nameBtn)
 
     expect(screen.getByRole('region', { name: /Stat block for Goblin A/i })).toBeInTheDocument()
     expect(screen.getByText('Sword Stab')).toBeInTheDocument()
     expect(screen.getByText('Crafty')).toBeInTheDocument()
 
-    const collapseBtn = screen.getByRole('button', { name: /Collapse stat block for Goblin A/i })
-    await user.click(collapseBtn)
+    await user.click(nameBtn)
 
     expect(screen.queryByRole('region', { name: /Stat block for Goblin A/i })).not.toBeInTheDocument()
   })
 
-  it('does not show stat block toggle for monster without features', () => {
+  it('does not expose stat card name control for monster without features', () => {
     const group = makeGroupWithFeatures()
-    render(<GroupSection group={group} {...groupBaseProps} />)
-    expect(screen.queryByRole('button', { name: /stat block for Goblin B/i })).not.toBeInTheDocument()
+    render(<GroupSectionWithDrawerHarness group={group} {...groupBaseProps} />)
+    expect(screen.queryByRole('button', { name: /^Stat card for Goblin B$/i })).not.toBeInTheDocument()
   })
 
-  it('renders stat block for minion group parent row', async () => {
+  it('opens stat card for minion group parent via name', async () => {
     const user = userEvent.setup()
     const group: EncounterGroup = {
       id: 'statblock-minion-g',
@@ -652,15 +579,52 @@ describe('GroupSection stat block integration', () => {
       ],
     }
     render(
-      <GroupSection
+      <GroupSectionWithDrawerHarness
         group={group}
         {...groupBaseProps}
         encounterGroupColors={['blue']}
       />,
     )
 
-    const expandStatBtn = screen.getByRole('button', { name: /Expand stat block for Minions/i })
-    await user.click(expandStatBtn)
+    await user.click(screen.getByRole('button', { name: /^Stat card for Minions$/i }))
+
+    expect(screen.getByRole('region', { name: /Stat block for Minions/i })).toBeInTheDocument()
+  })
+
+  it('opens stat card for minion child via name when horde is expanded', async () => {
+    const user = userEvent.setup()
+    const group: EncounterGroup = {
+      id: 'statblock-minion-child-g',
+      color: 'blue',
+      monsters: [
+        {
+          name: 'Minions',
+          subtitle: 'Horde',
+          initials: 'M',
+          stamina: [12, 12],
+          marip: [0, 0, 0, 0, 0],
+          fs: 0,
+          dist: 3,
+          stab: 0,
+          conditions: [],
+          features: [sampleAbility],
+          minions: [
+            { name: 'Minion 1', initials: 'M1', conditions: [], dead: false },
+            { name: 'Minion 2', initials: 'M2', conditions: [], dead: false },
+          ],
+        },
+      ],
+    }
+    render(
+      <GroupSectionWithDrawerHarness
+        group={group}
+        {...groupBaseProps}
+        encounterGroupColors={['blue']}
+      />,
+    )
+
+    await user.click(screen.getByRole('button', { name: /^Expand individual Minions$/i }))
+    await user.click(screen.getByRole('button', { name: /^Stat card for Minion 2$/i }))
 
     expect(screen.getByRole('region', { name: /Stat block for Minions/i })).toBeInTheDocument()
   })

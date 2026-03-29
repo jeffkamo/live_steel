@@ -5,39 +5,6 @@ import { EditableStaminaCell } from './EditableStaminaCell'
 import { MaripCluster } from './MaripCluster'
 import { StatCluster } from './StatCluster'
 import { CreatureConditionCell, type CreatureConditionDnDBinding } from './CreatureConditionCell'
-import { StatBlock } from './StatBlock'
-
-const statBlockChevronDown = (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 20 20"
-    fill="currentColor"
-    className="size-3.5"
-    aria-hidden
-  >
-    <path
-      fillRule="evenodd"
-      d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z"
-      clipRule="evenodd"
-    />
-  </svg>
-)
-
-const statBlockChevronUp = (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 20 20"
-    fill="currentColor"
-    className="size-3.5"
-    aria-hidden
-  >
-    <path
-      fillRule="evenodd"
-      d="M14.78 11.78a.75.75 0 0 1-1.06 0L10 8.06l-3.72 3.72a.75.75 0 1 1-1.06-1.06l4.25-4.25a.75.75 0 0 1 1.06 0l4.25 4.25a.75.75 0 0 1 0 1.06Z"
-      clipRule="evenodd"
-    />
-  </svg>
-)
 
 export function MonsterRowCells({
   monster,
@@ -56,8 +23,8 @@ export function MonsterRowCells({
   onStaminaChange,
   onConditionRemove,
   onConditionAddOrSet,
-  statBlockExpanded = false,
-  onToggleStatBlock,
+  monsterCardDrawerOpen = false,
+  onMonsterCardNameClick,
   onDelete,
   onConfirmEot,
   isEotConfirmed,
@@ -80,8 +47,8 @@ export function MonsterRowCells({
   onStaminaChange: (next: [number, number]) => void
   onConditionRemove: (conditionIndex: number) => void
   onConditionAddOrSet: (label: string, state: ConditionState) => void
-  statBlockExpanded?: boolean
-  onToggleStatBlock?: () => void
+  monsterCardDrawerOpen?: boolean
+  onMonsterCardNameClick?: () => void
   onDelete?: () => void
   onConfirmEot?: (label: string) => void
   isEotConfirmed?: (label: string) => boolean
@@ -153,7 +120,20 @@ export function MonsterRowCells({
             {ordinal}
           </button>
           <div className="min-w-0 flex-1">
-            <p className="truncate font-medium leading-tight text-zinc-50">{monster.name}</p>
+            {hasFeatures && onMonsterCardNameClick ? (
+              <button
+                type="button"
+                aria-expanded={monsterCardDrawerOpen}
+                aria-controls="monster-stat-card-drawer"
+                aria-label={`Stat card for ${monster.name}`}
+                onClick={onMonsterCardNameClick}
+                className="block w-full min-w-0 cursor-pointer rounded text-left outline-none transition-colors hover:text-amber-50/95 focus-visible:ring-2 focus-visible:ring-amber-500/45 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950"
+              >
+                <span className="block truncate font-medium leading-tight text-zinc-50">{monster.name}</span>
+              </button>
+            ) : (
+              <p className="truncate font-medium leading-tight text-zinc-50">{monster.name}</p>
+            )}
             <p className="mt-1 truncate text-[0.7rem] leading-snug text-zinc-400">{monster.subtitle}</p>
           </div>
           {onDelete && (
@@ -203,31 +183,8 @@ export function MonsterRowCells({
             isEotConfirmed={isEotConfirmed}
             conditionDnD={conditionDnD}
           />
-          {hasFeatures && onToggleStatBlock && (
-            <button
-              type="button"
-              aria-expanded={statBlockExpanded}
-              aria-label={
-                statBlockExpanded
-                  ? `Collapse stat block for ${monster.name}`
-                  : `Expand stat block for ${monster.name}`
-              }
-              onClick={onToggleStatBlock}
-              className={`flex shrink-0 cursor-pointer items-center justify-center px-2 text-zinc-400 transition-colors hover:text-zinc-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-amber-500/70 ${rowTone}`}
-            >
-              {statBlockExpanded ? statBlockChevronUp : statBlockChevronDown}
-            </button>
-          )}
         </div>
       </div>
-      {statBlockExpanded && hasFeatures && (
-        <div
-          className="border-t border-zinc-800/50 px-4 pb-3"
-          style={{ gridColumn: '2 / -1', gridRow: row + 1 }}
-        >
-          <StatBlock features={monster.features!} monsterName={monster.name} />
-        </div>
-      )}
     </>
   )
 }

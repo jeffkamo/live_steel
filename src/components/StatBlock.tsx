@@ -2,6 +2,8 @@ import { Fragment, useId, useLayoutEffect, useRef, useState } from 'react'
 import type { MonsterFeature, PowerRollEffect } from '../types'
 import type { BestiaryStatblock } from '../bestiary'
 import { lookupStatblock } from '../bestiary'
+import { GROUP_COLOR_STAT_BLOCK_CARD } from '../data'
+import type { GroupColorId } from '../types'
 import {
   DRAW_STEEL_DISTANCE_RULER_GLYPH,
   DRAW_STEEL_TIER_GLYPHS,
@@ -13,7 +15,9 @@ import {
 const statBlockVeneerClass =
   'bg-[linear-gradient(165deg,rgb(39_39_42/0.95)_0%,rgb(9_9_11/0.98)_55%)] shadow-[inset_0_1px_0_rgb(251_191_36/0.07)]'
 
-const statBlockCardClass = `rounded-md border border-amber-950/55 border-l-2 border-l-amber-700/45 bg-zinc-950/35 px-3 pt-2.5 pb-6 ${statBlockVeneerClass}`
+const statBlockCardBaseClass = `rounded-md bg-zinc-950/35 px-3 pt-2.5 pb-6 ${statBlockVeneerClass}`
+const statBlockCardBorderDefault =
+  'border border-amber-950/55 border-l-2 border-l-amber-700/45'
 
 const STAT_BLOCK_SEP_BAND_H_PX = 16
 const SEP_MID_Y = 7
@@ -392,11 +396,18 @@ function TraitBlock({ feature }: { feature: MonsterFeature }) {
 export function StatBlock({
   features,
   monsterName,
+  encounterGroupColor,
 }: {
   features: MonsterFeature[]
   monsterName: string
+  /** When set (e.g. monster drawer), card border matches encounter group color. */
+  encounterGroupColor?: GroupColorId
 }) {
   const statblock = lookupStatblock(monsterName)
+  const statCardBorderClass =
+    encounterGroupColor != null
+      ? GROUP_COLOR_STAT_BLOCK_CARD[encounterGroupColor]
+      : statBlockCardBorderDefault
 
   if (features.length === 0 && !statblock) {
     return (
@@ -417,7 +428,11 @@ export function StatBlock({
       aria-label={`Stat block for ${monsterName}`}
       data-testid="stat-block-root"
     >
-      <div className={statblock || hasFeatures ? statBlockCardClass : ''}>
+      <div
+        className={
+          statblock || hasFeatures ? `${statBlockCardBaseClass} ${statCardBorderClass}` : ''
+        }
+      >
         {statblock && <CoreStatsSection sb={statblock} />}
 
         {statblock && hasFeatures && <StatBlockSeparator />}

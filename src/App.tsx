@@ -1,6 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { DragEvent } from 'react'
-import type { CaptainRef, ConditionState, GroupColorId, Monster } from './types'
+import type {
+  CaptainRef,
+  ConditionState,
+  GroupColorId,
+  Monster,
+  MonsterCardDrawerState,
+  MonsterCardDrawerView,
+} from './types'
+import { monsterCardDrawerViewEquals } from './types'
 import {
   cloneEncounterGroups,
   cloneTerrainRows,
@@ -16,12 +24,14 @@ import {
   remapEncounterGroupIndex,
   remapEotConfirmedAfterMonsterMove,
   reorderEncounterGroupsWithCaptainRemap,
+  GROUP_COLOR_BADGE,
   ROSTER_GRID_TEMPLATE,
   transferConditionBetweenCreatures,
   type ConditionCreatureRef,
 } from './data'
 import { TitleRule } from './components/TitleRule'
 import { GroupSection } from './components/GroupSection'
+import { StatBlock } from './components/StatBlock'
 import { TerrainRow } from './components/TerrainRow'
 
 function App() {
@@ -32,6 +42,7 @@ function App() {
     ENCOUNTER_GROUPS.map(() => false),
   )
   const [uiLocked, setUiLocked] = useState(false)
+  const [monsterCardDrawer, setMonsterCardDrawer] = useState<MonsterCardDrawerState | null>(null)
 
   const eotTimersRef = useRef<Map<number, ReturnType<typeof setTimeout>>>(new Map())
   const [seActWindowElapsedGroup, setSeActWindowElapsedGroup] = useState<Set<number>>(() => new Set())
@@ -642,181 +653,313 @@ function App() {
     setGroupTurnActed((prev) => prev.map(() => false))
   }, [])
 
+  const toggleMonsterCard = useCallback(
+    (groupIndex: number, monsterIndex: number, view: MonsterCardDrawerView) => {
+      const m = encounterGroups[groupIndex]?.monsters[monsterIndex]
+      if (!m || (m.features?.length ?? 0) === 0) return
+      if (view.kind === 'minion') {
+        if (!m.minions || view.slot < 0 || view.slot >= m.minions.length) return
+      }
+      if (view.kind === 'minionParent' && (!m.minions || m.minions.length === 0)) return
+      setMonsterCardDrawer((prev) => {
+        if (
+          prev != null &&
+          prev.groupIndex === groupIndex &&
+          prev.monsterIndex === monsterIndex &&
+          monsterCardDrawerViewEquals(prev.view, view)
+        ) {
+          return null
+        }
+        return { groupIndex, monsterIndex, view }
+      })
+    },
+    [encounterGroups],
+  )
+
+  useEffect(() => {
+    if (!monsterCardDrawer) return
+    const m = encounterGroups[monsterCardDrawer.groupIndex]?.monsters[monsterCardDrawer.monsterIndex]
+    if (!m || (m.features?.length ?? 0) === 0) {
+      setMonsterCardDrawer(null)
+      return
+    }
+    const { view } = monsterCardDrawer
+    if (view.kind === 'minion') {
+      if (!m.minions || view.slot < 0 || view.slot >= m.minions.length) {
+        setMonsterCardDrawer(null)
+      }
+    } else if (view.kind === 'minionParent' && (!m.minions || m.minions.length === 0)) {
+      setMonsterCardDrawer(null)
+    }
+  }, [encounterGroups, monsterCardDrawer])
+
+  const drawerMonster =
+    monsterCardDrawer != null
+      ? encounterGroups[monsterCardDrawer.groupIndex]?.monsters[monsterCardDrawer.monsterIndex]
+      : undefined
+  const drawerFeatures = drawerMonster?.features
+  const statCardDrawerOpen = drawerMonster != null && (drawerFeatures?.length ?? 0) > 0
+  const drawerGroupColor =
+    monsterCardDrawer != null
+      ? encounterGroups[monsterCardDrawer.groupIndex]?.color
+      : undefined
+  const drawerOrdinalBadge =
+    drawerGroupColor != null ? GROUP_COLOR_BADGE[drawerGroupColor] : null
+
+  const drawerView = monsterCardDrawer?.view
+  const drawerOrdinalInCircle: number | null =
+    statCardDrawerOpen && monsterCardDrawer != null && drawerView != null
+      ? drawerView.kind === 'standard'
+        ? monsterCardDrawer.monsterIndex + 1
+        : drawerView.kind === 'minion'
+          ? drawerView.slot + 1
+          : null
+      : null
+
+  const drawerTitleName =
+    statCardDrawerOpen && drawerMonster != null && drawerView != null
+      ? drawerView.kind === 'minion'
+        ? (drawerMonster.minions?.[drawerView.slot]?.name ?? drawerMonster.name)
+        : drawerMonster.name
+      : ''
+
+  const drawerAsideAriaLabel =
+    statCardDrawerOpen && drawerMonster != null && drawerView != null
+      ? drawerView.kind === 'minionParent'
+        ? `Stat card for ${drawerMonster.name}`
+        : drawerView.kind === 'minion'
+          ? `Stat card for minion ${drawerView.slot + 1}: ${drawerTitleName}`
+          : drawerOrdinalInCircle != null
+            ? `Stat card for creature ${drawerOrdinalInCircle}: ${drawerTitleName}`
+            : `Stat card for ${drawerTitleName}`
+      : undefined
+
   return (
     <div className="min-h-svh bg-zinc-950 p-4 font-serif text-zinc-100 antialiased md:p-8">
-      <div className="mx-auto max-w-6xl">
-        <header className="px-4 pt-5 pb-0 text-center">
-          <h1 className="text-lg font-normal tracking-[0.2em] text-white md:text-xl">
-            Live Steel
-          </h1>
-          <p className="mt-1.5 text-[0.65rem] font-normal uppercase tracking-[0.28em] text-zinc-400">
-            Encounter roster
-          </p>
-          <TitleRule flushBelow />
-        </header>
+      <div className="mx-auto flex w-full max-w-[min(92rem,100%)] items-stretch gap-0">
+        <div className="min-w-0 flex-1">
+          <div className="mx-auto max-w-6xl">
+            <header className="px-4 pt-5 pb-0 text-center">
+              <h1 className="text-lg font-normal tracking-[0.2em] text-white md:text-xl">
+                Live Steel
+              </h1>
+              <p className="mt-1.5 text-[0.65rem] font-normal uppercase tracking-[0.28em] text-zinc-400">
+                Encounter roster
+              </p>
+              <TitleRule flushBelow />
+            </header>
 
-        <section aria-label="Creature tracker" className="mt-0 flex flex-col gap-2 px-0">
-          <div
-            className="grid w-full min-w-0 items-center"
-            style={{ gridTemplateColumns: ROSTER_GRID_TEMPLATE }}
-          >
-            <div className="flex justify-center py-1.5" style={{ gridColumn: 1 }}>
-              <button
-                type="button"
-                onClick={resetAllTurns}
-                aria-label="Reset all encounter group turn diamonds to pending"
-                className="min-h-10 min-w-[5.25rem] cursor-pointer rounded-md px-4 py-2 font-sans text-xs tracking-wide text-zinc-400 transition-colors hover:bg-zinc-900 hover:text-zinc-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500/60"
+            <section aria-label="Creature tracker" className="mt-0 flex flex-col gap-2 px-0">
+              <div
+                className="grid w-full min-w-0 items-center"
+                style={{ gridTemplateColumns: ROSTER_GRID_TEMPLATE }}
               >
-                Reset
-              </button>
-            </div>
-            <div className="flex justify-end py-1.5 pr-1 sm:pr-2" style={{ gridColumn: '2 / -1' }}>
-              <button
-                type="button"
-                aria-pressed={uiLocked}
-                onClick={() => setUiLocked((v) => !v)}
-                aria-label={
-                  uiLocked
-                    ? 'Unlock encounter editing controls'
-                    : 'Lock encounter editing controls'
-                }
-                className="min-h-10 min-w-[5.25rem] cursor-pointer rounded-md px-4 py-2 font-sans text-xs tracking-wide transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500/60 bg-zinc-800/85 text-zinc-100 hover:bg-zinc-700/90 hover:text-white aria-pressed:bg-transparent aria-pressed:text-zinc-400 aria-pressed:hover:bg-zinc-900 aria-pressed:hover:text-zinc-200"
-              >
-                {uiLocked ? 'Unlock' : 'Lock'}
-              </button>
-            </div>
+                <div className="flex justify-center py-1.5" style={{ gridColumn: 1 }}>
+                  <button
+                    type="button"
+                    onClick={resetAllTurns}
+                    aria-label="Reset all encounter group turn diamonds to pending"
+                    className="min-h-10 min-w-[5.25rem] cursor-pointer rounded-md px-4 py-2 font-sans text-xs tracking-wide text-zinc-400 transition-colors hover:bg-zinc-900 hover:text-zinc-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500/60"
+                  >
+                    Reset
+                  </button>
+                </div>
+                <div className="flex justify-end py-1.5 pr-1 sm:pr-2" style={{ gridColumn: '2 / -1' }}>
+                  <button
+                    type="button"
+                    aria-pressed={uiLocked}
+                    onClick={() => setUiLocked((v) => !v)}
+                    aria-label={
+                      uiLocked
+                        ? 'Unlock encounter editing controls'
+                        : 'Lock encounter editing controls'
+                    }
+                    className="min-h-10 min-w-[5.25rem] cursor-pointer rounded-md px-4 py-2 font-sans text-xs tracking-wide transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500/60 bg-zinc-800/85 text-zinc-100 hover:bg-zinc-700/90 hover:text-white aria-pressed:bg-transparent aria-pressed:text-zinc-400 aria-pressed:hover:bg-zinc-900 aria-pressed:hover:text-zinc-200"
+                  >
+                    {uiLocked ? 'Unlock' : 'Lock'}
+                  </button>
+                </div>
+              </div>
+              {encounterGroups.map((group, gi) => (
+                <div
+                  key={group.id}
+                  data-testid="encounter-group-drop-target"
+                  data-group-index={gi}
+                  className={`rounded-lg transition-[box-shadow] duration-150 ${
+                    dropTargetGroupIndex === gi ? 'ring-2 ring-amber-500/45 ring-offset-2 ring-offset-zinc-950' : ''
+                  }`}
+                  onDragOver={(e) => {
+                    if (![...e.dataTransfer.types].includes(ENCOUNTER_GROUP_DRAG_MIME)) return
+                    e.preventDefault()
+                    e.dataTransfer.dropEffect = 'move'
+                    setDropTargetGroupIndex(gi)
+                  }}
+                  onDragLeave={(e) => {
+                    if (!e.currentTarget.contains(e.relatedTarget as Node | null)) {
+                      setDropTargetGroupIndex((v) => (v === gi ? null : v))
+                    }
+                  }}
+                  onDrop={(e) => {
+                    e.preventDefault()
+                    setDropTargetGroupIndex(null)
+                    const raw = e.dataTransfer.getData(ENCOUNTER_GROUP_DRAG_MIME)
+                    const from = Number.parseInt(raw, 10)
+                    if (Number.isNaN(from) || from === gi) return
+                    reorderEncounterGroups(from, gi)
+                  }}
+                >
+                  <GroupSection
+                    group={group}
+                    groupKey={`g${gi}`}
+                    groupNumber={gi + 1}
+                    thisGroupIndex={gi}
+                    encounterGroupColors={encounterGroups.map((g) => g.color)}
+                    turnActed={groupTurnActed[gi] ?? false}
+                    seActPhaseGlow={
+                      (groupTurnActed[gi] ?? false) && !seActWindowElapsedGroup.has(gi)
+                    }
+                    onToggleTurn={() => toggleGroupTurn(gi)}
+                    turnAriaLabel={`Encounter group ${gi + 1}: turn ${groupTurnActed[gi] ? 'acted' : 'pending'}`}
+                    onGroupColorChange={(c) => patchGroupColor(gi, c)}
+                    onMonsterStaminaChange={(mi, st) => patchMonsterStamina(gi, mi, st)}
+                    onMonsterConditionRemove={(mi, ci) => patchMonsterConditionRemove(gi, mi, ci)}
+                    onMonsterConditionAddOrSet={(mi, label, state) =>
+                      patchMonsterConditionAddOrSet(gi, mi, label, state)
+                    }
+                    allGroups={encounterGroups}
+                    onMinionCaptainChange={(mi, captainId) =>
+                      patchMinionCaptain(gi, mi, captainId)
+                    }
+                    onMinionDeadChange={(mi, mni, dead) =>
+                      patchMinionDead(gi, mi, mni, dead)
+                    }
+                    onMinionConditionRemove={(mi, mni, ci) =>
+                      patchMinionConditionRemove(gi, mi, mni, ci)
+                    }
+                    onMinionConditionAddOrSet={(mi, mni, label, state) =>
+                      patchMinionConditionAddOrSet(gi, mi, mni, label, state)
+                    }
+                    onDeleteMonster={(mi) => deleteMonster(gi, mi)}
+                    onAddMonster={
+                      uiLocked ? undefined : (monster) => addMonsterToGroup(gi, monster)
+                    }
+                    onConfirmEot={(mi, label, minionIndex) =>
+                      confirmEotCondition(gi, mi, label, minionIndex)
+                    }
+                    isEotConfirmed={(mi, label, minionIndex) =>
+                      isEotConfirmed(gi, mi, label, minionIndex)
+                    }
+                    encounterGroupDragHandle={
+                      uiLocked
+                        ? undefined
+                        : {
+                            onDragStart: (e) => {
+                              e.dataTransfer.setData(ENCOUNTER_GROUP_DRAG_MIME, String(gi))
+                              e.dataTransfer.effectAllowed = 'move'
+                            },
+                            onDragEnd: () => setDropTargetGroupIndex(null),
+                            ariaLabel: `Reorder encounter group ${gi + 1}`,
+                          }
+                    }
+                    monsterDrag={
+                      uiLocked
+                        ? undefined
+                        : {
+                            thisGroupIndex: gi,
+                            dropTarget: monsterDropTarget,
+                            onMonsterDragStart: (mi, e) => onMonsterDragStart(gi, mi, e),
+                            onMonsterDragEnd: onMonsterDragEnd,
+                            onMonsterDragOver: (mi, e) => onMonsterDragOver(gi, mi, e),
+                            onMonsterDragLeave: (mi, e) => onMonsterDragLeave(gi, mi, e),
+                            onMonsterDrop: (mi, e) => onMonsterDrop(gi, mi, e),
+                          }
+                    }
+                    conditionDrag={{
+                      dropTarget: conditionDropTarget,
+                      onDragStart: (mi, mni, label, e) => onConditionDragStart(gi, mi, mni, label, e),
+                      onDragEnd: onConditionDragEnd,
+                      onDragOver: (mi, mni, e) => onConditionDragOver(gi, mi, mni, e),
+                      onDragLeave: (mi, mni, e) => onConditionDragLeave(gi, mi, mni, e),
+                      onDrop: (mi, mni, e) => onConditionDrop(gi, mi, mni, e),
+                    }}
+                    monsterCardDrawer={monsterCardDrawer}
+                    onToggleMonsterCard={(mi, view) => toggleMonsterCard(gi, mi, view)}
+                  />
+                </div>
+              ))}
+              {!uiLocked && (
+                <button
+                  type="button"
+                  onClick={addNewGroup}
+                  aria-label="Add new encounter group"
+                  className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-zinc-700 px-4 py-3 font-sans text-sm tracking-wide text-zinc-400 transition-colors hover:border-zinc-500 hover:bg-zinc-900/60 hover:text-zinc-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500/60"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+                    <path d="M10.75 4.75a.75.75 0 0 0-1.5 0v4.5h-4.5a.75.75 0 0 0 0 1.5h4.5v4.5a.75.75 0 0 0 1.5 0v-4.5h4.5a.75.75 0 0 0 0-1.5h-4.5v-4.5Z" />
+                  </svg>
+                  Add group
+                </button>
+              )}
+            </section>
+
+            <section aria-label="Dynamic terrain" className="mt-8 flex flex-col gap-2 md:mt-10">
+              <header className="px-4 pt-2 pb-0 text-center md:pt-3">
+                <h2 className="text-lg font-normal tracking-[0.2em] text-white md:text-xl">
+                  DYNAMIC TERRAIN
+                </h2>
+                <TitleRule />
+              </header>
+              {terrainRows.map((row, i) => (
+                <TerrainRow key={i} row={row} onStaminaChange={(st) => patchTerrainStamina(i, st)} />
+              ))}
+            </section>
           </div>
-          {encounterGroups.map((group, gi) => (
-            <div
-              key={group.id}
-              data-testid="encounter-group-drop-target"
-              data-group-index={gi}
-              className={`rounded-lg transition-[box-shadow] duration-150 ${
-                dropTargetGroupIndex === gi ? 'ring-2 ring-amber-500/45 ring-offset-2 ring-offset-zinc-950' : ''
-              }`}
-              onDragOver={(e) => {
-                if (![...e.dataTransfer.types].includes(ENCOUNTER_GROUP_DRAG_MIME)) return
-                e.preventDefault()
-                e.dataTransfer.dropEffect = 'move'
-                setDropTargetGroupIndex(gi)
-              }}
-              onDragLeave={(e) => {
-                if (!e.currentTarget.contains(e.relatedTarget as Node | null)) {
-                  setDropTargetGroupIndex((v) => (v === gi ? null : v))
-                }
-              }}
-              onDrop={(e) => {
-                e.preventDefault()
-                setDropTargetGroupIndex(null)
-                const raw = e.dataTransfer.getData(ENCOUNTER_GROUP_DRAG_MIME)
-                const from = Number.parseInt(raw, 10)
-                if (Number.isNaN(from) || from === gi) return
-                reorderEncounterGroups(from, gi)
-              }}
-            >
-              <GroupSection
-                group={group}
-                groupKey={`g${gi}`}
-                groupNumber={gi + 1}
-                thisGroupIndex={gi}
-                encounterGroupColors={encounterGroups.map((g) => g.color)}
-                turnActed={groupTurnActed[gi] ?? false}
-                seActPhaseGlow={
-                  (groupTurnActed[gi] ?? false) && !seActWindowElapsedGroup.has(gi)
-                }
-                onToggleTurn={() => toggleGroupTurn(gi)}
-                turnAriaLabel={`Encounter group ${gi + 1}: turn ${groupTurnActed[gi] ? 'acted' : 'pending'}`}
-                onGroupColorChange={(c) => patchGroupColor(gi, c)}
-                onMonsterStaminaChange={(mi, st) => patchMonsterStamina(gi, mi, st)}
-                onMonsterConditionRemove={(mi, ci) => patchMonsterConditionRemove(gi, mi, ci)}
-                onMonsterConditionAddOrSet={(mi, label, state) =>
-                  patchMonsterConditionAddOrSet(gi, mi, label, state)
-                }
-                allGroups={encounterGroups}
-                onMinionCaptainChange={(mi, captainId) =>
-                  patchMinionCaptain(gi, mi, captainId)
-                }
-                onMinionDeadChange={(mi, mni, dead) =>
-                  patchMinionDead(gi, mi, mni, dead)
-                }
-                onMinionConditionRemove={(mi, mni, ci) =>
-                  patchMinionConditionRemove(gi, mi, mni, ci)
-                }
-                onMinionConditionAddOrSet={(mi, mni, label, state) =>
-                  patchMinionConditionAddOrSet(gi, mi, mni, label, state)
-                }
-                onDeleteMonster={(mi) => deleteMonster(gi, mi)}
-                onAddMonster={
-                  uiLocked ? undefined : (monster) => addMonsterToGroup(gi, monster)
-                }
-                onConfirmEot={(mi, label, minionIndex) =>
-                  confirmEotCondition(gi, mi, label, minionIndex)
-                }
-                isEotConfirmed={(mi, label, minionIndex) =>
-                  isEotConfirmed(gi, mi, label, minionIndex)
-                }
-                encounterGroupDragHandle={
-                  uiLocked
-                    ? undefined
-                    : {
-                        onDragStart: (e) => {
-                          e.dataTransfer.setData(ENCOUNTER_GROUP_DRAG_MIME, String(gi))
-                          e.dataTransfer.effectAllowed = 'move'
-                        },
-                        onDragEnd: () => setDropTargetGroupIndex(null),
-                        ariaLabel: `Reorder encounter group ${gi + 1}`,
-                      }
-                }
-                monsterDrag={
-                  uiLocked
-                    ? undefined
-                    : {
-                        thisGroupIndex: gi,
-                        dropTarget: monsterDropTarget,
-                        onMonsterDragStart: (mi, e) => onMonsterDragStart(gi, mi, e),
-                        onMonsterDragEnd: onMonsterDragEnd,
-                        onMonsterDragOver: (mi, e) => onMonsterDragOver(gi, mi, e),
-                        onMonsterDragLeave: (mi, e) => onMonsterDragLeave(gi, mi, e),
-                        onMonsterDrop: (mi, e) => onMonsterDrop(gi, mi, e),
-                      }
-                }
-                conditionDrag={{
-                  dropTarget: conditionDropTarget,
-                  onDragStart: (mi, mni, label, e) => onConditionDragStart(gi, mi, mni, label, e),
-                  onDragEnd: onConditionDragEnd,
-                  onDragOver: (mi, mni, e) => onConditionDragOver(gi, mi, mni, e),
-                  onDragLeave: (mi, mni, e) => onConditionDragLeave(gi, mi, mni, e),
-                  onDrop: (mi, mni, e) => onConditionDrop(gi, mi, mni, e),
-                }}
-              />
-            </div>
-          ))}
-          {!uiLocked && (
-            <button
-              type="button"
-              onClick={addNewGroup}
-              aria-label="Add new encounter group"
-              className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-zinc-700 px-4 py-3 font-sans text-sm tracking-wide text-zinc-400 transition-colors hover:border-zinc-500 hover:bg-zinc-900/60 hover:text-zinc-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500/60"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
-                <path d="M10.75 4.75a.75.75 0 0 0-1.5 0v4.5h-4.5a.75.75 0 0 0 0 1.5h4.5v4.5a.75.75 0 0 0 1.5 0v-4.5h4.5a.75.75 0 0 0 0-1.5h-4.5v-4.5Z" />
-              </svg>
-              Add group
-            </button>
-          )}
-        </section>
+        </div>
 
-        <section aria-label="Dynamic terrain" className="mt-8 flex flex-col gap-2 md:mt-10">
-          <header className="px-4 pt-2 pb-0 text-center md:pt-3">
-            <h2 className="text-lg font-normal tracking-[0.2em] text-white md:text-xl">
-              DYNAMIC TERRAIN
-            </h2>
-            <TitleRule />
-          </header>
-          {terrainRows.map((row, i) => (
-            <TerrainRow key={i} row={row} onStaminaChange={(st) => patchTerrainStamina(i, st)} />
-          ))}
-        </section>
+        <aside
+          id="monster-stat-card-drawer"
+          aria-label={drawerAsideAriaLabel}
+          aria-hidden={!statCardDrawerOpen}
+          className={`shrink-0 bg-zinc-950 transition-[width] duration-300 ease-out motion-reduce:transition-none ${
+            statCardDrawerOpen
+              ? 'w-[min(20rem,calc(100vw-2rem))] overflow-x-hidden'
+              : 'w-0 overflow-hidden'
+          }`}
+        >
+          {statCardDrawerOpen && drawerMonster && (
+            <div className="box-border flex w-[min(20rem,calc(100vw-2rem))] flex-col font-sans">
+              <div className="flex shrink-0 items-start justify-between gap-2 border-b border-zinc-800/60 px-3 py-2.5">
+                <h2 className="flex min-w-0 flex-1 items-center gap-1.5 text-sm font-medium tracking-wide">
+                  {drawerOrdinalBadge != null ? (
+                    <span
+                      className={`inline-flex size-7 shrink-0 items-center justify-center rounded-full border-2 text-xs font-semibold tabular-nums leading-none ${drawerOrdinalBadge.border} ${drawerOrdinalBadge.bg} ${drawerOrdinalBadge.text}`}
+                    >
+                      {drawerOrdinalInCircle != null ? drawerOrdinalInCircle : '\u00a0'}
+                    </span>
+                  ) : null}
+                  <span className="min-w-0 truncate text-zinc-200">{drawerTitleName}</span>
+                </h2>
+                <button
+                  type="button"
+                  aria-label="Close stat card drawer"
+                  onClick={() => setMonsterCardDrawer(null)}
+                  className="shrink-0 cursor-pointer rounded p-1 text-zinc-500 transition-colors hover:bg-zinc-800/80 hover:text-zinc-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500/60"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="size-5" aria-hidden>
+                    <path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z" />
+                  </svg>
+                </button>
+              </div>
+              <div className="px-3 pb-4 pt-2">
+                <StatBlock
+                  features={drawerFeatures ?? []}
+                  monsterName={drawerMonster.name}
+                  encounterGroupColor={drawerGroupColor}
+                />
+              </div>
+            </div>
+          )}
+        </aside>
       </div>
     </div>
   )

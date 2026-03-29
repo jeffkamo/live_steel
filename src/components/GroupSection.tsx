@@ -1,6 +1,15 @@
 import { useCallback, useState } from 'react'
 import type { DragEvent } from 'react'
-import type { CaptainRef, ConditionState, EncounterGroup, GroupColorId, GroupColorMenuState, Monster } from '../types'
+import type {
+  CaptainRef,
+  ConditionState,
+  EncounterGroup,
+  GroupColorId,
+  GroupColorMenuState,
+  Monster,
+  MonsterCardDrawerState,
+  MonsterCardDrawerView,
+} from '../types'
 import { ROSTER_GRID_TEMPLATE } from '../data'
 import type { CreatureConditionDnDBinding } from './CreatureConditionCell'
 import { GroupTurnColumn } from './TurnColumnCell'
@@ -35,6 +44,8 @@ export function GroupSection({
   encounterGroupDragHandle,
   monsterDrag,
   conditionDrag,
+  monsterCardDrawer = null,
+  onToggleMonsterCard,
 }: {
   group: EncounterGroup
   groupKey: string
@@ -80,9 +91,10 @@ export function GroupSection({
     onDragLeave: (monsterIndex: number, minionIndex: number | null, e: DragEvent) => void
     onDrop: (monsterIndex: number, minionIndex: number | null, e: DragEvent) => void
   }
+  monsterCardDrawer?: MonsterCardDrawerState | null
+  onToggleMonsterCard?: (monsterIndex: number, view: MonsterCardDrawerView) => void
 }): React.JSX.Element {
   const [expandedMinions, setExpandedMinions] = useState<Record<number, boolean>>({})
-  const [expandedStatBlocks, setExpandedStatBlocks] = useState<Record<number, boolean>>({})
   const [colorMenu, setColorMenu] = useState<GroupColorMenuState>({
     open: false,
     anchor: null,
@@ -109,21 +121,14 @@ export function GroupSection({
     setExpandedMinions((prev) => ({ ...prev, [monsterIndex]: !prev[monsterIndex] }))
   }, [])
 
-  const toggleStatBlock = useCallback((monsterIndex: number) => {
-    setExpandedStatBlocks((prev) => ({ ...prev, [monsterIndex]: !prev[monsterIndex] }))
-  }, [])
-
   let currentRow = 1
   const monsterRows: { monsterIndex: number; startRow: number; rowCount: number }[] = []
   for (let i = 0; i < group.monsters.length; i++) {
     const m = group.monsters[i]!
     const isMinion = m.minions && m.minions.length > 0
     const minionExpanded = isMinion && !!expandedMinions[i]
-    const hasFeatures = (m.features?.length ?? 0) > 0
-    const statBlockOpen = hasFeatures && !!expandedStatBlocks[i]
     let count = 1
     if (isMinion && minionExpanded) count += m.minions!.length
-    if (statBlockOpen) count += 1
     monsterRows.push({ monsterIndex: i, startRow: currentRow, rowCount: count })
     currentRow += count
   }
@@ -208,6 +213,18 @@ export function GroupSection({
       {monsterRows.map(({ monsterIndex: i, startRow }) => {
         const monster = group.monsters[i]!
         const isMinion = monster.minions && monster.minions.length > 0
+        const hasFeatures = (monster.features?.length ?? 0) > 0
+        const statCardDrawerView =
+          monsterCardDrawer != null &&
+          monsterCardDrawer.groupIndex === thisGroupIndex &&
+          monsterCardDrawer.monsterIndex === i
+            ? monsterCardDrawer.view
+            : null
+        const monsterCardDrawerOpen = statCardDrawerView?.kind === 'standard'
+        const onMonsterCardNameClick =
+          hasFeatures && onToggleMonsterCard
+            ? () => onToggleMonsterCard(i, { kind: 'standard' })
+            : undefined
 
         if (isMinion) {
           return (
@@ -246,8 +263,12 @@ export function GroupSection({
               onMinionConditionAddOrSet={(mi, label, state) =>
                 onMinionConditionAddOrSet?.(i, mi, label, state)
               }
-              statBlockExpanded={!!expandedStatBlocks[i]}
-              onToggleStatBlock={() => toggleStatBlock(i)}
+              statCardDrawerView={statCardDrawerView}
+              onStatCardToggle={
+                hasFeatures && onToggleMonsterCard
+                  ? (view) => onToggleMonsterCard(i, view)
+                  : undefined
+              }
               onDelete={() => onDeleteMonster?.(i)}
               onConfirmEot={onConfirmEot ? (label, minionIndex) => onConfirmEot(i, label, minionIndex) : undefined}
               isEotConfirmed={isEotConfirmed ? (label, minionIndex) => isEotConfirmed(i, label, minionIndex) : undefined}
@@ -279,8 +300,8 @@ export function GroupSection({
             onConditionAddOrSet={(label, state) =>
               onMonsterConditionAddOrSet(i, label, state)
             }
-            statBlockExpanded={!!expandedStatBlocks[i]}
-            onToggleStatBlock={() => toggleStatBlock(i)}
+            monsterCardDrawerOpen={monsterCardDrawerOpen}
+            onMonsterCardNameClick={onMonsterCardNameClick}
             onDelete={() => onDeleteMonster?.(i)}
             onConfirmEot={onConfirmEot ? (label) => onConfirmEot(i, label) : undefined}
             isEotConfirmed={isEotConfirmed ? (label) => isEotConfirmed(i, label) : undefined}

@@ -76,6 +76,24 @@ export type EncounterGroup = {
   color: GroupColorId
 }
 
+/** Which row opened the monster stat card drawer (ordinal circle differs per case). */
+export type MonsterCardDrawerView =
+  | { kind: 'standard' }
+  | { kind: 'minionParent' }
+  | { kind: 'minion'; slot: number }
+
+export type MonsterCardDrawerState = {
+  groupIndex: number
+  monsterIndex: number
+  view: MonsterCardDrawerView
+}
+
+export function monsterCardDrawerViewEquals(a: MonsterCardDrawerView, b: MonsterCardDrawerView): boolean {
+  if (a.kind !== b.kind) return false
+  if (a.kind === 'minion' && b.kind === 'minion') return a.slot === b.slot
+  return true
+}
+
 export type MinionEntrySeed = {
   name: string
   initials: string
