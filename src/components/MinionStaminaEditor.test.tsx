@@ -38,6 +38,10 @@ describe('MinionStaminaEditor', () => {
 
   it('marks dead thresholds with line-through when stamina drops', () => {
     render(<MinionStaminaEditor {...baseProps} current={10} />)
+    expect(screen.getByTestId('editor-threshold-5')).toHaveTextContent('5')
+    expect(screen.getByTestId('editor-threshold-10')).toHaveTextContent('10')
+    expect(screen.getByTestId('editor-threshold-15')).toHaveTextContent('0')
+    expect(screen.getByTestId('editor-threshold-20')).toHaveTextContent('0')
     expect(screen.getByTestId('editor-threshold-5').className).not.toMatch(/line-through/)
     expect(screen.getByTestId('editor-threshold-10').className).not.toMatch(/line-through/)
     expect(screen.getByTestId('editor-threshold-15').className).toMatch(/line-through/)
@@ -46,6 +50,8 @@ describe('MinionStaminaEditor', () => {
 
   it('shows at-risk styling for partially crossed intervals', () => {
     render(<MinionStaminaEditor {...baseProps} current={12} />)
+    expect(screen.getByTestId('editor-threshold-15')).toHaveTextContent('12')
+    expect(screen.getByTestId('editor-threshold-20')).toHaveTextContent('0')
     expect(screen.getByTestId('editor-threshold-5').className).toMatch(/text-zinc-950/)
     expect(screen.getByTestId('editor-threshold-10').className).toMatch(/text-zinc-950/)
     expect(screen.getByTestId('editor-threshold-15').className).toMatch(/text-amber-700/)

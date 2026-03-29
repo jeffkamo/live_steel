@@ -1,4 +1,4 @@
-import type { MonsterFeature, PowerRollEffect } from './types'
+import type { Monster, MonsterFeature, PowerRollEffect } from './types'
 import statblockData from '../data/bestiary/Monsters/statblocks.json'
 
 export type BestiaryStatblock = {
@@ -145,6 +145,40 @@ export function minionInterval(
  */
 export function minionThresholds(interval: number, minionCount: number): number[] {
   return Array.from({ length: minionCount }, (_, i) => interval * (i + 1))
+}
+
+/**
+ * Stamina number shown for one minion-interval bracket (cumulative thresholds).
+ * Killed brackets show 0; the active bracket shows current pool stamina;
+ * full brackets show their cap (threshold).
+ */
+export function minionSegmentDisplay(current: number, prevThreshold: number, threshold: number): number {
+  if (current <= prevThreshold) return 0
+  if (current <= threshold) return current
+  return threshold
+}
+
+export type MinionSegmentVisualState = 'dead' | 'atRisk' | 'healthy'
+
+export function minionSegmentVisual(
+  current: number,
+  prevThreshold: number,
+  threshold: number,
+): { display: number; state: MinionSegmentVisualState } {
+  const display = minionSegmentDisplay(current, prevThreshold, threshold)
+  if (display === 0) return { display, state: 'dead' }
+  if (display < threshold) return { display, state: 'atRisk' }
+  return { display, state: 'healthy' }
+}
+
+/** FS, speed, and stability for roster rows — prefer bestiary, then encounter fields. */
+export function rosterCombatStats(m: Monster): { fs: number; spd: number; stab: number } {
+  const sb =
+    lookupStatblock(m.name) ?? (m.minions?.[0] ? lookupStatblock(m.minions[0].name) : undefined)
+  if (sb) {
+    return { fs: sb.free_strike, spd: sb.speed, stab: sb.stability }
+  }
+  return { fs: m.fs, spd: m.dist, stab: m.stab }
 }
 
 /**

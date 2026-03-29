@@ -268,7 +268,7 @@ export const MARIP_HEADERS = [
   { letter: 'P', title: 'Presence' },
 ] as const
 
-/** 6 columns: group | creatures (shrinks first) | stamina | MARIP | FS/Dist/Stab | conditions (width = icon row) */
+/** 6 columns: group | creatures (shrinks first) | stamina | MARIP | FS/SPD/Stab | conditions (width = icon row) */
 export const ROSTER_GRID_TEMPLATE =
   '5.5rem minmax(0,1fr) minmax(5.25rem,7rem) minmax(5.75rem,7.25rem) 7.25rem max-content'
 

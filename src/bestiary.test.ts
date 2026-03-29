@@ -9,12 +9,15 @@ import {
   isMaliceCreature,
   minionInterval,
   minionThresholds,
+  minionSegmentDisplay,
+  rosterCombatStats,
   suggestedDeadCount,
   bestiarySubtitle,
   deriveInitials,
   type BestiaryStatblock,
 } from './bestiary'
 import { cloneEncounterGroups } from './data'
+import type { Monster } from './types'
 
 describe('baseName', () => {
   it('strips trailing ordinal number', () => {
@@ -384,6 +387,54 @@ describe('minionThresholds', () => {
 
   it('returns empty array for zero minions', () => {
     expect(minionThresholds(5, 0)).toEqual([])
+  })
+})
+
+describe('minionSegmentDisplay', () => {
+  it('shows lowered tail after small damage (20→17)', () => {
+    expect(minionSegmentDisplay(17, 0, 5)).toBe(5)
+    expect(minionSegmentDisplay(17, 5, 10)).toBe(10)
+    expect(minionSegmentDisplay(17, 10, 15)).toBe(15)
+    expect(minionSegmentDisplay(17, 15, 20)).toBe(17)
+  })
+
+  it('shows zeros for eliminated brackets after heavier damage (17→9)', () => {
+    expect(minionSegmentDisplay(9, 0, 5)).toBe(5)
+    expect(minionSegmentDisplay(9, 5, 10)).toBe(9)
+    expect(minionSegmentDisplay(9, 10, 15)).toBe(0)
+    expect(minionSegmentDisplay(9, 15, 20)).toBe(0)
+  })
+})
+
+describe('rosterCombatStats', () => {
+  it('uses bestiary FS/speed/stability for a named creature', () => {
+    const sb = lookupStatblock('Goblin Assassin')
+    expect(sb).toBeDefined()
+    const m = { name: 'Goblin Assassin 1' } as Monster
+    const stats = rosterCombatStats(m)
+    expect(stats.fs).toBe(sb!.free_strike)
+    expect(stats.spd).toBe(sb!.speed)
+    expect(stats.stab).toBe(sb!.stability)
+  })
+
+  it('resolves minion parent via first minion name', () => {
+    const sb = lookupStatblock('Goblin Spinecleaver')
+    const m = {
+      name: 'Minions',
+      minions: [{ name: 'Goblin Spinecleaver 1', initials: 'G', conditions: [], dead: false }],
+    } as Monster
+    const stats = rosterCombatStats(m)
+    expect(stats.spd).toBe(sb!.speed)
+  })
+
+  it('falls back to encounter fields when not in bestiary', () => {
+    const m = {
+      name: 'Custom',
+      fs: 2,
+      dist: 4,
+      stab: 1,
+    } as Monster
+    expect(rosterCombatStats(m)).toEqual({ fs: 2, spd: 4, stab: 1 })
   })
 })
 

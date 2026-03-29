@@ -217,7 +217,9 @@ describe('App', () => {
 
     const picker = await screen.findByRole('dialog', { name: /^Add condition to Goblin Stinker$/i })
     // Frightened — avoids clashing with Dazed on Minotaur Sunderer in the same encounter group.
-    await user.click(within(picker).getByRole('button', { name: /^Frightened$/i }))
+    await user.click(
+      within(picker).getByRole('button', { name: /^Add Frightened as neutral on Goblin Stinker$/i }),
+    )
 
     expect(within(reserveConditions).getByRole('button', { name: /^Remove Frightened$/i })).toBeInTheDocument()
     expect(within(reserveConditions).getByTitle('Frightened (neutral)')).toBeInTheDocument()
@@ -242,7 +244,7 @@ describe('App', () => {
     expect(scope.getByTitle('Marked (End of turn)')).toBeInTheDocument()
 
     const markedEot = within(picker).getByRole('button', {
-      name: /^Add Marked as end of turn on Goblin Stinker$/i,
+      name: /^Remove Marked \(end of turn\) from Goblin Stinker$/i,
     })
     expect(markedEot.className).toMatch(/amber/)
 
@@ -422,10 +424,14 @@ describe('App', () => {
     reserveConditions.focus()
     await user.keyboard('{Enter}')
     const picker = screen.getByRole('dialog', { name: /^Add condition to Goblin Stinker$/i })
-    await user.click(within(picker).getByRole('button', { name: /^Bleeding$/i }))
+    await user.click(
+      within(picker).getByRole('button', { name: /^Add Bleeding as neutral on Goblin Stinker$/i }),
+    )
     expect(within(reserveConditions).getByTitle('Bleeding (neutral)')).toBeInTheDocument()
 
-    await user.click(within(picker).getByRole('button', { name: /^Surprised$/i }))
+    await user.click(
+      within(picker).getByRole('button', { name: /^Add Surprised as neutral on Goblin Stinker$/i }),
+    )
     expect(within(reserveConditions).getByTitle('Surprised (neutral)')).toBeInTheDocument()
     expect(within(reserveConditions).getByTitle('Bleeding (neutral)')).toBeInTheDocument()
   })
@@ -516,10 +522,10 @@ describe('App', () => {
     expect(screen.getByText('Level 1 · Horde Controller')).toBeInTheDocument()
   })
 
-  it('renders FS/Dist/Stab stat headers', () => {
+  it('renders FS/SPD/Stab stat headers', () => {
     render(<App />)
     expect(screen.getAllByTitle('Free strike').length).toBeGreaterThanOrEqual(1)
-    expect(screen.getAllByTitle('Distance').length).toBeGreaterThanOrEqual(1)
+    expect(screen.getAllByTitle('Speed').length).toBeGreaterThanOrEqual(1)
     expect(screen.getAllByTitle('Stability').length).toBeGreaterThanOrEqual(1)
   })
 

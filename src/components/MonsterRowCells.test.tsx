@@ -88,7 +88,7 @@ describe('MonsterRowCells', () => {
   it('renders stat cluster headers', () => {
     renderRow()
     expect(screen.getByTitle('Free strike')).toBeInTheDocument()
-    expect(screen.getByTitle('Distance')).toBeInTheDocument()
+    expect(screen.getByTitle('Speed')).toBeInTheDocument()
     expect(screen.getByTitle('Stability')).toBeInTheDocument()
   })
 

@@ -164,7 +164,7 @@ export function conditionIconShellClass(
   }
   if (state === 'se') {
     const glow = seGlow ? ' animate-glow-se motion-reduce:animate-none' : ''
-    return `${base} border-purple-500/75 bg-purple-500/15 text-purple-100 opacity-100 ring-1 ring-purple-500/45${glow}`
+    return `${base} border-purple-500/80 bg-purple-500/15 text-purple-200 opacity-100${glow}`
   }
   const glow = eotTurnGlow ? ' animate-glow-eot motion-reduce:animate-none' : ''
   return `${base} border-amber-500/75 bg-amber-500/15 text-amber-100 opacity-100 ring-1 ring-amber-500/45${glow}`

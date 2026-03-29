@@ -92,8 +92,12 @@ describe('CreatureConditionCell', () => {
     cell.focus()
     await user.keyboard('{Enter}')
     const picker = screen.getByRole('dialog', { name: /^Add condition to Test Monster$/i })
-    expect(within(picker).getByRole('button', { name: /^Bleeding$/i })).toBeInTheDocument()
-    expect(within(picker).getByRole('button', { name: /^Weakened$/i })).toBeInTheDocument()
+    expect(
+      within(picker).getByRole('button', { name: /^Add Bleeding as neutral on Test Monster$/i }),
+    ).toBeInTheDocument()
+    expect(
+      within(picker).getByRole('button', { name: /^Add Weakened as neutral on Test Monster$/i }),
+    ).toBeInTheDocument()
   })
 
   it('picker has EoT and SE duration buttons for each condition', async () => {
@@ -115,8 +119,59 @@ describe('CreatureConditionCell', () => {
     cell.focus()
     await user.keyboard('{Enter}')
     const picker = screen.getByRole('dialog', { name: /^Add condition to Test Monster$/i })
-    await user.click(within(picker).getByRole('button', { name: /^Bleeding$/i }))
+    await user.click(
+      within(picker).getByRole('button', { name: /^Add Bleeding as neutral on Test Monster$/i }),
+    )
     expect(onAddOrSet).toHaveBeenCalledWith('Bleeding', 'neutral')
+  })
+
+  it('calls onRemove when clicking condition name in picker while neutral is active', async () => {
+    const user = userEvent.setup()
+    const onRemove = vi.fn()
+    const conditions: ConditionEntry[] = [{ label: 'Bleeding', state: 'neutral' }]
+    renderCell(conditions, { onRemove })
+    const cell = screen.getByRole('group', { name: /^Conditions for Test Monster/i })
+    cell.focus()
+    await user.keyboard('{Enter}')
+    const picker = screen.getByRole('dialog', { name: /^Add condition to Test Monster$/i })
+    await user.click(
+      within(picker).getByRole('button', { name: /^Remove Bleeding from Test Monster$/i }),
+    )
+    expect(onRemove).toHaveBeenCalledWith(0)
+  })
+
+  it('calls onRemove when clicking EoT in picker while EoT is active', async () => {
+    const user = userEvent.setup()
+    const onRemove = vi.fn()
+    const conditions: ConditionEntry[] = [{ label: 'Bleeding', state: 'eot' }]
+    renderCell(conditions, { onRemove })
+    const cell = screen.getByRole('group', { name: /^Conditions for Test Monster/i })
+    cell.focus()
+    await user.keyboard('{Enter}')
+    const picker = screen.getByRole('dialog', { name: /^Add condition to Test Monster$/i })
+    await user.click(
+      within(picker).getByRole('button', {
+        name: /^Remove Bleeding \(end of turn\) from Test Monster$/i,
+      }),
+    )
+    expect(onRemove).toHaveBeenCalledWith(0)
+  })
+
+  it('calls onRemove when clicking SE in picker while SE is active', async () => {
+    const user = userEvent.setup()
+    const onRemove = vi.fn()
+    const conditions: ConditionEntry[] = [{ label: 'Bleeding', state: 'se' }]
+    renderCell(conditions, { onRemove })
+    const cell = screen.getByRole('group', { name: /^Conditions for Test Monster/i })
+    cell.focus()
+    await user.keyboard('{Enter}')
+    const picker = screen.getByRole('dialog', { name: /^Add condition to Test Monster$/i })
+    await user.click(
+      within(picker).getByRole('button', {
+        name: /^Remove Bleeding \(save ends\) from Test Monster$/i,
+      }),
+    )
+    expect(onRemove).toHaveBeenCalledWith(0)
   })
 
   it('calls onAddOrSetCondition with eot when clicking EoT button', async () => {
@@ -150,7 +205,9 @@ describe('CreatureConditionCell', () => {
     cell.focus()
     await user.keyboard('{Enter}')
     const picker = screen.getByRole('dialog', { name: /^Add condition to Test Monster$/i })
-    await user.click(within(picker).getByRole('button', { name: /^Bleeding$/i }))
+    await user.click(
+      within(picker).getByRole('button', { name: /^Add Bleeding as neutral on Test Monster$/i }),
+    )
     expect(screen.getByRole('dialog', { name: /^Add condition to Test Monster$/i })).toBeInTheDocument()
   })
 
@@ -173,7 +230,9 @@ describe('CreatureConditionCell', () => {
     cell.focus()
     await user.keyboard('{Enter}')
     const picker = screen.getByRole('dialog', { name: /^Add condition to Test Monster$/i })
-    const eotBtn = within(picker).getByRole('button', { name: /^Add Bleeding as end of turn on Test Monster$/i })
+    const eotBtn = within(picker).getByRole('button', {
+      name: /^Remove Bleeding \(end of turn\) from Test Monster$/i,
+    })
     expect(eotBtn.className).toContain('amber')
   })
 
@@ -185,11 +244,13 @@ describe('CreatureConditionCell', () => {
     cell.focus()
     await user.keyboard('{Enter}')
     const picker = screen.getByRole('dialog', { name: /^Add condition to Test Monster$/i })
-    const bleedingBtn = within(picker).getByRole('button', { name: /^Bleeding$/i })
+    const bleedingBtn = within(picker).getByRole('button', {
+      name: /^Remove Bleeding from Test Monster$/i,
+    })
     const activeRow = bleedingBtn.closest('[class*="opacity-50"]')
     expect(activeRow).toBeFalsy()
 
-    const dazedBtn = within(picker).getByRole('button', { name: /^Dazed$/i })
+    const dazedBtn = within(picker).getByRole('button', { name: /^Add Dazed as neutral on Test Monster$/i })
     const inactiveRow = dazedBtn.closest('[class*="opacity-50"]')
     expect(inactiveRow).toBeTruthy()
   })

@@ -189,6 +189,22 @@ export function CreatureConditionCell({
             {CONDITION_CATALOG.map((label) => {
               const active = findConditionOnMonster(conditions, label)
               const dimmed = active === undefined
+              const idx = conditions.findIndex((c) => c.label === label)
+              const nameAriaLabel =
+                active?.state === 'neutral'
+                  ? `Remove ${label} from ${monsterName}`
+                  : active
+                    ? `Set ${label} to neutral on ${monsterName}`
+                    : `Add ${label} as neutral on ${monsterName}`
+              const eotAriaLabel =
+                active?.state === 'eot'
+                  ? `Remove ${label} (end of turn) from ${monsterName}`
+                  : `Add ${label} as end of turn on ${monsterName}`
+              const seAriaLabel =
+                active?.state === 'se'
+                  ? `Remove ${label} (save ends) from ${monsterName}`
+                  : `Add ${label} as save ends on ${monsterName}`
+
               return (
                 <li key={label}>
                   <div
@@ -196,9 +212,14 @@ export function CreatureConditionCell({
                   >
                     <button
                       type="button"
+                      aria-label={nameAriaLabel}
                       className={`${conditionPickerRowBtn} flex min-w-0 flex-1 items-center gap-2 truncate text-zinc-100 hover:bg-zinc-800/80 ${dimmed ? 'text-zinc-400' : ''}`}
                       onClick={() => {
-                        onAddOrSetCondition(label, 'neutral')
+                        if (active?.state === 'neutral') {
+                          if (idx >= 0) onRemove(idx)
+                        } else {
+                          onAddOrSetCondition(label, 'neutral')
+                        }
                       }}
                     >
                       <ConditionIcon label={label} className="size-3.5 shrink-0 opacity-90" />
@@ -207,14 +228,18 @@ export function CreatureConditionCell({
                     <button
                       type="button"
                       title="End of turn"
-                      aria-label={`Add ${label} as end of turn on ${monsterName}`}
+                      aria-label={eotAriaLabel}
                       className={`${conditionPickerDurationPill} ${
                         active?.state === 'eot'
                           ? 'border-amber-500/80 bg-amber-500/15 text-amber-200'
                           : 'border-zinc-600/90 text-zinc-400 hover:border-zinc-500 hover:bg-zinc-800/60 hover:text-zinc-200'
                       }`}
                       onClick={() => {
-                        onAddOrSetCondition(label, 'eot')
+                        if (active?.state === 'eot') {
+                          if (idx >= 0) onRemove(idx)
+                        } else {
+                          onAddOrSetCondition(label, 'eot')
+                        }
                       }}
                     >
                       EoT
@@ -222,14 +247,18 @@ export function CreatureConditionCell({
                     <button
                       type="button"
                       title="Save ends"
-                      aria-label={`Add ${label} as save ends on ${monsterName}`}
+                      aria-label={seAriaLabel}
                       className={`${conditionPickerDurationPill} ${
                         active?.state === 'se'
                           ? 'border-purple-500/80 bg-purple-500/15 text-purple-200'
                           : 'border-zinc-600/90 text-zinc-400 hover:border-zinc-500 hover:bg-zinc-800/60 hover:text-zinc-200'
                       }`}
                       onClick={() => {
-                        onAddOrSetCondition(label, 'se')
+                        if (active?.state === 'se') {
+                          if (idx >= 0) onRemove(idx)
+                        } else {
+                          onAddOrSetCondition(label, 'se')
+                        }
                       }}
                     >
                       SE

@@ -8,6 +8,7 @@ import type {
   Monster,
   MonsterCardDrawerView,
 } from '../types'
+import { rosterCombatStats } from '../bestiary'
 import { GROUP_COLOR_BADGE, GROUP_COLOR_LABEL } from '../data'
 import { EditableStaminaCell } from './EditableStaminaCell'
 import { MinionStaminaDisplay } from './MinionStaminaDisplay'
@@ -195,6 +196,9 @@ export function MinionGroupRow({
 
   const bodyCell =
     'flex h-full min-h-[3.75rem] items-center p-3 sm:min-h-[4rem] sm:p-3.5'
+  const creatureNameColCell =
+    'flex h-full min-h-[3.75rem] items-center px-2 py-2 sm:min-h-[4rem] sm:px-2.5 sm:py-2.5'
+  const combat = rosterCombatStats(monster)
   const rowTone =
     'transition-opacity duration-200 ease-out motion-reduce:transition-none ' +
     (turnComplete ? 'opacity-[0.52]' : 'opacity-100')
@@ -203,7 +207,7 @@ export function MinionGroupRow({
     <>
       {/* --- parent minion summary row --- */}
       <div
-        className={`${bodyCell} min-w-0 ${rowTone} ${
+        className={`${creatureNameColCell} min-w-0 ${rowTone} ${
           monsterDrag?.dropHighlighted ? 'ring-2 ring-inset ring-sky-500/40' : ''
         }`}
         style={{ gridColumn: 2, gridRow: row }}
@@ -253,7 +257,7 @@ export function MinionGroupRow({
                 aria-controls="monster-stat-card-drawer"
                 aria-label={`Stat card for ${monster.name}`}
                 onClick={() => onStatCardToggle({ kind: 'minionParent' })}
-                className="block w-full min-w-0 cursor-pointer rounded-md -mx-1 px-1 py-0.5 text-left outline-none transition-[background-color,box-shadow,color] duration-150 ease-out motion-reduce:transition-none hover:bg-zinc-800/55 hover:shadow-sm hover:shadow-black/20 hover:[&>span]:text-amber-50/95 hover:[&>p]:text-zinc-300 focus-visible:ring-2 focus-visible:ring-amber-500/45 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950"
+                className="block w-full min-w-0 cursor-pointer rounded-md px-3 py-2 text-left outline-none transition-[background-color,box-shadow,color] duration-150 ease-out motion-reduce:transition-none hover:bg-zinc-800/55 hover:shadow-sm hover:shadow-black/20 hover:[&>span]:text-amber-50/95 hover:[&>p]:text-zinc-300 focus-visible:ring-2 focus-visible:ring-amber-500/45 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950"
               >
                 <span className="block truncate font-medium leading-tight text-zinc-50 transition-colors duration-150">
                   {monster.name}
@@ -446,7 +450,7 @@ export function MinionGroupRow({
         className={`${bodyCell} justify-center ${rowTone}`}
         style={{ gridColumn: 5, gridRow: row }}
       >
-        <StatCluster fs={monster.fs} dist={monster.dist} stab={monster.stab} />
+        <StatCluster fs={combat.fs} spd={combat.spd} stab={combat.stab} />
       </div>
       <div
         className="relative z-0 flex h-full min-h-[3.75rem] w-full items-stretch overflow-visible hover:z-20 focus-within:z-20 has-[[data-condition-picker]]:z-[100] sm:min-h-[4rem]"
@@ -557,6 +561,7 @@ function MinionChildRow({
   onMinionStatCardClick?: () => void
 }) {
   const badge = GROUP_COLOR_BADGE[groupColor]
+  const childCombat = rosterCombatStats(parentMonster)
   const bodyCell =
     'flex h-full min-h-[3rem] items-center p-2 sm:min-h-[3.25rem] sm:p-2.5'
   const deadDim = minion.dead ? 'opacity-40' : ''
@@ -643,11 +648,7 @@ function MinionChildRow({
         className={`${bodyCell} justify-center border-t border-zinc-800/60 ${rowTone} ${deadDim}`}
         style={{ gridColumn: 5, gridRow: gridRow }}
       >
-        <StatCluster
-          fs={parentMonster.fs}
-          dist={parentMonster.dist}
-          stab={parentMonster.stab}
-        />
+        <StatCluster fs={childCombat.fs} spd={childCombat.spd} stab={childCombat.stab} />
       </div>
       <div
         className={`relative z-0 flex h-full min-h-[3rem] w-full items-stretch overflow-visible border-t border-zinc-800/60 hover:z-20 focus-within:z-20 has-[[data-condition-picker]]:z-[100] sm:min-h-[3.25rem] ${deadDim}`}

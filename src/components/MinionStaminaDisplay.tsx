@@ -1,4 +1,9 @@
-import { minionInterval, minionThresholds, suggestedDeadCount } from '../bestiary'
+import {
+  minionInterval,
+  minionSegmentVisual,
+  minionThresholds,
+  suggestedDeadCount,
+} from '../bestiary'
 import { StaminaGlyph, staminaGlyphStatus } from './StaminaGlyph'
 
 export function MinionStaminaDisplay({
@@ -51,15 +56,14 @@ export function MinionStaminaDisplay({
     >
       {thresholds.map((threshold, i) => {
         const prevThreshold = i === 0 ? 0 : thresholds[i - 1]!
-        const alive = current > prevThreshold
-        const crossed = current < threshold
+        const { display, state } = minionSegmentVisual(current, prevThreshold, threshold)
 
         return (
           <span key={threshold} className="flex items-center">
             {i > 0 && (
               <span
                 className={`mx-0.5 select-none text-[0.6rem] ${
-                  crossed ? 'text-zinc-600' : 'text-zinc-500'
+                  display === 0 ? 'text-zinc-600' : 'text-zinc-500'
                 }`}
                 aria-hidden
               >
@@ -69,21 +73,21 @@ export function MinionStaminaDisplay({
             <span
               data-testid={`threshold-${threshold}`}
               className={`rounded px-1 py-0.5 text-xs font-medium transition-colors ${
-                !alive
+                state === 'dead'
                   ? 'bg-red-950/60 text-red-400/70 line-through decoration-red-500/50'
-                  : crossed
+                  : state === 'atRisk'
                     ? 'bg-amber-950/50 text-amber-300'
                     : 'text-zinc-50'
               }`}
               title={
-                !alive
-                  ? `Threshold ${threshold}: minion dead`
-                  : crossed
-                    ? `Threshold ${threshold}: minion at risk (stamina below ${threshold})`
-                    : `Threshold ${threshold}: minion healthy`
+                state === 'dead'
+                  ? `Cap ${threshold}: bracket empty (0) — dead`
+                  : state === 'atRisk'
+                    ? `Cap ${threshold}: ${display} stamina in this bracket — at risk`
+                    : `Cap ${threshold}: full (${threshold}) — healthy`
               }
             >
-              {threshold}
+              {display}
             </span>
           </span>
         )

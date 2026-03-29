@@ -49,8 +49,8 @@ describe('conditionIconShellClass', () => {
 
   it('returns duration active class for se', () => {
     const cls = conditionIconShellClass(true, 'se')
-    expect(cls).toContain('border-purple-500/75')
-    expect(cls).toContain('ring-1')
+    expect(cls).toContain('border-purple-500/80')
+    expect(cls).toContain('text-purple-200')
   })
 
   it('adds animate-glow-eot when turnActed is true and state is eot', () => {

@@ -30,6 +30,10 @@ describe('MinionStaminaDisplay', () => {
         minionCount={4}
       />,
     )
+    expect(screen.getByTestId('threshold-5')).toHaveTextContent('5')
+    expect(screen.getByTestId('threshold-10')).toHaveTextContent('10')
+    expect(screen.getByTestId('threshold-15')).toHaveTextContent('0')
+    expect(screen.getByTestId('threshold-20')).toHaveTextContent('0')
     expect(screen.getByTestId('threshold-5').title).toMatch(/healthy/)
     expect(screen.getByTestId('threshold-10').title).toMatch(/healthy/)
     expect(screen.getByTestId('threshold-15').title).toMatch(/dead/)
@@ -46,6 +50,10 @@ describe('MinionStaminaDisplay', () => {
         minionCount={4}
       />,
     )
+    expect(screen.getByTestId('threshold-5')).toHaveTextContent('5')
+    expect(screen.getByTestId('threshold-10')).toHaveTextContent('10')
+    expect(screen.getByTestId('threshold-15')).toHaveTextContent('12')
+    expect(screen.getByTestId('threshold-20')).toHaveTextContent('0')
     expect(screen.getByTestId('threshold-5').title).toMatch(/healthy/)
     expect(screen.getByTestId('threshold-10').title).toMatch(/healthy/)
     expect(screen.getByTestId('threshold-15').title).toMatch(/at risk/)
@@ -92,10 +100,46 @@ describe('MinionStaminaDisplay', () => {
         minionCount={4}
       />,
     )
+    expect(screen.getByTestId('threshold-5')).toHaveTextContent('5')
+    expect(screen.getByTestId('threshold-10')).toHaveTextContent('7')
+    expect(screen.getByTestId('threshold-15')).toHaveTextContent('0')
+    expect(screen.getByTestId('threshold-20')).toHaveTextContent('0')
     expect(screen.getByTestId('threshold-5').title).toMatch(/healthy/)
     expect(screen.getByTestId('threshold-10').title).toMatch(/at risk/)
     expect(screen.getByTestId('threshold-15').title).toMatch(/dead/)
     expect(screen.getByTestId('threshold-20').title).toMatch(/dead/)
+  })
+
+  it('shows 5/10/15/17 after 3 damage from full pool', () => {
+    render(
+      <MinionStaminaDisplay
+        current={17}
+        max={20}
+        parentName="Minions"
+        firstMinionName="Goblin Spinecleaver 1"
+        minionCount={4}
+      />,
+    )
+    expect(screen.getByTestId('threshold-5')).toHaveTextContent('5')
+    expect(screen.getByTestId('threshold-10')).toHaveTextContent('10')
+    expect(screen.getByTestId('threshold-15')).toHaveTextContent('15')
+    expect(screen.getByTestId('threshold-20')).toHaveTextContent('17')
+  })
+
+  it('shows 5/9/0/0 after further damage into lower bracket', () => {
+    render(
+      <MinionStaminaDisplay
+        current={9}
+        max={20}
+        parentName="Minions"
+        firstMinionName="Goblin Spinecleaver 1"
+        minionCount={4}
+      />,
+    )
+    expect(screen.getByTestId('threshold-5')).toHaveTextContent('5')
+    expect(screen.getByTestId('threshold-10')).toHaveTextContent('9')
+    expect(screen.getByTestId('threshold-15')).toHaveTextContent('0')
+    expect(screen.getByTestId('threshold-20')).toHaveTextContent('0')
   })
 
   it('applies line-through styling to dead thresholds', () => {
