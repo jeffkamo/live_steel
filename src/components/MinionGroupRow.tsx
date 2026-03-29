@@ -3,6 +3,7 @@ import type { CaptainRef, ConditionState, EncounterGroup, GroupColorId, Monster 
 import { GROUP_COLOR_BADGE, GROUP_COLOR_LABEL } from '../data'
 import { EditableStaminaCell } from './EditableStaminaCell'
 import { MinionStaminaDisplay } from './MinionStaminaDisplay'
+import { MinionStaminaEditor } from './MinionStaminaEditor'
 import { MaripCluster } from './MaripCluster'
 import { StatCluster } from './StatCluster'
 import { CreatureConditionCell } from './CreatureConditionCell'
@@ -290,6 +291,15 @@ export function MinionGroupRow({
             <MinionStaminaDisplay
               current={cur}
               max={mx}
+              parentName={monster.name}
+              firstMinionName={minions[0]?.name}
+              minionCount={minions.length}
+            />
+          )}
+          renderEditor={({ current: cur, bump }) => (
+            <MinionStaminaEditor
+              current={cur}
+              bump={bump}
               parentName={monster.name}
               firstMinionName={minions[0]?.name}
               minionCount={minions.length}

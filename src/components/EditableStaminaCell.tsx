@@ -17,12 +17,18 @@ export function EditableStaminaCell({
   onChange,
   ariaLabel,
   renderDisplay,
+  renderEditor,
 }: {
   current: number
   max: number
   onChange: (next: [number, number]) => void
   ariaLabel: string
   renderDisplay?: (current: number, max: number) => React.ReactNode
+  renderEditor?: (props: {
+    current: number
+    max: number
+    bump: (delta: number) => void
+  }) => React.ReactNode
 }) {
   const curFieldId = useId()
   const maxFieldId = useId()
@@ -86,93 +92,97 @@ export function EditableStaminaCell({
         )}
       </div>
       <div role="dialog" aria-label={`${ariaLabel} — adjust values`} className={editorOverlayClass}>
-        <div className="flex flex-nowrap items-center gap-2 rounded-lg border border-zinc-500/80 bg-zinc-900 py-1.5 pl-2 pr-2 shadow-xl shadow-black/50 ring-1 ring-black/20">
-          <div className="flex shrink-0 items-center gap-1">
-            <button
-              type="button"
-              className={staminaBumpMinusClass}
-              aria-label="Decrease stamina by 10"
-              onClick={() => bump(-10)}
-            >
-              −10
-            </button>
-            <button
-              type="button"
-              className={staminaBumpMinusClass}
-              aria-label="Decrease stamina by 1"
-              onClick={() => bump(-1)}
-            >
-              −1
-            </button>
-          </div>
-          <div className="flex shrink-0 items-center gap-1 rounded-md bg-zinc-100 px-2 py-1 shadow-inner shadow-zinc-300/30">
-            <label className="sr-only" htmlFor={curFieldId}>
-              Current stamina
-            </label>
-            <input
-              id={curFieldId}
-              type="number"
-              inputMode="numeric"
-              min={0}
-              className={staminaInlineInputClass}
-              value={draftCur}
-              onChange={(e) => setDraftCur(e.target.value)}
-              onBlur={commitDraft}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  e.currentTarget.blur()
+        {renderEditor ? (
+          renderEditor({ current, max, bump })
+        ) : (
+          <div className="flex flex-nowrap items-center gap-2 rounded-lg border border-zinc-500/80 bg-zinc-900 py-1.5 pl-2 pr-2 shadow-xl shadow-black/50 ring-1 ring-black/20">
+            <div className="flex shrink-0 items-center gap-1">
+              <button
+                type="button"
+                className={staminaBumpMinusClass}
+                aria-label="Decrease stamina by 10"
+                onClick={() => bump(-10)}
+              >
+                −10
+              </button>
+              <button
+                type="button"
+                className={staminaBumpMinusClass}
+                aria-label="Decrease stamina by 1"
+                onClick={() => bump(-1)}
+              >
+                −1
+              </button>
+            </div>
+            <div className="flex shrink-0 items-center gap-1 rounded-md bg-zinc-100 px-2 py-1 shadow-inner shadow-zinc-300/30">
+              <label className="sr-only" htmlFor={curFieldId}>
+                Current stamina
+              </label>
+              <input
+                id={curFieldId}
+                type="number"
+                inputMode="numeric"
+                min={0}
+                className={staminaInlineInputClass}
+                value={draftCur}
+                onChange={(e) => setDraftCur(e.target.value)}
+                onBlur={commitDraft}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.currentTarget.blur()
+                  }
+                }}
+              />
+              <span className="select-none text-sm text-zinc-500" aria-hidden>
+                /
+              </span>
+              <label className="sr-only" htmlFor={maxFieldId}>
+                Max stamina
+              </label>
+              <input
+                id={maxFieldId}
+                type="number"
+                inputMode="numeric"
+                min={0}
+                className={staminaInlineInputClass}
+                value={draftMax}
+                onChange={(e) => setDraftMax(e.target.value)}
+                onBlur={commitDraft}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.currentTarget.blur()
+                  }
+                }}
+              />
+              <StaminaGlyph
+                status={glyphStatus}
+                className={
+                  glyphStatus === 'dead'
+                    ? 'ml-0.5 size-4 shrink-0 text-zinc-600'
+                    : 'ml-0.5 size-4 shrink-0 text-rose-400'
                 }
-              }}
-            />
-            <span className="select-none text-sm text-zinc-500" aria-hidden>
-              /
-            </span>
-            <label className="sr-only" htmlFor={maxFieldId}>
-              Max stamina
-            </label>
-            <input
-              id={maxFieldId}
-              type="number"
-              inputMode="numeric"
-              min={0}
-              className={staminaInlineInputClass}
-              value={draftMax}
-              onChange={(e) => setDraftMax(e.target.value)}
-              onBlur={commitDraft}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  e.currentTarget.blur()
-                }
-              }}
-            />
-            <StaminaGlyph
-              status={glyphStatus}
-              className={
-                glyphStatus === 'dead'
-                  ? 'ml-0.5 size-4 shrink-0 text-zinc-600'
-                  : 'ml-0.5 size-4 shrink-0 text-rose-400'
-              }
-            />
+              />
+            </div>
+            <div className="flex shrink-0 items-center gap-1">
+              <button
+                type="button"
+                className={staminaBumpPlusClass}
+                aria-label="Increase stamina by 1"
+                onClick={() => bump(1)}
+              >
+                +1
+              </button>
+              <button
+                type="button"
+                className={staminaBumpPlusClass}
+                aria-label="Increase stamina by 10"
+                onClick={() => bump(10)}
+              >
+                +10
+              </button>
+            </div>
           </div>
-          <div className="flex shrink-0 items-center gap-1">
-            <button
-              type="button"
-              className={staminaBumpPlusClass}
-              aria-label="Increase stamina by 1"
-              onClick={() => bump(1)}
-            >
-              +1
-            </button>
-            <button
-              type="button"
-              className={staminaBumpPlusClass}
-              aria-label="Increase stamina by 10"
-              onClick={() => bump(10)}
-            >
-              +10
-            </button>
-          </div>
-        </div>
+        )}
       </div>
     </div>
   )

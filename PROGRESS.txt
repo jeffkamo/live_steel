@@ -163,3 +163,24 @@ Remove captain from minion group — added 'x' button directly on assigned capta
 - src/components/MinionGroupRow.tsx
 - src/App.test.tsx
 - PRD.json
+
+
+[MINION-005]
+
+Minion stamina popover with interval-based input — replaces standard cur/max text inputs with interval threshold segments in the hover editor
+
+**Key decisions:**
+- Added `renderEditor` prop to EditableStaminaCell alongside existing `renderDisplay`; when provided, replaces the entire editor panel (bump buttons + center input area) inside the hover dialog
+- MinionStaminaEditor component mirrors MinionStaminaDisplay's threshold logic but uses editor-appropriate styling (light bg, zinc-950 text for healthy, amber-700 for at-risk, red-700+line-through for dead)
+- Editor reuses same bump buttons (±1, ±10) as standard editor; bump function passed through from EditableStaminaCell
+- Falls back to null render (letting EditableStaminaCell show standard editor) when no bestiary entry or minionCount=0
+- Non-minion monsters unaffected — no `renderEditor` passed, standard cur/max inputs remain
+- 13 component tests + 4 App integration tests covering: interval segments, separators, state styling, bump buttons, dynamic segment count, fallback, popover content, cur/max absence, bump interaction, non-minion preservation
+
+**Files changed:**
+- src/components/MinionStaminaEditor.tsx (new)
+- src/components/MinionStaminaEditor.test.tsx (new)
+- src/components/EditableStaminaCell.tsx
+- src/components/MinionGroupRow.tsx
+- src/App.test.tsx
+- PRD.json

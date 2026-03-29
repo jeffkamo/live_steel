@@ -117,7 +117,7 @@
         "Write specs covering popover display, stamina controls, and dynamic interval segments",
         "Run the specs, fix any failures until all pass"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "MINION-006",

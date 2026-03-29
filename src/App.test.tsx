@@ -933,6 +933,60 @@ describe('App', () => {
     expect(screen.getByText('22 / 22')).toBeInTheDocument()
   })
 
+  // --- Minion stamina popover with interval editor (MINION-005) ---
+
+  it('minion group popover shows interval segments instead of cur/max inputs', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    const grid = screen.getByText('Minions', { exact: true }).closest('div.grid.items-stretch.rounded-lg') as HTMLElement
+    const scope = within(grid)
+    const staminaGroup = scope.getByRole('group', { name: /^Edit stamina for Minions$/i })
+    await user.hover(staminaGroup)
+    const dialog = within(staminaGroup).getByRole('dialog', { name: /adjust values/i })
+    const intervals = within(dialog).getByRole('group', { name: /Minion stamina intervals/i })
+    expect(intervals).toBeInTheDocument()
+    expect(within(intervals).getByTestId('editor-threshold-5')).toHaveTextContent('5')
+    expect(within(intervals).getByTestId('editor-threshold-10')).toHaveTextContent('10')
+    expect(within(intervals).getByTestId('editor-threshold-15')).toHaveTextContent('15')
+    expect(within(intervals).getByTestId('editor-threshold-20')).toHaveTextContent('20')
+  })
+
+  it('minion popover does not show cur/max inputs', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    const grid = screen.getByText('Minions', { exact: true }).closest('div.grid.items-stretch.rounded-lg') as HTMLElement
+    const scope = within(grid)
+    const staminaGroup = scope.getByRole('group', { name: /^Edit stamina for Minions$/i })
+    await user.hover(staminaGroup)
+    const dialog = within(staminaGroup).getByRole('dialog', { name: /adjust values/i })
+    expect(within(dialog).queryByLabelText('Current stamina')).not.toBeInTheDocument()
+    expect(within(dialog).queryByLabelText('Max stamina')).not.toBeInTheDocument()
+  })
+
+  it('minion popover bump buttons update interval display and thresholds', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    const grid = screen.getByText('Minions', { exact: true }).closest('div.grid.items-stretch.rounded-lg') as HTMLElement
+    const scope = within(grid)
+    const staminaGroup = scope.getByRole('group', { name: /^Edit stamina for Minions$/i })
+    await user.hover(staminaGroup)
+    await user.click(within(staminaGroup).getByRole('button', { name: /^Decrease stamina by 10$/i }))
+    expect(scope.getByTestId('threshold-5').title).toMatch(/healthy/)
+    expect(scope.getByTestId('threshold-10').title).toMatch(/healthy/)
+    expect(scope.getByTestId('threshold-15').title).toMatch(/dead/)
+    expect(scope.getByTestId('threshold-20').title).toMatch(/dead/)
+  })
+
+  it('non-minion monster popover still uses standard cur/max inputs', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    const staminaGroup = screen.getByRole('group', { name: /^Edit stamina for Goblin Assassin 1$/i })
+    await user.hover(staminaGroup)
+    const dialog = within(staminaGroup).getByRole('dialog', { name: /adjust values/i })
+    expect(within(dialog).getByLabelText('Current stamina')).toBeInTheDocument()
+    expect(within(dialog).getByLabelText('Max stamina')).toBeInTheDocument()
+  })
+
   // --- Captain assignment (MINION-001) ---
 
   const getMinionGrid = () =>
