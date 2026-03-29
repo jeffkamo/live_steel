@@ -20,3 +20,22 @@ Expandable/collapsible stat blocks per monster and minion row
 - src/components/MinionGroupRow.tsx
 - src/components/GroupSection.tsx
 - PRD.json
+
+
+[STAT-003]
+
+Source stat block data from SteelCompendium bestiary — bestiary.ts loads data/bestiary/Monsters/statblocks.json (416 monsters), builds name-keyed lookup map, maps raw JSON → MonsterFeature[]
+
+**Key decisions:**
+- Direct JSON import of statblocks.json via Vite's resolveJsonModule; no runtime fetch needed
+- baseName() strips trailing ordinal ("Goblin Assassin 1" → "Goblin Assassin") so numbered encounter copies resolve to the base statblock
+- resolveFeatures() in data.ts tries monster name first, then first minion's name (handles generic parent names like "Minions" for minion groups), then falls back to inline seed data
+- Removed hardcoded features from ENCOUNTER_GROUPS seed data; bestiary is now source of truth
+- mapFeatures() filters to ability/trait only (excludes subtrait), omits optional fields when absent
+- 30 new tests covering: baseName, statblockCount, statblockNames, lookupStatblock, mapFeatures, featuresForMonster, cloneEncounterGroups bestiary integration
+
+**Files changed:**
+- src/bestiary.ts (new)
+- src/bestiary.test.ts (new)
+- src/data.ts
+- PRD.json

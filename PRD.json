@@ -37,7 +37,7 @@
         "Write specs covering data fetching, parsing, and correct prop mapping",
         "Run the specs, fix any failures until all pass"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "STAT-004",
