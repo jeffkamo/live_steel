@@ -52,3 +52,12 @@ Ideas and enhancements tracked for future work (not committed to a roadmap).
 - [ ] **Keyboard-only pass** — Walk the app with keyboard only; ensure focus states are visible and that activating controls with Enter/Space matches pointer behavior.
 - [ ] **Dropdown keyboard access** — After opening a dropdown, options remain reachable and activatable from the keyboard (focus trap/restore, arrow keys, Escape, etc. as appropriate).
 
+---
+
+# Advanced
+
+- [ ] Add history menu that shows you each action performed. Things like applying damage or healing stamina should be batched (that way you don' tend up with 50 or 100 +10 or -10 actions)
+- [ ] Persist encounter data in local storage
+- [ ] Reload local storage state on page load
+- [ ] Add the ability to create new, empty encounters and name them
+- [ ] Add the ability to switch between encounters
