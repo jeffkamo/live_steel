@@ -37,10 +37,26 @@ describe('StatBlock', () => {
     expect(screen.getByText('Crafty')).toBeInTheDocument()
   })
 
-  it('renders section headers for abilities and traits', () => {
+  it('renders Draw Steel glyphs in left margin when feature icon emoji maps', () => {
     render(<StatBlock features={[sampleAbility, sampleTrait]} monsterName="Test Monster" />)
-    expect(screen.getByText('Abilities')).toBeInTheDocument()
-    expect(screen.getByText('Traits')).toBeInTheDocument()
+    const glyphs = screen.getAllByTestId('stat-block-feature-glyph')
+    expect(glyphs.map((el) => el.textContent).sort().join('')).toBe('*t')
+    expect(screen.queryByTestId('stat-block-feature-fallback')).not.toBeInTheDocument()
+  })
+
+  it('keeps emoji in margin when there is no glyph mapping', () => {
+    const skull: MonsterFeature = { ...sampleAbility, icon: '☠️' }
+    render(<StatBlock features={[skull]} monsterName="Test Monster" />)
+    expect(screen.getByTestId('stat-block-feature-fallback')).toHaveTextContent('☠️')
+    expect(screen.queryByTestId('stat-block-feature-glyph')).not.toBeInTheDocument()
+  })
+
+  it('renders abilities and traits in one card without section titles', () => {
+    render(<StatBlock features={[sampleAbility, sampleTrait]} monsterName="Test Monster" />)
+    expect(screen.queryByText('Abilities')).not.toBeInTheDocument()
+    expect(screen.queryByText('Traits')).not.toBeInTheDocument()
+    expect(screen.getByText('Sword Stab')).toBeInTheDocument()
+    expect(screen.getByText('Crafty')).toBeInTheDocument()
   })
 
   it('renders power roll tiers', () => {
@@ -51,11 +67,11 @@ describe('StatBlock', () => {
     expect(screen.getByText('7 damage')).toBeInTheDocument()
   })
 
-  it('renders tier labels', () => {
+  it('does not render tier range pills (glyph + aria carry threshold)', () => {
     render(<StatBlock features={[sampleAbility]} monsterName="Test Monster" />)
-    expect(screen.getByText('11−')).toBeInTheDocument()
-    expect(screen.getByText('12–16')).toBeInTheDocument()
-    expect(screen.getByText('17+')).toBeInTheDocument()
+    expect(screen.queryByText('≤11')).not.toBeInTheDocument()
+    expect(screen.queryByText('12–16')).not.toBeInTheDocument()
+    expect(screen.queryByText('17+')).not.toBeInTheDocument()
   })
 
   it('renders effect text', () => {
@@ -70,12 +86,13 @@ describe('StatBlock', () => {
 
   it('renders keywords, usage, distance, target for abilities', () => {
     render(<StatBlock features={[sampleAbility]} monsterName="Test Monster" />)
-    expect(screen.getByRole('img', { name: 'Melee' })).toBeInTheDocument()
+    expect(screen.getByText('Melee')).toBeInTheDocument()
     expect(screen.getByText('Strike')).toBeInTheDocument()
     expect(screen.getByText('Weapon')).toBeInTheDocument()
     expect(screen.getByText(/Main action/)).toBeInTheDocument()
     expect(screen.getByText(/Melee 1/)).toBeInTheDocument()
     expect(screen.getByText(/One creature or object/)).toBeInTheDocument()
+    expect(screen.getByText('+ 2')).toBeInTheDocument()
   })
 
   it('renders ability_type label', () => {
@@ -103,16 +120,16 @@ describe('StatBlock', () => {
     expect(screen.getByRole('region', { name: 'Stat block for Goblin' })).toBeInTheDocument()
   })
 
-  it('renders only abilities section when no traits', () => {
+  it('renders only abilities when no traits', () => {
     render(<StatBlock features={[sampleAbility]} monsterName="Test Monster" />)
-    expect(screen.getByText('Abilities')).toBeInTheDocument()
-    expect(screen.queryByText('Traits')).not.toBeInTheDocument()
+    expect(screen.getByText('Sword Stab')).toBeInTheDocument()
+    expect(screen.queryByText('Crafty')).not.toBeInTheDocument()
   })
 
-  it('renders only traits section when no abilities', () => {
+  it('renders only traits when no abilities', () => {
     render(<StatBlock features={[sampleTrait]} monsterName="Test Monster" />)
-    expect(screen.queryByText('Abilities')).not.toBeInTheDocument()
-    expect(screen.getByText('Traits')).toBeInTheDocument()
+    expect(screen.getByText('Crafty')).toBeInTheDocument()
+    expect(screen.queryByText('Sword Stab')).not.toBeInTheDocument()
   })
 })
 
@@ -126,13 +143,15 @@ describe('StatBlock core stats from bestiary', () => {
   it('renders MARIP values from bestiary', () => {
     render(<StatBlock features={[sampleAbility]} monsterName="Goblin Assassin" />)
     const nums = screen.getAllByTestId('draw-steel-marip-num')
-    expect(nums.map((n) => n.textContent).join(' ')).toBe('-2 2 0 0 -2')
+    expect(nums.map((n) => n.textContent).join(' ')).toBe('-2 +2 0 0 -2')
   })
 
-  it('renders speed and movement type', () => {
+  it('renders speed and movement on separate lines', () => {
     render(<StatBlock features={[sampleAbility]} monsterName="Goblin Assassin" />)
     const header = screen.getByTestId('core-stats-header')
-    expect(header.textContent).toMatch(/6\s*\(\s*Climb\s*\)/)
+    expect(header.textContent).toMatch(/Speed/)
+    expect(header.textContent).toMatch(/Movement:\s*Climb/)
+    expect(header.textContent).not.toMatch(/\(\s*Climb\s*\)/)
   })
 
   it('renders size', () => {
@@ -160,15 +179,22 @@ describe('StatBlock core stats from bestiary', () => {
   it('renders with_captain for minion statblocks', () => {
     render(<StatBlock features={[sampleAbility]} monsterName="Goblin Spinecleaver" />)
     expect(screen.getByText('+1 damage bonus to strikes')).toBeInTheDocument()
-    expect(screen.getByText('With Captain')).toBeInTheDocument()
+    expect(screen.getByText(/With Captain:/)).toBeInTheDocument()
   })
 
   it('renders immunities and weaknesses when present', () => {
     render(<StatBlock features={[sampleAbility]} monsterName="Lich" />)
-    expect(screen.getByText('Immunities')).toBeInTheDocument()
+    expect(screen.getByText(/Immunity:/)).toBeInTheDocument()
     expect(screen.getByText('Corruption 10, poison 10')).toBeInTheDocument()
-    expect(screen.getByText('Weaknesses')).toBeInTheDocument()
+    expect(screen.getByText(/Weakness:/)).toBeInTheDocument()
     expect(screen.getByText('Holy 5')).toBeInTheDocument()
+  })
+
+  it('renders immunity and weakness lines with em dash when empty', () => {
+    render(<StatBlock features={[sampleAbility]} monsterName="Goblin Assassin" />)
+    const header = screen.getByTestId('core-stats-header')
+    expect(header.textContent).toMatch(/Immunity:\s*—/)
+    expect(header.textContent).toMatch(/Weakness:\s*—/)
   })
 
   it('does not render core stats header for unknown monster', () => {
@@ -202,22 +228,22 @@ describe('StatBlock core stats from bestiary', () => {
 })
 
 describe('StatBlock Draw Steel glyphs (STAT-002)', () => {
-  it('renders tier band glyphs alongside tier ranges', () => {
+  it('renders tier band glyphs with threshold in aria-label', () => {
     render(<StatBlock features={[sampleAbility]} monsterName="Test Monster" />)
     const glyphs = screen.getAllByTestId('draw-steel-tier-glyph')
     expect(glyphs).toHaveLength(3)
-    expect(glyphs[0]).toHaveAttribute('aria-label', 'Tier 1')
+    expect(glyphs[0]).toHaveAttribute('aria-label', 'Tier 1 (≤11)')
+    expect(glyphs[1]).toHaveAttribute('aria-label', 'Tier 2 (12–16)')
+    expect(glyphs[2]).toHaveAttribute('aria-label', 'Tier 3 (17+)')
     expect(glyphs[0].textContent).toBe('!')
     expect(glyphs[1].textContent).toBe('@')
     expect(glyphs[2].textContent).toBe('#')
   })
 
-  it('renders keyword glyph for Melee and plain chips for unmapped keywords', () => {
+  it('renders attack keywords as plain words, not symbol glyphs', () => {
     render(<StatBlock features={[sampleAbility]} monsterName="Test Monster" />)
-    const melee = screen.getByTestId('draw-steel-keyword-glyph')
-    expect(melee).toHaveAttribute('data-keyword', 'Melee')
-    expect(melee).toHaveAttribute('aria-label', 'Melee')
-    expect(melee.textContent).toBe('t')
+    expect(screen.queryByTestId('draw-steel-keyword-glyph')).not.toBeInTheDocument()
+    expect(screen.getByText('Melee')).toBeInTheDocument()
     expect(screen.getByText('Strike')).toBeInTheDocument()
     expect(screen.getByText('Weapon')).toBeInTheDocument()
   })

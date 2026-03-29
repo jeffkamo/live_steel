@@ -10,7 +10,7 @@ export function MaripCluster({ values }: { values: Marip | null }) {
       aria-label="Characteristics (MARIP)"
     >
       <div
-        className={`${track} pb-0.5 text-[0.55rem] uppercase tracking-wide text-zinc-300 sm:text-[0.6rem]`}
+        className={`${track} pb-0.5 font-draw-steel text-sm uppercase tracking-wide text-zinc-300 sm:text-base`}
       >
         {MARIP_HEADERS.map(({ letter, title }) => (
           <span key={letter} title={title}>
