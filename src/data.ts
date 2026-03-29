@@ -156,7 +156,7 @@ export const ENCOUNTER_GROUPS: readonly EncounterGroupSeed[] = [
     monsters: [
       {
         name: 'Minions',
-        subtitle: 'Horde · Captain: Goblin Assassin 1',
+        subtitle: 'Level 1 · Minion Brute',
         initials: 'M',
         stamina: [20, 20],
         marip: [-1, 0, 0, 0, -1],

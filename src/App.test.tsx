@@ -510,6 +510,7 @@ describe('App', () => {
     expect(screen.getByText('Level 1 · Horde Ambusher')).toBeInTheDocument()
     expect(screen.getByText('Level 1 · Horde Harrier')).toBeInTheDocument()
     expect(screen.getByText('Level 1 · Horde Support')).toBeInTheDocument()
+    expect(screen.getByText('Level 1 · Minion Brute')).toBeInTheDocument()
     expect(screen.getByText('Level 3 · Elite Brute')).toBeInTheDocument()
     expect(screen.getByText('Level 2 · Horde Hexer')).toBeInTheDocument()
     expect(screen.getByText('Level 1 · Horde Controller')).toBeInTheDocument()
