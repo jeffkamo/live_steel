@@ -70,7 +70,9 @@ describe('StatBlock', () => {
 
   it('renders keywords, usage, distance, target for abilities', () => {
     render(<StatBlock features={[sampleAbility]} monsterName="Test Monster" />)
-    expect(screen.getByText(/Melee, Strike, Weapon/)).toBeInTheDocument()
+    expect(screen.getByRole('img', { name: 'Melee' })).toBeInTheDocument()
+    expect(screen.getByText('Strike')).toBeInTheDocument()
+    expect(screen.getByText('Weapon')).toBeInTheDocument()
     expect(screen.getByText(/Main action/)).toBeInTheDocument()
     expect(screen.getByText(/Melee 1/)).toBeInTheDocument()
     expect(screen.getByText(/One creature or object/)).toBeInTheDocument()
@@ -123,12 +125,14 @@ describe('StatBlock core stats from bestiary', () => {
 
   it('renders MARIP values from bestiary', () => {
     render(<StatBlock features={[sampleAbility]} monsterName="Goblin Assassin" />)
-    expect(screen.getByText('-2 / 2 / 0 / 0 / -2')).toBeInTheDocument()
+    const nums = screen.getAllByTestId('draw-steel-marip-num')
+    expect(nums.map((n) => n.textContent).join(' ')).toBe('-2 2 0 0 -2')
   })
 
   it('renders speed and movement type', () => {
     render(<StatBlock features={[sampleAbility]} monsterName="Goblin Assassin" />)
-    expect(screen.getByText('6 (Climb)')).toBeInTheDocument()
+    const header = screen.getByTestId('core-stats-header')
+    expect(header.textContent).toMatch(/6\s*\(\s*Climb\s*\)/)
   })
 
   it('renders size', () => {
@@ -194,6 +198,38 @@ describe('StatBlock core stats from bestiary', () => {
     render(<StatBlock features={[]} monsterName="Nonexistent Creature" />)
     expect(screen.queryByTestId('core-stats-header')).not.toBeInTheDocument()
     expect(screen.getByTestId('stat-block-empty')).toBeInTheDocument()
+  })
+})
+
+describe('StatBlock Draw Steel glyphs (STAT-002)', () => {
+  it('renders tier band glyphs alongside tier ranges', () => {
+    render(<StatBlock features={[sampleAbility]} monsterName="Test Monster" />)
+    const glyphs = screen.getAllByTestId('draw-steel-tier-glyph')
+    expect(glyphs).toHaveLength(3)
+    expect(glyphs[0]).toHaveAttribute('aria-label', 'Tier 1')
+    expect(glyphs[0].textContent).toBe('!')
+    expect(glyphs[1].textContent).toBe('@')
+    expect(glyphs[2].textContent).toBe('#')
+  })
+
+  it('renders keyword glyph for Melee and plain chips for unmapped keywords', () => {
+    render(<StatBlock features={[sampleAbility]} monsterName="Test Monster" />)
+    const melee = screen.getByTestId('draw-steel-keyword-glyph')
+    expect(melee).toHaveAttribute('data-keyword', 'Melee')
+    expect(melee).toHaveAttribute('aria-label', 'Melee')
+    expect(melee.textContent).toBe('t')
+    expect(screen.getByText('Strike')).toBeInTheDocument()
+    expect(screen.getByText('Weapon')).toBeInTheDocument()
+  })
+
+  it('exposes five MARIP letter slots for bestiary monsters', () => {
+    render(<StatBlock features={[sampleAbility]} monsterName="Goblin Assassin" />)
+    expect(screen.getAllByTestId('draw-steel-marip-letter')).toHaveLength(5)
+  })
+
+  it('stat block root is marked for layout tests', () => {
+    render(<StatBlock features={[sampleAbility]} monsterName="Test Monster" />)
+    expect(screen.getByTestId('stat-block-root')).toBeInTheDocument()
   })
 })
 

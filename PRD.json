@@ -24,7 +24,7 @@
         "Write specs verifying glyph rendering and visual layout structure",
         "Run the specs, fix any failures until all pass"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "STAT-003",

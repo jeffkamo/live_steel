@@ -471,3 +471,25 @@ Keyboard for all dropdowns — shared `dropdownA11y.ts` (listFocusableIn, tabWra
 - src/components/GroupColorPickerPopover.tsx
 - src/components/GroupColorPickerPopover.test.tsx
 - PRD.json
+
+
+[STAT-002]
+
+Draw Steel stat block styling + official DrawSteelGlyphs-Regular.otf — amber/zinc book-like panels, MARIP letters+nums + stamina/speed/size/stability/FS in glyph font, power-roll rows prefixed !/@/#, mapped keywords as icon chips (Melee→t etc. from MCDM chart 002.101 via pdftotext). Unmapped keywords stay text pills. Font+CC-BY-SA license copied to public/fonts/.
+
+**Key decisions:**
+- `drawSteelGlyphs.ts` keyword map from chart PDF; tier glyphs ! @ #; no automatic damage-type diamond substitution (chart order unclear)
+- `@font-face` + `.font-draw-steel` in index.css; tests assert structure/ARIA not font raster
+- Core header: split speed digit (glyph) vs movement parenthetical (sans)
+
+**Blockers/notes:** A11Y-001 still open. Extend keyword map as needed from full glyph chart.
+
+**Files changed:**
+- public/fonts/DrawSteelGlyphs-Regular.otf
+- public/fonts/DrawSteelGlyphs-LICENSE.txt
+- src/drawSteelGlyphs.ts (new)
+- src/drawSteelGlyphs.test.ts (new)
+- src/index.css
+- src/components/StatBlock.tsx
+- src/components/StatBlock.test.tsx
+- PRD.json

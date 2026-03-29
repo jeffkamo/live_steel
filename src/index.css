@@ -1,5 +1,19 @@
 @import 'tailwindcss';
 
+@font-face {
+  font-family: DrawSteelGlyphs;
+  src: url('/fonts/DrawSteelGlyphs-Regular.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@layer utilities {
+  .font-draw-steel {
+    font-family: DrawSteelGlyphs, ui-sans-serif, system-ui, sans-serif;
+  }
+}
+
 @layer base {
   html,
   body {
