@@ -1,4 +1,4 @@
-import { render, screen, within } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import { AddMonsterButton } from './AddMonsterButton'
@@ -89,9 +89,12 @@ describe('AddMonsterButton', () => {
     render(<AddMonsterButton onAdd={vi.fn()} />)
     await user.click(screen.getByRole('button', { name: /Add monster to group/i }))
     const input = screen.getByRole('textbox', { name: /Search bestiary/i })
+    const listbox = screen.getByRole('listbox', { name: /Available monsters/i })
+    await waitFor(() => {
+      expect(within(listbox).getAllByRole('button').length).toBeGreaterThan(0)
+    })
     await user.click(input)
     await user.keyboard('{ArrowDown}')
-    const listbox = screen.getByRole('listbox', { name: /Available monsters/i })
     const firstOptionBtn = within(listbox).getAllByRole('button')[0]
     expect(document.activeElement).toBe(firstOptionBtn)
   })
