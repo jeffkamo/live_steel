@@ -7,6 +7,7 @@ import {
   GROUP_COLOR_PREVIEW_HEX,
   otherGroupIndexForColor,
 } from '../data'
+import { focusRelativeIn, listFocusableIn, tabWrapKeyDown } from '../dropdownA11y'
 
 function GroupColorPreview({ colorId }: { colorId: GroupColorId }) {
   return (
@@ -61,6 +62,7 @@ export function GroupColorPickerPopover({
   onClose: () => void
 }) {
   const menuRef = useRef<HTMLDivElement>(null)
+  const returnFocusRef = useRef<HTMLElement | null>(null)
   const [coords, setCoords] = useState<{ top: number; left: number } | null>(null)
   const [hoverRowColorId, setHoverRowColorId] = useState<GroupColorId | null>(null)
 
@@ -114,6 +116,54 @@ export function GroupColorPickerPopover({
       setHoverRowColorId(null)
     }
   }, [open])
+
+  useEffect(() => {
+    if (!open) {
+      const t = returnFocusRef.current
+      returnFocusRef.current = null
+      queueMicrotask(() => {
+        if (t?.isConnected) t.focus()
+      })
+      return
+    }
+    if (!coords) return
+    returnFocusRef.current = anchor
+    let attached: HTMLDivElement | null = null
+    const onMenuKeyDown = (e: KeyboardEvent) => {
+      const root = menuRef.current
+      if (!root?.contains(e.target as Node)) return
+      if (e.key === 'Escape') {
+        e.preventDefault()
+        onClose()
+        return
+      }
+      tabWrapKeyDown(e, root)
+      if (e.key === 'ArrowDown') {
+        e.preventDefault()
+        focusRelativeIn(root, 1)
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault()
+        focusRelativeIn(root, -1)
+      } else if (e.key === 'Home') {
+        e.preventDefault()
+        listFocusableIn(root)[0]?.focus()
+      } else if (e.key === 'End') {
+        e.preventDefault()
+        const list = listFocusableIn(root)
+        list[list.length - 1]?.focus()
+      }
+    }
+    const id = requestAnimationFrame(() => {
+      attached = menuRef.current
+      if (!attached) return
+      listFocusableIn(attached)[0]?.focus()
+      attached.addEventListener('keydown', onMenuKeyDown)
+    })
+    return () => {
+      cancelAnimationFrame(id)
+      attached?.removeEventListener('keydown', onMenuKeyDown)
+    }
+  }, [open, coords, anchor, onClose])
 
   if (!open || !coords) {
     return null

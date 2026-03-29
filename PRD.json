@@ -323,7 +323,7 @@
         "Write specs covering focus trap, arrow key navigation, Escape, and Enter/Space behavior",
         "Run the specs, fix any failures until all pass"
       ],
-      "passes": false
+      "passes": true
     }
   ]
 }

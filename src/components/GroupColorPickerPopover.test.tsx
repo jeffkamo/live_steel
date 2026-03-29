@@ -1,4 +1,4 @@
-import { render, screen, within } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import { GroupColorPickerPopover, GroupColorSwapIcon } from './GroupColorPickerPopover'
@@ -107,6 +107,26 @@ describe('GroupColorPickerPopover', () => {
     )
     await user.keyboard('{Escape}')
     expect(onClose).toHaveBeenCalledOnce()
+    anchor.remove()
+  })
+
+  it('moves focus into dialog and supports ArrowDown between color rows', async () => {
+    const user = userEvent.setup()
+    const anchor = makeAnchor()
+    anchor.tabIndex = 0
+    anchor.focus()
+    render(
+      <GroupColorPickerPopover open={true} anchor={anchor} {...baseProps} />,
+    )
+    const dialog = screen.getByRole('dialog')
+    const buttons = within(dialog).getAllByRole('button')
+    await waitFor(() => {
+      expect(buttons.some((b) => b === document.activeElement)).toBe(true)
+    })
+    const startIdx = buttons.findIndex((b) => b === document.activeElement)
+    expect(startIdx).toBeGreaterThanOrEqual(0)
+    await user.keyboard('{ArrowDown}')
+    expect(document.activeElement).toBe(buttons[(startIdx + 1) % buttons.length])
     anchor.remove()
   })
 

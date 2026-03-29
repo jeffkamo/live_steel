@@ -9,6 +9,7 @@ import { MaripCluster } from './MaripCluster'
 import { StatCluster } from './StatCluster'
 import { CreatureConditionCell, type CreatureConditionDnDBinding } from './CreatureConditionCell'
 import { StatBlock } from './StatBlock'
+import { focusRelativeIn, listFocusableIn, tabWrapKeyDown } from '../dropdownA11y'
 
 const chevronDown = (
   <svg
@@ -128,8 +129,26 @@ export function MinionGroupRow({
 
   const [captainDropdownOpen, setCaptainDropdownOpen] = useState(false)
   const captainDropdownRef = useRef<HTMLDivElement>(null)
+  const captainMenuRef = useRef<HTMLDivElement>(null)
+  const captainReturnFocusRef = useRef<HTMLElement | null>(null)
 
   const closeCaptainDropdown = useCallback(() => setCaptainDropdownOpen(false), [])
+
+  useEffect(() => {
+    if (!captainDropdownOpen) {
+      const r = captainReturnFocusRef.current
+      captainReturnFocusRef.current = null
+      queueMicrotask(() => r?.focus?.())
+      return
+    }
+    captainReturnFocusRef.current =
+      document.activeElement instanceof HTMLElement ? document.activeElement : null
+    const id = requestAnimationFrame(() => {
+      const m = captainMenuRef.current
+      if (m) listFocusableIn(m)[0]?.focus()
+    })
+    return () => cancelAnimationFrame(id)
+  }, [captainDropdownOpen])
 
   useEffect(() => {
     if (!captainDropdownOpen) return
@@ -278,9 +297,33 @@ export function MinionGroupRow({
               )}
               {captainDropdownOpen && (
                 <div
+                  ref={captainMenuRef}
                   className="absolute left-0 top-full z-50 mt-1 max-h-52 min-w-[14rem] overflow-y-auto rounded-lg border border-zinc-700/80 bg-zinc-900 shadow-xl"
                   role="listbox"
                   aria-label={`Select captain for ${monster.name}`}
+                  onKeyDown={(e) => {
+                    const root = e.currentTarget
+                    if (e.key === 'Escape') {
+                      e.preventDefault()
+                      closeCaptainDropdown()
+                      return
+                    }
+                    tabWrapKeyDown(e.nativeEvent, root)
+                    if (e.key === 'ArrowDown') {
+                      e.preventDefault()
+                      focusRelativeIn(root, 1)
+                    } else if (e.key === 'ArrowUp') {
+                      e.preventDefault()
+                      focusRelativeIn(root, -1)
+                    } else if (e.key === 'Home') {
+                      e.preventDefault()
+                      listFocusableIn(root)[0]?.focus()
+                    } else if (e.key === 'End') {
+                      e.preventDefault()
+                      const list = listFocusableIn(root)
+                      list[list.length - 1]?.focus()
+                    }
+                  }}
                 >
                   {captainRef && (
                     <button

@@ -4,6 +4,7 @@ import type { ConditionEntry, ConditionState } from '../types'
 import { CONDITION_CATALOG, findConditionOnMonster } from '../data'
 import { ConditionIcon } from './ConditionIcon'
 import { ConditionCatalogIconStrip } from './ConditionCatalogIconStrip'
+import { focusRelativeIn, listFocusableIn, tabWrapKeyDown } from '../dropdownA11y'
 
 const conditionPickerRowBtn =
   'rounded-md px-2 py-1.5 text-left font-sans text-[0.72rem] font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-amber-600/70'
@@ -48,6 +49,23 @@ export function CreatureConditionCell({
 }) {
   const [open, setOpen] = useState(false)
   const cellRef = useRef<HTMLDivElement>(null)
+  const pickerRef = useRef<HTMLDivElement>(null)
+  const returnFocusRef = useRef<HTMLElement | null>(null)
+
+  useEffect(() => {
+    if (!open) {
+      const r = returnFocusRef.current
+      returnFocusRef.current = null
+      queueMicrotask(() => r?.focus?.())
+      return
+    }
+    returnFocusRef.current = cellRef.current
+    const id = requestAnimationFrame(() => {
+      const p = pickerRef.current
+      if (p) listFocusableIn(p)[0]?.focus()
+    })
+    return () => cancelAnimationFrame(id)
+  }, [open])
 
   useEffect(() => {
     if (!open) {
@@ -137,11 +155,35 @@ export function CreatureConditionCell({
       </div>
       {open ? (
         <div
+          ref={pickerRef}
           data-condition-picker
           className="absolute left-0 top-full z-50 mt-1 w-[min(20rem,calc(100vw-2rem))] max-h-[min(22rem,55vh)] overflow-y-auto rounded-lg border border-zinc-500/75 bg-zinc-900 py-1.5 pl-2 pr-1.5 shadow-xl shadow-black/50 ring-1 ring-black/25"
           role="dialog"
           aria-label={`Add condition to ${monsterName}`}
           onClick={(e) => e.stopPropagation()}
+          onKeyDown={(e) => {
+            const root = e.currentTarget
+            if (e.key === 'Escape') {
+              e.stopPropagation()
+              setOpen(false)
+              return
+            }
+            tabWrapKeyDown(e.nativeEvent, root)
+            if (e.key === 'ArrowDown') {
+              e.preventDefault()
+              focusRelativeIn(root, 1)
+            } else if (e.key === 'ArrowUp') {
+              e.preventDefault()
+              focusRelativeIn(root, -1)
+            } else if (e.key === 'Home') {
+              e.preventDefault()
+              listFocusableIn(root)[0]?.focus()
+            } else if (e.key === 'End') {
+              e.preventDefault()
+              const list = listFocusableIn(root)
+              list[list.length - 1]?.focus()
+            }
+          }}
         >
           <ul className="flex flex-col gap-0.5" role="list">
             {CONDITION_CATALOG.map((label) => {

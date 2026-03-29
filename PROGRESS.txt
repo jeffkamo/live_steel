@@ -425,7 +425,6 @@ Monster row DnD — 6-dot grip left of ordinal on each monster/minion parent row
 - PRD.json
 
 
-
 [DND-003]
 
 Condition DnD — active condition icon buttons draggable; drop on another creature condition cell transfers label+state; orthogonal MIME `CONDITION_DRAG_MIME` vs monster/group drags
@@ -447,4 +446,28 @@ Condition DnD — active condition icon buttons draggable; drop on another creat
 - src/components/GroupSection.tsx
 - src/components/MonsterRowCells.tsx
 - src/components/MinionGroupRow.tsx
+- PRD.json
+
+
+[A11Y-002]
+
+Keyboard for all dropdowns — shared `dropdownA11y.ts` (listFocusableIn, tabWrapKeyDown, focusRelativeIn); focus-in + focus restore on open/close; Tab wrap; Arrow/Home/End; Escape (doc listener on AddMonster when open so Escape works if input not focused)
+
+**Key decisions:**
+- Condition picker + captain listbox + color dialog: initial focus first control, restore prior/anchor on close
+- AddMonster: trigger ref for restore (button unmounts when open); `onKeyDownCapture` so ArrowDown leaves search before input eats it; `data-bestiary-option` for list-only arrow moves; doc Escape matches existing outside-click pattern
+- Color popover portal: key listener on menu div after rAF; restore `anchor` when `!open`
+- Unit tests in `dropdownA11y.test.ts`; AddMonster + GroupColorPicker integration tests for ArrowDown/Up + focus + ArrowDown row
+
+**Blockers/notes:** stamina hover editor still hover/focus-within only (not list dropdown). A11Y-001 still open.
+
+**Files changed:**
+- src/dropdownA11y.ts (new)
+- src/dropdownA11y.test.ts (new)
+- src/components/CreatureConditionCell.tsx
+- src/components/AddMonsterButton.tsx
+- src/components/AddMonsterButton.test.tsx
+- src/components/MinionGroupRow.tsx
+- src/components/GroupColorPickerPopover.tsx
+- src/components/GroupColorPickerPopover.test.tsx
 - PRD.json

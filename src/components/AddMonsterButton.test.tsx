@@ -84,6 +84,28 @@ describe('AddMonsterButton', () => {
     expect(screen.queryByRole('textbox', { name: /Search bestiary/i })).not.toBeInTheDocument()
   })
 
+  it('ArrowDown from search moves focus to first list option', async () => {
+    const user = userEvent.setup()
+    render(<AddMonsterButton onAdd={vi.fn()} />)
+    await user.click(screen.getByRole('button', { name: /Add monster to group/i }))
+    const input = screen.getByRole('textbox', { name: /Search bestiary/i })
+    await user.click(input)
+    await user.keyboard('{ArrowDown}')
+    const listbox = screen.getByRole('listbox', { name: /Available monsters/i })
+    const firstOptionBtn = within(listbox).getAllByRole('button')[0]
+    expect(document.activeElement).toBe(firstOptionBtn)
+  })
+
+  it('ArrowUp from first option returns focus to search', async () => {
+    const user = userEvent.setup()
+    render(<AddMonsterButton onAdd={vi.fn()} />)
+    await user.click(screen.getByRole('button', { name: /Add monster to group/i }))
+    const input = screen.getByRole('textbox', { name: /Search bestiary/i })
+    await user.click(input)
+    await user.keyboard('{ArrowDown}{ArrowUp}')
+    expect(document.activeElement).toBe(input)
+  })
+
   it('closes the picker when clicking the close button', async () => {
     const user = userEvent.setup()
     render(<AddMonsterButton onAdd={vi.fn()} />)
