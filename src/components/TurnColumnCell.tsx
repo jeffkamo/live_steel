@@ -50,7 +50,7 @@ export function GroupTurnColumn({
   return (
     <div
       style={{ gridColumn: 1, gridRow: `1 / span ${gridRowSpan}` }}
-      className="flex min-h-0 w-full min-w-0 flex-col overflow-visible"
+      className="flex min-h-0 w-full min-w-0 flex-row items-stretch overflow-visible"
     >
       {encounterGroupDragHandle != null && (
         <div
@@ -58,20 +58,22 @@ export function GroupTurnColumn({
           onDragStart={encounterGroupDragHandle.onDragStart}
           onDragEnd={encounterGroupDragHandle.onDragEnd}
           aria-label={encounterGroupDragHandle.ariaLabel}
-          className="flex cursor-grab touch-none select-none items-center justify-center py-1 active:cursor-grabbing"
+          className="flex w-7 shrink-0 cursor-grab touch-none select-none items-center justify-center border-r border-zinc-800/60 px-0.5 active:cursor-grabbing sm:w-8"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 16 16"
             fill="currentColor"
-            className="size-4 text-zinc-500"
+            className="size-3.5 text-zinc-500 sm:size-4"
             aria-hidden
           >
             <path d="M5 3a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0ZM5 8a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0ZM5 13a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0ZM14 3a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0ZM14 8a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0ZM14 13a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0Z" />
           </svg>
         </div>
       )}
-      <TurnColumnCell acted={acted} onToggle={onToggle} label={turnAriaLabel} />
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+        <TurnColumnCell acted={acted} onToggle={onToggle} label={turnAriaLabel} />
+      </div>
     </div>
   )
 }

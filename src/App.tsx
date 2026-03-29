@@ -31,6 +31,7 @@ function App() {
   const [groupTurnActed, setGroupTurnActed] = useState(() =>
     ENCOUNTER_GROUPS.map(() => false),
   )
+  const [uiLocked, setUiLocked] = useState(false)
 
   const eotTimersRef = useRef<Map<number, ReturnType<typeof setTimeout>>>(new Map())
   const [seActWindowElapsedGroup, setSeActWindowElapsedGroup] = useState<Set<number>>(() => new Set())
@@ -669,6 +670,21 @@ function App() {
                 Reset
               </button>
             </div>
+            <div className="flex justify-end py-1.5 pr-1 sm:pr-2" style={{ gridColumn: '2 / -1' }}>
+              <button
+                type="button"
+                aria-pressed={uiLocked}
+                onClick={() => setUiLocked((v) => !v)}
+                aria-label={
+                  uiLocked
+                    ? 'Unlock encounter editing controls'
+                    : 'Lock encounter editing controls'
+                }
+                className="min-h-10 min-w-[5.25rem] cursor-pointer rounded-md px-4 py-2 font-sans text-xs tracking-wide transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500/60 bg-zinc-800/85 text-zinc-100 hover:bg-zinc-700/90 hover:text-white aria-pressed:bg-transparent aria-pressed:text-zinc-400 aria-pressed:hover:bg-zinc-900 aria-pressed:hover:text-zinc-200"
+              >
+                {uiLocked ? 'Unlock' : 'Lock'}
+              </button>
+            </div>
           </div>
           {encounterGroups.map((group, gi) => (
             <div
@@ -730,30 +746,40 @@ function App() {
                   patchMinionConditionAddOrSet(gi, mi, mni, label, state)
                 }
                 onDeleteMonster={(mi) => deleteMonster(gi, mi)}
-                onAddMonster={(monster) => addMonsterToGroup(gi, monster)}
+                onAddMonster={
+                  uiLocked ? undefined : (monster) => addMonsterToGroup(gi, monster)
+                }
                 onConfirmEot={(mi, label, minionIndex) =>
                   confirmEotCondition(gi, mi, label, minionIndex)
                 }
                 isEotConfirmed={(mi, label, minionIndex) =>
                   isEotConfirmed(gi, mi, label, minionIndex)
                 }
-                encounterGroupDragHandle={{
-                  onDragStart: (e) => {
-                    e.dataTransfer.setData(ENCOUNTER_GROUP_DRAG_MIME, String(gi))
-                    e.dataTransfer.effectAllowed = 'move'
-                  },
-                  onDragEnd: () => setDropTargetGroupIndex(null),
-                  ariaLabel: `Reorder encounter group ${gi + 1}`,
-                }}
-                monsterDrag={{
-                  thisGroupIndex: gi,
-                  dropTarget: monsterDropTarget,
-                  onMonsterDragStart: (mi, e) => onMonsterDragStart(gi, mi, e),
-                  onMonsterDragEnd: onMonsterDragEnd,
-                  onMonsterDragOver: (mi, e) => onMonsterDragOver(gi, mi, e),
-                  onMonsterDragLeave: (mi, e) => onMonsterDragLeave(gi, mi, e),
-                  onMonsterDrop: (mi, e) => onMonsterDrop(gi, mi, e),
-                }}
+                encounterGroupDragHandle={
+                  uiLocked
+                    ? undefined
+                    : {
+                        onDragStart: (e) => {
+                          e.dataTransfer.setData(ENCOUNTER_GROUP_DRAG_MIME, String(gi))
+                          e.dataTransfer.effectAllowed = 'move'
+                        },
+                        onDragEnd: () => setDropTargetGroupIndex(null),
+                        ariaLabel: `Reorder encounter group ${gi + 1}`,
+                      }
+                }
+                monsterDrag={
+                  uiLocked
+                    ? undefined
+                    : {
+                        thisGroupIndex: gi,
+                        dropTarget: monsterDropTarget,
+                        onMonsterDragStart: (mi, e) => onMonsterDragStart(gi, mi, e),
+                        onMonsterDragEnd: onMonsterDragEnd,
+                        onMonsterDragOver: (mi, e) => onMonsterDragOver(gi, mi, e),
+                        onMonsterDragLeave: (mi, e) => onMonsterDragLeave(gi, mi, e),
+                        onMonsterDrop: (mi, e) => onMonsterDrop(gi, mi, e),
+                      }
+                }
                 conditionDrag={{
                   dropTarget: conditionDropTarget,
                   onDragStart: (mi, mni, label, e) => onConditionDragStart(gi, mi, mni, label, e),
@@ -765,17 +791,19 @@ function App() {
               />
             </div>
           ))}
-          <button
-            type="button"
-            onClick={addNewGroup}
-            aria-label="Add new encounter group"
-            className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-zinc-700 px-4 py-3 font-sans text-sm tracking-wide text-zinc-400 transition-colors hover:border-zinc-500 hover:bg-zinc-900/60 hover:text-zinc-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500/60"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
-              <path d="M10.75 4.75a.75.75 0 0 0-1.5 0v4.5h-4.5a.75.75 0 0 0 0 1.5h4.5v4.5a.75.75 0 0 0 1.5 0v-4.5h4.5a.75.75 0 0 0 0-1.5h-4.5v-4.5Z" />
-            </svg>
-            Add group
-          </button>
+          {!uiLocked && (
+            <button
+              type="button"
+              onClick={addNewGroup}
+              aria-label="Add new encounter group"
+              className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-zinc-700 px-4 py-3 font-sans text-sm tracking-wide text-zinc-400 transition-colors hover:border-zinc-500 hover:bg-zinc-900/60 hover:text-zinc-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500/60"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+                <path d="M10.75 4.75a.75.75 0 0 0-1.5 0v4.5h-4.5a.75.75 0 0 0 0 1.5h4.5v4.5a.75.75 0 0 0 1.5 0v-4.5h4.5a.75.75 0 0 0 0-1.5h-4.5v-4.5Z" />
+              </svg>
+              Add group
+            </button>
+          )}
         </section>
 
         <section aria-label="Dynamic terrain" className="mt-8 flex flex-col gap-2 md:mt-10">

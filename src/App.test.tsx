@@ -804,6 +804,28 @@ describe('App', () => {
     expect(screen.getByRole('button', { name: /Reset all encounter group turn diamonds to pending/i })).toBeInTheDocument()
   })
 
+  it('lock mode hides group and monster grab handles and add-monster controls', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    expect(screen.getAllByLabelText(/^Reorder encounter group \d+$/i).length).toBeGreaterThanOrEqual(2)
+    expect(screen.getAllByLabelText(/^Add monster to group$/i).length).toBeGreaterThan(0)
+
+    await user.click(screen.getByRole('button', { name: /Lock encounter editing controls/i }))
+    expect(screen.getByRole('button', { name: /Unlock encounter editing controls/i })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
+    expect(screen.queryAllByLabelText(/^Reorder encounter group \d+$/i)).toHaveLength(0)
+    expect(screen.queryAllByLabelText(/Reorder .* within encounter/i)).toHaveLength(0)
+    expect(screen.queryAllByLabelText(/^Add monster to group$/i)).toHaveLength(0)
+    expect(screen.queryByRole('button', { name: /Add new encounter group/i })).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: /Unlock encounter editing controls/i }))
+    expect(screen.getAllByLabelText(/^Reorder encounter group \d+$/i).length).toBeGreaterThanOrEqual(2)
+    expect(screen.getAllByLabelText(/^Add monster to group$/i).length).toBeGreaterThan(0)
+    expect(screen.getByRole('button', { name: /Add new encounter group/i })).toBeInTheDocument()
+  })
+
   // --- Group ordinal badges show correct numbers per group ---
 
   it('group 4 shows ordinal badges 1, 2, 3 for its three creatures', () => {
