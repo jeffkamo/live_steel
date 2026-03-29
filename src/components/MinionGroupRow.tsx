@@ -67,6 +67,8 @@ export function MinionGroupRow({
   statBlockExpanded = false,
   onToggleStatBlock,
   onDelete,
+  onConfirmEot,
+  isEotConfirmed,
 }: {
   monster: Monster
   row: number
@@ -97,6 +99,8 @@ export function MinionGroupRow({
   statBlockExpanded?: boolean
   onToggleStatBlock?: () => void
   onDelete?: () => void
+  onConfirmEot?: (label: string, minionIndex?: number) => void
+  isEotConfirmed?: (label: string, minionIndex?: number) => boolean
 }) {
   const [sc, sm] = monster.stamina
   const badge = GROUP_COLOR_BADGE[groupColor]
@@ -345,6 +349,8 @@ export function MinionGroupRow({
             onRemove={onConditionRemove}
             onAddOrSetCondition={onConditionAddOrSet}
             turnComplete={turnComplete}
+            onConfirmEot={onConfirmEot ? (label) => onConfirmEot(label) : undefined}
+            isEotConfirmed={isEotConfirmed ? (label) => isEotConfirmed(label) : undefined}
           />
           {hasFeatures && onToggleStatBlock && (
             <button
@@ -397,6 +403,8 @@ export function MinionGroupRow({
               onConditionAddOrSet={(label, state) =>
                 onMinionConditionAddOrSet(mi, label, state)
               }
+              onConfirmEot={onConfirmEot ? (label) => onConfirmEot(label, mi) : undefined}
+              isEotConfirmed={isEotConfirmed ? (label) => isEotConfirmed(label, mi) : undefined}
             />
           )
         })}
@@ -429,6 +437,8 @@ function MinionChildRow({
   onDeadChange,
   onConditionRemove,
   onConditionAddOrSet,
+  onConfirmEot,
+  isEotConfirmed,
 }: {
   minion: { name: string; initials: string; conditions: readonly import('../types').ConditionEntry[]; dead: boolean }
   minionIndex: number
@@ -441,6 +451,8 @@ function MinionChildRow({
   onDeadChange: (dead: boolean) => void
   onConditionRemove: (conditionIndex: number) => void
   onConditionAddOrSet: (label: string, state: ConditionState) => void
+  onConfirmEot?: (label: string) => void
+  isEotConfirmed?: (label: string) => boolean
 }) {
   const badge = GROUP_COLOR_BADGE[groupColor]
   const bodyCell =
@@ -528,6 +540,8 @@ function MinionChildRow({
           onRemove={onConditionRemove}
           onAddOrSetCondition={onConditionAddOrSet}
           turnComplete={turnComplete}
+          onConfirmEot={onConfirmEot}
+          isEotConfirmed={isEotConfirmed}
         />
       </div>
     </>

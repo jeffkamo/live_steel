@@ -259,7 +259,7 @@
         "Write specs covering timer behavior, auto-disable, and click-to-keep interactions",
         "Run the specs, fix any failures until all pass"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "TURN-003",

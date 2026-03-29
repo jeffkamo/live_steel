@@ -57,6 +57,8 @@ export function MonsterRowCells({
   statBlockExpanded = false,
   onToggleStatBlock,
   onDelete,
+  onConfirmEot,
+  isEotConfirmed,
 }: {
   monster: Monster
   row: number
@@ -76,6 +78,8 @@ export function MonsterRowCells({
   statBlockExpanded?: boolean
   onToggleStatBlock?: () => void
   onDelete?: () => void
+  onConfirmEot?: (label: string) => void
+  isEotConfirmed?: (label: string) => boolean
 }) {
   const [sc, sm] = monster.stamina
   const badge = GROUP_COLOR_BADGE[groupColor]
@@ -148,6 +152,8 @@ export function MonsterRowCells({
             onRemove={onConditionRemove}
             onAddOrSetCondition={onConditionAddOrSet}
             turnComplete={turnComplete}
+            onConfirmEot={onConfirmEot}
+            isEotConfirmed={isEotConfirmed}
           />
           {hasFeatures && onToggleStatBlock && (
             <button

@@ -16,12 +16,16 @@ export function CreatureConditionCell({
   onRemove,
   onAddOrSetCondition,
   turnComplete,
+  onConfirmEot,
+  isEotConfirmed,
 }: {
   monsterName: string
   conditions: readonly ConditionEntry[]
   onRemove: (index: number) => void
   onAddOrSetCondition: (label: string, state: ConditionState) => void
   turnComplete: boolean
+  onConfirmEot?: (label: string) => void
+  isEotConfirmed?: (label: string) => boolean
 }) {
   const [open, setOpen] = useState(false)
   const cellRef = useRef<HTMLDivElement>(null)
@@ -75,9 +79,15 @@ export function CreatureConditionCell({
           conditions={conditions}
           interactive
           turnActed={turnComplete}
+          isEotConfirmed={isEotConfirmed}
           onToggleLabel={(label) => {
-            const idx = conditions.findIndex((c) => c.label === label)
-            if (idx >= 0) {
+            const existing = conditions.find((c) => c.label === label)
+            if (existing) {
+              if (turnComplete && existing.state === 'eot' && onConfirmEot && !(isEotConfirmed?.(label))) {
+                onConfirmEot(label)
+                return
+              }
+              const idx = conditions.findIndex((c) => c.label === label)
               onRemove(idx)
             } else {
               onAddOrSetCondition(label, 'neutral')

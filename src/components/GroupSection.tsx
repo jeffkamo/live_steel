@@ -27,6 +27,8 @@ export function GroupSection({
   onMinionConditionAddOrSet,
   onDeleteMonster,
   onAddMonster,
+  onConfirmEot,
+  isEotConfirmed,
 }: {
   group: EncounterGroup
   groupKey: string
@@ -47,6 +49,8 @@ export function GroupSection({
   onMinionConditionAddOrSet?: (monsterIndex: number, minionIndex: number, label: string, state: ConditionState) => void
   onDeleteMonster?: (monsterIndex: number) => void
   onAddMonster?: (monster: Monster) => void
+  onConfirmEot?: (monsterIndex: number, label: string, minionIndex?: number) => void
+  isEotConfirmed?: (monsterIndex: number, label: string, minionIndex?: number) => boolean
 }): React.JSX.Element {
   const [expandedMinions, setExpandedMinions] = useState<Record<number, boolean>>({})
   const [expandedStatBlocks, setExpandedStatBlocks] = useState<Record<number, boolean>>({})
@@ -164,6 +168,8 @@ export function GroupSection({
               statBlockExpanded={!!expandedStatBlocks[i]}
               onToggleStatBlock={() => toggleStatBlock(i)}
               onDelete={() => onDeleteMonster?.(i)}
+              onConfirmEot={onConfirmEot ? (label, minionIndex) => onConfirmEot(i, label, minionIndex) : undefined}
+              isEotConfirmed={isEotConfirmed ? (label, minionIndex) => isEotConfirmed(i, label, minionIndex) : undefined}
             />
           )
         }
@@ -191,6 +197,8 @@ export function GroupSection({
             statBlockExpanded={!!expandedStatBlocks[i]}
             onToggleStatBlock={() => toggleStatBlock(i)}
             onDelete={() => onDeleteMonster?.(i)}
+            onConfirmEot={onConfirmEot ? (label) => onConfirmEot(i, label) : undefined}
+            isEotConfirmed={isEotConfirmed ? (label) => isEotConfirmed(i, label) : undefined}
           />
         )
       })}

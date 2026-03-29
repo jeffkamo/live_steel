@@ -1,6 +1,6 @@
-import { render, screen, within } from '@testing-library/react'
+import { act, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import App from './App'
 
 /** Accessible names use `Encounter group ${n}: …`; avoid `/group 1/` matching `group 10`. */
@@ -1844,5 +1844,283 @@ describe('App', () => {
 
     const g4EotIcon = within(sentinelConditions).getByTitle('Bleeding (End of turn)')
     expect(g4EotIcon.className).not.toContain('animate-glow-eot')
+  })
+
+  // --- Auto-disable EoT conditions after 30 seconds (TURN-002) ---
+
+  // --- Auto-disable EoT conditions after 30 seconds (TURN-002) ---
+
+  it('removes EoT condition after 30 seconds if not clicked', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    const goblinConditions = screen.getByRole('group', {
+      name: /^Conditions for Goblin Assassin 1\./i,
+    })
+
+    goblinConditions.focus()
+    await user.keyboard('{Enter}')
+    const picker = screen.getByRole('dialog', { name: /^Add condition to Goblin Assassin 1$/i })
+    await user.click(
+      within(picker).getByRole('button', { name: /^Add Weakened as end of turn on Goblin Assassin 1$/i }),
+    )
+
+    expect(within(goblinConditions).getByTitle('Weakened (End of turn)')).toBeInTheDocument()
+
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+    await user.click(screen.getByRole('button', { name: turnButton(1, 'pending') }))
+
+    await act(() => { vi.advanceTimersByTime(30_000) })
+
+    expect(within(goblinConditions).queryByTitle('Weakened (End of turn)')).not.toBeInTheDocument()
+    vi.useRealTimers()
+  })
+
+  it('keeps EoT condition if clicked within 30 seconds', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    const goblinConditions = screen.getByRole('group', {
+      name: /^Conditions for Goblin Assassin 1\./i,
+    })
+
+    goblinConditions.focus()
+    await user.keyboard('{Enter}')
+    const picker = screen.getByRole('dialog', { name: /^Add condition to Goblin Assassin 1$/i })
+    await user.click(
+      within(picker).getByRole('button', { name: /^Add Weakened as end of turn on Goblin Assassin 1$/i }),
+    )
+
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+    await user.click(screen.getByRole('button', { name: turnButton(1, 'pending') }))
+
+    const eotIcon = within(goblinConditions).getByTitle('Weakened (End of turn)')
+    expect(eotIcon.className).toContain('animate-glow-eot')
+
+    await user.click(within(goblinConditions).getByRole('button', { name: /^Remove Weakened$/i }))
+
+    expect(within(goblinConditions).getByTitle('Weakened (End of turn)')).toBeInTheDocument()
+
+    await act(() => { vi.advanceTimersByTime(30_000) })
+
+    expect(within(goblinConditions).getByTitle('Weakened (End of turn)')).toBeInTheDocument()
+    vi.useRealTimers()
+  })
+
+  it('clicking EoT condition during glow stops the animation', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    const goblinConditions = screen.getByRole('group', {
+      name: /^Conditions for Goblin Assassin 1\./i,
+    })
+
+    goblinConditions.focus()
+    await user.keyboard('{Enter}')
+    const picker = screen.getByRole('dialog', { name: /^Add condition to Goblin Assassin 1$/i })
+    await user.click(
+      within(picker).getByRole('button', { name: /^Add Weakened as end of turn on Goblin Assassin 1$/i }),
+    )
+
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+    await user.click(screen.getByRole('button', { name: turnButton(1, 'pending') }))
+
+    const eotIcon = within(goblinConditions).getByTitle('Weakened (End of turn)')
+    expect(eotIcon.className).toContain('animate-glow-eot')
+
+    await user.click(within(goblinConditions).getByRole('button', { name: /^Remove Weakened$/i }))
+
+    const eotIconAfter = within(goblinConditions).getByTitle('Weakened (End of turn)')
+    expect(eotIconAfter.className).not.toContain('animate-glow-eot')
+    vi.useRealTimers()
+  })
+
+  it('does not remove neutral conditions after 30 seconds', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    const goblinConditions = screen.getByRole('group', {
+      name: /^Conditions for Goblin Assassin 1\./i,
+    })
+
+    expect(within(goblinConditions).getByTitle('Weakened (neutral)')).toBeInTheDocument()
+
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+    await user.click(screen.getByRole('button', { name: turnButton(1, 'pending') }))
+    await act(() => { vi.advanceTimersByTime(30_000) })
+
+    expect(within(goblinConditions).getByTitle('Weakened (neutral)')).toBeInTheDocument()
+    vi.useRealTimers()
+  })
+
+  it('does not remove SE conditions after 30 seconds', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    const goblinConditions = screen.getByRole('group', {
+      name: /^Conditions for Goblin Assassin 1\./i,
+    })
+
+    goblinConditions.focus()
+    await user.keyboard('{Enter}')
+    const picker = screen.getByRole('dialog', { name: /^Add condition to Goblin Assassin 1$/i })
+    await user.click(
+      within(picker).getByRole('button', { name: /^Add Slowed as save ends on Goblin Assassin 1$/i }),
+    )
+
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+    await user.click(screen.getByRole('button', { name: turnButton(1, 'pending') }))
+    await act(() => { vi.advanceTimersByTime(30_000) })
+
+    expect(within(goblinConditions).getByTitle('Slowed (Save ends)')).toBeInTheDocument()
+    vi.useRealTimers()
+  })
+
+  it('cancels EoT timer when group toggled back to pending before 30 seconds', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    const goblinConditions = screen.getByRole('group', {
+      name: /^Conditions for Goblin Assassin 1\./i,
+    })
+
+    goblinConditions.focus()
+    await user.keyboard('{Enter}')
+    const picker = screen.getByRole('dialog', { name: /^Add condition to Goblin Assassin 1$/i })
+    await user.click(
+      within(picker).getByRole('button', { name: /^Add Weakened as end of turn on Goblin Assassin 1$/i }),
+    )
+
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+    await user.click(screen.getByRole('button', { name: turnButton(1, 'pending') }))
+
+    await act(() => { vi.advanceTimersByTime(15_000) })
+    expect(within(goblinConditions).getByTitle('Weakened (End of turn)')).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: turnButton(1, 'acted') }))
+
+    await act(() => { vi.advanceTimersByTime(30_000) })
+
+    expect(within(goblinConditions).getByTitle('Weakened (End of turn)')).toBeInTheDocument()
+    vi.useRealTimers()
+  })
+
+  it('removes multiple EoT conditions from different monsters in the same group', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    const g1Cond1 = screen.getByRole('group', {
+      name: /^Conditions for Goblin Assassin 1\./i,
+    })
+    g1Cond1.focus()
+    await user.keyboard('{Enter}')
+    const picker1 = screen.getByRole('dialog', { name: /^Add condition to Goblin Assassin 1$/i })
+    await user.click(
+      within(picker1).getByRole('button', { name: /^Add Weakened as end of turn on Goblin Assassin 1$/i }),
+    )
+
+    const g1Grid = screen.getByText('Goblin Assassin 1', { exact: true })
+      .closest('div.grid.items-stretch.rounded-lg') as HTMLElement
+    const g1Cond2 = within(g1Grid).getByRole('group', {
+      name: /^Conditions for Goblin Raider\./i,
+    })
+    g1Cond2.focus()
+    await user.keyboard('{Enter}')
+    const picker2 = screen.getByRole('dialog', { name: /^Add condition to Goblin Raider$/i })
+    await user.click(
+      within(picker2).getByRole('button', { name: /^Add Grabbed as end of turn on Goblin Raider$/i }),
+    )
+
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+    await user.click(screen.getByRole('button', { name: turnButton(1, 'pending') }))
+    await act(() => { vi.advanceTimersByTime(30_000) })
+
+    expect(within(g1Cond1).queryByTitle('Weakened (End of turn)')).not.toBeInTheDocument()
+    expect(within(g1Cond2).queryByTitle('Grabbed (End of turn)')).not.toBeInTheDocument()
+    vi.useRealTimers()
+  })
+
+  it('EoT auto-disable in one group does not affect EoT conditions in another group', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    const g1Cond = screen.getByRole('group', {
+      name: /^Conditions for Goblin Assassin 1\./i,
+    })
+    g1Cond.focus()
+    await user.keyboard('{Enter}')
+    const picker1 = screen.getByRole('dialog', { name: /^Add condition to Goblin Assassin 1$/i })
+    await user.click(
+      within(picker1).getByRole('button', { name: /^Add Weakened as end of turn on Goblin Assassin 1$/i }),
+    )
+
+    const sentinelGrid = screen.getByText('Ironwood Sentinel', { exact: true })
+      .closest('div.grid.items-stretch.rounded-lg') as HTMLElement
+    const g4Cond = within(sentinelGrid).getByRole('group', {
+      name: /^Conditions for Ironwood Sentinel\./i,
+    })
+    g4Cond.focus()
+    await user.keyboard('{Enter}')
+    const picker4 = screen.getByRole('dialog', { name: /^Add condition to Ironwood Sentinel$/i })
+    await user.click(
+      within(picker4).getByRole('button', { name: /^Add Bleeding as end of turn on Ironwood Sentinel$/i }),
+    )
+
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+    await user.click(screen.getByRole('button', { name: turnButton(1, 'pending') }))
+    await act(() => { vi.advanceTimersByTime(30_000) })
+
+    expect(within(g1Cond).queryByTitle('Weakened (End of turn)')).not.toBeInTheDocument()
+    expect(within(g4Cond).getByTitle('Bleeding (End of turn)')).toBeInTheDocument()
+    vi.useRealTimers()
+  })
+
+  it('auto-disables EoT on minion child row after 30 seconds', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    const expandBtn = screen.getByRole('button', { name: /^Expand individual Minions$/i })
+    await user.click(expandBtn)
+
+    const minionConditions = screen.getByRole('group', {
+      name: /^Conditions for Goblin Spinecleaver 2\./i,
+    })
+    minionConditions.focus()
+    await user.keyboard('{Enter}')
+    const picker = screen.getByRole('dialog', { name: /^Add condition to Goblin Spinecleaver 2$/i })
+    await user.click(
+      within(picker).getByRole('button', { name: /^Add Bleeding as end of turn on Goblin Spinecleaver 2$/i }),
+    )
+
+    expect(within(minionConditions).getByTitle('Bleeding (End of turn)')).toBeInTheDocument()
+
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+    await user.click(screen.getByRole('button', { name: turnButton(3, 'pending') }))
+    await act(() => { vi.advanceTimersByTime(30_000) })
+
+    expect(within(minionConditions).queryByTitle('Bleeding (End of turn)')).not.toBeInTheDocument()
+    vi.useRealTimers()
+  })
+
+  it('confirmed minion child EoT survives the 30-second timer', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    const expandBtn = screen.getByRole('button', { name: /^Expand individual Minions$/i })
+    await user.click(expandBtn)
+
+    const minionConditions = screen.getByRole('group', {
+      name: /^Conditions for Goblin Spinecleaver 2\./i,
+    })
+    minionConditions.focus()
+    await user.keyboard('{Enter}')
+    const picker = screen.getByRole('dialog', { name: /^Add condition to Goblin Spinecleaver 2$/i })
+    await user.click(
+      within(picker).getByRole('button', { name: /^Add Bleeding as end of turn on Goblin Spinecleaver 2$/i }),
+    )
+
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+    await user.click(screen.getByRole('button', { name: turnButton(3, 'pending') }))
+
+    await user.click(within(minionConditions).getByRole('button', { name: /^Remove Bleeding$/i }))
+
+    await act(() => { vi.advanceTimersByTime(30_000) })
+
+    expect(within(minionConditions).getByTitle('Bleeding (End of turn)')).toBeInTheDocument()
+    vi.useRealTimers()
   })
 })

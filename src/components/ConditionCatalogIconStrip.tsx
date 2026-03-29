@@ -11,16 +11,19 @@ export function ConditionCatalogIconStrip({
   interactive,
   onToggleLabel,
   turnActed = false,
+  isEotConfirmed,
 }: {
   conditions: readonly ConditionEntry[]
   interactive: boolean
   onToggleLabel?: (label: string) => void
   turnActed?: boolean
+  isEotConfirmed?: (label: string) => boolean
 }) {
   const iconRow = CONDITION_CATALOG.map((label) => {
     const active = findConditionOnMonster(conditions, label)
     const tip = conditionCatalogTooltip(label, active)
-    const shell = conditionIconShellClass(active !== undefined, active?.state ?? null, turnActed)
+    const confirmed = active?.state === 'eot' && isEotConfirmed?.(label)
+    const shell = conditionIconShellClass(active !== undefined, active?.state ?? null, turnActed && !confirmed)
     if (interactive && onToggleLabel) {
       return (
         <button

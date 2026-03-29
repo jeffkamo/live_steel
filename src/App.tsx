@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import type { CaptainRef, ConditionState, GroupColorId, Monster } from './types'
 import {
   cloneEncounterGroups,
@@ -18,6 +18,108 @@ function App() {
   const [groupTurnActed, setGroupTurnActed] = useState(() =>
     ENCOUNTER_GROUPS.map(() => false),
   )
+
+  const eotTimersRef = useRef<Map<number, ReturnType<typeof setTimeout>>>(new Map())
+  const [eotConfirmed, setEotConfirmed] = useState<Map<number, Set<string>>>(() => new Map())
+  const eotConfirmedLatest = useRef(eotConfirmed)
+  eotConfirmedLatest.current = eotConfirmed
+  const prevTurnActedRef = useRef<boolean[]>([])
+
+  const confirmEotCondition = useCallback(
+    (groupIndex: number, monsterIndex: number, label: string, minionIndex?: number) => {
+      const key = minionIndex != null
+        ? `${monsterIndex}:${minionIndex}:${label}`
+        : `${monsterIndex}:${label}`
+      setEotConfirmed((prev) => {
+        const next = new Map(prev)
+        const set = new Set(prev.get(groupIndex))
+        set.add(key)
+        next.set(groupIndex, set)
+        return next
+      })
+    },
+    [],
+  )
+
+  const isEotConfirmed = useCallback(
+    (groupIndex: number, monsterIndex: number, label: string, minionIndex?: number): boolean => {
+      const key = minionIndex != null
+        ? `${monsterIndex}:${minionIndex}:${label}`
+        : `${monsterIndex}:${label}`
+      return eotConfirmed.get(groupIndex)?.has(key) ?? false
+    },
+    [eotConfirmed],
+  )
+
+  useEffect(() => {
+    const prev = prevTurnActedRef.current
+    for (let gi = 0; gi < groupTurnActed.length; gi++) {
+      const wasActed = prev[gi] ?? false
+      const isActed = groupTurnActed[gi]!
+
+      if (!wasActed && isActed) {
+        const timer = setTimeout(() => {
+          eotTimersRef.current.delete(gi)
+          const confirmed = eotConfirmedLatest.current.get(gi) ?? new Set<string>()
+          setEncounterGroups((groups) =>
+            groups.map((g, gIdx) => {
+              if (gIdx !== gi) return g
+              return {
+                ...g,
+                monsters: g.monsters.map((m, mi) => {
+                  const updated = {
+                    ...m,
+                    conditions: m.conditions.filter((c) => {
+                      if (c.state !== 'eot') return true
+                      return confirmed.has(`${mi}:${c.label}`)
+                    }),
+                  }
+                  if (!m.minions) return updated
+                  return {
+                    ...updated,
+                    minions: m.minions.map((minion, mni) => ({
+                      ...minion,
+                      conditions: minion.conditions.filter((c) => {
+                        if (c.state !== 'eot') return true
+                        return confirmed.has(`${mi}:${mni}:${c.label}`)
+                      }),
+                    })),
+                  }
+                }),
+              }
+            }),
+          )
+          setEotConfirmed((prev) => {
+            const next = new Map(prev)
+            next.delete(gi)
+            return next
+          })
+        }, 30_000)
+        eotTimersRef.current.set(gi, timer)
+      }
+
+      if (wasActed && !isActed) {
+        const timer = eotTimersRef.current.get(gi)
+        if (timer != null) {
+          clearTimeout(timer)
+          eotTimersRef.current.delete(gi)
+        }
+        setEotConfirmed((prev) => {
+          const next = new Map(prev)
+          next.delete(gi)
+          return next
+        })
+      }
+    }
+    prevTurnActedRef.current = [...groupTurnActed]
+  }, [groupTurnActed])
+
+  useEffect(() => {
+    const timers = eotTimersRef.current
+    return () => {
+      for (const timer of timers.values()) clearTimeout(timer)
+    }
+  }, [])
 
   const patchMonsterStamina = useCallback(
     (groupIndex: number, monsterIndex: number, stamina: [number, number]) => {
@@ -370,6 +472,12 @@ function App() {
               }
               onDeleteMonster={(mi) => deleteMonster(gi, mi)}
               onAddMonster={(monster) => addMonsterToGroup(gi, monster)}
+              onConfirmEot={(mi, label, minionIndex) =>
+                confirmEotCondition(gi, mi, label, minionIndex)
+              }
+              isEotConfirmed={(mi, label, minionIndex) =>
+                isEotConfirmed(gi, mi, label, minionIndex)
+              }
             />
           ))}
           <button

@@ -327,3 +327,29 @@ Cancel condition animations on rapid acted→pending — no code changes needed;
 **Files changed:**
 - src/App.test.tsx
 - PRD.json
+
+
+[TURN-002]
+
+Auto-disable EoT conditions after 30s if not clicked — 30-second timer starts when group turn set to acted; unconfirmed EoT conditions auto-removed; clicking glowing EoT icon confirms (keeps) it
+
+**Key decisions:**
+- Timer per group via useRef<Map<number, timeout>>; starts in useEffect watching groupTurnActed transitions (false→true)
+- eotConfirmed tracked as React state (Map<number, Set<string>>) not ref, because confirming must trigger re-render to stop glow animation
+- eotConfirmedLatest ref mirrors state for timer callback (captures latest confirmed set at fire time)
+- Confirm key format: `${monsterIndex}:${label}` for monsters, `${monsterIndex}:${minionIndex}:${label}` for minions
+- Click interception in CreatureConditionCell: when turnComplete + EoT + not yet confirmed, click calls onConfirmEot instead of onRemove
+- ConditionCatalogIconStrip suppresses glow animation for confirmed EoT icons via isEotConfirmed prop
+- Timer cancelled + confirmed set cleared when group toggled back to pending (TURN-005 compatibility)
+- Neutral and SE conditions unaffected by timer; only EoT state filtered
+- 10 new App integration tests using vi.useFakeTimers({shouldAdvanceTime:true}) pattern — fake timers installed after user interactions to avoid userEvent hanging
+
+**Files changed:**
+- src/App.tsx
+- src/components/GroupSection.tsx
+- src/components/MonsterRowCells.tsx
+- src/components/MinionGroupRow.tsx
+- src/components/CreatureConditionCell.tsx
+- src/components/ConditionCatalogIconStrip.tsx
+- src/App.test.tsx
+- PRD.json
