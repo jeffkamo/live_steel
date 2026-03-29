@@ -1,4 +1,5 @@
-import type { ConditionState, GroupColorId, Monster } from '../types'
+import { useState, useRef, useEffect, useCallback } from 'react'
+import type { CaptainRef, ConditionState, EncounterGroup, GroupColorId, Monster } from '../types'
 import { GROUP_COLOR_BADGE, GROUP_COLOR_LABEL } from '../data'
 import { EditableStaminaCell } from './EditableStaminaCell'
 import { MinionStaminaDisplay } from './MinionStaminaDisplay'
@@ -54,6 +55,8 @@ export function MinionGroupRow({
   turnComplete,
   expanded,
   onToggleExpanded,
+  allGroups,
+  onCaptainChange,
   onStaminaChange,
   onConditionRemove,
   onConditionAddOrSet,
@@ -77,6 +80,8 @@ export function MinionGroupRow({
   turnComplete: boolean
   expanded: boolean
   onToggleExpanded: () => void
+  allGroups?: readonly EncounterGroup[]
+  onCaptainChange?: (captainId: CaptainRef | null) => void
   onStaminaChange: (next: [number, number]) => void
   onConditionRemove: (conditionIndex: number) => void
   onConditionAddOrSet: (label: string, state: ConditionState) => void
@@ -95,6 +100,48 @@ export function MinionGroupRow({
   const colorLabel = GROUP_COLOR_LABEL[groupColor]
   const minions = monster.minions ?? []
   const hasFeatures = (monster.features?.length ?? 0) > 0
+
+  const [captainDropdownOpen, setCaptainDropdownOpen] = useState(false)
+  const captainDropdownRef = useRef<HTMLDivElement>(null)
+
+  const closeCaptainDropdown = useCallback(() => setCaptainDropdownOpen(false), [])
+
+  useEffect(() => {
+    if (!captainDropdownOpen) return
+    const handler = (e: MouseEvent) => {
+      if (captainDropdownRef.current && !captainDropdownRef.current.contains(e.target as Node)) {
+        closeCaptainDropdown()
+      }
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [captainDropdownOpen, closeCaptainDropdown])
+
+  const captainRef = monster.captainId ?? null
+  const captainMonster = captainRef && allGroups
+    ? allGroups[captainRef.groupIndex]?.monsters[captainRef.monsterIndex]
+    : undefined
+  const captainGroupColor = captainRef && allGroups
+    ? allGroups[captainRef.groupIndex]?.color
+    : undefined
+
+  const candidateMonsters: { groupIndex: number; monsterIndex: number; name: string; ordinal: number; color: GroupColorId }[] = []
+  if (allGroups) {
+    for (let gi = 0; gi < allGroups.length; gi++) {
+      const g = allGroups[gi]!
+      for (let mi = 0; mi < g.monsters.length; mi++) {
+        const m = g.monsters[mi]!
+        if (m.minions && m.minions.length > 0) continue
+        candidateMonsters.push({
+          groupIndex: gi,
+          monsterIndex: mi,
+          name: m.name,
+          ordinal: mi + 1,
+          color: g.color,
+        })
+      }
+    }
+  }
 
   const bodyCell =
     'flex h-full min-h-[3.75rem] items-center p-3 sm:min-h-[4rem] sm:p-3.5'
@@ -128,6 +175,94 @@ export function MinionGroupRow({
             <p className="mt-1 truncate text-[0.7rem] leading-snug text-zinc-400">
               {monster.subtitle}
             </p>
+            <div className="relative mt-1.5" ref={captainDropdownRef}>
+              {captainMonster && captainGroupColor ? (
+                <span
+                  className="inline-flex items-center gap-1.5 rounded-full border border-zinc-700/80 bg-zinc-800/80 px-2.5 py-0.5 text-xs leading-tight"
+                  data-testid="captain-pill"
+                >
+                  <span className="text-[0.6rem] font-medium uppercase tracking-wider text-zinc-500">Captain</span>
+                  <span
+                    className={`inline-flex size-5 items-center justify-center rounded-full border text-[0.6rem] font-semibold tabular-nums leading-none ${GROUP_COLOR_BADGE[captainGroupColor].border} ${GROUP_COLOR_BADGE[captainGroupColor].bg} ${GROUP_COLOR_BADGE[captainGroupColor].text}`}
+                  >
+                    {captainRef!.monsterIndex + 1}
+                  </span>
+                  <span className="truncate text-zinc-200">{captainMonster.name}</span>
+                  <button
+                    type="button"
+                    aria-label={`Change captain for ${monster.name}`}
+                    onClick={() => setCaptainDropdownOpen((v) => !v)}
+                    className="ml-0.5 cursor-pointer text-zinc-400 transition-colors hover:text-zinc-100"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="size-3" aria-hidden>
+                      <path d="M13.488 2.513a1.75 1.75 0 0 0-2.475 0L3.05 10.476a1 1 0 0 0-.27.481l-.57 2.565a.75.75 0 0 0 .897.897l2.565-.57a1 1 0 0 0 .481-.27l7.963-7.963a1.75 1.75 0 0 0 0-2.475l-.628-.628ZM11.72 3.22a.25.25 0 0 1 .354 0l.628.628a.25.25 0 0 1 0 .354L5.134 11.77l-1.27.282.282-1.27 7.574-7.562Z" />
+                    </svg>
+                  </button>
+                </span>
+              ) : (
+                <button
+                  type="button"
+                  aria-label={`Assign captain for ${monster.name}`}
+                  onClick={() => setCaptainDropdownOpen((v) => !v)}
+                  className="inline-flex cursor-pointer items-center gap-1 rounded-full border border-dashed border-zinc-600/80 bg-zinc-800/40 px-2.5 py-0.5 text-xs leading-tight text-zinc-500 transition-colors hover:border-zinc-500 hover:text-zinc-300"
+                  data-testid="captain-pill"
+                >
+                  <span className="text-[0.6rem] font-medium uppercase tracking-wider">Captain</span>
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="size-3" aria-hidden>
+                    <path d="M8.75 3.75a.75.75 0 0 0-1.5 0v3.5h-3.5a.75.75 0 0 0 0 1.5h3.5v3.5a.75.75 0 0 0 1.5 0v-3.5h3.5a.75.75 0 0 0 0-1.5h-3.5v-3.5Z" />
+                  </svg>
+                </button>
+              )}
+              {captainDropdownOpen && (
+                <div
+                  className="absolute left-0 top-full z-50 mt-1 max-h-52 min-w-[14rem] overflow-y-auto rounded-lg border border-zinc-700/80 bg-zinc-900 shadow-xl"
+                  role="listbox"
+                  aria-label={`Select captain for ${monster.name}`}
+                >
+                  {captainRef && (
+                    <button
+                      type="button"
+                      role="option"
+                      aria-selected={false}
+                      onClick={() => {
+                        onCaptainChange?.(null)
+                        closeCaptainDropdown()
+                      }}
+                      className="flex w-full cursor-pointer items-center gap-2 border-b border-zinc-800 px-3 py-2 text-left text-xs text-red-400 transition-colors hover:bg-zinc-800"
+                    >
+                      Remove captain
+                    </button>
+                  )}
+                  {candidateMonsters.length === 0 && (
+                    <div className="px-3 py-2 text-xs text-zinc-500">No eligible monsters</div>
+                  )}
+                  {candidateMonsters.map((c) => {
+                    const isCurrentCaptain = captainRef?.groupIndex === c.groupIndex && captainRef?.monsterIndex === c.monsterIndex
+                    const cBadge = GROUP_COLOR_BADGE[c.color]
+                    return (
+                      <button
+                        type="button"
+                        role="option"
+                        aria-selected={isCurrentCaptain}
+                        key={`captain-${c.groupIndex}-${c.monsterIndex}`}
+                        onClick={() => {
+                          onCaptainChange?.({ groupIndex: c.groupIndex, monsterIndex: c.monsterIndex })
+                          closeCaptainDropdown()
+                        }}
+                        className={`flex w-full cursor-pointer items-center gap-2 px-3 py-2 text-left text-xs transition-colors hover:bg-zinc-800 ${isCurrentCaptain ? 'bg-zinc-800/60 text-zinc-100' : 'text-zinc-300'}`}
+                      >
+                        <span
+                          className={`inline-flex size-5 shrink-0 items-center justify-center rounded-full border text-[0.6rem] font-semibold tabular-nums leading-none ${cBadge.border} ${cBadge.bg} ${cBadge.text}`}
+                        >
+                          {c.ordinal}
+                        </span>
+                        <span className="truncate">{c.name}</span>
+                      </button>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>

@@ -123,3 +123,26 @@ Interval-based shared stamina pool for minion groups — replaces standard `cur/
 - src/data.ts
 - src/App.test.tsx
 - PRD.json
+
+
+[MINION-001]
+
+Captain assignment for minion groups — Captain pill under parent minion row, dropdown of non-minion monsters, colored ordinal + name on assignment
+
+**Key decisions:**
+- CaptainRef type `{ groupIndex, monsterIndex }` added to types.ts; Monster gets optional `captainId?: CaptainRef | null`
+- allGroups passed from App → GroupSection → MinionGroupRow so dropdown can list all non-minion monsters across all encounter groups
+- Candidate list filters out any monster with minions (minion groups can't captain other minion groups)
+- Captain pill rendered in creature name cell (col 2) below subtitle; unassigned state shows dashed border + plus icon, assigned state shows captain's group-colored ordinal badge + name + edit icon
+- Dropdown includes "Remove captain" option when a captain is already assigned (covers MINION-002 flow)
+- patchMinionCaptain callback in App.tsx follows same immutable update pattern as other patch functions
+- Dropdown closes on outside click via mousedown listener on document
+- 8 new integration tests covering: unassigned pill rendering, dropdown content, captain assignment, ordinal display, dropdown close, captain change via edit icon, captain removal, minion exclusion from candidates
+
+**Files changed:**
+- src/types.ts
+- src/App.tsx
+- src/components/GroupSection.tsx
+- src/components/MinionGroupRow.tsx
+- src/App.test.tsx
+- PRD.json

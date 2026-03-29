@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react'
-import type { ConditionState, GroupColorId } from './types'
+import type { CaptainRef, ConditionState, GroupColorId } from './types'
 import {
   cloneEncounterGroups,
   cloneTerrainRows,
@@ -146,6 +146,24 @@ function App() {
     [],
   )
 
+  const patchMinionCaptain = useCallback(
+    (groupIndex: number, monsterIndex: number, captainId: CaptainRef | null) => {
+      setEncounterGroups((prev) =>
+        prev.map((g, gi) => {
+          if (gi !== groupIndex) return g
+          return {
+            ...g,
+            monsters: g.monsters.map((m, mi) => {
+              if (mi !== monsterIndex || !m.minions) return m
+              return { ...m, captainId }
+            }),
+          }
+        }),
+      )
+    },
+    [],
+  )
+
   const patchMinionConditionAddOrSet = useCallback(
     (groupIndex: number, monsterIndex: number, minionIndex: number, label: string, state: ConditionState) => {
       setEncounterGroups((prev) =>
@@ -269,6 +287,10 @@ function App() {
               onMonsterConditionRemove={(mi, ci) => patchMonsterConditionRemove(gi, mi, ci)}
               onMonsterConditionAddOrSet={(mi, label, state) =>
                 patchMonsterConditionAddOrSet(gi, mi, label, state)
+              }
+              allGroups={encounterGroups}
+              onMinionCaptainChange={(mi, captainId) =>
+                patchMinionCaptain(gi, mi, captainId)
               }
               onMinionDeadChange={(mi, mni, dead) =>
                 patchMinionDead(gi, mi, mni, dead)

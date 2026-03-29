@@ -932,4 +932,108 @@ describe('App', () => {
     expect(screen.getByText('5 / 15')).toBeInTheDocument()
     expect(screen.getByText('22 / 22')).toBeInTheDocument()
   })
+
+  // --- Captain assignment (MINION-001) ---
+
+  const getMinionGrid = () =>
+    screen.getByText('Minions', { exact: true }).closest('div.grid.items-stretch.rounded-lg') as HTMLElement
+
+  it('minion group shows an unassigned Captain pill', () => {
+    render(<App />)
+    const grid = getMinionGrid()
+    const pill = within(grid).getByTestId('captain-pill')
+    expect(pill).toBeInTheDocument()
+    expect(pill).toHaveTextContent(/Captain/i)
+  })
+
+  it('clicking the Captain pill opens a dropdown listing non-minion monsters', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    const grid = getMinionGrid()
+    const pill = within(grid).getByRole('button', { name: /Assign captain for Minions/i })
+    await user.click(pill)
+    const dropdown = within(grid).getByRole('listbox', { name: /Select captain for Minions/i })
+    expect(dropdown).toBeInTheDocument()
+    expect(within(dropdown).getByText('Goblin Assassin 1')).toBeInTheDocument()
+    expect(within(dropdown).getByText('Goblin Raider')).toBeInTheDocument()
+    expect(within(dropdown).getByText('Goblin Underboss')).toBeInTheDocument()
+    expect(within(dropdown).getByText('Ironwood Sentinel')).toBeInTheDocument()
+    expect(within(dropdown).getByText('Arcane Echo')).toBeInTheDocument()
+    expect(within(dropdown).getByText('Reserve slot')).toBeInTheDocument()
+    expect(within(dropdown).queryByText('Minions')).toBeNull()
+  })
+
+  it('selecting a monster from the dropdown assigns it as captain', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    const grid = getMinionGrid()
+    await user.click(within(grid).getByRole('button', { name: /Assign captain for Minions/i }))
+    const dropdown = within(grid).getByRole('listbox', { name: /Select captain for Minions/i })
+    await user.click(within(dropdown).getByText('Goblin Underboss'))
+    const pill = within(grid).getByTestId('captain-pill')
+    expect(pill).toHaveTextContent(/Captain/)
+    expect(pill).toHaveTextContent(/Goblin Underboss/)
+  })
+
+  it('assigned captain pill shows the captain group colored ordinal', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    const grid = getMinionGrid()
+    await user.click(within(grid).getByRole('button', { name: /Assign captain for Minions/i }))
+    const dropdown = within(grid).getByRole('listbox', { name: /Select captain for Minions/i })
+    await user.click(within(dropdown).getByText('Goblin Underboss'))
+    const pill = within(grid).getByTestId('captain-pill')
+    expect(pill).toHaveTextContent('1')
+    expect(pill).toHaveTextContent('Goblin Underboss')
+  })
+
+  it('dropdown closes after selecting a captain', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    const grid = getMinionGrid()
+    await user.click(within(grid).getByRole('button', { name: /Assign captain for Minions/i }))
+    expect(within(grid).getByRole('listbox', { name: /Select captain for Minions/i })).toBeInTheDocument()
+    const dropdown = within(grid).getByRole('listbox', { name: /Select captain for Minions/i })
+    await user.click(within(dropdown).getByText('Goblin Assassin 1'))
+    expect(within(grid).queryByRole('listbox')).toBeNull()
+  })
+
+  it('assigned captain can be changed via the edit icon', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    const grid = getMinionGrid()
+    await user.click(within(grid).getByRole('button', { name: /Assign captain for Minions/i }))
+    await user.click(within(grid).getByText('Goblin Assassin 1'))
+    expect(within(grid).getByTestId('captain-pill')).toHaveTextContent('Goblin Assassin 1')
+    await user.click(within(grid).getByRole('button', { name: /Change captain for Minions/i }))
+    const dropdown = within(grid).getByRole('listbox', { name: /Select captain for Minions/i })
+    await user.click(within(dropdown).getByText('Ironwood Sentinel'))
+    expect(within(grid).getByTestId('captain-pill')).toHaveTextContent('Ironwood Sentinel')
+  })
+
+  it('captain can be removed via the dropdown remove option', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    const grid = getMinionGrid()
+    await user.click(within(grid).getByRole('button', { name: /Assign captain for Minions/i }))
+    await user.click(within(grid).getByText('Goblin Underboss'))
+    expect(within(grid).getByTestId('captain-pill')).toHaveTextContent('Goblin Underboss')
+    await user.click(within(grid).getByRole('button', { name: /Change captain for Minions/i }))
+    const dropdown = within(grid).getByRole('listbox', { name: /Select captain for Minions/i })
+    await user.click(within(dropdown).getByText('Remove captain'))
+    const pill = within(grid).getByTestId('captain-pill')
+    expect(pill).not.toHaveTextContent('Goblin Underboss')
+    expect(within(grid).getByRole('button', { name: /Assign captain for Minions/i })).toBeInTheDocument()
+  })
+
+  it('captain dropdown does not list minion group monsters as candidates', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    const grid = getMinionGrid()
+    await user.click(within(grid).getByRole('button', { name: /Assign captain for Minions/i }))
+    const dropdown = within(grid).getByRole('listbox', { name: /Select captain for Minions/i })
+    const options = within(dropdown).getAllByRole('option')
+    const texts = options.map((o) => o.textContent)
+    expect(texts.every((t) => !t?.includes('Minions'))).toBe(true)
+  })
 })

@@ -30,6 +30,11 @@ export type ConditionEntry = {
   state: ConditionState
 }
 
+export type CaptainRef = {
+  groupIndex: number
+  monsterIndex: number
+}
+
 export type Monster = {
   name: string
   subtitle: string
@@ -42,6 +47,7 @@ export type Monster = {
   conditions: readonly ConditionEntry[]
   minions?: MinionEntry[]
   features?: MonsterFeature[]
+  captainId?: CaptainRef | null
 }
 
 export type MinionEntry = {

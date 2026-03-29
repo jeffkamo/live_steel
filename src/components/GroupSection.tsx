@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react'
-import type { ConditionState, EncounterGroup, GroupColorId, GroupColorMenuState } from '../types'
+import type { CaptainRef, ConditionState, EncounterGroup, GroupColorId, GroupColorMenuState } from '../types'
 import { ROSTER_GRID_TEMPLATE } from '../data'
 import { GroupTurnColumn } from './TurnColumnCell'
 import { GroupColorPickerPopover } from './GroupColorPickerPopover'
@@ -19,6 +19,8 @@ export function GroupSection({
   onMonsterStaminaChange,
   onMonsterConditionRemove,
   onMonsterConditionAddOrSet,
+  allGroups,
+  onMinionCaptainChange,
   onMinionDeadChange,
   onMinionConditionRemove,
   onMinionConditionAddOrSet,
@@ -35,6 +37,8 @@ export function GroupSection({
   onMonsterStaminaChange: (monsterIndex: number, stamina: [number, number]) => void
   onMonsterConditionRemove: (monsterIndex: number, conditionIndex: number) => void
   onMonsterConditionAddOrSet: (monsterIndex: number, label: string, state: ConditionState) => void
+  allGroups?: readonly EncounterGroup[]
+  onMinionCaptainChange?: (monsterIndex: number, captainId: CaptainRef | null) => void
   onMinionDeadChange?: (monsterIndex: number, minionIndex: number, dead: boolean) => void
   onMinionConditionRemove?: (monsterIndex: number, minionIndex: number, conditionIndex: number) => void
   onMinionConditionAddOrSet?: (monsterIndex: number, minionIndex: number, label: string, state: ConditionState) => void
@@ -134,6 +138,10 @@ export function GroupSection({
               turnComplete={turnActed}
               expanded={!!expandedMinions[i]}
               onToggleExpanded={() => toggleMinionExpanded(i)}
+              allGroups={allGroups}
+              onCaptainChange={(captainId) =>
+                onMinionCaptainChange?.(i, captainId)
+              }
               onStaminaChange={(st) => onMonsterStaminaChange(i, st)}
               onConditionRemove={(ci) => onMonsterConditionRemove(i, ci)}
               onConditionAddOrSet={(label, state) =>

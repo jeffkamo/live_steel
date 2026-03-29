@@ -64,7 +64,7 @@
         "Write specs covering pill click, dropdown display, captain assignment, and rendered output",
         "Run the specs, fix any failures until all pass"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "MINION-002",
