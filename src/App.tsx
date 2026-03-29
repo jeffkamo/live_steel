@@ -3,8 +3,13 @@ import type { CaptainRef, ConditionState, GroupColorId, Monster } from './types'
 import {
   cloneEncounterGroups,
   cloneTerrainRows,
+  ENCOUNTER_GROUP_DRAG_MIME,
   ENCOUNTER_GROUPS,
+  moveIndexInArray,
+  newEncounterGroupId,
   nextAvailableColor,
+  remapEncounterGroupIndex,
+  reorderEncounterGroupsWithCaptainRemap,
   ROSTER_GRID_TEMPLATE,
 } from './data'
 import { TitleRule } from './components/TitleRule'
@@ -24,7 +29,54 @@ function App() {
   const [eotConfirmed, setEotConfirmed] = useState<Map<number, Set<string>>>(() => new Map())
   const eotConfirmedLatest = useRef(eotConfirmed)
   eotConfirmedLatest.current = eotConfirmed
-  const prevTurnActedRef = useRef<boolean[]>([])
+  const prevTurnActedRef = useRef<boolean[]>(ENCOUNTER_GROUPS.map(() => false))
+
+  const scheduleEotTimerForGroup = useCallback((gi: number) => {
+    const existing = eotTimersRef.current.get(gi)
+    if (existing != null) {
+      clearTimeout(existing)
+      eotTimersRef.current.delete(gi)
+    }
+    const timer = setTimeout(() => {
+      eotTimersRef.current.delete(gi)
+      const confirmed = eotConfirmedLatest.current.get(gi) ?? new Set<string>()
+      setEncounterGroups((groups) =>
+        groups.map((g, gIdx) => {
+          if (gIdx !== gi) return g
+          return {
+            ...g,
+            monsters: g.monsters.map((m, mi) => {
+              const updated = {
+                ...m,
+                conditions: m.conditions.filter((c) => {
+                  if (c.state !== 'eot') return true
+                  return confirmed.has(`${mi}:${c.label}`)
+                }),
+              }
+              if (!m.minions) return updated
+              return {
+                ...updated,
+                minions: m.minions.map((minion, mni) => ({
+                  ...minion,
+                  conditions: minion.conditions.filter((c) => {
+                    if (c.state !== 'eot') return true
+                    return confirmed.has(`${mi}:${mni}:${c.label}`)
+                  }),
+                })),
+              }
+            }),
+          }
+        }),
+      )
+      setEotConfirmed((prev) => {
+        const next = new Map(prev)
+        next.delete(gi)
+        return next
+      })
+      setSeActWindowElapsedGroup((prev) => new Set(prev).add(gi))
+    }, 30_000)
+    eotTimersRef.current.set(gi, timer)
+  }, [])
 
   const confirmEotCondition = useCallback(
     (groupIndex: number, monsterIndex: number, label: string, minionIndex?: number) => {
@@ -59,45 +111,7 @@ function App() {
       const isActed = groupTurnActed[gi]!
 
       if (!wasActed && isActed) {
-        const timer = setTimeout(() => {
-          eotTimersRef.current.delete(gi)
-          const confirmed = eotConfirmedLatest.current.get(gi) ?? new Set<string>()
-          setEncounterGroups((groups) =>
-            groups.map((g, gIdx) => {
-              if (gIdx !== gi) return g
-              return {
-                ...g,
-                monsters: g.monsters.map((m, mi) => {
-                  const updated = {
-                    ...m,
-                    conditions: m.conditions.filter((c) => {
-                      if (c.state !== 'eot') return true
-                      return confirmed.has(`${mi}:${c.label}`)
-                    }),
-                  }
-                  if (!m.minions) return updated
-                  return {
-                    ...updated,
-                    minions: m.minions.map((minion, mni) => ({
-                      ...minion,
-                      conditions: minion.conditions.filter((c) => {
-                        if (c.state !== 'eot') return true
-                        return confirmed.has(`${mi}:${mni}:${c.label}`)
-                      }),
-                    })),
-                  }
-                }),
-              }
-            }),
-          )
-          setEotConfirmed((prev) => {
-            const next = new Map(prev)
-            next.delete(gi)
-            return next
-          })
-          setSeActWindowElapsedGroup((prev) => new Set(prev).add(gi))
-        }, 30_000)
-        eotTimersRef.current.set(gi, timer)
+        scheduleEotTimerForGroup(gi)
       }
 
       if (wasActed && !isActed) {
@@ -119,7 +133,7 @@ function App() {
       }
     }
     prevTurnActedRef.current = [...groupTurnActed]
-  }, [groupTurnActed])
+  }, [groupTurnActed, scheduleEotTimerForGroup])
 
   useEffect(() => {
     const timers = eotTimersRef.current
@@ -332,10 +346,47 @@ function App() {
     [],
   )
 
+  const [dropTargetGroupIndex, setDropTargetGroupIndex] = useState<number | null>(null)
+
+  const reorderEncounterGroups = useCallback(
+    (from: number, to: number) => {
+      if (from === to) return
+      const scheduledOld = [...eotTimersRef.current.keys()]
+      for (const t of eotTimersRef.current.values()) clearTimeout(t)
+      eotTimersRef.current.clear()
+
+      const remap = (oldGi: number) => remapEncounterGroupIndex(from, to, oldGi)
+
+      prevTurnActedRef.current = moveIndexInArray(prevTurnActedRef.current, from, to)
+
+      setEncounterGroups((prev) => reorderEncounterGroupsWithCaptainRemap(prev, from, to))
+      setGroupTurnActed((prev) => moveIndexInArray(prev, from, to))
+      setEotConfirmed((prev) => {
+        const next = new Map<number, Set<string>>()
+        for (const [gi, set] of prev) {
+          next.set(remap(gi), new Set(set))
+        }
+        return next
+      })
+      setSeActWindowElapsedGroup((prev) => {
+        const next = new Set<number>()
+        for (const gi of prev) next.add(remap(gi))
+        return next
+      })
+
+      queueMicrotask(() => {
+        for (const oldGi of scheduledOld) {
+          scheduleEotTimerForGroup(remap(oldGi))
+        }
+      })
+    },
+    [scheduleEotTimerForGroup],
+  )
+
   const addNewGroup = useCallback(() => {
     setEncounterGroups((prev) => {
       const color = nextAvailableColor(prev.map((g) => g.color))
-      return [...prev, { monsters: [], color }]
+      return [...prev, { id: newEncounterGroupId(), monsters: [], color }]
     })
     setGroupTurnActed((prev) => [...prev, false])
   }, [])
@@ -448,47 +499,82 @@ function App() {
             </div>
           </div>
           {encounterGroups.map((group, gi) => (
-            <GroupSection
-              key={`encounter-group-${gi}`}
-              group={group}
-              groupKey={`g${gi}`}
-              groupNumber={gi + 1}
-              thisGroupIndex={gi}
-              encounterGroupColors={encounterGroups.map((g) => g.color)}
-              turnActed={groupTurnActed[gi] ?? false}
-              seActPhaseGlow={
-                (groupTurnActed[gi] ?? false) && !seActWindowElapsedGroup.has(gi)
-              }
-              onToggleTurn={() => toggleGroupTurn(gi)}
-              turnAriaLabel={`Encounter group ${gi + 1}: turn ${groupTurnActed[gi] ? 'acted' : 'pending'}`}
-              onGroupColorChange={(c) => patchGroupColor(gi, c)}
-              onMonsterStaminaChange={(mi, st) => patchMonsterStamina(gi, mi, st)}
-              onMonsterConditionRemove={(mi, ci) => patchMonsterConditionRemove(gi, mi, ci)}
-              onMonsterConditionAddOrSet={(mi, label, state) =>
-                patchMonsterConditionAddOrSet(gi, mi, label, state)
-              }
-              allGroups={encounterGroups}
-              onMinionCaptainChange={(mi, captainId) =>
-                patchMinionCaptain(gi, mi, captainId)
-              }
-              onMinionDeadChange={(mi, mni, dead) =>
-                patchMinionDead(gi, mi, mni, dead)
-              }
-              onMinionConditionRemove={(mi, mni, ci) =>
-                patchMinionConditionRemove(gi, mi, mni, ci)
-              }
-              onMinionConditionAddOrSet={(mi, mni, label, state) =>
-                patchMinionConditionAddOrSet(gi, mi, mni, label, state)
-              }
-              onDeleteMonster={(mi) => deleteMonster(gi, mi)}
-              onAddMonster={(monster) => addMonsterToGroup(gi, monster)}
-              onConfirmEot={(mi, label, minionIndex) =>
-                confirmEotCondition(gi, mi, label, minionIndex)
-              }
-              isEotConfirmed={(mi, label, minionIndex) =>
-                isEotConfirmed(gi, mi, label, minionIndex)
-              }
-            />
+            <div
+              key={group.id}
+              data-testid="encounter-group-drop-target"
+              data-group-index={gi}
+              className={`rounded-lg transition-[box-shadow] duration-150 ${
+                dropTargetGroupIndex === gi ? 'ring-2 ring-amber-500/45 ring-offset-2 ring-offset-zinc-950' : ''
+              }`}
+              onDragOver={(e) => {
+                if (![...e.dataTransfer.types].includes(ENCOUNTER_GROUP_DRAG_MIME)) return
+                e.preventDefault()
+                e.dataTransfer.dropEffect = 'move'
+                setDropTargetGroupIndex(gi)
+              }}
+              onDragLeave={(e) => {
+                if (!e.currentTarget.contains(e.relatedTarget as Node | null)) {
+                  setDropTargetGroupIndex((v) => (v === gi ? null : v))
+                }
+              }}
+              onDrop={(e) => {
+                e.preventDefault()
+                setDropTargetGroupIndex(null)
+                const raw = e.dataTransfer.getData(ENCOUNTER_GROUP_DRAG_MIME)
+                const from = Number.parseInt(raw, 10)
+                if (Number.isNaN(from) || from === gi) return
+                reorderEncounterGroups(from, gi)
+              }}
+            >
+              <GroupSection
+                group={group}
+                groupKey={`g${gi}`}
+                groupNumber={gi + 1}
+                thisGroupIndex={gi}
+                encounterGroupColors={encounterGroups.map((g) => g.color)}
+                turnActed={groupTurnActed[gi] ?? false}
+                seActPhaseGlow={
+                  (groupTurnActed[gi] ?? false) && !seActWindowElapsedGroup.has(gi)
+                }
+                onToggleTurn={() => toggleGroupTurn(gi)}
+                turnAriaLabel={`Encounter group ${gi + 1}: turn ${groupTurnActed[gi] ? 'acted' : 'pending'}`}
+                onGroupColorChange={(c) => patchGroupColor(gi, c)}
+                onMonsterStaminaChange={(mi, st) => patchMonsterStamina(gi, mi, st)}
+                onMonsterConditionRemove={(mi, ci) => patchMonsterConditionRemove(gi, mi, ci)}
+                onMonsterConditionAddOrSet={(mi, label, state) =>
+                  patchMonsterConditionAddOrSet(gi, mi, label, state)
+                }
+                allGroups={encounterGroups}
+                onMinionCaptainChange={(mi, captainId) =>
+                  patchMinionCaptain(gi, mi, captainId)
+                }
+                onMinionDeadChange={(mi, mni, dead) =>
+                  patchMinionDead(gi, mi, mni, dead)
+                }
+                onMinionConditionRemove={(mi, mni, ci) =>
+                  patchMinionConditionRemove(gi, mi, mni, ci)
+                }
+                onMinionConditionAddOrSet={(mi, mni, label, state) =>
+                  patchMinionConditionAddOrSet(gi, mi, mni, label, state)
+                }
+                onDeleteMonster={(mi) => deleteMonster(gi, mi)}
+                onAddMonster={(monster) => addMonsterToGroup(gi, monster)}
+                onConfirmEot={(mi, label, minionIndex) =>
+                  confirmEotCondition(gi, mi, label, minionIndex)
+                }
+                isEotConfirmed={(mi, label, minionIndex) =>
+                  isEotConfirmed(gi, mi, label, minionIndex)
+                }
+                encounterGroupDragHandle={{
+                  onDragStart: (e) => {
+                    e.dataTransfer.setData(ENCOUNTER_GROUP_DRAG_MIME, String(gi))
+                    e.dataTransfer.effectAllowed = 'move'
+                  },
+                  onDragEnd: () => setDropTargetGroupIndex(null),
+                  ariaLabel: `Reorder encounter group ${gi + 1}`,
+                }}
+              />
+            </div>
           ))}
           <button
             type="button"

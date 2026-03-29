@@ -206,7 +206,7 @@
         "Write specs covering drag initiation, drop reordering, and state persistence",
         "Run the specs, fix any failures until all pass"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "DND-002",

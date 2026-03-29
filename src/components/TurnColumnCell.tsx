@@ -1,3 +1,5 @@
+import type { DragEvent } from 'react'
+
 export function TurnColumnCell({
   acted,
   onToggle,
@@ -33,17 +35,42 @@ export function GroupTurnColumn({
   acted,
   onToggle,
   turnAriaLabel,
+  encounterGroupDragHandle,
 }: {
   gridRowSpan: number
   acted: boolean
   onToggle: () => void
   turnAriaLabel: string
+  encounterGroupDragHandle?: {
+    onDragStart: (e: DragEvent) => void
+    onDragEnd: (e: DragEvent) => void
+    ariaLabel: string
+  }
 }) {
   return (
     <div
       style={{ gridColumn: 1, gridRow: `1 / span ${gridRowSpan}` }}
       className="flex min-h-0 w-full min-w-0 flex-col overflow-visible"
     >
+      {encounterGroupDragHandle != null && (
+        <div
+          draggable
+          onDragStart={encounterGroupDragHandle.onDragStart}
+          onDragEnd={encounterGroupDragHandle.onDragEnd}
+          aria-label={encounterGroupDragHandle.ariaLabel}
+          className="flex cursor-grab touch-none select-none items-center justify-center py-1 active:cursor-grabbing"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 16 16"
+            fill="currentColor"
+            className="size-4 text-zinc-500"
+            aria-hidden
+          >
+            <path d="M5 3a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0ZM5 8a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0ZM5 13a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0ZM14 3a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0ZM14 8a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0ZM14 13a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0Z" />
+          </svg>
+        </div>
+      )}
       <TurnColumnCell acted={acted} onToggle={onToggle} label={turnAriaLabel} />
     </div>
   )

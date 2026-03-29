@@ -70,6 +70,8 @@ export type GroupColorId =
   | 'black'
 
 export type EncounterGroup = {
+  /** Stable key for React lists and future cross-index state (timers, etc.). */
+  id: string
   monsters: Monster[]
   color: GroupColorId
 }

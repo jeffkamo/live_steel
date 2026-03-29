@@ -6,6 +6,7 @@ import type { EncounterGroup, GroupColorId } from '../types'
 
 function makeGroup(overrides: Partial<EncounterGroup> = {}): EncounterGroup {
   return {
+    id: 'test-encounter-group',
     color: 'red',
     monsters: [
       {

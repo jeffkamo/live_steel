@@ -1,4 +1,4 @@
-import { act, render, screen, within } from '@testing-library/react'
+import { act, fireEvent, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import App from './App'
@@ -2152,5 +2152,46 @@ describe('App', () => {
 
     expect(within(minionConditions).getByTitle('Bleeding (End of turn)')).toBeInTheDocument()
     vi.useRealTimers()
+  })
+
+  it('renders a reorder drag handle on each encounter group', () => {
+    render(<App />)
+    const handles = screen.getAllByLabelText(/^Reorder encounter group \d+$/i)
+    expect(handles.length).toBeGreaterThanOrEqual(2)
+    for (const h of handles) {
+      expect(h).toHaveAttribute('draggable', 'true')
+    }
+  })
+
+  it('reorders encounter groups on drag-and-drop and persists creature order', () => {
+    render(<App />)
+    const targets = screen.getAllByTestId('encounter-group-drop-target')
+    expect(targets.length).toBeGreaterThanOrEqual(2)
+
+    expect(within(targets[0]!).getByText('Goblin Assassin 1', { exact: true })).toBeInTheDocument()
+
+    const handle1 = screen.getByLabelText(/^Reorder encounter group 1$/i)
+    const store = new Map<string, string>()
+    const types: string[] = []
+    const dt = {
+      effectAllowed: 'uninitialized',
+      dropEffect: 'none' as const,
+      get types() {
+        return types as unknown as DOMStringList
+      },
+      setData(type: string, v: string) {
+        store.set(type, v)
+        if (!types.includes(type)) types.push(type)
+      },
+      getData(type: string) {
+        return store.get(type) ?? ''
+      },
+    } as unknown as DataTransfer
+    fireEvent.dragStart(handle1, { dataTransfer: dt })
+    fireEvent.dragOver(targets[1]!, { dataTransfer: dt })
+    fireEvent.drop(targets[1]!, { dataTransfer: dt })
+
+    const after = screen.getAllByTestId('encounter-group-drop-target')
+    expect(within(after[1]!).getByText('Goblin Assassin 1', { exact: true })).toBeInTheDocument()
   })
 })

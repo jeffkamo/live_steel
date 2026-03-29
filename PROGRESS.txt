@@ -377,3 +377,27 @@ SE stays on monster after 30s (no auto-clear); SE pulsate stops after same 30s p
 - src/App.test.tsx
 - eslint.config.js
 - PRD.json
+
+
+[DND-001]
+
+Reorder encounter groups — HTML5 DnD from grip in turn column; drop on group wrapper reorders `encounterGroups` + `groupTurnActed`; captain refs + EoT maps + SE elapsed set remapped via `remapEncounterGroupIndex`; pending EoT timers cleared + rescheduled on new indices (30s window restarts — acceptable edge)
+
+**Key decisions:**
+- `EncounterGroup.id` (uuid) for stable React keys; `newEncounterGroupId()` on clone + add group
+- Pure helpers in data.ts: `moveIndexInArray`, `remapEncounterGroupIndex`, `reorderEncounterGroupsWithCaptainRemap`, `ENCOUNTER_GROUP_DRAG_MIME`
+- `scheduleEotTimerForGroup` extracted from useEffect; reorder clears timer map then `queueMicrotask` reschedules for remapped keys; `prevTurnActedRef` init from ENCOUNTER_GROUPS length + manual remap on reorder keeps turn transition effect sane
+- Drop target wrapper in App (`data-testid=encounter-group-drop-target`); ring highlight on drag-over
+- GroupTurnColumn optional `encounterGroupDragHandle` (6-dot svg, `aria-label` reorder)
+
+**Files changed:**
+- src/types.ts
+- src/data.ts
+- src/data.test.ts
+- src/App.tsx
+- src/App.test.tsx
+- src/components/TurnColumnCell.tsx
+- src/components/GroupSection.tsx
+- src/components/GroupSection.test.tsx
+- src/components/StatBlock.test.tsx
+- PRD.json

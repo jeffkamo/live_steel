@@ -451,6 +451,7 @@ describe('Malice creatures still show stat blocks', () => {
 
   it('shows stat block toggle for malice creature in GroupSection', () => {
     const group: EncounterGroup = {
+      id: 'statblock-test-g',
       color: 'red',
       monsters: [
         {
@@ -493,6 +494,7 @@ describe('Malice creatures still show stat blocks', () => {
 describe('GroupSection stat block integration', () => {
   function makeGroupWithFeatures(): EncounterGroup {
     return {
+      id: 'statblock-features-g',
       color: 'red',
       monsters: [
         {
@@ -566,6 +568,7 @@ describe('GroupSection stat block integration', () => {
   it('renders stat block for minion group parent row', async () => {
     const user = userEvent.setup()
     const group: EncounterGroup = {
+      id: 'statblock-minion-g',
       color: 'blue',
       monsters: [
         {
@@ -580,8 +583,8 @@ describe('GroupSection stat block integration', () => {
           conditions: [],
           features: [sampleAbility],
           minions: [
-            { name: 'Minion 1', initials: 'M1', conditions: [] },
-            { name: 'Minion 2', initials: 'M2', conditions: [] },
+            { name: 'Minion 1', initials: 'M1', conditions: [], dead: false },
+            { name: 'Minion 2', initials: 'M2', conditions: [], dead: false },
           ],
         },
       ],

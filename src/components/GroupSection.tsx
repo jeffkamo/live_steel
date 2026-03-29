@@ -1,4 +1,5 @@
 import { useCallback, useState } from 'react'
+import type { DragEvent } from 'react'
 import type { CaptainRef, ConditionState, EncounterGroup, GroupColorId, GroupColorMenuState, Monster } from '../types'
 import { ROSTER_GRID_TEMPLATE } from '../data'
 import { GroupTurnColumn } from './TurnColumnCell'
@@ -30,6 +31,7 @@ export function GroupSection({
   onAddMonster,
   onConfirmEot,
   isEotConfirmed,
+  encounterGroupDragHandle,
 }: {
   group: EncounterGroup
   groupKey: string
@@ -40,6 +42,11 @@ export function GroupSection({
   seActPhaseGlow: boolean
   onToggleTurn: () => void
   turnAriaLabel: string
+  encounterGroupDragHandle?: {
+    onDragStart: (e: DragEvent) => void
+    onDragEnd: (e: DragEvent) => void
+    ariaLabel: string
+  }
   onGroupColorChange: (color: GroupColorId) => void
   onMonsterStaminaChange: (monsterIndex: number, stamina: [number, number]) => void
   onMonsterConditionRemove: (monsterIndex: number, conditionIndex: number) => void
@@ -115,6 +122,7 @@ export function GroupSection({
         acted={turnActed}
         onToggle={onToggleTurn}
         turnAriaLabel={turnAriaLabel}
+        encounterGroupDragHandle={encounterGroupDragHandle}
       />
       <GroupColorPickerPopover
         open={colorMenu.open}

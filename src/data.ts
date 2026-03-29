@@ -254,6 +254,62 @@ export const MARIP_HEADERS = [
 export const ROSTER_GRID_TEMPLATE =
   '5.5rem minmax(0,1fr) minmax(5.25rem,7rem) minmax(5.75rem,7.25rem) 7.25rem max-content'
 
+/** MIME type for HTML5 drag payload: source encounter group index (stringified). */
+export const ENCOUNTER_GROUP_DRAG_MIME = 'application/x-live-steel-encounter-group-index'
+
+export function newEncounterGroupId(): string {
+  return globalThis.crypto?.randomUUID?.() ?? `eg-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`
+}
+
+/**
+ * Move one item from `from` to `to` in a copy of the array (inclusive indices, same semantics as splice).
+ */
+export function moveIndexInArray<T>(items: readonly T[], from: number, to: number): T[] {
+  if (from === to || from < 0 || to < 0 || from >= items.length || to >= items.length) {
+    return [...items]
+  }
+  const next = [...items]
+  const [x] = next.splice(from, 1)
+  next.splice(to, 0, x!)
+  return next
+}
+
+/**
+ * After moving the encounter group at `from` to index `to`, map an old group index to its new index.
+ */
+export function remapEncounterGroupIndex(from: number, to: number, oldGroupIndex: number): number {
+  if (oldGroupIndex === from) return to
+  if (from < to) {
+    if (oldGroupIndex > from && oldGroupIndex <= to) return oldGroupIndex - 1
+    return oldGroupIndex
+  }
+  if (oldGroupIndex >= to && oldGroupIndex < from) return oldGroupIndex + 1
+  return oldGroupIndex
+}
+
+/** Reorder encounter groups and remap {@link Monster.captainId} group indices to match. */
+export function reorderEncounterGroupsWithCaptainRemap(
+  groups: EncounterGroup[],
+  from: number,
+  to: number,
+): EncounterGroup[] {
+  const moved = moveIndexInArray(groups, from, to)
+  return moved.map((g) => ({
+    ...g,
+    monsters: g.monsters.map((m) => {
+      if (!m.captainId) return m
+      const ref = m.captainId
+      return {
+        ...m,
+        captainId: {
+          groupIndex: remapEncounterGroupIndex(from, to, ref.groupIndex),
+          monsterIndex: ref.monsterIndex,
+        },
+      }
+    }),
+  }))
+}
+
 export const terrainGridClass = 'grid grid-cols-[minmax(0,1.35fr)_minmax(4.5rem,6.5rem)_minmax(0,1.2fr)]'
 
 export function conditionEntryFromLabel(label: string): ConditionEntry {
@@ -290,6 +346,7 @@ function resolveFeatures(m: MonsterSeed): MonsterFeature[] {
 
 export function cloneEncounterGroups(): EncounterGroup[] {
   return ENCOUNTER_GROUPS.map((group, groupIndex) => ({
+    id: newEncounterGroupId(),
     color: GROUP_COLOR_ORDER[groupIndex % GROUP_COLOR_ORDER.length]!,
     monsters: group.monsters.map((m) => ({
       name: m.name,

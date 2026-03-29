@@ -11,6 +11,9 @@ import {
   otherGroupIndexForColor,
   nextAvailableColor,
   monsterFromBestiary,
+  moveIndexInArray,
+  remapEncounterGroupIndex,
+  reorderEncounterGroupsWithCaptainRemap,
   CONDITION_CATALOG,
   GROUP_COLOR_ORDER,
   MARIP_HEADERS,
@@ -152,7 +155,78 @@ describe('otherGroupIndexForColor', () => {
   })
 })
 
+describe('moveIndexInArray', () => {
+  it('moves an item toward a higher index', () => {
+    expect(moveIndexInArray(['a', 'b', 'c'], 0, 2)).toEqual(['b', 'c', 'a'])
+  })
+
+  it('moves an item toward a lower index', () => {
+    expect(moveIndexInArray(['a', 'b', 'c'], 2, 0)).toEqual(['c', 'a', 'b'])
+  })
+
+  it('returns a copy unchanged when from equals to', () => {
+    expect(moveIndexInArray([1, 2, 3], 1, 1)).toEqual([1, 2, 3])
+  })
+})
+
+describe('remapEncounterGroupIndex', () => {
+  it('maps indices when moving from low to high', () => {
+    expect(remapEncounterGroupIndex(0, 2, 0)).toBe(2)
+    expect(remapEncounterGroupIndex(0, 2, 1)).toBe(0)
+    expect(remapEncounterGroupIndex(0, 2, 2)).toBe(1)
+  })
+
+  it('maps indices when moving from high to low', () => {
+    expect(remapEncounterGroupIndex(2, 0, 2)).toBe(0)
+    expect(remapEncounterGroupIndex(2, 0, 0)).toBe(1)
+    expect(remapEncounterGroupIndex(2, 0, 1)).toBe(2)
+  })
+})
+
+describe('reorderEncounterGroupsWithCaptainRemap', () => {
+  it('remaps captain groupIndex after reorder', () => {
+    const groups = reorderEncounterGroupsWithCaptainRemap(
+      [
+        {
+          id: 'g0',
+          color: 'red',
+          monsters: [{ name: 'A', subtitle: '', initials: 'A', stamina: [1, 1], marip: null, fs: 0, dist: 0, stab: 0, conditions: [] }],
+        },
+        {
+          id: 'g1',
+          color: 'blue',
+          monsters: [
+            {
+              name: 'B',
+              subtitle: '',
+              initials: 'B',
+              stamina: [1, 1],
+              marip: null,
+              fs: 0,
+              dist: 0,
+              stab: 0,
+              conditions: [],
+              captainId: { groupIndex: 0, monsterIndex: 0 },
+            },
+          ],
+        },
+      ],
+      1,
+      0,
+    )
+    expect(groups[0]!.monsters[0]!.captainId).toEqual({ groupIndex: 1, monsterIndex: 0 })
+  })
+})
+
 describe('cloneEncounterGroups', () => {
+  it('assigns a non-empty id on each group', () => {
+    const groups = cloneEncounterGroups()
+    for (const g of groups) {
+      expect(typeof g.id).toBe('string')
+      expect(g.id.length).toBeGreaterThan(0)
+    }
+  })
+
   it('returns deep copies that are independent of seed data', () => {
     const a = cloneEncounterGroups()
     const b = cloneEncounterGroups()
@@ -182,7 +256,7 @@ describe('cloneEncounterGroups', () => {
     const b = cloneEncounterGroups()
     const marip = a[0]!.monsters[0]!.marip
     if (marip) {
-      (marip as number[])[0] = 999
+      ;(marip as unknown as number[])[0] = 999
     }
     expect(b[0]!.monsters[0]!.marip![0]).not.toBe(999)
   })
