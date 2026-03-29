@@ -146,3 +146,20 @@ Captain assignment for minion groups — Captain pill under parent minion row, d
 - src/components/MinionGroupRow.tsx
 - src/App.test.tsx
 - PRD.json
+
+
+[MINION-002]
+
+Remove captain from minion group — added 'x' button directly on assigned captain pill for one-click removal
+
+**Key decisions:**
+- Added dedicated 'x' (close) SVG button with `data-testid="remove-captain"` next to captain name, alongside existing edit (pencil) icon
+- 'x' calls `onCaptainChange?.(null)` directly — no dropdown interaction needed
+- Edit icon still opens dropdown for changing captain; 'x' is strictly for removal
+- MINION-001 already had "Remove captain" in the dropdown; this adds the direct-action button the PRD requires
+- 4 new tests: x button presence on assigned pill, x click removes + reverts to unassigned, x not present when unassigned, reassignment after x removal
+
+**Files changed:**
+- src/components/MinionGroupRow.tsx
+- src/App.test.tsx
+- PRD.json

@@ -198,6 +198,17 @@ export function MinionGroupRow({
                       <path d="M13.488 2.513a1.75 1.75 0 0 0-2.475 0L3.05 10.476a1 1 0 0 0-.27.481l-.57 2.565a.75.75 0 0 0 .897.897l2.565-.57a1 1 0 0 0 .481-.27l7.963-7.963a1.75 1.75 0 0 0 0-2.475l-.628-.628ZM11.72 3.22a.25.25 0 0 1 .354 0l.628.628a.25.25 0 0 1 0 .354L5.134 11.77l-1.27.282.282-1.27 7.574-7.562Z" />
                     </svg>
                   </button>
+                  <button
+                    type="button"
+                    aria-label={`Remove captain from ${monster.name}`}
+                    data-testid="remove-captain"
+                    onClick={() => onCaptainChange?.(null)}
+                    className="ml-0.5 cursor-pointer text-zinc-500 transition-colors hover:text-red-400"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="size-3" aria-hidden>
+                      <path d="M5.28 4.22a.75.75 0 0 0-1.06 1.06L6.94 8l-2.72 2.72a.75.75 0 1 0 1.06 1.06L8 9.06l2.72 2.72a.75.75 0 1 0 1.06-1.06L9.06 8l2.72-2.72a.75.75 0 0 0-1.06-1.06L8 6.94 5.28 4.22Z" />
+                    </svg>
+                  </button>
                 </span>
               ) : (
                 <button

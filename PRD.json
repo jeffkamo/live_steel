@@ -77,7 +77,7 @@
         "Write specs covering captain removal and pill state reset",
         "Run the specs, fix any failures until all pass"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "MINION-003",

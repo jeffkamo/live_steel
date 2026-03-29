@@ -1036,4 +1036,48 @@ describe('App', () => {
     const texts = options.map((o) => o.textContent)
     expect(texts.every((t) => !t?.includes('Minions'))).toBe(true)
   })
+
+  // --- Captain removal via x button (MINION-002) ---
+
+  it('assigned captain pill shows an x button for removal', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    const grid = getMinionGrid()
+    await user.click(within(grid).getByRole('button', { name: /Assign captain for Minions/i }))
+    await user.click(within(grid).getByText('Goblin Underboss'))
+    expect(within(grid).getByTestId('remove-captain')).toBeInTheDocument()
+    expect(within(grid).getByRole('button', { name: /Remove captain from Minions/i })).toBeInTheDocument()
+  })
+
+  it('clicking x button removes the captain and reverts pill to unassigned', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    const grid = getMinionGrid()
+    await user.click(within(grid).getByRole('button', { name: /Assign captain for Minions/i }))
+    await user.click(within(grid).getByText('Goblin Underboss'))
+    expect(within(grid).getByTestId('captain-pill')).toHaveTextContent('Goblin Underboss')
+    await user.click(within(grid).getByTestId('remove-captain'))
+    const pill = within(grid).getByTestId('captain-pill')
+    expect(pill).not.toHaveTextContent('Goblin Underboss')
+    expect(within(grid).getByRole('button', { name: /Assign captain for Minions/i })).toBeInTheDocument()
+  })
+
+  it('x button is not visible when no captain is assigned', () => {
+    render(<App />)
+    const grid = getMinionGrid()
+    expect(within(grid).queryByTestId('remove-captain')).not.toBeInTheDocument()
+  })
+
+  it('after x removal, captain can be reassigned', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    const grid = getMinionGrid()
+    await user.click(within(grid).getByRole('button', { name: /Assign captain for Minions/i }))
+    await user.click(within(grid).getByText('Goblin Underboss'))
+    await user.click(within(grid).getByTestId('remove-captain'))
+    expect(within(grid).getByRole('button', { name: /Assign captain for Minions/i })).toBeInTheDocument()
+    await user.click(within(grid).getByRole('button', { name: /Assign captain for Minions/i }))
+    await user.click(within(grid).getByText('Goblin Assassin 1'))
+    expect(within(grid).getByTestId('captain-pill')).toHaveTextContent('Goblin Assassin 1')
+  })
 })
