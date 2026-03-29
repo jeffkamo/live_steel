@@ -826,11 +826,13 @@ describe('App', () => {
     expect(screen.queryAllByLabelText(/Reorder .* within encounter/i)).toHaveLength(0)
     expect(screen.queryAllByLabelText(/^Add monster to group$/i)).toHaveLength(0)
     expect(screen.queryByRole('button', { name: /Add new encounter group/i })).not.toBeInTheDocument()
+    expect(screen.queryAllByRole('button', { name: /^Delete /i })).toHaveLength(0)
 
     await user.click(screen.getByRole('button', { name: /Unlock encounter editing controls/i }))
     expect(screen.getAllByLabelText(/^Reorder encounter group \d+$/i).length).toBeGreaterThanOrEqual(2)
     expect(screen.getAllByLabelText(/^Add monster to group$/i).length).toBeGreaterThan(0)
     expect(screen.getByRole('button', { name: /Add new encounter group/i })).toBeInTheDocument()
+    expect(screen.getAllByRole('button', { name: /^Delete /i }).length).toBeGreaterThan(0)
   })
 
   // --- Group ordinal badges show correct numbers per group ---

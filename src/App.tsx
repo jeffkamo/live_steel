@@ -839,7 +839,9 @@ function App() {
                     onMinionConditionAddOrSet={(mi, mni, label, state) =>
                       patchMinionConditionAddOrSet(gi, mi, mni, label, state)
                     }
-                    onDeleteMonster={(mi) => deleteMonster(gi, mi)}
+                    onDeleteMonster={
+                      uiLocked ? undefined : (mi) => deleteMonster(gi, mi)
+                    }
                     onAddMonster={
                       uiLocked ? undefined : (monster) => addMonsterToGroup(gi, monster)
                     }

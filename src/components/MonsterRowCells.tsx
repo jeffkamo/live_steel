@@ -77,7 +77,7 @@ export function MonsterRowCells({
   return (
     <>
       <div
-        className={`${bodyCell} min-w-0 ${rowTone} group/namecell ${
+        className={`${bodyCell} min-w-0 ${rowTone} ${
           monsterDrag?.dropHighlighted ? 'ring-2 ring-inset ring-sky-500/40' : ''
         }`}
         style={{ gridColumn: 2, gridRow: row }}
@@ -127,21 +127,28 @@ export function MonsterRowCells({
                 aria-controls="monster-stat-card-drawer"
                 aria-label={`Stat card for ${monster.name}`}
                 onClick={onMonsterCardNameClick}
-                className="block w-full min-w-0 cursor-pointer rounded text-left outline-none transition-colors hover:text-amber-50/95 focus-visible:ring-2 focus-visible:ring-amber-500/45 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950"
+                className="block w-full min-w-0 cursor-pointer rounded-md -mx-1 px-1 py-0.5 text-left outline-none transition-[background-color,box-shadow,color] duration-150 ease-out motion-reduce:transition-none hover:bg-zinc-800/55 hover:shadow-sm hover:shadow-black/20 hover:[&>span]:text-amber-50/95 hover:[&>p]:text-zinc-300 focus-visible:ring-2 focus-visible:ring-amber-500/45 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950"
               >
-                <span className="block truncate font-medium leading-tight text-zinc-50">{monster.name}</span>
+                <span className="block truncate font-medium leading-tight text-zinc-50 transition-colors duration-150">
+                  {monster.name}
+                </span>
+                <p className="mt-1 truncate text-[0.7rem] leading-snug text-zinc-400 transition-colors duration-150">
+                  {monster.subtitle}
+                </p>
               </button>
             ) : (
-              <p className="truncate font-medium leading-tight text-zinc-50">{monster.name}</p>
+              <>
+                <p className="truncate font-medium leading-tight text-zinc-50">{monster.name}</p>
+                <p className="mt-1 truncate text-[0.7rem] leading-snug text-zinc-400">{monster.subtitle}</p>
+              </>
             )}
-            <p className="mt-1 truncate text-[0.7rem] leading-snug text-zinc-400">{monster.subtitle}</p>
           </div>
           {onDelete && (
             <button
               type="button"
               aria-label={`Delete ${monster.name}`}
               onClick={onDelete}
-              className="ml-1 shrink-0 cursor-pointer rounded p-1 text-zinc-600 opacity-0 transition-[color,opacity] duration-150 group-hover/namecell:opacity-100 hover:!text-red-400 focus-visible:opacity-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-amber-500/70"
+              className="ml-1 shrink-0 cursor-pointer rounded p-1 text-zinc-500 transition-colors duration-150 hover:text-red-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-amber-500/70"
             >
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="size-3.5" aria-hidden>
                 <path fillRule="evenodd" d="M5 3.25V4H2.75a.75.75 0 0 0 0 1.5h.3l.815 8.15A1.5 1.5 0 0 0 5.357 15h5.285a1.5 1.5 0 0 0 1.493-1.35l.815-8.15h.3a.75.75 0 0 0 0-1.5H11v-.75A2.25 2.25 0 0 0 8.75 1h-1.5A2.25 2.25 0 0 0 5 3.25Zm2.25-.75a.75.75 0 0 0-.75.75V4h3v-.75a.75.75 0 0 0-.75-.75h-1.5ZM6.05 6a.75.75 0 0 1 .787.713l.275 5.5a.75.75 0 0 1-1.498.075l-.275-5.5A.75.75 0 0 1 6.05 6Zm3.9 0a.75.75 0 0 1 .712.787l-.275 5.5a.75.75 0 0 1-1.498-.075l.275-5.5A.75.75 0 0 1 9.95 6Z" clipRule="evenodd" />

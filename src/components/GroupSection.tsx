@@ -269,7 +269,9 @@ export function GroupSection({
                   ? (view) => onToggleMonsterCard(i, view)
                   : undefined
               }
-              onDelete={() => onDeleteMonster?.(i)}
+              onDelete={
+                onDeleteMonster != null ? () => onDeleteMonster(i) : undefined
+              }
               onConfirmEot={onConfirmEot ? (label, minionIndex) => onConfirmEot(i, label, minionIndex) : undefined}
               isEotConfirmed={isEotConfirmed ? (label, minionIndex) => isEotConfirmed(i, label, minionIndex) : undefined}
               monsterDrag={monsterRowDrag(i)}
@@ -302,7 +304,9 @@ export function GroupSection({
             }
             monsterCardDrawerOpen={monsterCardDrawerOpen}
             onMonsterCardNameClick={onMonsterCardNameClick}
-            onDelete={() => onDeleteMonster?.(i)}
+            onDelete={
+              onDeleteMonster != null ? () => onDeleteMonster(i) : undefined
+            }
             onConfirmEot={onConfirmEot ? (label) => onConfirmEot(i, label) : undefined}
             isEotConfirmed={isEotConfirmed ? (label) => isEotConfirmed(i, label) : undefined}
             monsterDrag={monsterRowDrag(i)}
