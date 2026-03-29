@@ -275,3 +275,17 @@ Create new blank encounter group — "Add group" button below encounter groups, 
 - src/components/GroupSection.tsx
 - src/App.test.tsx
 - PRD.json
+
+
+[TURN-004]
+
+No condition changes when toggling group turn back to pending — verified existing behavior is correct (toggleGroupTurn only flips boolean, never touches encounterGroups state), wrote 5 integration tests
+
+**Key decisions:**
+- No code changes needed; toggleGroupTurn already only modifies groupTurnActed state, conditions live in encounterGroups state — fully isolated
+- 5 new App integration tests: neutral conditions preserved, EoT/SE conditions preserved, cross-group isolation, minion child conditions preserved, stamina preserved
+- Existing "reset clears turns but preserves stamina and condition changes" test covers resetAllTurns path; new tests cover single-group toggle path
+
+**Files changed:**
+- src/App.test.tsx
+- PRD.json

@@ -284,7 +284,7 @@
         "Write specs verifying conditions are untouched after a pending reset",
         "Run the specs, fix any failures until all pass"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "TURN-005",

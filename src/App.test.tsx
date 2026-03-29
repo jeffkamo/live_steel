@@ -1456,6 +1456,108 @@ describe('App', () => {
     expect(screen.getByRole('button', { name: turnButton(6, 'pending') })).toBeInTheDocument()
   })
 
+  // --- Turn toggle preserves conditions (TURN-004) ---
+
+  it('toggling a group from acted back to pending preserves all monster conditions', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    const goblinConditions = screen.getByRole('group', {
+      name: /^Conditions for Goblin Assassin 1\./i,
+    })
+    expect(within(goblinConditions).getByRole('button', { name: /^Remove Weakened$/i })).toBeInTheDocument()
+    expect(within(goblinConditions).getByRole('button', { name: /^Remove Slowed$/i })).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: turnButton(1, 'pending') }))
+    expect(screen.getByRole('button', { name: turnButton(1, 'acted') })).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: turnButton(1, 'acted') }))
+    expect(screen.getByRole('button', { name: turnButton(1, 'pending') })).toBeInTheDocument()
+
+    expect(within(goblinConditions).getByRole('button', { name: /^Remove Weakened$/i })).toBeInTheDocument()
+    expect(within(goblinConditions).getByRole('button', { name: /^Remove Slowed$/i })).toBeInTheDocument()
+  })
+
+  it('toggling a group back to pending preserves EoT and SE condition states', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    const goblinConditions = screen.getByRole('group', {
+      name: /^Conditions for Goblin Assassin 1\./i,
+    })
+
+    goblinConditions.focus()
+    await user.keyboard('{Enter}')
+    const picker = screen.getByRole('dialog', { name: /^Add condition to Goblin Assassin 1$/i })
+    await user.click(
+      within(picker).getByRole('button', { name: /^Add Weakened as end of turn on Goblin Assassin 1$/i }),
+    )
+    await user.click(
+      within(picker).getByRole('button', { name: /^Add Slowed as save ends on Goblin Assassin 1$/i }),
+    )
+    expect(within(goblinConditions).getByTitle('Weakened (End of turn)')).toBeInTheDocument()
+    expect(within(goblinConditions).getByTitle('Slowed (Save ends)')).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: turnButton(1, 'pending') }))
+    await user.click(screen.getByRole('button', { name: turnButton(1, 'acted') }))
+
+    expect(within(goblinConditions).getByTitle('Weakened (End of turn)')).toBeInTheDocument()
+    expect(within(goblinConditions).getByTitle('Slowed (Save ends)')).toBeInTheDocument()
+  })
+
+  it('toggling a group back to pending does not affect conditions in other groups', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    const sentinelGrid = screen.getByText('Ironwood Sentinel', { exact: true })
+      .closest('div.grid.items-stretch.rounded-lg') as HTMLElement
+    const sentinelConditions = within(sentinelGrid).getByRole('group', {
+      name: /^Conditions for Ironwood Sentinel\./i,
+    })
+    expect(within(sentinelConditions).getByRole('button', { name: /^Remove Bleeding$/i })).toBeInTheDocument()
+    expect(within(sentinelConditions).getByRole('button', { name: /^Remove Dazed$/i })).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: turnButton(1, 'pending') }))
+    await user.click(screen.getByRole('button', { name: turnButton(1, 'acted') }))
+
+    expect(within(sentinelConditions).getByRole('button', { name: /^Remove Bleeding$/i })).toBeInTheDocument()
+    expect(within(sentinelConditions).getByRole('button', { name: /^Remove Dazed$/i })).toBeInTheDocument()
+  })
+
+  it('toggling a group back to pending preserves minion child conditions', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    const grid = screen.getByText('Minions', { exact: true })
+      .closest('div.grid.items-stretch.rounded-lg') as HTMLElement
+    const expandBtn = within(grid).getByRole('button', { name: /^Expand individual Minions$/i })
+    await user.click(expandBtn)
+
+    const spinecleaver2Conditions = within(grid).getByRole('group', {
+      name: /^Conditions for Goblin Spinecleaver 2\./i,
+    })
+    expect(within(spinecleaver2Conditions).getByRole('button', { name: /^Remove Bleeding$/i })).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: turnButton(3, 'pending') }))
+    await user.click(screen.getByRole('button', { name: turnButton(3, 'acted') }))
+
+    expect(within(spinecleaver2Conditions).getByRole('button', { name: /^Remove Bleeding$/i })).toBeInTheDocument()
+  })
+
+  it('toggling a group back to pending preserves stamina values', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    const staminaGroup = screen.getByRole('group', { name: /^Edit stamina for Goblin Assassin 1$/i })
+    await user.hover(staminaGroup)
+    await user.click(within(staminaGroup).getByRole('button', { name: /^Decrease stamina by 1$/i }))
+    expect(screen.getByText('4 / 15')).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: turnButton(1, 'pending') }))
+    await user.click(screen.getByRole('button', { name: turnButton(1, 'acted') }))
+
+    expect(screen.getByText('4 / 15')).toBeInTheDocument()
+  })
+
   it('shows "Revive" cue when minions are dead but stamina is restored', async () => {
     const user = userEvent.setup()
     render(<App />)
