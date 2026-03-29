@@ -1,6 +1,7 @@
 import type { ConditionState, GroupColorId, Monster } from '../types'
 import { GROUP_COLOR_BADGE, GROUP_COLOR_LABEL } from '../data'
 import { EditableStaminaCell } from './EditableStaminaCell'
+import { MinionStaminaDisplay } from './MinionStaminaDisplay'
 import { MaripCluster } from './MaripCluster'
 import { StatCluster } from './StatCluster'
 import { CreatureConditionCell } from './CreatureConditionCell'
@@ -139,6 +140,15 @@ export function MinionGroupRow({
           max={sm}
           onChange={onStaminaChange}
           ariaLabel={`Edit stamina for ${monster.name}`}
+          renderDisplay={(cur, mx) => (
+            <MinionStaminaDisplay
+              current={cur}
+              max={mx}
+              parentName={monster.name}
+              firstMinionName={minions[0]?.name}
+              minionCount={minions.length}
+            />
+          )}
         />
       </div>
       <div

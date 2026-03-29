@@ -156,7 +156,7 @@ export const ENCOUNTER_GROUPS: readonly EncounterGroupSeed[] = [
         name: 'Minions',
         subtitle: 'Horde · Captain: Goblin Assassin 1',
         initials: 'M',
-        stamina: [12, 12],
+        stamina: [20, 20],
         marip: [-1, 0, 0, 0, -1],
         fs: 0,
         dist: 3,

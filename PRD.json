@@ -103,7 +103,7 @@
         "Write specs covering interval calculation, rendering, and threshold clarity",
         "Run the specs, fix any failures until all pass"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "MINION-005",

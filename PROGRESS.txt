@@ -99,3 +99,27 @@ Dead/alive toggle on individual child minion rows — replaces empty stamina cel
 - src/components/MinionGroupRow.tsx
 - src/App.test.tsx
 - PRD.json
+
+
+[MINION-004]
+
+Interval-based shared stamina pool for minion groups — replaces standard `cur/max` with threshold markers (e.g. `5 / 10 / 15 / 20`)
+
+**Key decisions:**
+- `minionInterval()` in bestiary.ts resolves per-minion stamina from bestiary; tries parent name, falls back to first minion name (same pattern as resolveFeatures)
+- `minionThresholds()` builds ascending threshold array: `interval * (i+1)` for each minion
+- MinionStaminaDisplay component shows threshold segments with 3 visual states: healthy (white), at-risk (amber, stamina within interval but below threshold), dead (red + line-through, stamina at or below previous threshold)
+- EditableStaminaCell gets optional `renderDisplay` prop so MinionGroupRow can inject the interval display while keeping the existing hover popover for stamina adjustments
+- Seed data updated: Minions stamina `[12,12]` → `[20,20]` to match 4×5 bestiary interval total
+- 23 new tests: 9 minionInterval/minionThresholds unit tests, 10 MinionStaminaDisplay component tests, 4 App integration tests
+
+**Files changed:**
+- src/bestiary.ts
+- src/bestiary.test.ts
+- src/components/MinionStaminaDisplay.tsx (new)
+- src/components/MinionStaminaDisplay.test.tsx (new)
+- src/components/EditableStaminaCell.tsx
+- src/components/MinionGroupRow.tsx
+- src/data.ts
+- src/App.test.tsx
+- PRD.json

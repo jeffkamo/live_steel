@@ -7,6 +7,8 @@ import {
   mapFeatures,
   featuresForMonster,
   isMaliceCreature,
+  minionInterval,
+  minionThresholds,
 } from './bestiary'
 import { cloneEncounterGroups } from './data'
 
@@ -337,5 +339,45 @@ describe('cloneEncounterGroups bestiary integration', () => {
       expect(e.tier2).toBeDefined()
       expect(e.tier3).toBeDefined()
     }
+  })
+})
+
+describe('minionInterval', () => {
+  it('returns per-minion stamina from bestiary via parent name', () => {
+    expect(minionInterval('Goblin Spinecleaver')).toBe(5)
+  })
+
+  it('resolves via first minion name when parent name not found', () => {
+    expect(minionInterval('Minions', 'Goblin Spinecleaver 1')).toBe(5)
+  })
+
+  it('strips trailing ordinal from first minion name', () => {
+    expect(minionInterval('Unknown Parent', 'Goblin Spinecleaver 3')).toBe(5)
+  })
+
+  it('returns undefined when no bestiary entry is found', () => {
+    expect(minionInterval('Nonexistent', 'Also Nonexistent')).toBeUndefined()
+  })
+
+  it('returns undefined when no minion fallback is provided', () => {
+    expect(minionInterval('Nonexistent')).toBeUndefined()
+  })
+})
+
+describe('minionThresholds', () => {
+  it('builds correct thresholds for 4 minions with interval 5', () => {
+    expect(minionThresholds(5, 4)).toEqual([5, 10, 15, 20])
+  })
+
+  it('builds thresholds for 1 minion', () => {
+    expect(minionThresholds(8, 1)).toEqual([8])
+  })
+
+  it('builds thresholds for 6 minions', () => {
+    expect(minionThresholds(3, 6)).toEqual([3, 6, 9, 12, 15, 18])
+  })
+
+  it('returns empty array for zero minions', () => {
+    expect(minionThresholds(5, 0)).toEqual([])
   })
 })

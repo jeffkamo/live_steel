@@ -16,11 +16,13 @@ export function EditableStaminaCell({
   max,
   onChange,
   ariaLabel,
+  renderDisplay,
 }: {
   current: number
   max: number
   onChange: (next: [number, number]) => void
   ariaLabel: string
+  renderDisplay?: (current: number, max: number) => React.ReactNode
 }) {
   const curFieldId = useId()
   const maxFieldId = useId()
@@ -63,7 +65,9 @@ export function EditableStaminaCell({
       role="group"
     >
       <div className={baseTextClass}>
-        {empty ? (
+        {renderDisplay ? (
+          renderDisplay(current, max)
+        ) : empty ? (
           <span className="text-sm text-zinc-400">—</span>
         ) : (
           <div className="flex items-center justify-center gap-1.5 tabular-nums">

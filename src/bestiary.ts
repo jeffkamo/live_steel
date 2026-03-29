@@ -125,6 +125,29 @@ export function featuresForMonster(encounterName: string): MonsterFeature[] | un
 }
 
 /**
+ * Get the per-minion stamina interval from the bestiary.
+ * Tries the parent monster name first, then falls back to the first minion's name.
+ * Returns undefined when no bestiary entry is found.
+ */
+export function minionInterval(
+  parentName: string,
+  firstMinionName?: string,
+): number | undefined {
+  const sb = lookupStatblock(parentName) ?? (firstMinionName ? lookupStatblock(firstMinionName) : undefined)
+  if (!sb) return undefined
+  const parsed = Number.parseInt(sb.stamina, 10)
+  return Number.isNaN(parsed) ? undefined : parsed
+}
+
+/**
+ * Build the interval thresholds array for a minion group.
+ * E.g. interval=5, count=4 → [5, 10, 15, 20]
+ */
+export function minionThresholds(interval: number, minionCount: number): number[] {
+  return Array.from({ length: minionCount }, (_, i) => interval * (i + 1))
+}
+
+/**
  * Returns true when a creature's bestiary entry contains at least one
  * feature or effect whose cost mentions "Malice".
  */

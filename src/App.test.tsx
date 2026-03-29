@@ -889,4 +889,47 @@ describe('App', () => {
     const toggles = screen.getAllByRole('checkbox', { name: /alive$/i })
     expect(toggles.length).toBeGreaterThanOrEqual(4)
   })
+
+  // --- Minion interval stamina display (MINION-004) ---
+
+  it('minion group shows interval thresholds instead of standard stamina display', () => {
+    render(<App />)
+    const grid = screen.getByText('Minions', { exact: true }).closest('div.grid.items-stretch.rounded-lg') as HTMLElement
+    const scope = within(grid)
+    const staminaPool = scope.getByRole('group', { name: /Minion stamina pool/i })
+    expect(staminaPool).toBeInTheDocument()
+    expect(within(staminaPool).getByTestId('threshold-5')).toHaveTextContent('5')
+    expect(within(staminaPool).getByTestId('threshold-10')).toHaveTextContent('10')
+    expect(within(staminaPool).getByTestId('threshold-15')).toHaveTextContent('15')
+    expect(within(staminaPool).getByTestId('threshold-20')).toHaveTextContent('20')
+  })
+
+  it('minion interval thresholds show healthy state when pool is full', () => {
+    render(<App />)
+    const grid = screen.getByText('Minions', { exact: true }).closest('div.grid.items-stretch.rounded-lg') as HTMLElement
+    const scope = within(grid)
+    for (const t of [5, 10, 15, 20]) {
+      expect(scope.getByTestId(`threshold-${t}`).title).toMatch(/healthy/)
+    }
+  })
+
+  it('minion interval thresholds update when stamina is decreased', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    const grid = screen.getByText('Minions', { exact: true }).closest('div.grid.items-stretch.rounded-lg') as HTMLElement
+    const scope = within(grid)
+    const staminaGroup = scope.getByRole('group', { name: /^Edit stamina for Minions$/i })
+    await user.hover(staminaGroup)
+    await user.click(within(staminaGroup).getByRole('button', { name: /^Decrease stamina by 10$/i }))
+    expect(scope.getByTestId('threshold-5').title).toMatch(/healthy/)
+    expect(scope.getByTestId('threshold-10').title).toMatch(/healthy/)
+    expect(scope.getByTestId('threshold-15').title).toMatch(/dead/)
+    expect(scope.getByTestId('threshold-20').title).toMatch(/dead/)
+  })
+
+  it('non-minion monsters still use standard stamina display', () => {
+    render(<App />)
+    expect(screen.getByText('5 / 15')).toBeInTheDocument()
+    expect(screen.getByText('22 / 22')).toBeInTheDocument()
+  })
 })
