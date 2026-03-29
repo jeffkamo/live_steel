@@ -63,12 +63,23 @@ export function GroupSection({
   }
   monsterDrag?: {
     thisGroupIndex: number
-    dropTarget: { groupIndex: number; monsterIndex: number } | null
-    onMonsterDragStart: (monsterIndex: number, e: DragEvent) => void
+    dropTarget: {
+      groupIndex: number
+      monsterIndex: number
+      minionIndex: number | null
+      invalid: boolean
+    } | null
+    dropRejectFlash: {
+      groupIndex: number
+      monsterIndex: number
+      minionIndex: number | null
+      id: number
+    } | null
+    onMonsterDragStart: (monsterIndex: number, e: DragEvent, fromMinion?: number) => void
     onMonsterDragEnd: (e: DragEvent) => void
-    onMonsterDragOver: (monsterIndex: number, e: DragEvent) => void
-    onMonsterDragLeave: (monsterIndex: number, e: DragEvent) => void
-    onMonsterDrop: (monsterIndex: number, e: DragEvent) => void
+    onMonsterDragOver: (monsterIndex: number, minionIndex: number | null, e: DragEvent) => void
+    onMonsterDragLeave: (monsterIndex: number, minionIndex: number | null, e: DragEvent) => void
+    onMonsterDrop: (monsterIndex: number, minionIndex: number | null, e: DragEvent) => void
   }
   onGroupColorChange: (color: GroupColorId) => void
   onMonsterStaminaChange: (monsterIndex: number, stamina: [number, number]) => void
@@ -94,7 +105,6 @@ export function GroupSection({
   monsterCardDrawer?: MonsterCardDrawerState | null
   onToggleMonsterCard?: (monsterIndex: number, view: MonsterCardDrawerView) => void
 }): React.JSX.Element {
-  const [expandedMinions, setExpandedMinions] = useState<Record<number, boolean>>({})
   const [colorMenu, setColorMenu] = useState<GroupColorMenuState>({
     open: false,
     anchor: null,
@@ -117,22 +127,19 @@ export function GroupSection({
     [],
   )
 
-  const toggleMinionExpanded = useCallback((monsterIndex: number) => {
-    setExpandedMinions((prev) => ({ ...prev, [monsterIndex]: !prev[monsterIndex] }))
-  }, [])
-
   let currentRow = 1
   const monsterRows: { monsterIndex: number; startRow: number; rowCount: number }[] = []
   for (let i = 0; i < group.monsters.length; i++) {
     const m = group.monsters[i]!
     const isMinion = m.minions && m.minions.length > 0
-    const minionExpanded = isMinion && !!expandedMinions[i]
     let count = 1
-    if (isMinion && minionExpanded) count += m.minions!.length
+    if (isMinion) count += m.minions!.length
     monsterRows.push({ monsterIndex: i, startRow: currentRow, rowCount: count })
     currentRow += count
   }
   const totalGridRows = Math.max(currentRow - 1, 1)
+  const addRowCount = onAddMonster ? 1 : 0
+  const gridRowCount = totalGridRows + addRowCount
 
   const bindConditionDnD = (mi: number, mni: number | null): CreatureConditionDnDBinding | undefined => {
     if (conditionDrag == null) return undefined
@@ -152,17 +159,61 @@ export function GroupSection({
 
   const monsterRowDrag = (i: number) => {
     if (monsterDrag == null) return undefined
+    const t = monsterDrag.dropTarget
+    const f = monsterDrag.dropRejectFlash
+    const matchHover =
+      t != null &&
+      t.groupIndex === monsterDrag.thisGroupIndex &&
+      t.monsterIndex === i &&
+      t.minionIndex === null
+    const matchReject =
+      f != null &&
+      f.groupIndex === monsterDrag.thisGroupIndex &&
+      f.monsterIndex === i &&
+      f.minionIndex === null
     return {
       groupIndex: monsterDrag.thisGroupIndex,
       monsterIndex: i,
-      dropHighlighted:
-        monsterDrag.dropTarget?.groupIndex === monsterDrag.thisGroupIndex &&
-        monsterDrag.dropTarget?.monsterIndex === i,
+      dropHighlighted: matchHover && !t.invalid,
+      dropInvalidHover: matchHover && t.invalid,
+      dropRejectFlash: matchReject,
       onDragStart: (e: DragEvent) => monsterDrag.onMonsterDragStart(i, e),
       onDragEnd: monsterDrag.onMonsterDragEnd,
-      onDragOver: (e: DragEvent) => monsterDrag.onMonsterDragOver(i, e),
-      onDragLeave: (e: DragEvent) => monsterDrag.onMonsterDragLeave(i, e),
-      onDrop: (e: DragEvent) => monsterDrag.onMonsterDrop(i, e),
+      onDragOver: (e: DragEvent) => monsterDrag.onMonsterDragOver(i, null, e),
+      onDragLeave: (e: DragEvent) => monsterDrag.onMonsterDragLeave(i, null, e),
+      onDrop: (e: DragEvent) => monsterDrag.onMonsterDrop(i, null, e),
+    }
+  }
+
+  const minionRowDrag = (parentMonsterIndex: number, minionIndex: number) => {
+    if (monsterDrag == null) return undefined
+    const t = monsterDrag.dropTarget
+    const f = monsterDrag.dropRejectFlash
+    const matchHover =
+      t != null &&
+      t.groupIndex === monsterDrag.thisGroupIndex &&
+      t.monsterIndex === parentMonsterIndex &&
+      t.minionIndex === minionIndex
+    const matchReject =
+      f != null &&
+      f.groupIndex === monsterDrag.thisGroupIndex &&
+      f.monsterIndex === parentMonsterIndex &&
+      f.minionIndex === minionIndex
+    return {
+      groupIndex: monsterDrag.thisGroupIndex,
+      monsterIndex: parentMonsterIndex,
+      minionIndex,
+      dropHighlighted: matchHover && !t.invalid,
+      dropInvalidHover: matchHover && t.invalid,
+      dropRejectFlash: matchReject,
+      onDragStart: (e: DragEvent) =>
+        monsterDrag.onMonsterDragStart(parentMonsterIndex, e, minionIndex),
+      onDragEnd: monsterDrag.onMonsterDragEnd,
+      onDragOver: (e: DragEvent) =>
+        monsterDrag.onMonsterDragOver(parentMonsterIndex, minionIndex, e),
+      onDragLeave: (e: DragEvent) =>
+        monsterDrag.onMonsterDragLeave(parentMonsterIndex, minionIndex, e),
+      onDrop: (e: DragEvent) => monsterDrag.onMonsterDrop(parentMonsterIndex, minionIndex, e),
     }
   }
 
@@ -171,11 +222,11 @@ export function GroupSection({
       className="grid items-stretch overflow-visible rounded-lg bg-zinc-900/80"
       style={{
         gridTemplateColumns: ROSTER_GRID_TEMPLATE,
-        gridTemplateRows: `repeat(${totalGridRows}, minmax(0, auto))`,
+        gridTemplateRows: `repeat(${gridRowCount}, minmax(0, auto))`,
       }}
     >
       <GroupTurnColumn
-        gridRowSpan={totalGridRows}
+        gridRowSpan={gridRowCount}
         acted={turnActed}
         onToggle={onToggleTurn}
         turnAriaLabel={turnAriaLabel}
@@ -192,9 +243,9 @@ export function GroupSection({
               : ''
           }`}
           style={{ gridColumn: '2 / -1', gridRow: 1 }}
-          onDragOver={(e) => monsterDrag.onMonsterDragOver(0, e)}
-          onDragLeave={(e) => monsterDrag.onMonsterDragLeave(0, e)}
-          onDrop={(e) => monsterDrag.onMonsterDrop(0, e)}
+          onDragOver={(e) => monsterDrag.onMonsterDragOver(0, null, e)}
+          onDragLeave={(e) => monsterDrag.onMonsterDragLeave(0, null, e)}
+          onDrop={(e) => monsterDrag.onMonsterDrop(0, null, e)}
         >
           Drop creature here
         </div>
@@ -243,8 +294,6 @@ export function GroupSection({
               onGroupColorOrdinalClick={onGroupColorOrdinalClick}
               turnComplete={turnActed}
               seActPhaseGlow={seActPhaseGlow}
-              expanded={!!expandedMinions[i]}
-              onToggleExpanded={() => toggleMinionExpanded(i)}
               allGroups={allGroups}
               onCaptainChange={(captainId) =>
                 onMinionCaptainChange?.(i, captainId)
@@ -277,6 +326,7 @@ export function GroupSection({
               monsterDrag={monsterRowDrag(i)}
               conditionDnDParent={bindConditionDnD(i, null)}
               conditionDnDForMinion={(mni) => bindConditionDnD(i, mni)}
+              minionRowDrag={(mni) => minionRowDrag(i, mni)}
             />
           )
         }
@@ -317,7 +367,7 @@ export function GroupSection({
       {onAddMonster && (
         <div
           style={{ gridColumn: '2 / -1', gridRow: totalGridRows + 1 }}
-          className="px-3 pb-2"
+          className="flex min-h-0 items-center px-3 py-2"
         >
           <AddMonsterButton onAdd={onAddMonster} />
         </div>

@@ -275,8 +275,147 @@ export const ROSTER_GRID_TEMPLATE =
 /** MIME type for HTML5 drag payload: source encounter group index (stringified). */
 export const ENCOUNTER_GROUP_DRAG_MIME = 'application/x-live-steel-encounter-group-index'
 
-/** MIME type for HTML5 drag payload: JSON `{ fromGroup, fromMonster }`. */
+/** MIME type for HTML5 drag payload: JSON {@link MonsterDragPayload}. */
 export const MONSTER_DRAG_MIME = 'application/x-live-steel-monster-ref'
+
+/** Drag payload: top-level creature omits `fromMinion`; minion child rows include it. */
+export type MonsterDragPayload = {
+  fromGroup: number
+  fromMonster: number
+  fromMinion?: number
+}
+
+export function parseMonsterDragPayload(raw: string): MonsterDragPayload | null {
+  try {
+    const o = JSON.parse(raw) as Record<string, unknown>
+    if (typeof o.fromGroup !== 'number' || !Number.isInteger(o.fromGroup)) return null
+    if (typeof o.fromMonster !== 'number' || !Number.isInteger(o.fromMonster)) return null
+    const payload: MonsterDragPayload = { fromGroup: o.fromGroup, fromMonster: o.fromMonster }
+    if (o.fromMinion != null) {
+      if (typeof o.fromMinion !== 'number' || !Number.isInteger(o.fromMinion)) return null
+      payload.fromMinion = o.fromMinion
+    }
+    return payload
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Whether a drop target accepts the current drag: minions may only reorder within their parent
+ * horde; top-level monsters may only drop on top-level rows (not minion lines).
+ */
+export function monsterDragDropIsValid(
+  source: MonsterDragPayload,
+  toGroup: number,
+  toMonster: number,
+  toMinion: number | null,
+): boolean {
+  const fromMini = source.fromMinion
+  const fromG = source.fromGroup
+  const fromParent = source.fromMonster
+  if (fromMini == null) {
+    return toMinion == null && !(fromG === toGroup && fromParent === toMonster)
+  }
+  return fromG === toGroup && fromParent === toMonster && toMinion != null && fromMini !== toMinion
+}
+
+/** Reorder minions within one parent monster; returns null if indices are invalid or no-op. */
+export function reorderMinionsInHorde(
+  groups: EncounterGroup[],
+  groupIndex: number,
+  parentMonsterIndex: number,
+  fromMinion: number,
+  toMinion: number,
+): EncounterGroup[] | null {
+  const g = groups[groupIndex]
+  if (!g) return null
+  const parent = g.monsters[parentMonsterIndex]
+  const minions = parent?.minions
+  if (!minions || minions.length === 0) return null
+  const n = minions.length
+  if (fromMinion < 0 || fromMinion >= n || toMinion < 0 || toMinion > n) return null
+  const insertIndex = computeMonsterInsertIndex(0, fromMinion, 0, toMinion)
+  if (insertIndex === null) return null
+  const nextMinions = [...minions]
+  const [moved] = nextMinions.splice(fromMinion, 1)
+  nextMinions.splice(insertIndex, 0, moved!)
+  return groups.map((gr, gi) => {
+    if (gi !== groupIndex) return gr
+    return {
+      ...gr,
+      monsters: gr.monsters.map((mon, mi) =>
+        mi === parentMonsterIndex ? { ...mon, minions: nextMinions } : mon,
+      ),
+    }
+  })
+}
+
+/** Map a minion slot index after reordering minions `fromMinion` → drop target `toMinion`. */
+export function mapMinionIndexAfterReorder(
+  fromMinion: number,
+  toMinion: number,
+  oldMinionIndex: number,
+): number {
+  const ins = computeMonsterInsertIndex(0, fromMinion, 0, toMinion)
+  if (ins === null) return oldMinionIndex
+  if (oldMinionIndex === fromMinion) return ins
+  let i = oldMinionIndex > fromMinion ? oldMinionIndex - 1 : oldMinionIndex
+  if (i >= ins) i += 1
+  return i
+}
+
+/** Remap EoT confirmation keys `parent:minion:label` after minion reorder within one parent. */
+export function remapEotConfirmedAfterMinionReorder(
+  prev: ReadonlyMap<number, ReadonlySet<string>>,
+  groupCount: number,
+  groupIndex: number,
+  parentMonsterIndex: number,
+  fromMinion: number,
+  toMinion: number,
+): Map<number, Set<string>> {
+  const ins = computeMonsterInsertIndex(0, fromMinion, 0, toMinion)
+  if (ins === null) {
+    return new Map(Array.from({ length: groupCount }, (_, i) => [i, new Set(prev.get(i) ?? [])]))
+  }
+  const out = new Map<number, Set<string>>()
+  for (let gi = 0; gi < groupCount; gi++) {
+    const src = prev.get(gi) ?? new Set<string>()
+    const dst = new Set<string>()
+    if (gi !== groupIndex) {
+      for (const key of src) dst.add(key)
+      out.set(gi, dst)
+      continue
+    }
+    for (const key of src) {
+      const parts = key.split(':')
+      if (parts.length < 3) {
+        dst.add(key)
+        continue
+      }
+      const mi = Number(parts[0])
+      const mni = Number(parts[1])
+      if (!Number.isFinite(mi) || !Number.isFinite(mni)) {
+        dst.add(key)
+        continue
+      }
+      const tail = parts.slice(2).join(':')
+      if (mi !== parentMonsterIndex) {
+        dst.add(key)
+        continue
+      }
+      if (mni === fromMinion) {
+        dst.add(`${mi}:${ins}:${tail}`)
+      } else {
+        let mni2 = mni > fromMinion ? mni - 1 : mni
+        if (mni2 >= ins) mni2 += 1
+        dst.add(`${mi}:${mni2}:${tail}`)
+      }
+    }
+    out.set(gi, dst)
+  }
+  return out
+}
 
 /** MIME type for HTML5 drag payload: JSON `{ fromGroup, fromMonster, fromMinion?, label }`. */
 export const CONDITION_DRAG_MIME = 'application/x-live-steel-condition-ref'
@@ -451,7 +590,10 @@ export function transferConditionBetweenCreatures(
 
 /**
  * Insert index in the per-group monsters array after removing the source monster.
- * `toMonster` is "insert before this index" in pre-move coordinates (0..length inclusive for append).
+ * `toMonster` is the drop target's monster index in pre-move coordinates (0..length inclusive for append).
+ * For same-group moves, this is "insert before that monster" except when the source is directly above
+ * the target (`toMonster === fromMonster + 1`): then we insert after the target so the row reads as
+ * swapping / moving one step down (otherwise "insert before" would be a no-op).
  */
 export function computeMonsterInsertIndex(
   fromGroup: number,
@@ -461,7 +603,10 @@ export function computeMonsterInsertIndex(
 ): number | null {
   if (fromGroup === toGroup && fromMonster === toMonster) return null
   if (fromGroup === toGroup) {
-    if (fromMonster < toMonster) return toMonster - 1
+    if (fromMonster < toMonster) {
+      if (toMonster === fromMonster + 1) return toMonster
+      return toMonster - 1
+    }
     return toMonster
   }
   return toMonster

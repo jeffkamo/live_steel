@@ -1,4 +1,5 @@
 import type { DragEvent } from 'react'
+import { ReorderGripIcon } from './ReorderGripIcon'
 
 export function TurnColumnCell({
   acted,
@@ -50,7 +51,7 @@ export function GroupTurnColumn({
   return (
     <div
       style={{ gridColumn: 1, gridRow: `1 / span ${gridRowSpan}` }}
-      className="flex min-h-0 w-full min-w-0 flex-row items-stretch overflow-visible"
+      className="flex min-h-0 w-full min-w-0 flex-row items-stretch overflow-visible border-r border-zinc-800/60 bg-zinc-900/80"
     >
       {encounterGroupDragHandle != null && (
         <div
@@ -58,17 +59,9 @@ export function GroupTurnColumn({
           onDragStart={encounterGroupDragHandle.onDragStart}
           onDragEnd={encounterGroupDragHandle.onDragEnd}
           aria-label={encounterGroupDragHandle.ariaLabel}
-          className="flex w-7 shrink-0 cursor-grab touch-none select-none items-center justify-center border-r border-zinc-800/60 px-0.5 active:cursor-grabbing sm:w-8"
+          className="group flex w-7 shrink-0 cursor-grab touch-none select-none items-center justify-center self-stretch border-r border-zinc-800/60 px-0.5 transition-[background-color,border-color,box-shadow,color] duration-150 ease-out hover:border-zinc-600/55 hover:bg-zinc-800/55 active:cursor-grabbing motion-reduce:transition-none sm:w-8"
         >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 16 16"
-            fill="currentColor"
-            className="size-3.5 text-zinc-500 sm:size-4"
-            aria-hidden
-          >
-            <path d="M5 3a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0ZM5 8a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0ZM5 13a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0ZM14 3a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0ZM14 8a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0ZM14 13a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0Z" />
-          </svg>
+          <ReorderGripIcon className="size-3.5 text-zinc-500 transition-colors group-hover:text-zinc-200 sm:size-4" />
         </div>
       )}
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">

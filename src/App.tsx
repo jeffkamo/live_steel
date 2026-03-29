@@ -16,8 +16,14 @@ import {
   ENCOUNTER_GROUP_DRAG_MIME,
   ENCOUNTER_GROUPS,
   MONSTER_DRAG_MIME,
+  mapMinionIndexAfterReorder,
+  monsterDragDropIsValid,
   moveIndexInArray,
   moveMonsterInEncounterWithCaptainRemap,
+  parseMonsterDragPayload,
+  type MonsterDragPayload,
+  reorderMinionsInHorde,
+  remapEotConfirmedAfterMinionReorder,
   newEncounterGroupId,
   nextAvailableColor,
   parseConditionDragPayload,
@@ -367,10 +373,28 @@ function App() {
   )
 
   const [dropTargetGroupIndex, setDropTargetGroupIndex] = useState<number | null>(null)
+  const monsterDragSourceRef = useRef<MonsterDragPayload | null>(null)
+
   const [monsterDropTarget, setMonsterDropTarget] = useState<{
     groupIndex: number
     monsterIndex: number
+    minionIndex: number | null
+    invalid: boolean
   } | null>(null)
+
+  const [monsterDropRejectFlash, setMonsterDropRejectFlash] = useState<{
+    groupIndex: number
+    monsterIndex: number
+    minionIndex: number | null
+    id: number
+  } | null>(null)
+  const rejectFlashIdRef = useRef(0)
+
+  useEffect(() => {
+    if (monsterDropRejectFlash == null) return
+    const t = window.setTimeout(() => setMonsterDropRejectFlash(null), 520)
+    return () => window.clearTimeout(t)
+  }, [monsterDropRejectFlash])
 
   const [conditionDropTarget, setConditionDropTarget] = useState<{
     groupIndex: number
@@ -480,56 +504,131 @@ function App() {
     [],
   )
 
-  const onMonsterDragStart = useCallback((fromG: number, fromM: number, e: DragEvent) => {
-    e.dataTransfer.setData(
-      MONSTER_DRAG_MIME,
-      JSON.stringify({ fromGroup: fromG, fromMonster: fromM }),
-    )
+  const onMonsterDragStart = useCallback((fromG: number, fromM: number, e: DragEvent, fromMinion?: number) => {
+    const payload: MonsterDragPayload =
+      fromMinion != null
+        ? { fromGroup: fromG, fromMonster: fromM, fromMinion }
+        : { fromGroup: fromG, fromMonster: fromM }
+    monsterDragSourceRef.current = payload
+    e.dataTransfer.setData(MONSTER_DRAG_MIME, JSON.stringify(payload))
     e.dataTransfer.effectAllowed = 'move'
   }, [])
 
   const onMonsterDragEnd = useCallback(() => {
+    monsterDragSourceRef.current = null
     setMonsterDropTarget(null)
   }, [])
 
-  const onMonsterDragOver = useCallback((toG: number, toM: number, e: DragEvent) => {
-    if (![...e.dataTransfer.types].includes(MONSTER_DRAG_MIME)) return
-    e.preventDefault()
-    e.dataTransfer.dropEffect = 'move'
-    setMonsterDropTarget({ groupIndex: toG, monsterIndex: toM })
-  }, [])
+  const onMonsterDragOver = useCallback(
+    (toG: number, toM: number, toMinion: number | null, e: DragEvent) => {
+      if (![...e.dataTransfer.types].includes(MONSTER_DRAG_MIME)) return
+      const source = monsterDragSourceRef.current
+      if (!source) return
+      e.preventDefault()
+      const valid = monsterDragDropIsValid(source, toG, toM, toMinion)
+      e.dataTransfer.dropEffect = valid ? 'move' : 'none'
+      setMonsterDropTarget({
+        groupIndex: toG,
+        monsterIndex: toM,
+        minionIndex: toMinion,
+        invalid: !valid,
+      })
+    },
+    [],
+  )
 
-  const onMonsterDragLeave = useCallback((toG: number, toM: number, e: DragEvent) => {
-    if (!e.currentTarget.contains(e.relatedTarget as Node | null)) {
-      setMonsterDropTarget((v) =>
-        v?.groupIndex === toG && v?.monsterIndex === toM ? null : v,
-      )
-    }
-  }, [])
+  const onMonsterDragLeave = useCallback(
+    (toG: number, toM: number, toMinion: number | null, e: DragEvent) => {
+      if (!e.currentTarget.contains(e.relatedTarget as Node | null)) {
+        setMonsterDropTarget((v) =>
+          v != null &&
+          v.groupIndex === toG &&
+          v.monsterIndex === toM &&
+          v.minionIndex === toMinion
+            ? null
+            : v,
+        )
+      }
+    },
+    [],
+  )
+
+  const triggerMonsterDropRejectFlash = useCallback(
+    (toG: number, toM: number, toMinion: number | null) => {
+      rejectFlashIdRef.current += 1
+      setMonsterDropRejectFlash({
+        groupIndex: toG,
+        monsterIndex: toM,
+        minionIndex: toMinion,
+        id: rejectFlashIdRef.current,
+      })
+    },
+    [],
+  )
 
   const onMonsterDrop = useCallback(
-    (toG: number, toM: number, e: DragEvent) => {
+    (toG: number, toM: number, toMinion: number | null, e: DragEvent) => {
       e.preventDefault()
       setMonsterDropTarget(null)
       const raw = e.dataTransfer.getData(MONSTER_DRAG_MIME)
-      let payload: { fromGroup: number; fromMonster: number } | null = null
-      try {
-        const o = JSON.parse(raw) as { fromGroup?: unknown; fromMonster?: unknown }
-        if (
-          typeof o.fromGroup === 'number' &&
-          typeof o.fromMonster === 'number' &&
-          Number.isInteger(o.fromGroup) &&
-          Number.isInteger(o.fromMonster)
-        ) {
-          payload = { fromGroup: o.fromGroup, fromMonster: o.fromMonster }
-        }
-      } catch {
-        /* ignore */
-      }
+      const payload = parseMonsterDragPayload(raw)
       if (!payload) return
+      if (!monsterDragDropIsValid(payload, toG, toM, toMinion)) {
+        triggerMonsterDropRejectFlash(toG, toM, toMinion)
+        return
+      }
+      if (payload.fromMinion != null) {
+        if (toMinion == null) return
+        let reorderFailed = false
+        setEncounterGroups((prev) => {
+          const next = reorderMinionsInHorde(
+            prev,
+            payload.fromGroup,
+            payload.fromMonster,
+            payload.fromMinion,
+            toMinion,
+          )
+          if (!next) {
+            reorderFailed = true
+            return prev
+          }
+          queueMicrotask(() => {
+            setEotConfirmed((eMap) =>
+              remapEotConfirmedAfterMinionReorder(
+                eMap,
+                next.length,
+                payload.fromGroup,
+                payload.fromMonster,
+                payload.fromMinion!,
+                toMinion,
+              ),
+            )
+            setMonsterCardDrawer((drawer) => {
+              if (
+                drawer == null ||
+                drawer.groupIndex !== payload.fromGroup ||
+                drawer.monsterIndex !== payload.fromMonster ||
+                drawer.view.kind !== 'minion'
+              ) {
+                return drawer
+              }
+              const newSlot = mapMinionIndexAfterReorder(
+                payload.fromMinion!,
+                toMinion,
+                drawer.view.slot,
+              )
+              if (newSlot === drawer.view.slot) return drawer
+              return { ...drawer, view: { kind: 'minion', slot: newSlot } }
+            })
+          })
+          return next
+        })
+        if (reorderFailed) triggerMonsterDropRejectFlash(toG, toM, toMinion)
+        return
+      }
       moveMonsterInEncounter(payload.fromGroup, payload.fromMonster, toG, toM)
     },
-    [moveMonsterInEncounter],
+    [moveMonsterInEncounter, triggerMonsterDropRejectFlash],
   )
 
   const reorderEncounterGroups = useCallback(
@@ -869,11 +968,13 @@ function App() {
                         : {
                             thisGroupIndex: gi,
                             dropTarget: monsterDropTarget,
-                            onMonsterDragStart: (mi, e) => onMonsterDragStart(gi, mi, e),
+                            dropRejectFlash: monsterDropRejectFlash,
+                            onMonsterDragStart: (mi, e, fromMinion) =>
+                              onMonsterDragStart(gi, mi, e, fromMinion),
                             onMonsterDragEnd: onMonsterDragEnd,
-                            onMonsterDragOver: (mi, e) => onMonsterDragOver(gi, mi, e),
-                            onMonsterDragLeave: (mi, e) => onMonsterDragLeave(gi, mi, e),
-                            onMonsterDrop: (mi, e) => onMonsterDrop(gi, mi, e),
+                            onMonsterDragOver: (mi, mni, e) => onMonsterDragOver(gi, mi, mni, e),
+                            onMonsterDragLeave: (mi, mni, e) => onMonsterDragLeave(gi, mi, mni, e),
+                            onMonsterDrop: (mi, mni, e) => onMonsterDrop(gi, mi, mni, e),
                           }
                     }
                     conditionDrag={{

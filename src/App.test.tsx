@@ -50,7 +50,12 @@ describe('App', () => {
     expect(within(tracker).getByRole('button', { name: /^Remove Weakened$/i })).toBeInTheDocument()
     expect(within(tracker).getByRole('button', { name: /^Remove Slowed$/i })).toBeInTheDocument()
     expect(screen.getByText('Minotaur Sunderer', { exact: true })).toBeInTheDocument()
-    expect(within(tracker).getByRole('button', { name: /^Remove Bleeding$/i })).toBeInTheDocument()
+    const minotaurGrid = screen.getByText('Minotaur Sunderer', { exact: true }).closest(
+      'div.grid.items-stretch.rounded-lg',
+    ) as HTMLElement
+    expect(
+      within(minotaurGrid).getByRole('button', { name: /^Remove Bleeding$/i }),
+    ).toBeInTheDocument()
   })
 
   it('renders MARIP characteristic headers and numeric row for the first creature in its group', () => {
@@ -854,17 +859,12 @@ describe('App', () => {
 
   // --- Minion dead/alive toggle (MINION-003) ---
 
-  const expandMinions = async (user: ReturnType<typeof userEvent.setup>) => {
-    const grid = screen.getByText('Minions', { exact: true }).closest('div.grid.items-stretch.rounded-lg') as HTMLElement
-    const expandBtn = within(grid).getByRole('button', { name: /^Expand individual Minions$/i })
-    await user.click(expandBtn)
-    return grid
-  }
+  const minionGroupGrid = () =>
+    screen.getByText('Minions', { exact: true }).closest('div.grid.items-stretch.rounded-lg') as HTMLElement
 
-  it('minion child rows default to alive state', async () => {
-    const user = userEvent.setup()
+  it('minion child rows default to alive state', () => {
     render(<App />)
-    const grid = await expandMinions(user)
+    const grid = minionGroupGrid()
     const scope = within(grid)
     const toggles = scope.getAllByRole('button', { name: /Goblin Spinecleaver [1-4]: alive/i })
     expect(toggles).toHaveLength(4)
@@ -876,7 +876,7 @@ describe('App', () => {
   it('clicking the dead/alive toggle marks a minion as dead', async () => {
     const user = userEvent.setup()
     render(<App />)
-    const grid = await expandMinions(user)
+    const grid = minionGroupGrid()
     const scope = within(grid)
     const toggle = scope.getByRole('button', { name: /Goblin Spinecleaver 1: alive/i })
     await user.click(toggle)
@@ -887,7 +887,7 @@ describe('App', () => {
   it('toggling a minion dead applies visual dimming and strikethrough', async () => {
     const user = userEvent.setup()
     render(<App />)
-    const grid = await expandMinions(user)
+    const grid = minionGroupGrid()
     const scope = within(grid)
     const toggle = scope.getByRole('button', { name: /Goblin Spinecleaver 2: alive/i })
     await user.click(toggle)
@@ -898,7 +898,7 @@ describe('App', () => {
   it('toggling a dead minion back to alive removes visual state', async () => {
     const user = userEvent.setup()
     render(<App />)
-    const grid = await expandMinions(user)
+    const grid = minionGroupGrid()
     const scope = within(grid)
     const toggle = scope.getByRole('button', { name: /Goblin Spinecleaver 1: alive/i })
     await user.click(toggle)
@@ -912,7 +912,7 @@ describe('App', () => {
   it('minion life toggle updates accessible name when marked dead', async () => {
     const user = userEvent.setup()
     render(<App />)
-    const grid = await expandMinions(user)
+    const grid = minionGroupGrid()
     const scope = within(grid)
     expect(scope.getAllByRole('button', { name: /Goblin Spinecleaver \d+: alive/i })).toHaveLength(4)
     expect(scope.queryByRole('button', { name: /Goblin Spinecleaver 3: dead/i })).toBeNull()
@@ -924,7 +924,7 @@ describe('App', () => {
   it('dead minion toggle does not affect other minions in the group', async () => {
     const user = userEvent.setup()
     render(<App />)
-    const grid = await expandMinions(user)
+    const grid = minionGroupGrid()
     const scope = within(grid)
     await user.click(scope.getByRole('button', { name: /Goblin Spinecleaver 1: alive/i }))
     const otherToggles = [
@@ -937,10 +937,8 @@ describe('App', () => {
     }
   })
 
-  it('minion child rows render life control in stamina column (col 3)', async () => {
-    const user = userEvent.setup()
+  it('minion child rows render life control in stamina column (col 3)', () => {
     render(<App />)
-    await expandMinions(user)
     const toggles = screen.getAllByRole('button', { name: /Goblin Spinecleaver \d+: alive/i })
     expect(toggles.length).toBeGreaterThanOrEqual(4)
   })
@@ -1335,9 +1333,6 @@ describe('App', () => {
     await user.click(within(dialog).getByRole('button', { name: /^Decrease stamina by 10$/i }))
     await user.unhover(staminaGroup)
 
-    const expandBtn = screen.getByRole('button', { name: /^Expand individual Minions$/i })
-    await user.click(expandBtn)
-
     const toggle3 = screen.getByRole('button', { name: /Goblin Spinecleaver 3: alive/i })
     const toggle4 = screen.getByRole('button', { name: /Goblin Spinecleaver 4: alive/i })
     await user.click(toggle3)
@@ -1584,10 +1579,7 @@ describe('App', () => {
     const user = userEvent.setup()
     render(<App />)
 
-    const grid = screen.getByText('Minions', { exact: true })
-      .closest('div.grid.items-stretch.rounded-lg') as HTMLElement
-    const expandBtn = within(grid).getByRole('button', { name: /^Expand individual Minions$/i })
-    await user.click(expandBtn)
+    const grid = minionGroupGrid()
 
     const spinecleaver2Conditions = within(grid).getByRole('group', {
       name: /^Conditions for Goblin Spinecleaver 2\./i,
@@ -1618,9 +1610,6 @@ describe('App', () => {
   it('shows "Revive" cue when minions are dead but stamina is restored', async () => {
     const user = userEvent.setup()
     render(<App />)
-
-    const expandBtn = screen.getByRole('button', { name: /^Expand individual Minions$/i })
-    await user.click(expandBtn)
 
     const toggle4 = screen.getByRole('button', { name: /Goblin Spinecleaver 4: alive/i })
     await user.click(toggle4)
@@ -1714,9 +1703,6 @@ describe('App', () => {
   it('glow animation applies to EoT/SE conditions on minion child rows too', async () => {
     const user = userEvent.setup()
     render(<App />)
-
-    const expandBtn = screen.getByRole('button', { name: /^Expand individual Minions$/i })
-    await user.click(expandBtn)
 
     const minionConditions = screen.getByRole('group', {
       name: /^Conditions for Goblin Spinecleaver 2\./i,
@@ -2160,9 +2146,6 @@ describe('App', () => {
     const user = userEvent.setup()
     render(<App />)
 
-    const expandBtn = screen.getByRole('button', { name: /^Expand individual Minions$/i })
-    await user.click(expandBtn)
-
     const minionConditions = screen.getByRole('group', {
       name: /^Conditions for Goblin Spinecleaver 2\./i,
     })
@@ -2186,9 +2169,6 @@ describe('App', () => {
   it('confirmed minion child EoT survives the 30-second timer', async () => {
     const user = userEvent.setup()
     render(<App />)
-
-    const expandBtn = screen.getByRole('button', { name: /^Expand individual Minions$/i })
-    await user.click(expandBtn)
 
     const minionConditions = screen.getByRole('group', {
       name: /^Conditions for Goblin Spinecleaver 2\./i,
@@ -2276,6 +2256,37 @@ describe('App', () => {
     const rows = g0.querySelectorAll('[data-testid="monster-drop-target"]')
     expect(rows[0]).toHaveTextContent('Goblin Warrior')
     expect(rows[1]).toHaveTextContent('Goblin Assassin 1')
+  })
+
+  it('reorders monsters when dropping on the row directly below (swap down)', () => {
+    render(<App />)
+    const groups = screen.getAllByTestId('encounter-group-drop-target')
+    const g0 = groups[0]!
+    const assassinHandle = within(g0).getByLabelText('Reorder Goblin Assassin 1 within encounter')
+    const warriorDrop = g0.querySelector('[data-testid="monster-drop-target"][data-monster-index="1"]')
+    expect(warriorDrop).toBeTruthy()
+    const dt = mockMonsterDataTransfer()
+    fireEvent.dragStart(assassinHandle, { dataTransfer: dt })
+    fireEvent.dragOver(warriorDrop!, { dataTransfer: dt })
+    fireEvent.drop(warriorDrop!, { dataTransfer: dt })
+    const rows = g0.querySelectorAll('[data-testid="monster-drop-target"]')
+    expect(rows[0]).toHaveTextContent('Goblin Warrior')
+    expect(rows[1]).toHaveTextContent('Goblin Assassin 1')
+  })
+
+  it('reorders minions within horde on drag-and-drop', () => {
+    render(<App />)
+    const grid = minionGroupGrid()
+    const grip1 = within(grid).getByLabelText('Reorder Goblin Spinecleaver 1 within horde')
+    const drop2 = grid.querySelector('[data-testid="minion-drop-target"][data-minion-index="1"]')
+    expect(drop2).toBeTruthy()
+    const dt = mockMonsterDataTransfer()
+    fireEvent.dragStart(grip1, { dataTransfer: dt })
+    fireEvent.dragOver(drop2!, { dataTransfer: dt })
+    fireEvent.drop(drop2!, { dataTransfer: dt })
+    const targets = grid.querySelectorAll('[data-testid="minion-drop-target"]')
+    expect(targets[0]).toHaveTextContent('Goblin Spinecleaver 2')
+    expect(targets[1]).toHaveTextContent('Goblin Spinecleaver 1')
   })
 
   it('moves a monster into another group on drop', () => {

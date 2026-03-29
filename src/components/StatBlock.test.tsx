@@ -591,7 +591,7 @@ describe('GroupSection stat card drawer integration', () => {
     expect(screen.getByRole('region', { name: /Stat block for Minions/i })).toBeInTheDocument()
   })
 
-  it('opens stat card for minion child via name when horde is expanded', async () => {
+  it('opens stat card for minion child via name on the horde', async () => {
     const user = userEvent.setup()
     const group: EncounterGroup = {
       id: 'statblock-minion-child-g',
@@ -623,7 +623,6 @@ describe('GroupSection stat card drawer integration', () => {
       />,
     )
 
-    await user.click(screen.getByRole('button', { name: /^Expand individual Minions$/i }))
     await user.click(screen.getByRole('button', { name: /^Stat card for Minion 2$/i }))
 
     expect(screen.getByRole('region', { name: /Stat block for Minions/i })).toBeInTheDocument()

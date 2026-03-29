@@ -13,8 +13,13 @@ import {
   nextAvailableColor,
   monsterFromBestiary,
   moveIndexInArray,
+  mapMinionIndexAfterReorder,
+  monsterDragDropIsValid,
   moveMonsterInEncounterWithCaptainRemap,
   parseConditionDragPayload,
+  parseMonsterDragPayload,
+  reorderMinionsInHorde,
+  remapEotConfirmedAfterMinionReorder,
   remapEncounterGroupIndex,
   remapEotConfirmedAfterMonsterMove,
   reorderEncounterGroupsWithCaptainRemap,
@@ -197,6 +202,11 @@ describe('computeMonsterInsertIndex', () => {
     expect(computeMonsterInsertIndex(0, 0, 0, 2)).toBe(1)
   })
 
+  it('same-group swap with monster directly below (drop on next row)', () => {
+    expect(computeMonsterInsertIndex(0, 0, 0, 1)).toBe(1)
+    expect(computeMonsterInsertIndex(0, 1, 0, 2)).toBe(2)
+  })
+
   it('same-group insert before an earlier monster', () => {
     expect(computeMonsterInsertIndex(0, 2, 0, 0)).toBe(0)
   })
@@ -228,6 +238,14 @@ describe('moveMonsterInEncounterWithCaptainRemap', () => {
     expect(next!.map((g) => g.monsters.map((m) => m.name))).toEqual([['C', 'A', 'B']])
   })
 
+  it('swaps with the monster directly below within the same group', () => {
+    const groups: EncounterGroup[] = [
+      { id: 'a', color: 'red', monsters: [mk('A'), mk('B'), mk('C')] },
+    ]
+    const next = moveMonsterInEncounterWithCaptainRemap(groups, 0, 0, 0, 1)
+    expect(next!.map((g) => g.monsters.map((m) => m.name))).toEqual([['B', 'A', 'C']])
+  })
+
   it('moves to another group and remaps captain ref to moved captain', () => {
     const groups: EncounterGroup[] = [
       { id: 'g0', color: 'red', monsters: [mk('Cap')] },
@@ -244,6 +262,91 @@ describe('moveMonsterInEncounterWithCaptainRemap', () => {
     ]
     const next = moveMonsterInEncounterWithCaptainRemap(groups, 0, 1, 0, 0)
     expect(next![0]!.monsters[0]!.captainId).toEqual({ groupIndex: 0, monsterIndex: 1 })
+  })
+})
+
+describe('parseMonsterDragPayload', () => {
+  it('parses top-level and minion payloads', () => {
+    expect(parseMonsterDragPayload(JSON.stringify({ fromGroup: 1, fromMonster: 2 }))).toEqual({
+      fromGroup: 1,
+      fromMonster: 2,
+    })
+    expect(parseMonsterDragPayload(JSON.stringify({ fromGroup: 0, fromMonster: 1, fromMinion: 3 }))).toEqual({
+      fromGroup: 0,
+      fromMonster: 1,
+      fromMinion: 3,
+    })
+    expect(parseMonsterDragPayload('')).toBeNull()
+    expect(parseMonsterDragPayload(JSON.stringify({ fromGroup: 'x', fromMonster: 0 }))).toBeNull()
+  })
+})
+
+describe('monsterDragDropIsValid', () => {
+  it('allows top-level only onto top-level rows (not same slot)', () => {
+    expect(monsterDragDropIsValid({ fromGroup: 0, fromMonster: 0 }, 0, 1, null)).toBe(true)
+    expect(monsterDragDropIsValid({ fromGroup: 0, fromMonster: 0 }, 0, 0, null)).toBe(false)
+    expect(monsterDragDropIsValid({ fromGroup: 0, fromMonster: 0 }, 0, 0, 2)).toBe(false)
+  })
+
+  it('allows minion reorder only within same parent horde', () => {
+    expect(monsterDragDropIsValid({ fromGroup: 0, fromMonster: 2, fromMinion: 0 }, 0, 2, 1)).toBe(true)
+    expect(monsterDragDropIsValid({ fromGroup: 0, fromMonster: 2, fromMinion: 0 }, 0, 2, 0)).toBe(false)
+    expect(monsterDragDropIsValid({ fromGroup: 0, fromMonster: 2, fromMinion: 0 }, 0, 2, null)).toBe(false)
+    expect(monsterDragDropIsValid({ fromGroup: 0, fromMonster: 2, fromMinion: 0 }, 0, 1, 0)).toBe(false)
+    expect(monsterDragDropIsValid({ fromGroup: 0, fromMonster: 2, fromMinion: 0 }, 1, 2, 0)).toBe(false)
+  })
+})
+
+describe('reorderMinionsInHorde', () => {
+  const horde = (): EncounterGroup[] => [
+    {
+      id: 'g',
+      color: 'red',
+      monsters: [
+        {
+          name: 'Minions',
+          subtitle: 'H',
+          initials: 'M',
+          stamina: [1, 1],
+          marip: null,
+          fs: 0,
+          dist: 0,
+          stab: 0,
+          conditions: [],
+          minions: [
+            { name: 'A', initials: 'A', conditions: [], dead: false },
+            { name: 'B', initials: 'B', conditions: [], dead: false },
+            { name: 'C', initials: 'C', conditions: [], dead: false },
+          ],
+        },
+      ],
+    },
+  ]
+
+  it('swaps adjacent minions downward', () => {
+    const next = reorderMinionsInHorde(horde(), 0, 0, 0, 1)!
+    expect(next[0]!.monsters[0]!.minions!.map((m) => m.name)).toEqual(['B', 'A', 'C'])
+  })
+
+  it('returns null for invalid indices', () => {
+    expect(reorderMinionsInHorde(horde(), 0, 0, 0, 0)).toBeNull()
+    expect(reorderMinionsInHorde(horde(), 0, 0, 9, 1)).toBeNull()
+  })
+})
+
+describe('mapMinionIndexAfterReorder', () => {
+  it('maps viewer slot after minion reorder', () => {
+    expect(mapMinionIndexAfterReorder(0, 1, 0)).toBe(1)
+    expect(mapMinionIndexAfterReorder(0, 1, 1)).toBe(0)
+    expect(mapMinionIndexAfterReorder(0, 2, 2)).toBe(2)
+  })
+})
+
+describe('remapEotConfirmedAfterMinionReorder', () => {
+  it('rewrites minion EoT keys when minions reorder', () => {
+    const prev = new Map<number, Set<string>>([[0, new Set(['0:1:Bleeding', '0:0:Slow'])]])
+    const next = remapEotConfirmedAfterMinionReorder(prev, 1, 0, 0, 0, 1)
+    expect(next.get(0)).toEqual(new Set(['0:0:Bleeding', '0:1:Slow']))
   })
 })
 

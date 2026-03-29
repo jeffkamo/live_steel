@@ -6,6 +6,7 @@ import { EditableStaminaCell } from './EditableStaminaCell'
 import { MaripCluster } from './MaripCluster'
 import { StatCluster } from './StatCluster'
 import { CreatureConditionCell, type CreatureConditionDnDBinding } from './CreatureConditionCell'
+import { ReorderGripIcon } from './ReorderGripIcon'
 
 export function MonsterRowCells({
   monster,
@@ -57,6 +58,8 @@ export function MonsterRowCells({
     groupIndex: number
     monsterIndex: number
     dropHighlighted: boolean
+    dropInvalidHover?: boolean
+    dropRejectFlash?: boolean
     onDragStart: (e: DragEvent) => void
     onDragEnd: (e: DragEvent) => void
     onDragOver: (e: DragEvent) => void
@@ -72,18 +75,25 @@ export function MonsterRowCells({
   const bodyCell =
     'flex h-full min-h-[3.75rem] items-center p-3 sm:min-h-[4rem] sm:p-3.5'
   const creatureNameColCell =
-    'flex h-full min-h-[3.75rem] items-center px-2 py-2 sm:min-h-[4rem] sm:px-2.5 sm:py-2.5'
+    'flex h-full min-h-[3.75rem] items-stretch px-2 py-2 sm:min-h-[4rem] sm:px-2.5 sm:py-2.5'
   const combat = rosterCombatStats(monster)
   const rowTone =
     'transition-opacity duration-200 ease-out motion-reduce:transition-none ' +
     (turnComplete ? 'opacity-[0.52]' : 'opacity-100')
 
+  const monsterDropRing =
+    monsterDrag?.dropHighlighted
+      ? 'ring-2 ring-inset ring-sky-500/40'
+      : monsterDrag?.dropRejectFlash
+        ? 'ring-2 ring-inset ring-rose-500/70 motion-safe:animate-pulse'
+        : monsterDrag?.dropInvalidHover
+          ? 'ring-2 ring-inset ring-rose-500/45'
+          : ''
+
   return (
     <>
       <div
-        className={`${creatureNameColCell} min-w-0 ${rowTone} ${
-          monsterDrag?.dropHighlighted ? 'ring-2 ring-inset ring-sky-500/40' : ''
-        }`}
+        className={`${creatureNameColCell} min-w-0 ${rowTone} ${monsterDropRing}`}
         style={{ gridColumn: 2, gridRow: row }}
         data-testid="monster-drop-target"
         data-group-index={monsterDrag?.groupIndex}
@@ -92,26 +102,19 @@ export function MonsterRowCells({
         onDragLeave={monsterDrag?.onDragLeave}
         onDrop={monsterDrag?.onDrop}
       >
-        <div className="flex w-full min-w-0 items-center gap-3">
+        <div className="flex min-h-0 min-w-0 flex-1 items-stretch gap-3">
           {monsterDrag != null && (
             <div
               draggable
               onDragStart={monsterDrag.onDragStart}
               onDragEnd={monsterDrag.onDragEnd}
               aria-label={`Reorder ${monster.name} within encounter`}
-              className="flex shrink-0 cursor-grab touch-none select-none items-center justify-center rounded p-0.5 active:cursor-grabbing"
+              className="group flex w-9 shrink-0 cursor-grab touch-none select-none items-center justify-center rounded-md border border-transparent transition-[background-color,border-color,box-shadow,color] duration-150 ease-out hover:border-zinc-700/45 hover:bg-zinc-800/55 hover:shadow-sm active:cursor-grabbing motion-reduce:transition-none sm:w-10"
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 16 16"
-                fill="currentColor"
-                className="size-3.5 text-zinc-500"
-                aria-hidden
-              >
-                <path d="M5 3a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0ZM5 8a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0ZM5 13a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0ZM14 3a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0ZM14 8a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0ZM14 13a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0Z" />
-              </svg>
+              <ReorderGripIcon className="size-3.5 text-zinc-500 transition-colors group-hover:text-zinc-200 sm:size-4" />
             </div>
           )}
+          <div className="flex min-w-0 flex-1 items-center gap-3">
           <button
             type="button"
             data-group-color-trigger={groupKey}
@@ -159,6 +162,7 @@ export function MonsterRowCells({
               </svg>
             </button>
           )}
+          </div>
         </div>
       </div>
       <div
