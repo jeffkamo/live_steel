@@ -164,6 +164,52 @@ function App() {
     [],
   )
 
+  const deleteMonster = useCallback(
+    (groupIndex: number, monsterIndex: number) => {
+      let groupRemoved = false
+
+      setEncounterGroups((prev) => {
+        groupRemoved = prev[groupIndex]?.monsters.length === 1
+
+        const afterRemove = prev.map((g, gi) => {
+          if (gi !== groupIndex) return g
+          return {
+            ...g,
+            monsters: g.monsters.filter((_, mi) => mi !== monsterIndex),
+          }
+        }).filter((g) => g.monsters.length > 0)
+
+        return afterRemove.map((g) => ({
+          ...g,
+          monsters: g.monsters.map((m) => {
+            if (!m.captainId) return m
+            const ref = m.captainId
+            if (ref.groupIndex === groupIndex && ref.monsterIndex === monsterIndex) {
+              return { ...m, captainId: null }
+            }
+            let newGi = ref.groupIndex
+            let newMi = ref.monsterIndex
+            if (groupRemoved && ref.groupIndex > groupIndex) {
+              newGi -= 1
+            }
+            if (!groupRemoved && ref.groupIndex === groupIndex && ref.monsterIndex > monsterIndex) {
+              newMi -= 1
+            }
+            if (newGi !== ref.groupIndex || newMi !== ref.monsterIndex) {
+              return { ...m, captainId: { groupIndex: newGi, monsterIndex: newMi } }
+            }
+            return m
+          }),
+        }))
+      })
+
+      setGroupTurnActed((prev) =>
+        groupRemoved ? prev.filter((_, i) => i !== groupIndex) : prev,
+      )
+    },
+    [],
+  )
+
   const patchMinionConditionAddOrSet = useCallback(
     (groupIndex: number, monsterIndex: number, minionIndex: number, label: string, state: ConditionState) => {
       setEncounterGroups((prev) =>
@@ -301,6 +347,7 @@ function App() {
               onMinionConditionAddOrSet={(mi, mni, label, state) =>
                 patchMinionConditionAddOrSet(gi, mi, mni, label, state)
               }
+              onDeleteMonster={(mi) => deleteMonster(gi, mi)}
             />
           ))}
         </section>

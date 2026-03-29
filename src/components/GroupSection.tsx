@@ -24,6 +24,7 @@ export function GroupSection({
   onMinionDeadChange,
   onMinionConditionRemove,
   onMinionConditionAddOrSet,
+  onDeleteMonster,
 }: {
   group: EncounterGroup
   groupKey: string
@@ -42,6 +43,7 @@ export function GroupSection({
   onMinionDeadChange?: (monsterIndex: number, minionIndex: number, dead: boolean) => void
   onMinionConditionRemove?: (monsterIndex: number, minionIndex: number, conditionIndex: number) => void
   onMinionConditionAddOrSet?: (monsterIndex: number, minionIndex: number, label: string, state: ConditionState) => void
+  onDeleteMonster?: (monsterIndex: number) => void
 }) {
   const [expandedMinions, setExpandedMinions] = useState<Record<number, boolean>>({})
   const [expandedStatBlocks, setExpandedStatBlocks] = useState<Record<number, boolean>>({})
@@ -158,6 +160,7 @@ export function GroupSection({
               }
               statBlockExpanded={!!expandedStatBlocks[i]}
               onToggleStatBlock={() => toggleStatBlock(i)}
+              onDelete={() => onDeleteMonster?.(i)}
             />
           )
         }
@@ -184,6 +187,7 @@ export function GroupSection({
             }
             statBlockExpanded={!!expandedStatBlocks[i]}
             onToggleStatBlock={() => toggleStatBlock(i)}
+            onDelete={() => onDeleteMonster?.(i)}
           />
         )
       })}

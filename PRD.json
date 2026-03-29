@@ -181,7 +181,7 @@
         "Write specs covering deletion, state cleanup, and reference handling",
         "Run the specs, fix any failures until all pass"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "DND-001",

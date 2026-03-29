@@ -1134,4 +1134,117 @@ describe('App', () => {
     await user.click(within(grid).getByText('Goblin Assassin 1'))
     expect(within(grid).getByTestId('captain-pill')).toHaveTextContent('Goblin Assassin 1')
   })
+
+  // --- Delete monster from group (DATA-003) ---
+
+  it('each monster row has a delete button', () => {
+    render(<App />)
+    expect(screen.getByRole('button', { name: /^Delete Goblin Assassin 1$/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /^Delete Goblin Raider$/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /^Delete Goblin Underboss$/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /^Delete Minions$/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /^Delete Ironwood Sentinel$/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /^Delete Arcane Echo$/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /^Delete Reserve slot$/i })).toBeInTheDocument()
+  })
+
+  it('clicking delete removes the monster from its group', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    expect(screen.getByText('Goblin Raider', { exact: true })).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: /^Delete Goblin Raider$/i }))
+    expect(screen.queryByText('Goblin Raider', { exact: true })).not.toBeInTheDocument()
+    expect(screen.getByText('Goblin Assassin 1', { exact: true })).toBeInTheDocument()
+  })
+
+  it('deleting a monster updates ordinal badge counts for remaining monsters in the group', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    const group4grid = screen.getByText('Ironwood Sentinel', { exact: true })
+      .closest('div.grid.items-stretch.rounded-lg') as HTMLElement
+    expect(within(group4grid).getByRole('button', { name: /creature 1 of 3/i })).toBeInTheDocument()
+    expect(within(group4grid).getByRole('button', { name: /creature 2 of 3/i })).toBeInTheDocument()
+    expect(within(group4grid).getByRole('button', { name: /creature 3 of 3/i })).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: /^Delete Arcane Echo$/i }))
+
+    expect(within(group4grid).getByRole('button', { name: /creature 1 of 2/i })).toBeInTheDocument()
+    expect(within(group4grid).getByRole('button', { name: /creature 2 of 2/i })).toBeInTheDocument()
+    expect(within(group4grid).queryByRole('button', { name: /creature 3 of/i })).not.toBeInTheDocument()
+  })
+
+  it('deleting the last monster in a group removes the entire group', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    expect(screen.getByText('Goblin Underboss', { exact: true })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: turnButton(2, 'pending') })).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: /^Delete Goblin Underboss$/i }))
+
+    expect(screen.queryByText('Goblin Underboss', { exact: true })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: turnButton(4, 'pending') })).not.toBeInTheDocument()
+  })
+
+  it('deleting a captain clears the captain ref on the minion group', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    const minionGrid = getMinionGrid()
+    await user.click(within(minionGrid).getByRole('button', { name: /Assign captain for Minions/i }))
+    await user.click(within(minionGrid).getByText('Goblin Assassin 1'))
+    expect(within(minionGrid).getByTestId('captain-pill')).toHaveTextContent('Goblin Assassin 1')
+
+    await user.click(screen.getByRole('button', { name: /^Delete Goblin Assassin 1$/i }))
+
+    const pill = within(minionGrid).getByTestId('captain-pill')
+    expect(pill).not.toHaveTextContent('Goblin Assassin 1')
+    expect(within(minionGrid).getByRole('button', { name: /Assign captain for Minions/i })).toBeInTheDocument()
+  })
+
+  it('deleting a monster before the captain in the same group shifts the captain index', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    const minionGrid = getMinionGrid()
+    await user.click(within(minionGrid).getByRole('button', { name: /Assign captain for Minions/i }))
+    await user.click(within(minionGrid).getByText('Goblin Raider'))
+    expect(within(minionGrid).getByTestId('captain-pill')).toHaveTextContent('Goblin Raider')
+
+    await user.click(screen.getByRole('button', { name: /^Delete Goblin Assassin 1$/i }))
+
+    expect(within(minionGrid).getByTestId('captain-pill')).toHaveTextContent('Goblin Raider')
+  })
+
+  it('deleting a monster in another group does not affect the current group', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    expect(screen.getByText('Goblin Assassin 1', { exact: true })).toBeInTheDocument()
+    expect(screen.getByText('Ironwood Sentinel', { exact: true })).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: /^Delete Arcane Echo$/i }))
+
+    expect(screen.getByText('Goblin Assassin 1', { exact: true })).toBeInTheDocument()
+    expect(screen.getByText('Ironwood Sentinel', { exact: true })).toBeInTheDocument()
+    expect(screen.queryByText('Arcane Echo', { exact: true })).not.toBeInTheDocument()
+  })
+
+  it('deleting a minion group monster removes it and all its child minions', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    expect(screen.getByText('Minions', { exact: true })).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: /^Delete Minions$/i }))
+
+    expect(screen.queryByText('Minions', { exact: true })).not.toBeInTheDocument()
+    expect(screen.queryByText('Goblin Spinecleaver 1', { exact: true })).not.toBeInTheDocument()
+  })
+
+  it('other monsters remain functional after a deletion', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    await user.click(screen.getByRole('button', { name: /^Delete Reserve slot$/i }))
+
+    const staminaGroup = screen.getByRole('group', { name: /^Edit stamina for Ironwood Sentinel$/i })
+    await user.hover(staminaGroup)
+    await user.click(within(staminaGroup).getByRole('button', { name: /^Increase stamina by 1$/i }))
+    expect(screen.getByText('9 / 24')).toBeInTheDocument()
+  })
 })

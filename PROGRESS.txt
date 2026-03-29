@@ -184,3 +184,24 @@ Minion stamina popover with interval-based input — replaces standard cur/max t
 - src/components/MinionGroupRow.tsx
 - src/App.test.tsx
 - PRD.json
+
+
+[DATA-003]
+
+Delete monster from group — trash icon on each monster/minion row, immediate removal with captain ref cleanup
+
+**Key decisions:**
+- deleteMonster() in App.tsx: filters out monster, removes empty groups, fixes CaptainRef indices (groupIndex shift when group removed, monsterIndex shift when earlier monster in same group removed), nullifies refs pointing at deleted monster
+- groupTurnActed array pruned when a group is fully removed
+- Delete button placed in creature name cell (col 2) with hover-to-reveal via Tailwind `group/namecell` + `group-hover/namecell:opacity-100`; always accessible via keyboard focus
+- Both MonsterRowCells and MinionGroupRow get the same delete button pattern
+- onDeleteMonster threaded: App → GroupSection → MonsterRowCells / MinionGroupRow
+- 9 new integration tests: button presence, deletion, ordinal update, last-monster-removes-group, captain-ref-cleared-on-captain-delete, captain-index-shift, cross-group-isolation, minion-group-deletion, post-delete-functionality
+
+**Files changed:**
+- src/App.tsx
+- src/components/GroupSection.tsx
+- src/components/MonsterRowCells.tsx
+- src/components/MinionGroupRow.tsx
+- src/App.test.tsx
+- PRD.json
