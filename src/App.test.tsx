@@ -1247,4 +1247,62 @@ describe('App', () => {
     await user.click(within(staminaGroup).getByRole('button', { name: /^Increase stamina by 1$/i }))
     expect(screen.getByText('9 / 24')).toBeInTheDocument()
   })
+
+  // --- Threshold mismatch cue (MINION-006) ---
+
+  it('no threshold mismatch cue when stamina and dead states are in sync', () => {
+    render(<App />)
+    const staminaGroup = screen.getByRole('group', { name: /^Edit stamina for Minions$/i })
+    expect(within(staminaGroup).queryByTestId('threshold-mismatch-cue')).not.toBeInTheDocument()
+  })
+
+  it('shows "Kill" cue when stamina drops below a threshold but minions are still alive', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    const staminaGroup = screen.getByRole('group', { name: /^Edit stamina for Minions$/i })
+    await user.hover(staminaGroup)
+    const dialog = within(staminaGroup).getByRole('dialog', { name: /adjust values/i })
+    await user.click(within(dialog).getByRole('button', { name: /^Decrease stamina by 10$/i }))
+    const pool = screen.getByRole('group', { name: /Minion stamina pool/i })
+    const cue = within(pool).getByTestId('threshold-mismatch-cue')
+    expect(cue).toBeInTheDocument()
+    expect(cue.textContent).toMatch(/Kill 2/)
+  })
+
+  it('threshold cue disappears when dead toggles match suggested count', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    const staminaGroup = screen.getByRole('group', { name: /^Edit stamina for Minions$/i })
+    await user.hover(staminaGroup)
+    const dialog = within(staminaGroup).getByRole('dialog', { name: /adjust values/i })
+    await user.click(within(dialog).getByRole('button', { name: /^Decrease stamina by 10$/i }))
+    await user.unhover(staminaGroup)
+
+    const expandBtn = screen.getByRole('button', { name: /^Expand individual Minions$/i })
+    await user.click(expandBtn)
+
+    const toggle3 = screen.getByRole('checkbox', { name: /Goblin Spinecleaver 3/i })
+    const toggle4 = screen.getByRole('checkbox', { name: /Goblin Spinecleaver 4/i })
+    await user.click(toggle3)
+    await user.click(toggle4)
+
+    const pool = screen.getByRole('group', { name: /Minion stamina pool/i })
+    expect(within(pool).queryByTestId('threshold-mismatch-cue')).not.toBeInTheDocument()
+  })
+
+  it('shows "Revive" cue when minions are dead but stamina is restored', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    const expandBtn = screen.getByRole('button', { name: /^Expand individual Minions$/i })
+    await user.click(expandBtn)
+
+    const toggle4 = screen.getByRole('checkbox', { name: /Goblin Spinecleaver 4/i })
+    await user.click(toggle4)
+
+    const pool = screen.getByRole('group', { name: /Minion stamina pool/i })
+    const cue = within(pool).getByTestId('threshold-mismatch-cue')
+    expect(cue).toBeInTheDocument()
+    expect(cue.textContent).toMatch(/Revive 1/)
+  })
 })

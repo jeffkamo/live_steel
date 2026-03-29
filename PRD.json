@@ -130,7 +130,7 @@
         "Write specs covering threshold detection and visual cue display",
         "Run the specs, fix any failures until all pass"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "MALICE-001",
@@ -179,6 +179,18 @@
         "Confirm or immediately remove the monster from the group",
         "Handle cleanup of any references (e.g. captain assignments)",
         "Write specs covering deletion, state cleanup, and reference handling",
+        "Run the specs, fix any failures until all pass"
+      ],
+      "passes": true
+    },
+    {
+      "id": "DATA-004",
+      "category": "data",
+      "description": "Add protection for delete monster action",
+      "steps": [
+        "Add a 'Are you sure?' confirmation alert to prevent accidental deletions",
+        "If the user confirms positively, then delete the monster, otherwise do nothing",
+        "Write specs",
         "Run the specs, fix any failures until all pass"
       ],
       "passes": true

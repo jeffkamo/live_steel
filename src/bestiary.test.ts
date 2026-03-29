@@ -9,6 +9,7 @@ import {
   isMaliceCreature,
   minionInterval,
   minionThresholds,
+  suggestedDeadCount,
 } from './bestiary'
 import { cloneEncounterGroups } from './data'
 
@@ -379,5 +380,35 @@ describe('minionThresholds', () => {
 
   it('returns empty array for zero minions', () => {
     expect(minionThresholds(5, 0)).toEqual([])
+  })
+})
+
+describe('suggestedDeadCount', () => {
+  it('returns 0 when pool is full (current=20, interval=5, count=4)', () => {
+    expect(suggestedDeadCount(20, 5, 4)).toBe(0)
+  })
+
+  it('returns count when pool is empty (current=0)', () => {
+    expect(suggestedDeadCount(0, 5, 4)).toBe(4)
+  })
+
+  it('returns 2 when current=10 and thresholds are [5,10,15,20]', () => {
+    expect(suggestedDeadCount(10, 5, 4)).toBe(2)
+  })
+
+  it('returns 3 when current=5 and thresholds are [5,10,15,20]', () => {
+    expect(suggestedDeadCount(5, 5, 4)).toBe(3)
+  })
+
+  it('returns 1 when current=12 (between 10 and 15)', () => {
+    expect(suggestedDeadCount(12, 5, 4)).toBe(1)
+  })
+
+  it('returns 0 for a single minion at full stamina', () => {
+    expect(suggestedDeadCount(8, 8, 1)).toBe(0)
+  })
+
+  it('returns 1 for a single minion at 0 stamina', () => {
+    expect(suggestedDeadCount(0, 8, 1)).toBe(1)
   })
 })

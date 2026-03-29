@@ -148,6 +148,25 @@ export function minionThresholds(interval: number, minionCount: number): number[
 }
 
 /**
+ * Count how many minions the stamina pool says should be dead.
+ * A minion is "suggested dead" when the pool's current stamina
+ * has dropped to or below its lower-bound threshold.
+ */
+export function suggestedDeadCount(
+  current: number,
+  interval: number,
+  minionCount: number,
+): number {
+  const thresholds = minionThresholds(interval, minionCount)
+  let dead = 0
+  for (let i = thresholds.length - 1; i >= 0; i--) {
+    const prevThreshold = i === 0 ? 0 : thresholds[i - 1]!
+    if (current <= prevThreshold) dead++
+  }
+  return dead
+}
+
+/**
  * Returns true when a creature's bestiary entry contains at least one
  * feature or effect whose cost mentions "Malice".
  */

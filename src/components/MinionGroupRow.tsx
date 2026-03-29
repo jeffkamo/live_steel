@@ -308,6 +308,7 @@ export function MinionGroupRow({
               parentName={monster.name}
               firstMinionName={minions[0]?.name}
               minionCount={minions.length}
+              actualDeadCount={minions.filter((m) => m.dead).length}
             />
           )}
           renderEditor={({ current: cur, bump }) => (

@@ -205,3 +205,25 @@ Delete monster from group — trash icon on each monster/minion row, immediate r
 - src/components/MinionGroupRow.tsx
 - src/App.test.tsx
 - PRD.json
+
+
+[MINION-006]
+
+Subtle threshold mismatch cue — compares stamina-suggested dead count vs actual toggled dead count, shows animated "Kill N" or "Revive N" pill on the parent minion stamina display
+
+**Key decisions:**
+- suggestedDeadCount() in bestiary.ts counts minions whose lower-bound threshold >= current stamina; pure function, no side effects
+- MinionStaminaDisplay gets optional actualDeadCount prop (defaults 0); compares against suggestedDeadCount to decide cue
+- Cue rendered as animate-pulse pill with role="status" for screen reader; red "Kill N" when director needs to mark deaths, green "Revive N" when minions can come back
+- No auto-toggling — cue is advisory only, director manually toggles dead/alive per PRD requirement
+- MinionGroupRow passes `minions.filter(m => m.dead).length` as actualDeadCount
+- 7 suggestedDeadCount unit tests, 7 MinionStaminaDisplay cue tests, 4 App integration tests (sync=no cue, kill cue on stamina drop, cue clears after toggling dead, revive cue when dead but full HP)
+
+**Files changed:**
+- src/bestiary.ts
+- src/bestiary.test.ts
+- src/components/MinionStaminaDisplay.tsx
+- src/components/MinionStaminaDisplay.test.tsx
+- src/components/MinionGroupRow.tsx
+- src/App.test.tsx
+- PRD.json

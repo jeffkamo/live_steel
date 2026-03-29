@@ -155,4 +155,110 @@ describe('MinionStaminaDisplay', () => {
     const separators = within(group).getAllByText('/')
     expect(separators).toHaveLength(3)
   })
+
+  it('shows "Kill" cue when stamina suggests more dead than actually dead', () => {
+    render(
+      <MinionStaminaDisplay
+        current={10}
+        max={20}
+        parentName="Minions"
+        firstMinionName="Goblin Spinecleaver 1"
+        minionCount={4}
+        actualDeadCount={0}
+      />,
+    )
+    const cue = screen.getByTestId('threshold-mismatch-cue')
+    expect(cue).toBeInTheDocument()
+    expect(cue.textContent).toMatch(/Kill 2/)
+    expect(cue.title).toMatch(/2 minions should be marked dead/)
+  })
+
+  it('shows "Kill 1" cue for single minion mismatch', () => {
+    render(
+      <MinionStaminaDisplay
+        current={10}
+        max={20}
+        parentName="Minions"
+        firstMinionName="Goblin Spinecleaver 1"
+        minionCount={4}
+        actualDeadCount={1}
+      />,
+    )
+    const cue = screen.getByTestId('threshold-mismatch-cue')
+    expect(cue.textContent).toMatch(/Kill 1/)
+    expect(cue.title).toMatch(/1 minion should be marked dead/)
+  })
+
+  it('shows "Revive" cue when more minions are dead than stamina suggests', () => {
+    render(
+      <MinionStaminaDisplay
+        current={20}
+        max={20}
+        parentName="Minions"
+        firstMinionName="Goblin Spinecleaver 1"
+        minionCount={4}
+        actualDeadCount={2}
+      />,
+    )
+    const cue = screen.getByTestId('threshold-mismatch-cue')
+    expect(cue).toBeInTheDocument()
+    expect(cue.textContent).toMatch(/Revive 2/)
+    expect(cue.title).toMatch(/2 minions can be revived/)
+  })
+
+  it('shows no cue when actual dead matches suggested dead', () => {
+    render(
+      <MinionStaminaDisplay
+        current={10}
+        max={20}
+        parentName="Minions"
+        firstMinionName="Goblin Spinecleaver 1"
+        minionCount={4}
+        actualDeadCount={2}
+      />,
+    )
+    expect(screen.queryByTestId('threshold-mismatch-cue')).not.toBeInTheDocument()
+  })
+
+  it('shows no cue when actualDeadCount is omitted and pool is full', () => {
+    render(
+      <MinionStaminaDisplay
+        current={20}
+        max={20}
+        parentName="Minions"
+        firstMinionName="Goblin Spinecleaver 1"
+        minionCount={4}
+      />,
+    )
+    expect(screen.queryByTestId('threshold-mismatch-cue')).not.toBeInTheDocument()
+  })
+
+  it('cue has animate-pulse class for subtle animation', () => {
+    render(
+      <MinionStaminaDisplay
+        current={5}
+        max={20}
+        parentName="Minions"
+        firstMinionName="Goblin Spinecleaver 1"
+        minionCount={4}
+        actualDeadCount={0}
+      />,
+    )
+    const cue = screen.getByTestId('threshold-mismatch-cue')
+    expect(cue.className).toMatch(/animate-pulse/)
+  })
+
+  it('cue has role="status" for screen reader announcement', () => {
+    render(
+      <MinionStaminaDisplay
+        current={5}
+        max={20}
+        parentName="Minions"
+        firstMinionName="Goblin Spinecleaver 1"
+        minionCount={4}
+        actualDeadCount={0}
+      />,
+    )
+    expect(screen.getByRole('status')).toBeInTheDocument()
+  })
 })
