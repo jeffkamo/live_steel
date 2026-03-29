@@ -2,6 +2,26 @@ import { act, fireEvent, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import App from './App'
+import { MONSTER_DRAG_MIME } from './data'
+
+function mockMonsterDataTransfer(): DataTransfer {
+  const store = new Map<string, string>()
+  const types: string[] = []
+  return {
+    effectAllowed: 'uninitialized',
+    dropEffect: 'none' as const,
+    get types() {
+      return types as unknown as DOMStringList
+    },
+    setData(type: string, v: string) {
+      store.set(type, v)
+      if (!types.includes(type)) types.push(type)
+    },
+    getData(type: string) {
+      return store.get(type) ?? ''
+    },
+  } as unknown as DataTransfer
+}
 
 /** Accessible names use `Encounter group ${n}: …`; avoid `/group 1/` matching `group 10`. */
 const turnButton = (n: number, state: 'pending' | 'acted') =>
@@ -2193,5 +2213,62 @@ describe('App', () => {
 
     const after = screen.getAllByTestId('encounter-group-drop-target')
     expect(within(after[1]!).getByText('Goblin Assassin 1', { exact: true })).toBeInTheDocument()
+  })
+
+  it('renders draggable handles on each monster row', () => {
+    render(<App />)
+    const handles = screen.getAllByLabelText(/Reorder .* within encounter/i)
+    expect(handles.length).toBeGreaterThan(0)
+    for (const h of handles) {
+      expect(h).toHaveAttribute('draggable', 'true')
+    }
+  })
+
+  it('reorders monsters within a group on drag-and-drop', () => {
+    render(<App />)
+    const groups = screen.getAllByTestId('encounter-group-drop-target')
+    const g0 = groups[0]!
+    const raiderHandle = within(g0).getByLabelText('Reorder Goblin Raider within encounter')
+    const assassinDrop = g0.querySelector('[data-testid="monster-drop-target"][data-monster-index="0"]')
+    expect(assassinDrop).toBeTruthy()
+    const dt = mockMonsterDataTransfer()
+    fireEvent.dragStart(raiderHandle, { dataTransfer: dt })
+    expect(dt.getData(MONSTER_DRAG_MIME)).toContain('fromMonster')
+    fireEvent.dragOver(assassinDrop!, { dataTransfer: dt })
+    fireEvent.drop(assassinDrop!, { dataTransfer: dt })
+    const rows = g0.querySelectorAll('[data-testid="monster-drop-target"]')
+    expect(rows[0]).toHaveTextContent('Goblin Raider')
+    expect(rows[1]).toHaveTextContent('Goblin Assassin 1')
+  })
+
+  it('moves a monster into another group on drop', () => {
+    render(<App />)
+    const groups = screen.getAllByTestId('encounter-group-drop-target')
+    const g0 = groups[0]!
+    const g1 = groups[1]!
+    const raiderHandle = within(g0).getByLabelText('Reorder Goblin Raider within encounter')
+    const underbossDrop = g1.querySelector('[data-testid="monster-drop-target"][data-monster-index="0"]')
+    expect(underbossDrop).toBeTruthy()
+    const dt = mockMonsterDataTransfer()
+    fireEvent.dragStart(raiderHandle, { dataTransfer: dt })
+    fireEvent.dragOver(underbossDrop!, { dataTransfer: dt })
+    fireEvent.drop(underbossDrop!, { dataTransfer: dt })
+    expect(within(g1).getByText('Goblin Raider', { exact: true })).toBeInTheDocument()
+    expect(within(g0).queryByText('Goblin Raider', { exact: true })).not.toBeInTheDocument()
+  })
+
+  it('drops a monster into an empty encounter group', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    await user.click(screen.getByRole('button', { name: /^Add new encounter group$/i }))
+    const groups = screen.getAllByTestId('encounter-group-drop-target')
+    const last = groups[groups.length - 1]!
+    const emptyZone = within(last).getByTestId('empty-group-monster-drop-target')
+    const raiderHandle = screen.getByLabelText('Reorder Goblin Raider within encounter')
+    const dt = mockMonsterDataTransfer()
+    fireEvent.dragStart(raiderHandle, { dataTransfer: dt })
+    fireEvent.dragOver(emptyZone, { dataTransfer: dt })
+    fireEvent.drop(emptyZone, { dataTransfer: dt })
+    expect(within(last).getByText('Goblin Raider', { exact: true })).toBeInTheDocument()
   })
 })

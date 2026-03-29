@@ -1,14 +1,18 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import type { DragEvent } from 'react'
 import type { CaptainRef, ConditionState, GroupColorId, Monster } from './types'
 import {
   cloneEncounterGroups,
   cloneTerrainRows,
   ENCOUNTER_GROUP_DRAG_MIME,
   ENCOUNTER_GROUPS,
+  MONSTER_DRAG_MIME,
   moveIndexInArray,
+  moveMonsterInEncounterWithCaptainRemap,
   newEncounterGroupId,
   nextAvailableColor,
   remapEncounterGroupIndex,
+  remapEotConfirmedAfterMonsterMove,
   reorderEncounterGroupsWithCaptainRemap,
   ROSTER_GRID_TEMPLATE,
 } from './data'
@@ -347,6 +351,78 @@ function App() {
   )
 
   const [dropTargetGroupIndex, setDropTargetGroupIndex] = useState<number | null>(null)
+  const [monsterDropTarget, setMonsterDropTarget] = useState<{
+    groupIndex: number
+    monsterIndex: number
+  } | null>(null)
+
+  const moveMonsterInEncounter = useCallback(
+    (fromG: number, fromM: number, toG: number, toM: number) => {
+      setEncounterGroups((prev) => {
+        const next = moveMonsterInEncounterWithCaptainRemap(prev, fromG, fromM, toG, toM)
+        if (!next) return prev
+        queueMicrotask(() => {
+          setEotConfirmed((e) =>
+            remapEotConfirmedAfterMonsterMove(e, next.length, fromG, fromM, toG, toM),
+          )
+        })
+        return next
+      })
+    },
+    [],
+  )
+
+  const onMonsterDragStart = useCallback((fromG: number, fromM: number, e: DragEvent) => {
+    e.dataTransfer.setData(
+      MONSTER_DRAG_MIME,
+      JSON.stringify({ fromGroup: fromG, fromMonster: fromM }),
+    )
+    e.dataTransfer.effectAllowed = 'move'
+  }, [])
+
+  const onMonsterDragEnd = useCallback(() => {
+    setMonsterDropTarget(null)
+  }, [])
+
+  const onMonsterDragOver = useCallback((toG: number, toM: number, e: DragEvent) => {
+    if (![...e.dataTransfer.types].includes(MONSTER_DRAG_MIME)) return
+    e.preventDefault()
+    e.dataTransfer.dropEffect = 'move'
+    setMonsterDropTarget({ groupIndex: toG, monsterIndex: toM })
+  }, [])
+
+  const onMonsterDragLeave = useCallback((toG: number, toM: number, e: DragEvent) => {
+    if (!e.currentTarget.contains(e.relatedTarget as Node | null)) {
+      setMonsterDropTarget((v) =>
+        v?.groupIndex === toG && v?.monsterIndex === toM ? null : v,
+      )
+    }
+  }, [])
+
+  const onMonsterDrop = useCallback(
+    (toG: number, toM: number, e: DragEvent) => {
+      e.preventDefault()
+      setMonsterDropTarget(null)
+      const raw = e.dataTransfer.getData(MONSTER_DRAG_MIME)
+      let payload: { fromGroup: number; fromMonster: number } | null = null
+      try {
+        const o = JSON.parse(raw) as { fromGroup?: unknown; fromMonster?: unknown }
+        if (
+          typeof o.fromGroup === 'number' &&
+          typeof o.fromMonster === 'number' &&
+          Number.isInteger(o.fromGroup) &&
+          Number.isInteger(o.fromMonster)
+        ) {
+          payload = { fromGroup: o.fromGroup, fromMonster: o.fromMonster }
+        }
+      } catch {
+        /* ignore */
+      }
+      if (!payload) return
+      moveMonsterInEncounter(payload.fromGroup, payload.fromMonster, toG, toM)
+    },
+    [moveMonsterInEncounter],
+  )
 
   const reorderEncounterGroups = useCallback(
     (from: number, to: number) => {
@@ -572,6 +648,15 @@ function App() {
                   },
                   onDragEnd: () => setDropTargetGroupIndex(null),
                   ariaLabel: `Reorder encounter group ${gi + 1}`,
+                }}
+                monsterDrag={{
+                  thisGroupIndex: gi,
+                  dropTarget: monsterDropTarget,
+                  onMonsterDragStart: (mi, e) => onMonsterDragStart(gi, mi, e),
+                  onMonsterDragEnd: onMonsterDragEnd,
+                  onMonsterDragOver: (mi, e) => onMonsterDragOver(gi, mi, e),
+                  onMonsterDragLeave: (mi, e) => onMonsterDragLeave(gi, mi, e),
+                  onMonsterDrop: (mi, e) => onMonsterDrop(gi, mi, e),
                 }}
               />
             </div>

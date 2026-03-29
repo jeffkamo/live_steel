@@ -3,6 +3,7 @@ import {
   conditionEntryFromLabel,
   cloneEncounterGroups,
   cloneTerrainRows,
+  computeMonsterInsertIndex,
   findConditionOnMonster,
   conditionStateTitle,
   conditionCatalogTooltip,
@@ -12,7 +13,9 @@ import {
   nextAvailableColor,
   monsterFromBestiary,
   moveIndexInArray,
+  moveMonsterInEncounterWithCaptainRemap,
   remapEncounterGroupIndex,
+  remapEotConfirmedAfterMonsterMove,
   reorderEncounterGroupsWithCaptainRemap,
   CONDITION_CATALOG,
   GROUP_COLOR_ORDER,
@@ -20,7 +23,7 @@ import {
   ENCOUNTER_GROUPS,
   TERRAIN_ROWS,
 } from './data'
-import type { ConditionEntry, GroupColorId } from './types'
+import type { ConditionEntry, EncounterGroup, GroupColorId, Monster } from './types'
 
 describe('conditionEntryFromLabel', () => {
   it('creates a neutral condition entry', () => {
@@ -180,6 +183,83 @@ describe('remapEncounterGroupIndex', () => {
     expect(remapEncounterGroupIndex(2, 0, 2)).toBe(0)
     expect(remapEncounterGroupIndex(2, 0, 0)).toBe(1)
     expect(remapEncounterGroupIndex(2, 0, 1)).toBe(2)
+  })
+})
+
+describe('computeMonsterInsertIndex', () => {
+  it('returns null for same slot noop', () => {
+    expect(computeMonsterInsertIndex(0, 1, 0, 1)).toBeNull()
+  })
+
+  it('same-group insert before a later monster', () => {
+    expect(computeMonsterInsertIndex(0, 0, 0, 2)).toBe(1)
+  })
+
+  it('same-group insert before an earlier monster', () => {
+    expect(computeMonsterInsertIndex(0, 2, 0, 0)).toBe(0)
+  })
+
+  it('cross-group uses raw toMonster', () => {
+    expect(computeMonsterInsertIndex(0, 0, 1, 1)).toBe(1)
+  })
+})
+
+describe('moveMonsterInEncounterWithCaptainRemap', () => {
+  const mk = (name: string, captain?: Monster['captainId']): Monster => ({
+    name,
+    subtitle: '',
+    initials: name,
+    stamina: [1, 1],
+    marip: null,
+    fs: 0,
+    dist: 0,
+    stab: 0,
+    conditions: [],
+    captainId: captain,
+  })
+
+  it('reorders within same group', () => {
+    const groups: EncounterGroup[] = [
+      { id: 'a', color: 'red', monsters: [mk('A'), mk('B'), mk('C')] },
+    ]
+    const next = moveMonsterInEncounterWithCaptainRemap(groups, 0, 2, 0, 0)
+    expect(next!.map((g) => g.monsters.map((m) => m.name))).toEqual([['C', 'A', 'B']])
+  })
+
+  it('moves to another group and remaps captain ref to moved captain', () => {
+    const groups: EncounterGroup[] = [
+      { id: 'g0', color: 'red', monsters: [mk('Cap')] },
+      { id: 'g1', color: 'blue', monsters: [mk('Minion', { groupIndex: 0, monsterIndex: 0 })] },
+    ]
+    const next = moveMonsterInEncounterWithCaptainRemap(groups, 0, 0, 1, 0)
+    expect(next![1]!.monsters.map((m) => m.name)).toEqual(['Cap', 'Minion'])
+    expect(next![1]!.monsters[1]!.captainId).toEqual({ groupIndex: 1, monsterIndex: 0 })
+  })
+
+  it('updates captain monsterIndex when captain target reorders within group', () => {
+    const groups: EncounterGroup[] = [
+      { id: 'a', color: 'red', monsters: [mk('Cap'), mk('M', { groupIndex: 0, monsterIndex: 0 })] },
+    ]
+    const next = moveMonsterInEncounterWithCaptainRemap(groups, 0, 1, 0, 0)
+    expect(next![0]!.monsters[0]!.captainId).toEqual({ groupIndex: 0, monsterIndex: 1 })
+  })
+})
+
+describe('remapEotConfirmedAfterMonsterMove', () => {
+  it('migrates keys when moving monster cross-group', () => {
+    const prev = new Map<number, Set<string>>([
+      [0, new Set(['1:Bleeding'])],
+      [1, new Set()],
+    ])
+    const next = remapEotConfirmedAfterMonsterMove(prev, 2, 0, 1, 1, 0)
+    expect(next.get(0)).toEqual(new Set())
+    expect(next.get(1)).toEqual(new Set(['0:Bleeding']))
+  })
+
+  it('rewrites indices for same-group reorder', () => {
+    const prev = new Map<number, Set<string>>([[0, new Set(['2:Eot'])]])
+    const next = remapEotConfirmedAfterMonsterMove(prev, 1, 0, 2, 0, 0)
+    expect(next.get(0)).toEqual(new Set(['0:Eot']))
   })
 })
 

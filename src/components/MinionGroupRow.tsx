@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
+import type { DragEvent } from 'react'
 import type { CaptainRef, ConditionState, EncounterGroup, GroupColorId, Monster } from '../types'
 import { GROUP_COLOR_BADGE, GROUP_COLOR_LABEL } from '../data'
 import { EditableStaminaCell } from './EditableStaminaCell'
@@ -70,6 +71,7 @@ export function MinionGroupRow({
   onDelete,
   onConfirmEot,
   isEotConfirmed,
+  monsterDrag,
 }: {
   monster: Monster
   row: number
@@ -103,6 +105,16 @@ export function MinionGroupRow({
   onDelete?: () => void
   onConfirmEot?: (label: string, minionIndex?: number) => void
   isEotConfirmed?: (label: string, minionIndex?: number) => boolean
+  monsterDrag?: {
+    groupIndex: number
+    monsterIndex: number
+    dropHighlighted: boolean
+    onDragStart: (e: DragEvent) => void
+    onDragEnd: (e: DragEvent) => void
+    onDragOver: (e: DragEvent) => void
+    onDragLeave: (e: DragEvent) => void
+    onDrop: (e: DragEvent) => void
+  }
 }) {
   const [sc, sm] = monster.stamina
   const badge = GROUP_COLOR_BADGE[groupColor]
@@ -162,10 +174,37 @@ export function MinionGroupRow({
     <>
       {/* --- parent minion summary row --- */}
       <div
-        className={`${bodyCell} min-w-0 ${rowTone} group/namecell`}
+        className={`${bodyCell} min-w-0 ${rowTone} group/namecell ${
+          monsterDrag?.dropHighlighted ? 'ring-2 ring-inset ring-sky-500/40' : ''
+        }`}
         style={{ gridColumn: 2, gridRow: row }}
+        data-testid="monster-drop-target"
+        data-group-index={monsterDrag?.groupIndex}
+        data-monster-index={monsterDrag?.monsterIndex}
+        onDragOver={monsterDrag?.onDragOver}
+        onDragLeave={monsterDrag?.onDragLeave}
+        onDrop={monsterDrag?.onDrop}
       >
         <div className="flex w-full min-w-0 items-center gap-3">
+          {monsterDrag != null && (
+            <div
+              draggable
+              onDragStart={monsterDrag.onDragStart}
+              onDragEnd={monsterDrag.onDragEnd}
+              aria-label={`Reorder ${monster.name} within encounter`}
+              className="flex shrink-0 cursor-grab touch-none select-none items-center justify-center rounded p-0.5 active:cursor-grabbing"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 16 16"
+                fill="currentColor"
+                className="size-3.5 text-zinc-500"
+                aria-hidden
+              >
+                <path d="M5 3a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0ZM5 8a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0ZM5 13a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0ZM14 3a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0ZM14 8a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0ZM14 13a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0Z" />
+              </svg>
+            </div>
+          )}
           <button
             type="button"
             data-group-color-trigger={groupKey}

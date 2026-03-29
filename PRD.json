@@ -220,7 +220,7 @@
         "Write specs covering intra-group reorder, cross-group move, and state persistence",
         "Run the specs, fix any failures until all pass"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "DND-003",

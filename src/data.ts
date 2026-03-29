@@ -1,4 +1,5 @@
 import type {
+  CaptainRef,
   ConditionEntry,
   EncounterGroup,
   EncounterGroupSeed,
@@ -256,6 +257,188 @@ export const ROSTER_GRID_TEMPLATE =
 
 /** MIME type for HTML5 drag payload: source encounter group index (stringified). */
 export const ENCOUNTER_GROUP_DRAG_MIME = 'application/x-live-steel-encounter-group-index'
+
+/** MIME type for HTML5 drag payload: JSON `{ fromGroup, fromMonster }`. */
+export const MONSTER_DRAG_MIME = 'application/x-live-steel-monster-ref'
+
+/**
+ * Insert index in the per-group monsters array after removing the source monster.
+ * `toMonster` is "insert before this index" in pre-move coordinates (0..length inclusive for append).
+ */
+export function computeMonsterInsertIndex(
+  fromGroup: number,
+  fromMonster: number,
+  toGroup: number,
+  toMonster: number,
+): number | null {
+  if (fromGroup === toGroup && fromMonster === toMonster) return null
+  if (fromGroup === toGroup) {
+    if (fromMonster < toMonster) return toMonster - 1
+    return toMonster
+  }
+  return toMonster
+}
+
+function remapCaptainRefAfterMonsterMove(
+  ref: CaptainRef,
+  fromGroup: number,
+  fromMonster: number,
+  toGroup: number,
+  insertIndex: number,
+): CaptainRef {
+  const g = ref.groupIndex
+  let m = ref.monsterIndex
+  if (g === fromGroup && m === fromMonster) {
+    return { groupIndex: toGroup, monsterIndex: insertIndex }
+  }
+  if (g === fromGroup && m > fromMonster) {
+    m -= 1
+  }
+  if (g === toGroup && m >= insertIndex) {
+    m += 1
+  }
+  return { groupIndex: g, monsterIndex: m }
+}
+
+/**
+ * Move one monster to another index (possibly another group). Remaps {@link Monster.captainId} on all monsters.
+ */
+export function moveMonsterInEncounterWithCaptainRemap(
+  groups: EncounterGroup[],
+  fromGroup: number,
+  fromMonster: number,
+  toGroup: number,
+  toMonster: number,
+): EncounterGroup[] | null {
+  if (fromGroup < 0 || toGroup < 0 || fromGroup >= groups.length || toGroup >= groups.length) {
+    return null
+  }
+  const src = groups[fromGroup]?.monsters
+  const destLen = groups[toGroup]?.monsters.length
+  if (!src || fromMonster < 0 || fromMonster >= src.length || destLen === undefined) return null
+  if (toMonster < 0 || toMonster > destLen) return null
+
+  const insertIndex = computeMonsterInsertIndex(fromGroup, fromMonster, toGroup, toMonster)
+  if (insertIndex === null) return null
+
+  const monster = src[fromMonster]!
+  const next = groups.map((g) => ({
+    ...g,
+    monsters: [...g.monsters],
+  }))
+
+  next[fromGroup]!.monsters.splice(fromMonster, 1)
+  next[toGroup]!.monsters.splice(insertIndex, 0, monster)
+
+  return next.map((g) => ({
+    ...g,
+    monsters: g.monsters.map((m) => {
+      if (!m.captainId) return m
+      const ref = remapCaptainRefAfterMonsterMove(
+        m.captainId,
+        fromGroup,
+        fromMonster,
+        toGroup,
+        insertIndex,
+      )
+      if (ref.groupIndex === m.captainId.groupIndex && ref.monsterIndex === m.captainId.monsterIndex) {
+        return m
+      }
+      return { ...m, captainId: ref }
+    }),
+  }))
+}
+
+/** Remap EoT confirmation keys after a monster move (indices are per-group). */
+export function remapEotConfirmedAfterMonsterMove(
+  prev: ReadonlyMap<number, ReadonlySet<string>>,
+  groupCount: number,
+  fromGroup: number,
+  fromMonster: number,
+  toGroup: number,
+  toMonster: number,
+): Map<number, Set<string>> {
+  const ins = computeMonsterInsertIndex(fromGroup, fromMonster, toGroup, toMonster)
+  if (ins === null) {
+    return new Map(Array.from({ length: groupCount }, (_, i) => [i, new Set(prev.get(i) ?? [])]))
+  }
+
+  const out = new Map<number, Set<string>>()
+  for (let gi = 0; gi < groupCount; gi++) {
+    const src = prev.get(gi) ?? new Set<string>()
+    const dst = new Set<string>()
+
+    if (gi === fromGroup && gi !== toGroup) {
+      for (const key of src) {
+        const parts = key.split(':')
+        if (parts.length < 2) {
+          dst.add(key)
+          continue
+        }
+        const mi = Number(parts[0])
+        if (!Number.isFinite(mi)) {
+          dst.add(key)
+          continue
+        }
+        if (mi === fromMonster) continue
+        const tail = parts.slice(1).join(':')
+        if (mi > fromMonster) dst.add(`${mi - 1}:${tail}`)
+        else dst.add(key)
+      }
+    } else if (gi === toGroup && gi !== fromGroup) {
+      for (const key of src) {
+        const parts = key.split(':')
+        if (parts.length < 2) {
+          dst.add(key)
+          continue
+        }
+        const mi = Number(parts[0])
+        if (!Number.isFinite(mi)) {
+          dst.add(key)
+          continue
+        }
+        const tail = parts.slice(1).join(':')
+        const newMi = mi >= ins ? mi + 1 : mi
+        dst.add(`${newMi}:${tail}`)
+      }
+      const fromKeys = prev.get(fromGroup) ?? new Set<string>()
+      for (const key of fromKeys) {
+        const parts = key.split(':')
+        if (parts.length < 2) continue
+        const mi = Number(parts[0])
+        if (!Number.isFinite(mi) || mi !== fromMonster) continue
+        const tail = parts.slice(1).join(':')
+        dst.add(`${ins}:${tail}`)
+      }
+    } else if (gi === fromGroup && gi === toGroup) {
+      for (const key of src) {
+        const parts = key.split(':')
+        if (parts.length < 2) {
+          dst.add(key)
+          continue
+        }
+        const mi = Number(parts[0])
+        if (!Number.isFinite(mi)) {
+          dst.add(key)
+          continue
+        }
+        const tail = parts.slice(1).join(':')
+        if (mi === fromMonster) {
+          dst.add(`${ins}:${tail}`)
+        } else {
+          const mi2 = mi > fromMonster ? mi - 1 : mi
+          const mi3 = mi2 >= ins ? mi2 + 1 : mi2
+          dst.add(`${mi3}:${tail}`)
+        }
+      }
+    } else {
+      for (const key of src) dst.add(key)
+    }
+
+    out.set(gi, dst)
+  }
+  return out
+}
 
 export function newEncounterGroupId(): string {
   return globalThis.crypto?.randomUUID?.() ?? `eg-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`

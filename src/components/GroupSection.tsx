@@ -32,6 +32,7 @@ export function GroupSection({
   onConfirmEot,
   isEotConfirmed,
   encounterGroupDragHandle,
+  monsterDrag,
 }: {
   group: EncounterGroup
   groupKey: string
@@ -46,6 +47,15 @@ export function GroupSection({
     onDragStart: (e: DragEvent) => void
     onDragEnd: (e: DragEvent) => void
     ariaLabel: string
+  }
+  monsterDrag?: {
+    thisGroupIndex: number
+    dropTarget: { groupIndex: number; monsterIndex: number } | null
+    onMonsterDragStart: (monsterIndex: number, e: DragEvent) => void
+    onMonsterDragEnd: (e: DragEvent) => void
+    onMonsterDragOver: (monsterIndex: number, e: DragEvent) => void
+    onMonsterDragLeave: (monsterIndex: number, e: DragEvent) => void
+    onMonsterDrop: (monsterIndex: number, e: DragEvent) => void
   }
   onGroupColorChange: (color: GroupColorId) => void
   onMonsterStaminaChange: (monsterIndex: number, stamina: [number, number]) => void
@@ -109,6 +119,22 @@ export function GroupSection({
   }
   const totalGridRows = Math.max(currentRow - 1, 1)
 
+  const monsterRowDrag = (i: number) => {
+    if (monsterDrag == null) return undefined
+    return {
+      groupIndex: monsterDrag.thisGroupIndex,
+      monsterIndex: i,
+      dropHighlighted:
+        monsterDrag.dropTarget?.groupIndex === monsterDrag.thisGroupIndex &&
+        monsterDrag.dropTarget?.monsterIndex === i,
+      onDragStart: (e: DragEvent) => monsterDrag.onMonsterDragStart(i, e),
+      onDragEnd: monsterDrag.onMonsterDragEnd,
+      onDragOver: (e: DragEvent) => monsterDrag.onMonsterDragOver(i, e),
+      onDragLeave: (e: DragEvent) => monsterDrag.onMonsterDragLeave(i, e),
+      onDrop: (e: DragEvent) => monsterDrag.onMonsterDrop(i, e),
+    }
+  }
+
   return (
     <div
       className="grid items-stretch overflow-visible rounded-lg bg-zinc-900/80"
@@ -124,6 +150,24 @@ export function GroupSection({
         turnAriaLabel={turnAriaLabel}
         encounterGroupDragHandle={encounterGroupDragHandle}
       />
+      {monsterDrag != null && group.monsters.length === 0 && (
+        <div
+          data-testid="empty-group-monster-drop-target"
+          data-group-index={monsterDrag.thisGroupIndex}
+          className={`flex min-h-[3.75rem] items-center justify-center rounded border border-dashed border-zinc-700/80 px-3 text-sm text-zinc-500 sm:min-h-[4rem] ${
+            monsterDrag.dropTarget?.groupIndex === monsterDrag.thisGroupIndex &&
+            monsterDrag.dropTarget?.monsterIndex === 0
+              ? 'bg-sky-950/25 ring-2 ring-inset ring-sky-500/40'
+              : ''
+          }`}
+          style={{ gridColumn: '2 / -1', gridRow: 1 }}
+          onDragOver={(e) => monsterDrag.onMonsterDragOver(0, e)}
+          onDragLeave={(e) => monsterDrag.onMonsterDragLeave(0, e)}
+          onDrop={(e) => monsterDrag.onMonsterDrop(0, e)}
+        >
+          Drop creature here
+        </div>
+      )}
       <GroupColorPickerPopover
         open={colorMenu.open}
         anchor={colorMenu.anchor}
@@ -181,6 +225,7 @@ export function GroupSection({
               onDelete={() => onDeleteMonster?.(i)}
               onConfirmEot={onConfirmEot ? (label, minionIndex) => onConfirmEot(i, label, minionIndex) : undefined}
               isEotConfirmed={isEotConfirmed ? (label, minionIndex) => isEotConfirmed(i, label, minionIndex) : undefined}
+              monsterDrag={monsterRowDrag(i)}
             />
           )
         }
@@ -211,6 +256,7 @@ export function GroupSection({
             onDelete={() => onDeleteMonster?.(i)}
             onConfirmEot={onConfirmEot ? (label) => onConfirmEot(i, label) : undefined}
             isEotConfirmed={isEotConfirmed ? (label) => isEotConfirmed(i, label) : undefined}
+            monsterDrag={monsterRowDrag(i)}
           />
         )
       })}

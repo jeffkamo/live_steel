@@ -401,3 +401,25 @@ Reorder encounter groups — HTML5 DnD from grip in turn column; drop on group w
 - src/components/GroupSection.test.tsx
 - src/components/StatBlock.test.tsx
 - PRD.json
+
+
+[DND-002]
+
+Monster row DnD — 6-dot grip left of ordinal on each monster/minion parent row; drop target = name cell (`monster-drop-target` + data-group-index/monster-index); insert-before `toMonster`; empty group gets `empty-group-monster-drop-target` row
+
+**Key decisions:**
+- `MONSTER_DRAG_MIME` JSON `{fromGroup,fromMonster}` — orthogonal to `ENCOUNTER_GROUP_DRAG_MIME` so group wrapper dragOver/drop ignores monster drags
+- `moveMonsterInEncounterWithCaptainRemap` in data.ts: splice out/in then remap every `captainId` via remove-then-insert index rules (refs to moved monster → new slot; same-group shifts; dest group bump ≥ insert)
+- `remapEotConfirmedAfterMonsterMove` for cross-group + same-group EoT key strings (`mi:label` / `mi:mni:label`)
+- EoT map update in `queueMicrotask` after `setEncounterGroups` schedules (avoids nested setState in updater)
+- 7 data unit tests + 4 App tests (handles, intra-group reorder, cross-group, empty group)
+
+**Files changed:**
+- src/data.ts
+- src/data.test.ts
+- src/App.tsx
+- src/App.test.tsx
+- src/components/GroupSection.tsx
+- src/components/MonsterRowCells.tsx
+- src/components/MinionGroupRow.tsx
+- PRD.json
