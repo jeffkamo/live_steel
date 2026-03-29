@@ -12,6 +12,11 @@ An inspiration for the app is [Forge Steel](https://forgesteel.net). Live Steel 
 
 The app does not roll dice or enforce rules; it is a **readable control panel** for the encounter you have prepared. Data in the UI is sample content until you wire in your own encounters.
 
+## Data & SDK
+
+Bestiary statblock data in `data/bestiary/` comes from the [Steel Compendium data-bestiary-json](https://github.com/SteelCompendium/data-bestiary-json) repository.
+The data is parsed at runtime using the [steel-compendium-sdk](https://www.npmjs.com/package/steel-compendium-sdk) npm package.
+
 ## Development
 
 ```bash
