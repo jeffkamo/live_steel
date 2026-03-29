@@ -115,3 +115,21 @@ export function featuresForMonster(encounterName: string): MonsterFeature[] | un
   if (!sb) return undefined
   return mapFeatures(sb.features)
 }
+
+/**
+ * Returns true when a creature's bestiary entry contains at least one
+ * feature or effect whose cost mentions "Malice".
+ */
+export function isMaliceCreature(encounterName: string): boolean {
+  const sb = lookupStatblock(encounterName)
+  if (!sb?.features) return false
+  return sb.features.some(
+    (f) =>
+      hasMaliceCost(f.cost) ||
+      (f.effects?.some((e) => hasMaliceCost(e.cost)) ?? false),
+  )
+}
+
+function hasMaliceCost(cost: string | undefined): boolean {
+  return cost != null && /malice/i.test(cost)
+}

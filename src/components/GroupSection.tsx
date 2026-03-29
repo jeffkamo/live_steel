@@ -1,6 +1,7 @@
 import { useCallback, useState } from 'react'
 import type { ConditionState, EncounterGroup, GroupColorId, GroupColorMenuState } from '../types'
 import { ROSTER_GRID_TEMPLATE } from '../data'
+import { isMaliceCreature } from '../bestiary'
 import { GroupTurnColumn } from './TurnColumnCell'
 import { GroupColorPickerPopover } from './GroupColorPickerPopover'
 import { MonsterRowCells } from './MonsterRowCells'
@@ -75,7 +76,9 @@ export function GroupSection({
     const m = group.monsters[i]!
     const isMinion = m.minions && m.minions.length > 0
     const minionExpanded = isMinion && !!expandedMinions[i]
-    const hasFeatures = (m.features?.length ?? 0) > 0
+    const malice = isMaliceCreature(m.name) ||
+      (isMinion && m.minions!.length > 0 && isMaliceCreature(m.minions![0]!.name))
+    const hasFeatures = !malice && (m.features?.length ?? 0) > 0
     const statBlockOpen = hasFeatures && !!expandedStatBlocks[i]
     let count = 1
     if (isMinion && minionExpanded) count += m.minions!.length

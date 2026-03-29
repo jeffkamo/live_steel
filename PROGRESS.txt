@@ -58,3 +58,24 @@ Core stats header in stat block — stamina, MARIP, speed, size, stability, free
 - src/components/StatBlock.tsx
 - src/components/StatBlock.test.tsx
 - PRD.json
+
+
+[MALICE-001]
+
+Suppress stat block rendering for malice creatures (those with Malice-cost features/effects) until design is finalized
+
+**Key decisions:**
+- isMaliceCreature() in bestiary.ts checks feature.cost and effect.cost for /malice/i regex match
+- Guard applied at rendering layer (MonsterRowCells, MinionGroupRow, GroupSection) not data layer — features still populated, just not displayed
+- MinionGroupRow checks both parent name and first minion name for malice (mirrors resolveFeatures fallback pattern)
+- 262/416 bestiary monsters are malice creatures; includes Goblin Assassin and Goblin Underboss from seed data
+- 10 new tests: 6 for isMaliceCreature unit, 4 for component-level stat block suppression
+
+**Files changed:**
+- src/bestiary.ts
+- src/bestiary.test.ts
+- src/components/MonsterRowCells.tsx
+- src/components/MinionGroupRow.tsx
+- src/components/GroupSection.tsx
+- src/components/StatBlock.test.tsx
+- PRD.json

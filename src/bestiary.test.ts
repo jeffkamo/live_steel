@@ -6,6 +6,7 @@ import {
   statblockCount,
   mapFeatures,
   featuresForMonster,
+  isMaliceCreature,
 } from './bestiary'
 import { cloneEncounterGroups } from './data'
 
@@ -207,6 +208,32 @@ describe('featuresForMonster', () => {
 
   it('returns undefined for unknown monster', () => {
     expect(featuresForMonster('Made Up Monster')).toBeUndefined()
+  })
+})
+
+describe('isMaliceCreature', () => {
+  it('returns true for a monster with a malice-cost feature', () => {
+    expect(isMaliceCreature('Goblin Assassin')).toBe(true)
+  })
+
+  it('returns true when given a numbered encounter name', () => {
+    expect(isMaliceCreature('Goblin Assassin 1')).toBe(true)
+  })
+
+  it('returns true for Goblin Underboss (has malice effects)', () => {
+    expect(isMaliceCreature('Goblin Underboss')).toBe(true)
+  })
+
+  it('returns false for a monster without malice costs', () => {
+    expect(isMaliceCreature('Goblin Spinecleaver')).toBe(false)
+  })
+
+  it('returns false for an unknown monster name', () => {
+    expect(isMaliceCreature('Nonexistent Dragon')).toBe(false)
+  })
+
+  it('returns false for a monster with features but no malice costs', () => {
+    expect(isMaliceCreature('Goblin Spinecleaver 1')).toBe(false)
   })
 })
 

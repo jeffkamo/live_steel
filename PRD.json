@@ -142,7 +142,7 @@
         "Write specs verifying malice creatures do not render stat blocks",
         "Run the specs, fix any failures until all pass"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "DATA-001",

@@ -375,6 +375,149 @@ describe('MonsterRowCells stat block toggle', () => {
   })
 })
 
+describe('Malice creature stat block suppression', () => {
+  const maliceRowProps = {
+    row: 1,
+    ordinal: 1,
+    monsterIndex: 0,
+    monsterCount: 1,
+    groupKey: 'g0',
+    groupNumber: 1,
+    groupColor: 'red' as const,
+    colorMenuOpen: false,
+    colorMenuMonsterIndex: null as number | null,
+    onGroupColorOrdinalClick: vi.fn(),
+    turnComplete: false,
+    onStaminaChange: vi.fn(),
+    onConditionRemove: vi.fn(),
+    onConditionAddOrSet: vi.fn(),
+  }
+
+  const maliceGroupProps = {
+    groupKey: 'g0',
+    groupNumber: 1,
+    thisGroupIndex: 0,
+    encounterGroupColors: ['red'] as GroupColorId[],
+    turnActed: false,
+    onToggleTurn: vi.fn(),
+    turnAriaLabel: 'Encounter group 1: turn pending',
+    onGroupColorChange: vi.fn(),
+    onMonsterStaminaChange: vi.fn(),
+    onMonsterConditionRemove: vi.fn(),
+    onMonsterConditionAddOrSet: vi.fn(),
+  }
+
+  it('does not show stat block toggle for a malice creature in MonsterRowCells', () => {
+    render(
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)' }}>
+        <MonsterRowCells
+          monster={{
+            name: 'Goblin Assassin 1',
+            subtitle: 'L1 Horde · Ambusher',
+            initials: 'GA',
+            stamina: [5, 15],
+            marip: [-2, 2, 0, 0, -2],
+            fs: -1,
+            dist: 4,
+            stab: 0,
+            conditions: [],
+            features: [sampleAbility],
+          }}
+          {...maliceRowProps}
+          statBlockExpanded={false}
+          onToggleStatBlock={vi.fn()}
+        />
+      </div>,
+    )
+    expect(
+      screen.queryByRole('button', { name: /stat block/i }),
+    ).not.toBeInTheDocument()
+  })
+
+  it('does not render stat block content even when expanded prop is true for malice creature', () => {
+    render(
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)' }}>
+        <MonsterRowCells
+          monster={{
+            name: 'Goblin Assassin 1',
+            subtitle: 'L1 Horde · Ambusher',
+            initials: 'GA',
+            stamina: [5, 15],
+            marip: [-2, 2, 0, 0, -2],
+            fs: -1,
+            dist: 4,
+            stab: 0,
+            conditions: [],
+            features: [sampleAbility],
+          }}
+          {...maliceRowProps}
+          statBlockExpanded={true}
+          onToggleStatBlock={vi.fn()}
+        />
+      </div>,
+    )
+    expect(
+      screen.queryByRole('region', { name: /Stat block/i }),
+    ).not.toBeInTheDocument()
+  })
+
+  it('still shows stat block toggle for non-malice creature with features', () => {
+    render(
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)' }}>
+        <MonsterRowCells
+          monster={{
+            name: 'Goblin Spinecleaver 1',
+            subtitle: 'Level 1 Minion',
+            initials: 'GS',
+            stamina: [1, 1],
+            marip: [-1, 0, 0, 0, -1],
+            fs: 0,
+            dist: 3,
+            stab: 0,
+            conditions: [],
+            features: [sampleAbility],
+          }}
+          {...maliceRowProps}
+          statBlockExpanded={false}
+          onToggleStatBlock={vi.fn()}
+        />
+      </div>,
+    )
+    expect(
+      screen.getByRole('button', { name: /Expand stat block for Goblin Spinecleaver/i }),
+    ).toBeInTheDocument()
+  })
+
+  it('does not show stat block toggle for malice creature in GroupSection', () => {
+    const group: EncounterGroup = {
+      color: 'red',
+      monsters: [
+        {
+          name: 'Goblin Assassin 1',
+          subtitle: 'L1 Horde · Ambusher',
+          initials: 'GA',
+          stamina: [5, 15],
+          marip: [-2, 2, 0, 0, -2],
+          fs: -1,
+          dist: 4,
+          stab: 0,
+          conditions: [],
+          features: [sampleAbility],
+        },
+      ],
+    }
+    render(
+      <GroupSection
+        group={group}
+        {...maliceGroupProps}
+      />,
+    )
+    expect(
+      screen.queryByRole('button', { name: /stat block/i }),
+    ).not.toBeInTheDocument()
+  })
+})
+
 describe('GroupSection stat block integration', () => {
   function makeGroupWithFeatures(): EncounterGroup {
     return {
