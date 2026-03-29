@@ -14,6 +14,7 @@ import { EditableStaminaCell } from './EditableStaminaCell'
 import { MinionStaminaDisplay } from './MinionStaminaDisplay'
 import { MinionStaminaEditor } from './MinionStaminaEditor'
 import { MaripCluster } from './MaripCluster'
+import { StaminaHeartFullIcon, StaminaSkullIcon } from './StaminaGlyph'
 import { StatCluster } from './StatCluster'
 import { CreatureConditionCell, type CreatureConditionDnDBinding } from './CreatureConditionCell'
 import { focusRelativeIn, listFocusableIn, tabWrapKeyDown } from '../dropdownA11y'
@@ -274,39 +275,38 @@ export function MinionGroupRow({
             )}
             <div className="relative mt-1.5" ref={captainDropdownRef}>
               {captainMonster && captainGroupColor ? (
-                <span
-                  className="inline-flex items-center gap-1.5 rounded-full border border-zinc-700/80 bg-zinc-800/80 px-2.5 py-0.5 text-xs leading-tight"
+                <div
+                  className="inline-flex max-w-full items-stretch overflow-hidden rounded-full border border-zinc-700/80 bg-zinc-800/80 text-xs leading-tight"
                   data-testid="captain-pill"
                 >
-                  <span className="text-[0.6rem] font-medium uppercase tracking-wider text-zinc-500">Captain</span>
-                  <span
-                    className={`inline-flex size-5 items-center justify-center rounded-full border text-[0.6rem] font-semibold tabular-nums leading-none ${GROUP_COLOR_BADGE[captainGroupColor].border} ${GROUP_COLOR_BADGE[captainGroupColor].bg} ${GROUP_COLOR_BADGE[captainGroupColor].text}`}
-                  >
-                    {captainRef!.monsterIndex + 1}
-                  </span>
-                  <span className="truncate text-zinc-200">{captainMonster.name}</span>
                   <button
                     type="button"
                     aria-label={`Change captain for ${monster.name}`}
+                    aria-expanded={captainDropdownOpen}
+                    aria-haspopup="listbox"
                     onClick={() => setCaptainDropdownOpen((v) => !v)}
-                    className="ml-0.5 cursor-pointer text-zinc-400 transition-colors hover:text-zinc-100"
+                    className="inline-flex min-w-0 flex-1 cursor-pointer items-center gap-1.5 px-2.5 py-0.5 text-left outline-none transition-colors hover:bg-zinc-700/40 focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-amber-500/45 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950"
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="size-3" aria-hidden>
-                      <path d="M13.488 2.513a1.75 1.75 0 0 0-2.475 0L3.05 10.476a1 1 0 0 0-.27.481l-.57 2.565a.75.75 0 0 0 .897.897l2.565-.57a1 1 0 0 0 .481-.27l7.963-7.963a1.75 1.75 0 0 0 0-2.475l-.628-.628ZM11.72 3.22a.25.25 0 0 1 .354 0l.628.628a.25.25 0 0 1 0 .354L5.134 11.77l-1.27.282.282-1.27 7.574-7.562Z" />
-                    </svg>
+                    <span className="shrink-0 text-[0.6rem] font-medium uppercase tracking-wider text-zinc-500">Captain</span>
+                    <span
+                      className={`inline-flex size-5 shrink-0 items-center justify-center rounded-full border text-[0.6rem] font-semibold tabular-nums leading-none ${GROUP_COLOR_BADGE[captainGroupColor].border} ${GROUP_COLOR_BADGE[captainGroupColor].bg} ${GROUP_COLOR_BADGE[captainGroupColor].text}`}
+                    >
+                      {captainRef!.monsterIndex + 1}
+                    </span>
+                    <span className="min-w-0 truncate text-zinc-200">{captainMonster.name}</span>
                   </button>
                   <button
                     type="button"
                     aria-label={`Remove captain from ${monster.name}`}
                     data-testid="remove-captain"
                     onClick={() => onCaptainChange?.(null)}
-                    className="ml-0.5 cursor-pointer text-zinc-500 transition-colors hover:text-red-400"
+                    className="flex shrink-0 cursor-pointer items-center border-l border-zinc-700/80 px-2 py-0.5 text-zinc-500 transition-colors hover:bg-zinc-700/40 hover:text-red-400 focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-amber-500/45 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="size-3" aria-hidden>
                       <path d="M5.28 4.22a.75.75 0 0 0-1.06 1.06L6.94 8l-2.72 2.72a.75.75 0 1 0 1.06 1.06L8 9.06l2.72 2.72a.75.75 0 1 0 1.06-1.06L9.06 8l2.72-2.72a.75.75 0 0 0-1.06-1.06L8 6.94 5.28 4.22Z" />
                     </svg>
                   </button>
-                </span>
+                </div>
               ) : (
                 <button
                   type="button"
@@ -610,33 +610,32 @@ function MinionChildRow({
         className={`${bodyCell} justify-center border-t border-zinc-800/60 ${rowTone}`}
         style={{ gridColumn: 3, gridRow: gridRow }}
       >
-        <label className="relative inline-flex cursor-pointer items-center gap-2">
-          <input
-            type="checkbox"
-            checked={minion.dead}
-            onChange={(e) => onDeadChange(e.target.checked)}
-            className="peer sr-only"
-            aria-label={`${minion.name}: ${minion.dead ? 'dead' : 'alive'}`}
-          />
-          <span
-            className={`flex h-6 w-11 items-center rounded-full transition-colors duration-200 ${
-              minion.dead
-                ? 'bg-red-900/70'
-                : 'bg-emerald-900/50'
-            }`}
-          >
-            <span
-              className={`inline-block size-4 rounded-full transition-all duration-200 ${
-                minion.dead
-                  ? 'translate-x-[1.375rem] bg-red-400'
-                  : 'translate-x-1 bg-emerald-400'
-              }`}
-            />
-          </span>
-          <span className={`select-none text-xs font-medium ${minion.dead ? 'text-red-400' : 'text-emerald-400'}`}>
-            {minion.dead ? 'Dead' : 'Alive'}
-          </span>
-        </label>
+        <button
+          type="button"
+          aria-pressed={minion.dead}
+          title={
+            minion.dead
+              ? 'Dead — click to mark alive'
+              : 'Alive — click to mark dead'
+          }
+          aria-label={
+            minion.dead
+              ? `${minion.name}: dead. Click to mark alive.`
+              : `${minion.name}: alive. Click to mark dead.`
+          }
+          onClick={() => onDeadChange(!minion.dead)}
+          className={`inline-flex size-9 shrink-0 items-center justify-center rounded-full border outline-none transition-[background-color,border-color,color,transform] duration-200 ease-out motion-reduce:transition-none hover:brightness-110 active:scale-[0.96] focus-visible:ring-2 focus-visible:ring-amber-500/45 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950 sm:size-10 ${
+            minion.dead
+              ? 'border-red-800/70 bg-red-950/55 text-red-400'
+              : 'border-emerald-800/55 bg-emerald-950/45 text-emerald-400'
+          }`}
+        >
+          {minion.dead ? (
+            <StaminaSkullIcon className="size-5 scale-90" />
+          ) : (
+            <StaminaHeartFullIcon className="size-5" />
+          )}
+        </button>
       </div>
       <div
         className={`${bodyCell} justify-center border-t border-zinc-800/60 ${rowTone} ${deadDim}`}

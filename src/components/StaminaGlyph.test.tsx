@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
-import { StaminaGlyph, staminaGlyphStatus } from './StaminaGlyph'
+import { StaminaGlyph, staminaGlyphStatus, staminaReadoutChipClass } from './StaminaGlyph'
 
 describe('staminaGlyphStatus', () => {
   it('returns "none" when max is 0', () => {
@@ -30,6 +30,20 @@ describe('staminaGlyphStatus', () => {
   it('uses floor for half calculation (odd max)', () => {
     expect(staminaGlyphStatus(7, 15)).toBe('winded')
     expect(staminaGlyphStatus(8, 15)).toBe('healthy')
+  })
+})
+
+describe('staminaReadoutChipClass', () => {
+  it('maps stamina states to chip classes (minion segment parity)', () => {
+    expect(staminaReadoutChipClass('none')).toBe('text-sm text-zinc-400')
+    expect(staminaReadoutChipClass('healthy')).toMatch(/text-sm/)
+    expect(staminaReadoutChipClass('healthy')).toMatch(/text-zinc-50/)
+    expect(staminaReadoutChipClass('healthy')).not.toMatch(/bg-/)
+    expect(staminaReadoutChipClass('winded')).toMatch(/text-sm/)
+    expect(staminaReadoutChipClass('winded')).toMatch(/bg-amber-950\/50/)
+    expect(staminaReadoutChipClass('winded')).toMatch(/text-amber-300/)
+    expect(staminaReadoutChipClass('dead')).toMatch(/bg-red-950\/60/)
+    expect(staminaReadoutChipClass('dead')).toMatch(/line-through/)
   })
 })
 

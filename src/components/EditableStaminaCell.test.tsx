@@ -21,6 +21,29 @@ describe('EditableStaminaCell', () => {
     expect(hearts.length).toBe(2)
   })
 
+  it('styles stamina readout chip when healthy (no fill)', () => {
+    render(<EditableStaminaCell current={10} max={15} onChange={vi.fn()} ariaLabel="Edit stamina" />)
+    const el = screen.getByText('10 / 15')
+    expect(el.className).toMatch(/text-zinc-50/)
+    expect(el.className).not.toMatch(/bg-amber/)
+    expect(el.className).not.toMatch(/bg-red/)
+  })
+
+  it('styles stamina readout with amber chip when winded', () => {
+    render(<EditableStaminaCell current={5} max={15} onChange={vi.fn()} ariaLabel="Edit stamina" />)
+    const el = screen.getByText('5 / 15')
+    expect(el.className).toMatch(/bg-amber-950\/50/)
+    expect(el.className).toMatch(/text-amber-300/)
+  })
+
+  it('styles stamina readout with red chip at zero stamina', () => {
+    render(<EditableStaminaCell current={0} max={15} onChange={vi.fn()} ariaLabel="Edit stamina" />)
+    const el = screen.getByText('0 / 15')
+    expect(el.className).toMatch(/bg-red-950\/60/)
+    expect(el.className).toMatch(/text-red-400/)
+    expect(el.className).toMatch(/line-through/)
+  })
+
   it('renders a winded heart when stamina is at or below half', () => {
     render(<EditableStaminaCell current={5} max={15} onChange={vi.fn()} ariaLabel="Edit stamina" />)
     const group = screen.getByRole('group', { name: 'Edit stamina' })

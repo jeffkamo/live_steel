@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useId, useState } from 'react'
 import { applyStaminaDelta, normalizeStamina } from '../data'
-import { StaminaGlyph, staminaGlyphStatus } from './StaminaGlyph'
+import { StaminaGlyph, staminaGlyphStatus, staminaReadoutChipClass } from './StaminaGlyph'
 
 const staminaBumpMinusClass =
   'flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-full border border-zinc-500/75 bg-zinc-800/40 font-sans text-[0.58rem] font-semibold tabular-nums text-zinc-300 transition-colors hover:border-zinc-400 hover:bg-zinc-800/80 hover:text-zinc-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500/60 active:bg-zinc-900 sm:h-9 sm:w-9 sm:text-[0.62rem]'
@@ -74,10 +74,10 @@ export function EditableStaminaCell({
         {renderDisplay ? (
           renderDisplay(current, max)
         ) : empty ? (
-          <span className="text-sm text-zinc-400">—</span>
+          <span className={staminaReadoutChipClass('none')}>—</span>
         ) : (
           <div className="flex items-center justify-center gap-1.5 tabular-nums">
-            <span className="text-sm text-zinc-50">
+            <span className={staminaReadoutChipClass(glyphStatus)}>
               {current} / {max}
             </span>
             <StaminaGlyph

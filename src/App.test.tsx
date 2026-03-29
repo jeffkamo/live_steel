@@ -866,12 +866,11 @@ describe('App', () => {
     render(<App />)
     const grid = await expandMinions(user)
     const scope = within(grid)
-    const toggles = scope.getAllByRole('checkbox', { name: /alive$/i })
+    const toggles = scope.getAllByRole('button', { name: /Goblin Spinecleaver [1-4]: alive/i })
     expect(toggles).toHaveLength(4)
     for (const toggle of toggles) {
-      expect(toggle).not.toBeChecked()
+      expect(toggle).toHaveAttribute('aria-pressed', 'false')
     }
-    expect(scope.getAllByText('Alive')).toHaveLength(4)
   })
 
   it('clicking the dead/alive toggle marks a minion as dead', async () => {
@@ -879,10 +878,10 @@ describe('App', () => {
     render(<App />)
     const grid = await expandMinions(user)
     const scope = within(grid)
-    const toggle = scope.getByRole('checkbox', { name: /Goblin Spinecleaver 1.*alive$/i })
+    const toggle = scope.getByRole('button', { name: /Goblin Spinecleaver 1: alive/i })
     await user.click(toggle)
-    expect(toggle).toBeChecked()
-    expect(scope.getByRole('checkbox', { name: /Goblin Spinecleaver 1.*dead$/i })).toBeInTheDocument()
+    expect(toggle).toHaveAttribute('aria-pressed', 'true')
+    expect(scope.getByRole('button', { name: /Goblin Spinecleaver 1: dead/i })).toBeInTheDocument()
   })
 
   it('toggling a minion dead applies visual dimming and strikethrough', async () => {
@@ -890,7 +889,7 @@ describe('App', () => {
     render(<App />)
     const grid = await expandMinions(user)
     const scope = within(grid)
-    const toggle = scope.getByRole('checkbox', { name: /Goblin Spinecleaver 2.*alive$/i })
+    const toggle = scope.getByRole('button', { name: /Goblin Spinecleaver 2: alive/i })
     await user.click(toggle)
     const nameEl = scope.getByText('Goblin Spinecleaver 2', { exact: true })
     expect(nameEl.className).toMatch(/line-through/)
@@ -901,26 +900,25 @@ describe('App', () => {
     render(<App />)
     const grid = await expandMinions(user)
     const scope = within(grid)
-    const toggle = scope.getByRole('checkbox', { name: /Goblin Spinecleaver 1.*alive$/i })
+    const toggle = scope.getByRole('button', { name: /Goblin Spinecleaver 1: alive/i })
     await user.click(toggle)
-    expect(toggle).toBeChecked()
+    expect(toggle).toHaveAttribute('aria-pressed', 'true')
     await user.click(toggle)
-    expect(toggle).not.toBeChecked()
+    expect(toggle).toHaveAttribute('aria-pressed', 'false')
     const nameEl = scope.getByText('Goblin Spinecleaver 1', { exact: true })
     expect(nameEl.className).not.toMatch(/line-through/)
   })
 
-  it('dead/alive toggle label text switches between Dead and Alive', async () => {
+  it('minion life toggle updates accessible name when marked dead', async () => {
     const user = userEvent.setup()
     render(<App />)
     const grid = await expandMinions(user)
     const scope = within(grid)
-    expect(scope.getAllByText('Alive')).toHaveLength(4)
-    expect(scope.queryByText('Dead')).toBeNull()
-    const toggle = scope.getByRole('checkbox', { name: /Goblin Spinecleaver 3.*alive$/i })
-    await user.click(toggle)
-    expect(scope.getAllByText('Alive')).toHaveLength(3)
-    expect(scope.getByText('Dead')).toBeInTheDocument()
+    expect(scope.getAllByRole('button', { name: /Goblin Spinecleaver \d+: alive/i })).toHaveLength(4)
+    expect(scope.queryByRole('button', { name: /Goblin Spinecleaver 3: dead/i })).toBeNull()
+    await user.click(scope.getByRole('button', { name: /Goblin Spinecleaver 3: alive/i }))
+    expect(scope.getAllByRole('button', { name: /Goblin Spinecleaver \d+: alive/i })).toHaveLength(3)
+    expect(scope.getByRole('button', { name: /Goblin Spinecleaver 3: dead/i })).toBeInTheDocument()
   })
 
   it('dead minion toggle does not affect other minions in the group', async () => {
@@ -928,22 +926,22 @@ describe('App', () => {
     render(<App />)
     const grid = await expandMinions(user)
     const scope = within(grid)
-    await user.click(scope.getByRole('checkbox', { name: /Goblin Spinecleaver 1.*alive$/i }))
+    await user.click(scope.getByRole('button', { name: /Goblin Spinecleaver 1: alive/i }))
     const otherToggles = [
-      scope.getByRole('checkbox', { name: /Goblin Spinecleaver 2/i }),
-      scope.getByRole('checkbox', { name: /Goblin Spinecleaver 3/i }),
-      scope.getByRole('checkbox', { name: /Goblin Spinecleaver 4/i }),
+      scope.getByRole('button', { name: /Goblin Spinecleaver 2: alive/i }),
+      scope.getByRole('button', { name: /Goblin Spinecleaver 3: alive/i }),
+      scope.getByRole('button', { name: /Goblin Spinecleaver 4: alive/i }),
     ]
     for (const t of otherToggles) {
-      expect(t).not.toBeChecked()
+      expect(t).toHaveAttribute('aria-pressed', 'false')
     }
   })
 
-  it('minion child rows render toggle in stamina column (col 3)', async () => {
+  it('minion child rows render life control in stamina column (col 3)', async () => {
     const user = userEvent.setup()
     render(<App />)
     await expandMinions(user)
-    const toggles = screen.getAllByRole('checkbox', { name: /alive$/i })
+    const toggles = screen.getAllByRole('button', { name: /Goblin Spinecleaver \d+: alive/i })
     expect(toggles.length).toBeGreaterThanOrEqual(4)
   })
 
@@ -1111,7 +1109,7 @@ describe('App', () => {
     expect(within(grid).queryByRole('listbox')).toBeNull()
   })
 
-  it('assigned captain can be changed via the edit icon', async () => {
+  it('assigned captain can be changed by clicking the pill', async () => {
     const user = userEvent.setup()
     render(<App />)
     const grid = getMinionGrid()
@@ -1340,8 +1338,8 @@ describe('App', () => {
     const expandBtn = screen.getByRole('button', { name: /^Expand individual Minions$/i })
     await user.click(expandBtn)
 
-    const toggle3 = screen.getByRole('checkbox', { name: /Goblin Spinecleaver 3/i })
-    const toggle4 = screen.getByRole('checkbox', { name: /Goblin Spinecleaver 4/i })
+    const toggle3 = screen.getByRole('button', { name: /Goblin Spinecleaver 3: alive/i })
+    const toggle4 = screen.getByRole('button', { name: /Goblin Spinecleaver 4: alive/i })
     await user.click(toggle3)
     await user.click(toggle4)
 
@@ -1624,7 +1622,7 @@ describe('App', () => {
     const expandBtn = screen.getByRole('button', { name: /^Expand individual Minions$/i })
     await user.click(expandBtn)
 
-    const toggle4 = screen.getByRole('checkbox', { name: /Goblin Spinecleaver 4/i })
+    const toggle4 = screen.getByRole('button', { name: /Goblin Spinecleaver 4: alive/i })
     await user.click(toggle4)
 
     const pool = screen.getByRole('group', { name: /Minion stamina pool/i })

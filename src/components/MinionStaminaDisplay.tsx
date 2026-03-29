@@ -4,7 +4,12 @@ import {
   minionThresholds,
   suggestedDeadCount,
 } from '../bestiary'
-import { StaminaGlyph, staminaGlyphStatus } from './StaminaGlyph'
+import {
+  StaminaGlyph,
+  STAMINA_SEGMENT_SHELL,
+  staminaGlyphStatus,
+  staminaReadoutChipClass,
+} from './StaminaGlyph'
 
 export function MinionStaminaDisplay({
   current,
@@ -27,7 +32,7 @@ export function MinionStaminaDisplay({
     const glyphStatus = staminaGlyphStatus(current, max)
     return (
       <div className="flex items-center justify-center gap-1.5 tabular-nums">
-        <span className="text-sm text-zinc-50">
+        <span className={staminaReadoutChipClass(glyphStatus)}>
           {current} / {max}
         </span>
         <StaminaGlyph
@@ -62,7 +67,7 @@ export function MinionStaminaDisplay({
           <span key={threshold} className="flex items-center">
             {i > 0 && (
               <span
-                className={`mx-0.5 select-none text-[0.6rem] ${
+                className={`mx-0.5 select-none text-xs ${
                   display === 0 ? 'text-zinc-600' : 'text-zinc-500'
                 }`}
                 aria-hidden
@@ -72,7 +77,7 @@ export function MinionStaminaDisplay({
             )}
             <span
               data-testid={`threshold-${threshold}`}
-              className={`rounded px-1 py-0.5 text-xs font-medium transition-colors ${
+              className={`${STAMINA_SEGMENT_SHELL} ${
                 state === 'dead'
                   ? 'bg-red-950/60 text-red-400/70 line-through decoration-red-500/50'
                   : state === 'atRisk'

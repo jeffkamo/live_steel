@@ -1,4 +1,5 @@
 import { minionInterval, minionSegmentVisual, minionThresholds } from '../bestiary'
+import { STAMINA_SEGMENT_SHELL } from './StaminaGlyph'
 
 const bumpMinusClass =
   'flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-full border border-zinc-500/75 bg-zinc-800/40 font-sans text-[0.58rem] font-semibold tabular-nums text-zinc-300 transition-colors hover:border-zinc-400 hover:bg-zinc-800/80 hover:text-zinc-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500/60 active:bg-zinc-900 sm:h-9 sm:w-9 sm:text-[0.62rem]'
@@ -70,7 +71,7 @@ export function MinionStaminaEditor({
               )}
               <span
                 data-testid={`editor-threshold-${threshold}`}
-                className={`rounded px-1 py-0.5 text-xs font-medium tabular-nums transition-colors ${
+                className={`${STAMINA_SEGMENT_SHELL} ${
                   state === 'dead'
                     ? 'bg-red-200/60 text-red-700 line-through decoration-red-500/50'
                     : state === 'atRisk'
