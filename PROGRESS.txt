@@ -1,0 +1,22 @@
+[STAT-001]
+
+Expandable/collapsible stat blocks per monster and minion row
+
+**Key decisions:**
+- Added MonsterFeature/PowerRollEffect types to types.ts; Monster gets optional features field
+- StatBlock component splits features into Abilities and Traits sections w/ power roll tier tables
+- Expand/collapse toggle button appears only when monster has features; chevron icon in condition cell column
+- Stat block row spans gridColumn 2/-1 below monster row; GroupSection tracks expandedStatBlocks state and adjusts grid row counts
+- MinionGroupRow gets separate stat block toggle alongside existing minion expand chevron
+- Seeded features data inline in ENCOUNTER_GROUPS for Goblin Assassin, Underboss, and Minions (Spinecleaver)
+- 22 new tests covering: StatBlock rendering, MonsterRowCells toggle, GroupSection integration, minion group stat block
+
+**Files changed:**
+- src/types.ts
+- src/data.ts
+- src/components/StatBlock.tsx (new)
+- src/components/StatBlock.test.tsx (new)
+- src/components/MonsterRowCells.tsx
+- src/components/MinionGroupRow.tsx
+- src/components/GroupSection.tsx
+- PRD.json

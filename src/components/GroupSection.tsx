@@ -38,6 +38,7 @@ export function GroupSection({
   onMinionConditionAddOrSet?: (monsterIndex: number, minionIndex: number, label: string, state: ConditionState) => void
 }) {
   const [expandedMinions, setExpandedMinions] = useState<Record<number, boolean>>({})
+  const [expandedStatBlocks, setExpandedStatBlocks] = useState<Record<number, boolean>>({})
   const [colorMenu, setColorMenu] = useState<GroupColorMenuState>({
     open: false,
     anchor: null,
@@ -64,13 +65,21 @@ export function GroupSection({
     setExpandedMinions((prev) => ({ ...prev, [monsterIndex]: !prev[monsterIndex] }))
   }, [])
 
+  const toggleStatBlock = useCallback((monsterIndex: number) => {
+    setExpandedStatBlocks((prev) => ({ ...prev, [monsterIndex]: !prev[monsterIndex] }))
+  }, [])
+
   let currentRow = 1
   const monsterRows: { monsterIndex: number; startRow: number; rowCount: number }[] = []
   for (let i = 0; i < group.monsters.length; i++) {
     const m = group.monsters[i]!
     const isMinion = m.minions && m.minions.length > 0
-    const expanded = isMinion && !!expandedMinions[i]
-    const count = isMinion && expanded ? 1 + m.minions!.length : 1
+    const minionExpanded = isMinion && !!expandedMinions[i]
+    const hasFeatures = (m.features?.length ?? 0) > 0
+    const statBlockOpen = hasFeatures && !!expandedStatBlocks[i]
+    let count = 1
+    if (isMinion && minionExpanded) count += m.minions!.length
+    if (statBlockOpen) count += 1
     monsterRows.push({ monsterIndex: i, startRow: currentRow, rowCount: count })
     currentRow += count
   }
@@ -134,6 +143,8 @@ export function GroupSection({
               onMinionConditionAddOrSet={(mi, label, state) =>
                 onMinionConditionAddOrSet?.(i, mi, label, state)
               }
+              statBlockExpanded={!!expandedStatBlocks[i]}
+              onToggleStatBlock={() => toggleStatBlock(i)}
             />
           )
         }
@@ -158,6 +169,8 @@ export function GroupSection({
             onConditionAddOrSet={(label, state) =>
               onMonsterConditionAddOrSet(i, label, state)
             }
+            statBlockExpanded={!!expandedStatBlocks[i]}
+            onToggleStatBlock={() => toggleStatBlock(i)}
           />
         )
       })}

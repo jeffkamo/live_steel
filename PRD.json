@@ -11,7 +11,7 @@
         "Write specs covering expand/collapse behavior and correct data rendering",
         "Run the specs, fix any failures until all pass"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "STAT-002",

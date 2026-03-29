@@ -4,6 +4,39 @@ import { EditableStaminaCell } from './EditableStaminaCell'
 import { MaripCluster } from './MaripCluster'
 import { StatCluster } from './StatCluster'
 import { CreatureConditionCell } from './CreatureConditionCell'
+import { StatBlock } from './StatBlock'
+
+const statBlockChevronDown = (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 20 20"
+    fill="currentColor"
+    className="size-3.5"
+    aria-hidden
+  >
+    <path
+      fillRule="evenodd"
+      d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z"
+      clipRule="evenodd"
+    />
+  </svg>
+)
+
+const statBlockChevronUp = (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 20 20"
+    fill="currentColor"
+    className="size-3.5"
+    aria-hidden
+  >
+    <path
+      fillRule="evenodd"
+      d="M14.78 11.78a.75.75 0 0 1-1.06 0L10 8.06l-3.72 3.72a.75.75 0 1 1-1.06-1.06l4.25-4.25a.75.75 0 0 1 1.06 0l4.25 4.25a.75.75 0 0 1 0 1.06Z"
+      clipRule="evenodd"
+    />
+  </svg>
+)
 
 export function MonsterRowCells({
   monster,
@@ -21,6 +54,8 @@ export function MonsterRowCells({
   onStaminaChange,
   onConditionRemove,
   onConditionAddOrSet,
+  statBlockExpanded = false,
+  onToggleStatBlock,
 }: {
   monster: Monster
   row: number
@@ -37,10 +72,13 @@ export function MonsterRowCells({
   onStaminaChange: (next: [number, number]) => void
   onConditionRemove: (conditionIndex: number) => void
   onConditionAddOrSet: (label: string, state: ConditionState) => void
+  statBlockExpanded?: boolean
+  onToggleStatBlock?: () => void
 }) {
   const [sc, sm] = monster.stamina
   const badge = GROUP_COLOR_BADGE[groupColor]
   const colorLabel = GROUP_COLOR_LABEL[groupColor]
+  const hasFeatures = (monster.features?.length ?? 0) > 0
   const bodyCell =
     'flex h-full min-h-[3.75rem] items-center p-3 sm:min-h-[4rem] sm:p-3.5'
   const rowTone =
@@ -89,14 +127,39 @@ export function MonsterRowCells({
         className="relative z-0 flex h-full min-h-[3.75rem] w-full items-stretch overflow-visible hover:z-20 focus-within:z-20 has-[[data-condition-picker]]:z-[100] sm:min-h-[4rem]"
         style={{ gridColumn: 6, gridRow: row }}
       >
-        <CreatureConditionCell
-          monsterName={monster.name}
-          conditions={monster.conditions}
-          onRemove={onConditionRemove}
-          onAddOrSetCondition={onConditionAddOrSet}
-          turnComplete={turnComplete}
-        />
+        <div className="flex min-w-0 flex-1 items-stretch">
+          <CreatureConditionCell
+            monsterName={monster.name}
+            conditions={monster.conditions}
+            onRemove={onConditionRemove}
+            onAddOrSetCondition={onConditionAddOrSet}
+            turnComplete={turnComplete}
+          />
+          {hasFeatures && onToggleStatBlock && (
+            <button
+              type="button"
+              aria-expanded={statBlockExpanded}
+              aria-label={
+                statBlockExpanded
+                  ? `Collapse stat block for ${monster.name}`
+                  : `Expand stat block for ${monster.name}`
+              }
+              onClick={onToggleStatBlock}
+              className={`flex shrink-0 cursor-pointer items-center justify-center px-2 text-zinc-400 transition-colors hover:text-zinc-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-amber-500/70 ${rowTone}`}
+            >
+              {statBlockExpanded ? statBlockChevronUp : statBlockChevronDown}
+            </button>
+          )}
+        </div>
       </div>
+      {statBlockExpanded && hasFeatures && (
+        <div
+          className="border-t border-zinc-800/50 px-4 pb-3"
+          style={{ gridColumn: '2 / -1', gridRow: row + 1 }}
+        >
+          <StatBlock features={monster.features!} monsterName={monster.name} />
+        </div>
+      )}
     </>
   )
 }

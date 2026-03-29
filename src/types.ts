@@ -2,6 +2,29 @@ export type Marip = readonly [number, number, number, number, number]
 
 export type ConditionState = 'neutral' | 'eot' | 'se'
 
+export type PowerRollEffect = {
+  roll?: string
+  tier1?: string
+  tier2?: string
+  tier3?: string
+  name?: string
+  effect?: string
+}
+
+export type MonsterFeature = {
+  type: 'feature'
+  feature_type: 'ability' | 'trait'
+  name: string
+  icon?: string
+  ability_type?: string
+  keywords?: string[]
+  usage?: string
+  distance?: string
+  target?: string
+  cost?: string
+  effects?: PowerRollEffect[]
+}
+
 export type ConditionEntry = {
   label: string
   state: ConditionState
@@ -18,6 +41,7 @@ export type Monster = {
   stab: number
   conditions: readonly ConditionEntry[]
   minions?: MinionEntry[]
+  features?: MonsterFeature[]
 }
 
 export type MinionEntry = {
@@ -53,6 +77,7 @@ export type MinionEntrySeed = {
 export type MonsterSeed = Omit<Monster, 'conditions' | 'minions'> & {
   conditions: readonly string[]
   minions?: readonly MinionEntrySeed[]
+  features?: readonly MonsterFeature[]
 }
 
 export type EncounterGroupSeed = {

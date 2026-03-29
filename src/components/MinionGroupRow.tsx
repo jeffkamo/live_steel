@@ -4,6 +4,7 @@ import { EditableStaminaCell } from './EditableStaminaCell'
 import { MaripCluster } from './MaripCluster'
 import { StatCluster } from './StatCluster'
 import { CreatureConditionCell } from './CreatureConditionCell'
+import { StatBlock } from './StatBlock'
 
 const chevronDown = (
   <svg
@@ -57,6 +58,8 @@ export function MinionGroupRow({
   onConditionAddOrSet,
   onMinionConditionRemove,
   onMinionConditionAddOrSet,
+  statBlockExpanded = false,
+  onToggleStatBlock,
 }: {
   monster: Monster
   row: number
@@ -81,11 +84,14 @@ export function MinionGroupRow({
     label: string,
     state: ConditionState,
   ) => void
+  statBlockExpanded?: boolean
+  onToggleStatBlock?: () => void
 }) {
   const [sc, sm] = monster.stamina
   const badge = GROUP_COLOR_BADGE[groupColor]
   const colorLabel = GROUP_COLOR_LABEL[groupColor]
   const minions = monster.minions ?? []
+  const hasFeatures = (monster.features?.length ?? 0) > 0
 
   const bodyCell =
     'flex h-full min-h-[3.75rem] items-center p-3 sm:min-h-[4rem] sm:p-3.5'
@@ -157,6 +163,21 @@ export function MinionGroupRow({
             onAddOrSetCondition={onConditionAddOrSet}
             turnComplete={turnComplete}
           />
+          {hasFeatures && onToggleStatBlock && (
+            <button
+              type="button"
+              aria-expanded={statBlockExpanded}
+              aria-label={
+                statBlockExpanded
+                  ? `Collapse stat block for ${monster.name}`
+                  : `Expand stat block for ${monster.name}`
+              }
+              onClick={onToggleStatBlock}
+              className={`flex shrink-0 cursor-pointer items-center justify-center px-1 text-zinc-500 transition-colors hover:text-zinc-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-amber-500/70 ${rowTone}`}
+            >
+              {statBlockExpanded ? chevronUp : chevronDown}
+            </button>
+          )}
           <button
             type="button"
             aria-expanded={expanded}
@@ -195,6 +216,19 @@ export function MinionGroupRow({
             />
           )
         })}
+
+      {/* --- stat block row --- */}
+      {statBlockExpanded && hasFeatures && (
+        <div
+          className="border-t border-zinc-800/50 px-4 pb-3"
+          style={{
+            gridColumn: '2 / -1',
+            gridRow: row + 1 + (expanded ? minions.length : 0),
+          }}
+        >
+          <StatBlock features={monster.features!} monsterName={monster.name} />
+        </div>
+      )}
     </>
   )
 }

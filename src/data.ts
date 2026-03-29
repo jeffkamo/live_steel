@@ -118,6 +118,12 @@ export const ENCOUNTER_GROUPS: readonly EncounterGroupSeed[] = [
         dist: 4,
         stab: 0,
         conditions: ['Weakened', 'Slowed'],
+        features: [
+          { type: 'feature', feature_type: 'ability', name: 'Sword Stab', icon: '🗡', ability_type: 'Signature Ability', keywords: ['Melee', 'Strike', 'Weapon'], usage: 'Main action', distance: 'Melee 1', target: 'One creature or object', effects: [{ roll: 'Power Roll + 2', tier1: '4 damage', tier2: '6 damage', tier3: '7 damage' }, { name: 'Effect', effect: 'If this ability gains an edge or has a double edge, it deals an extra 2 damage.' }] },
+          { type: 'feature', feature_type: 'ability', name: 'Shadow Chains', icon: '🏹', cost: '3 Malice', keywords: ['Magic', 'Ranged', 'Strike'], usage: 'Main action', distance: 'Ranged 10', target: 'Three creatures', effects: [{ roll: 'Power Roll + 2', tier1: '2 corruption damage; A < 0 restrained (save ends)', tier2: '4 corruption damage; A < 1 restrained (save ends)', tier3: '5 corruption damage; A < 2 restrained (save ends)' }] },
+          { type: 'feature', feature_type: 'trait', name: 'Crafty', icon: '⭐️', effects: [{ effect: "The assassin doesn't provoke opportunity attacks by moving." }] },
+          { type: 'feature', feature_type: 'trait', name: 'Slip Away', icon: '⭐️', effects: [{ effect: 'The assassin can attempt to hide even while observed.' }] },
+        ],
       },
       {
         name: 'Goblin Raider',
@@ -144,6 +150,11 @@ export const ENCOUNTER_GROUPS: readonly EncounterGroupSeed[] = [
         dist: 5,
         stab: 1,
         conditions: ['Judged'],
+        features: [
+          { type: 'feature', feature_type: 'ability', name: 'Swordplay', icon: '🗡', ability_type: 'Signature Ability', keywords: ['Melee', 'Strike', 'Weapon'], usage: 'Main action', distance: 'Melee 1', target: 'One creature or object', effects: [{ roll: 'Power Roll + 2', tier1: '3 damage', tier2: '4 damage', tier3: '5 damage' }, { name: 'Effect', effect: 'One ally adjacent to the target can make a free strike against them.' }] },
+          { type: 'feature', feature_type: 'ability', name: 'Get Reckless!', icon: '❇️', keywords: ['Area'], usage: 'Maneuver', distance: '5 burst', target: 'Each ally in the area', effects: [{ name: 'Effect', effect: "Until the start of the underboss's next turn, each target gains an edge on strikes, and any strike made against a target gains an edge." }] },
+          { type: 'feature', feature_type: 'trait', name: 'Crafty', icon: '⭐️', effects: [{ effect: "The underboss doesn't provoke opportunity attacks by moving." }] },
+        ],
       },
     ],
   },
@@ -159,6 +170,10 @@ export const ENCOUNTER_GROUPS: readonly EncounterGroupSeed[] = [
         dist: 3,
         stab: 0,
         conditions: ['Taunted'],
+        features: [
+          { type: 'feature', feature_type: 'ability', name: 'Axe', icon: '🗡', ability_type: 'Signature Ability', keywords: ['Melee', 'Strike', 'Weapon'], usage: 'Main action', distance: 'Melee 1', target: 'One creature or object per minion', effects: [{ roll: 'Power Roll + 2', tier1: '2 damage; push 1', tier2: '4 damage; push 3', tier3: '5 damage; push 4' }] },
+          { type: 'feature', feature_type: 'trait', name: 'Crafty', icon: '⭐️', effects: [{ effect: "The spinecleaver doesn't provoke opportunity attacks by moving." }] },
+        ],
         minions: [
           { name: 'Goblin Spinecleaver 1', initials: 'GS1', conditions: [] },
           { name: 'Goblin Spinecleaver 2', initials: 'GS2', conditions: ['Bleeding'] },
@@ -280,6 +295,7 @@ export function cloneEncounterGroups(): EncounterGroup[] {
       stab: m.stab,
       conditions: m.conditions.map(conditionEntryFromLabel),
       ...(m.minions ? { minions: cloneMinionEntries(m.minions) } : {}),
+      ...(m.features ? { features: [...m.features] } : {}),
     })),
   }))
 }
