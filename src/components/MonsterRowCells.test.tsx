@@ -31,6 +31,7 @@ const baseProps = {
   colorMenuMonsterIndex: null as number | null,
   onGroupColorOrdinalClick: vi.fn(),
   turnComplete: false,
+  seActPhaseGlow: false,
   onStaminaChange: vi.fn(),
   onConditionRemove: vi.fn(),
   onConditionAddOrSet: vi.fn(),

@@ -73,6 +73,11 @@ describe('conditionIconShellClass', () => {
     expect(cls).not.toContain('animate-glow-se')
   })
 
+  it('suppresses SE glow when fourth argument is false even if eot glow is true', () => {
+    const cls = conditionIconShellClass(true, 'se', true, false)
+    expect(cls).not.toContain('animate-glow-se')
+  })
+
   it('does not add glow animation for neutral state even when turnActed is true', () => {
     const cls = conditionIconShellClass(true, 'neutral', true)
     expect(cls).not.toContain('animate-glow')

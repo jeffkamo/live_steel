@@ -14,6 +14,7 @@ export function GroupSection({
   thisGroupIndex,
   encounterGroupColors,
   turnActed,
+  seActPhaseGlow,
   onToggleTurn,
   turnAriaLabel,
   onGroupColorChange,
@@ -36,6 +37,7 @@ export function GroupSection({
   thisGroupIndex: number
   encounterGroupColors: readonly GroupColorId[]
   turnActed: boolean
+  seActPhaseGlow: boolean
   onToggleTurn: () => void
   turnAriaLabel: string
   onGroupColorChange: (color: GroupColorId) => void
@@ -145,6 +147,7 @@ export function GroupSection({
               colorMenuMonsterIndex={colorMenu.monsterIndex}
               onGroupColorOrdinalClick={onGroupColorOrdinalClick}
               turnComplete={turnActed}
+              seActPhaseGlow={seActPhaseGlow}
               expanded={!!expandedMinions[i]}
               onToggleExpanded={() => toggleMinionExpanded(i)}
               allGroups={allGroups}
@@ -189,6 +192,7 @@ export function GroupSection({
             colorMenuMonsterIndex={colorMenu.monsterIndex}
             onGroupColorOrdinalClick={onGroupColorOrdinalClick}
             turnComplete={turnActed}
+            seActPhaseGlow={seActPhaseGlow}
             onStaminaChange={(st) => onMonsterStaminaChange(i, st)}
             onConditionRemove={(ci) => onMonsterConditionRemove(i, ci)}
             onConditionAddOrSet={(label, state) =>

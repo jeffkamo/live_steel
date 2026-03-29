@@ -353,3 +353,27 @@ Auto-disable EoT conditions after 30s if not clicked — 30-second timer starts 
 - src/components/ConditionCatalogIconStrip.tsx
 - src/App.test.tsx
 - PRD.json
+
+
+[TURN-003]
+
+SE stays on monster after 30s (no auto-clear); SE pulsate stops after same 30s post-act window as EoT timer; click still removes SE (save failed)
+
+**Key decisions:**
+- `seActWindowElapsedGroup` Set in App: same setTimeout(30s) as EoT cleanup adds gi; pending toggle deletes gi — reuses one timer, no second clock
+- `conditionIconShellClass` 3rd/4th args: eotTurnGlow vs seTurnGlow; `seTurnGlow ?? eotTurnGlow` preserves old 3-arg calls
+- `seActPhaseGlow` threaded App→GroupSection→rows→CreatureConditionCell→strip; `seActPhaseGlow ?? turnActed` for strips that omit prop (terrain)
+- Tests: extended SE 30s test for glow off; new click-remove-after-30s; strip + shell unit tests; eslint.config file overrides for pre-existing react-refresh / set-state-in-effect noise
+
+**Files changed:**
+- src/App.tsx
+- src/components/ConditionIcon.tsx
+- src/components/ConditionCatalogIconStrip.tsx
+- src/components/CreatureConditionCell.tsx
+- src/components/GroupSection.tsx
+- src/components/MonsterRowCells.tsx
+- src/components/MinionGroupRow.tsx
+- src/components/*.test.tsx (GroupSection, MonsterRowCells, StatBlock, ConditionIcon, ConditionCatalogIconStrip)
+- src/App.test.tsx
+- eslint.config.js
+- PRD.json

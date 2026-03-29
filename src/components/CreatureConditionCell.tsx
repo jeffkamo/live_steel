@@ -16,6 +16,7 @@ export function CreatureConditionCell({
   onRemove,
   onAddOrSetCondition,
   turnComplete,
+  seActPhaseGlow,
   onConfirmEot,
   isEotConfirmed,
 }: {
@@ -24,6 +25,7 @@ export function CreatureConditionCell({
   onRemove: (index: number) => void
   onAddOrSetCondition: (label: string, state: ConditionState) => void
   turnComplete: boolean
+  seActPhaseGlow?: boolean
   onConfirmEot?: (label: string) => void
   isEotConfirmed?: (label: string) => boolean
 }) {
@@ -79,6 +81,7 @@ export function CreatureConditionCell({
           conditions={conditions}
           interactive
           turnActed={turnComplete}
+          seActPhaseGlow={seActPhaseGlow}
           isEotConfirmed={isEotConfirmed}
           onToggleLabel={(label) => {
             const existing = conditions.find((c) => c.label === label)

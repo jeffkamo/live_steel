@@ -272,7 +272,7 @@
         "Write specs covering default persistence, click-to-remove, and animation stop",
         "Run the specs, fix any failures until all pass"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "TURN-004",

@@ -41,6 +41,7 @@ const baseProps = {
   thisGroupIndex: 0,
   encounterGroupColors: ['red', 'blue'] as GroupColorId[],
   turnActed: false,
+  seActPhaseGlow: false,
   onToggleTurn: vi.fn(),
   turnAriaLabel: 'Encounter group 1: turn pending',
   onGroupColorChange: vi.fn(),

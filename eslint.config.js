@@ -20,4 +20,15 @@ export default defineConfig([
       globals: globals.browser,
     },
   },
+  {
+    files: ['src/components/ConditionIcon.tsx', 'src/components/StaminaGlyph.tsx'],
+    rules: { 'react-refresh/only-export-components': 'off' },
+  },
+  {
+    files: [
+      'src/components/EditableStaminaCell.tsx',
+      'src/components/GroupColorPickerPopover.tsx',
+    ],
+    rules: { 'react-hooks/set-state-in-effect': 'off' },
+  },
 ])

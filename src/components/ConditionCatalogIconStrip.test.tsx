@@ -95,6 +95,20 @@ describe('ConditionCatalogIconStrip', () => {
       expect(bleedingIcon?.className).toContain('animate-glow-eot')
     })
 
+    it('omits SE glow when seActPhaseGlow is false even if turnActed is true', () => {
+      const seBleeding: ConditionEntry[] = [{ label: 'Bleeding', state: 'se' }]
+      render(
+        <ConditionCatalogIconStrip
+          conditions={seBleeding}
+          interactive={false}
+          turnActed
+          seActPhaseGlow={false}
+        />,
+      )
+      const bleedingIcon = screen.getByTitle('Bleeding (Save ends)')
+      expect(bleedingIcon.className).not.toContain('animate-glow-se')
+    })
+
     it('applies animate-glow-se to SE condition icon when turnActed is true', () => {
       const { container } = render(
         <ConditionCatalogIconStrip conditions={seBleeding} interactive={false} turnActed />,
@@ -121,7 +135,7 @@ describe('ConditionCatalogIconStrip', () => {
 
     it('applies glow in interactive mode too', () => {
       const onToggle = vi.fn()
-      const { container } = render(
+      render(
         <ConditionCatalogIconStrip conditions={eotBleeding} interactive onToggleLabel={onToggle} turnActed />,
       )
       const btn = screen.getByRole('button', { name: /^Remove Bleeding$/i })

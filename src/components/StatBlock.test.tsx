@@ -210,6 +210,7 @@ describe('MonsterRowCells stat block toggle', () => {
     colorMenuMonsterIndex: null as number | null,
     onGroupColorOrdinalClick: vi.fn(),
     turnComplete: false,
+    seActPhaseGlow: false,
     onStaminaChange: vi.fn(),
     onConditionRemove: vi.fn(),
     onConditionAddOrSet: vi.fn(),
@@ -388,6 +389,7 @@ describe('Malice creatures still show stat blocks', () => {
     colorMenuMonsterIndex: null as number | null,
     onGroupColorOrdinalClick: vi.fn(),
     turnComplete: false,
+    seActPhaseGlow: false,
     onStaminaChange: vi.fn(),
     onConditionRemove: vi.fn(),
     onConditionAddOrSet: vi.fn(),
@@ -473,6 +475,7 @@ describe('Malice creatures still show stat blocks', () => {
         thisGroupIndex={0}
         encounterGroupColors={['red'] as GroupColorId[]}
         turnActed={false}
+        seActPhaseGlow={false}
         onToggleTurn={vi.fn()}
         turnAriaLabel="Encounter group 1: turn pending"
         onGroupColorChange={vi.fn()}
@@ -525,6 +528,7 @@ describe('GroupSection stat block integration', () => {
     thisGroupIndex: 0,
     encounterGroupColors: ['red', 'blue'] as GroupColorId[],
     turnActed: false,
+    seActPhaseGlow: false,
     onToggleTurn: vi.fn(),
     turnAriaLabel: 'Encounter group 1: turn pending',
     onGroupColorChange: vi.fn(),

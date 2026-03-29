@@ -11,19 +11,24 @@ export function ConditionCatalogIconStrip({
   interactive,
   onToggleLabel,
   turnActed = false,
+  seActPhaseGlow,
   isEotConfirmed,
 }: {
   conditions: readonly ConditionEntry[]
   interactive: boolean
   onToggleLabel?: (label: string) => void
   turnActed?: boolean
+  /** When turn acted: SE pulse until post-act window ends (~30s). Defaults to turnActed when omitted. */
+  seActPhaseGlow?: boolean
   isEotConfirmed?: (label: string) => boolean
 }) {
+  const seGlow = seActPhaseGlow ?? turnActed
   const iconRow = CONDITION_CATALOG.map((label) => {
     const active = findConditionOnMonster(conditions, label)
     const tip = conditionCatalogTooltip(label, active)
     const confirmed = active?.state === 'eot' && isEotConfirmed?.(label)
-    const shell = conditionIconShellClass(active !== undefined, active?.state ?? null, turnActed && !confirmed)
+    const eotGlow = turnActed && !confirmed
+    const shell = conditionIconShellClass(active !== undefined, active?.state ?? null, eotGlow, seGlow)
     if (interactive && onToggleLabel) {
       return (
         <button

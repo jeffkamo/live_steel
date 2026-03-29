@@ -20,6 +20,7 @@ function App() {
   )
 
   const eotTimersRef = useRef<Map<number, ReturnType<typeof setTimeout>>>(new Map())
+  const [seActWindowElapsedGroup, setSeActWindowElapsedGroup] = useState<Set<number>>(() => new Set())
   const [eotConfirmed, setEotConfirmed] = useState<Map<number, Set<string>>>(() => new Map())
   const eotConfirmedLatest = useRef(eotConfirmed)
   eotConfirmedLatest.current = eotConfirmed
@@ -94,6 +95,7 @@ function App() {
             next.delete(gi)
             return next
           })
+          setSeActWindowElapsedGroup((prev) => new Set(prev).add(gi))
         }, 30_000)
         eotTimersRef.current.set(gi, timer)
       }
@@ -106,6 +108,11 @@ function App() {
         }
         setEotConfirmed((prev) => {
           const next = new Map(prev)
+          next.delete(gi)
+          return next
+        })
+        setSeActWindowElapsedGroup((prev) => {
+          const next = new Set(prev)
           next.delete(gi)
           return next
         })
@@ -449,6 +456,9 @@ function App() {
               thisGroupIndex={gi}
               encounterGroupColors={encounterGroups.map((g) => g.color)}
               turnActed={groupTurnActed[gi] ?? false}
+              seActPhaseGlow={
+                (groupTurnActed[gi] ?? false) && !seActWindowElapsedGroup.has(gi)
+              }
               onToggleTurn={() => toggleGroupTurn(gi)}
               turnAriaLabel={`Encounter group ${gi + 1}: turn ${groupTurnActed[gi] ? 'acted' : 'pending'}`}
               onGroupColorChange={(c) => patchGroupColor(gi, c)}

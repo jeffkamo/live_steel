@@ -54,6 +54,7 @@ export function MinionGroupRow({
   colorMenuMonsterIndex,
   onGroupColorOrdinalClick,
   turnComplete,
+  seActPhaseGlow,
   expanded,
   onToggleExpanded,
   allGroups,
@@ -82,6 +83,7 @@ export function MinionGroupRow({
   colorMenuMonsterIndex: number | null
   onGroupColorOrdinalClick: (monsterIndex: number, anchor: HTMLElement) => void
   turnComplete: boolean
+  seActPhaseGlow: boolean
   expanded: boolean
   onToggleExpanded: () => void
   allGroups?: readonly EncounterGroup[]
@@ -349,6 +351,7 @@ export function MinionGroupRow({
             onRemove={onConditionRemove}
             onAddOrSetCondition={onConditionAddOrSet}
             turnComplete={turnComplete}
+            seActPhaseGlow={seActPhaseGlow}
             onConfirmEot={onConfirmEot ? (label) => onConfirmEot(label) : undefined}
             isEotConfirmed={isEotConfirmed ? (label) => isEotConfirmed(label) : undefined}
           />
@@ -398,6 +401,7 @@ export function MinionGroupRow({
               groupColor={groupColor}
               groupNumber={groupNumber}
               turnComplete={turnComplete}
+              seActPhaseGlow={seActPhaseGlow}
               onDeadChange={(dead) => onMinionDeadChange(mi, dead)}
               onConditionRemove={(ci) => onMinionConditionRemove(mi, ci)}
               onConditionAddOrSet={(label, state) =>
@@ -434,6 +438,7 @@ function MinionChildRow({
   groupColor,
   groupNumber,
   turnComplete,
+  seActPhaseGlow,
   onDeadChange,
   onConditionRemove,
   onConditionAddOrSet,
@@ -448,6 +453,7 @@ function MinionChildRow({
   groupColor: GroupColorId
   groupNumber: number
   turnComplete: boolean
+  seActPhaseGlow: boolean
   onDeadChange: (dead: boolean) => void
   onConditionRemove: (conditionIndex: number) => void
   onConditionAddOrSet: (label: string, state: ConditionState) => void
@@ -540,6 +546,7 @@ function MinionChildRow({
           onRemove={onConditionRemove}
           onAddOrSetCondition={onConditionAddOrSet}
           turnComplete={turnComplete}
+          seActPhaseGlow={seActPhaseGlow}
           onConfirmEot={onConfirmEot}
           isEotConfirmed={isEotConfirmed}
         />

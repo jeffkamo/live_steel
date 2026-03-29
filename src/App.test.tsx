@@ -217,7 +217,7 @@ describe('App', () => {
 
     reserveConditions.focus()
     await user.keyboard('{Enter}')
-    let picker = screen.getByRole('dialog', { name: /^Add condition to Reserve slot$/i })
+    const picker = screen.getByRole('dialog', { name: /^Add condition to Reserve slot$/i })
     await user.click(
       within(picker).getByRole('button', { name: /^Add Marked as end of turn on Reserve slot$/i }),
     )
@@ -1965,9 +1965,39 @@ describe('App', () => {
 
     vi.useFakeTimers({ shouldAdvanceTime: true })
     await user.click(screen.getByRole('button', { name: turnButton(1, 'pending') }))
+    const seIcon = within(goblinConditions).getByTitle('Slowed (Save ends)')
+    expect(seIcon.className).toContain('animate-glow-se')
+
     await act(() => { vi.advanceTimersByTime(30_000) })
 
     expect(within(goblinConditions).getByTitle('Slowed (Save ends)')).toBeInTheDocument()
+    expect(seIcon.className).not.toContain('animate-glow-se')
+    vi.useRealTimers()
+  })
+
+  it('clicking SE condition after 30s post-act window removes it (save failed)', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    const goblinConditions = screen.getByRole('group', {
+      name: /^Conditions for Goblin Assassin 1\./i,
+    })
+
+    goblinConditions.focus()
+    await user.keyboard('{Enter}')
+    const picker = screen.getByRole('dialog', { name: /^Add condition to Goblin Assassin 1$/i })
+    await user.click(
+      within(picker).getByRole('button', { name: /^Add Slowed as save ends on Goblin Assassin 1$/i }),
+    )
+
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+    await user.click(screen.getByRole('button', { name: turnButton(1, 'pending') }))
+    await act(() => { vi.advanceTimersByTime(30_000) })
+
+    expect(within(goblinConditions).getByTitle('Slowed (Save ends)')).toBeInTheDocument()
+
+    await user.click(within(goblinConditions).getByRole('button', { name: /^Remove Slowed$/i }))
+
+    expect(within(goblinConditions).queryByTitle('Slowed (Save ends)')).not.toBeInTheDocument()
     vi.useRealTimers()
   })
 

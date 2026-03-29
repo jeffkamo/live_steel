@@ -51,6 +51,7 @@ export function MonsterRowCells({
   colorMenuMonsterIndex,
   onGroupColorOrdinalClick,
   turnComplete,
+  seActPhaseGlow,
   onStaminaChange,
   onConditionRemove,
   onConditionAddOrSet,
@@ -72,6 +73,7 @@ export function MonsterRowCells({
   colorMenuMonsterIndex: number | null
   onGroupColorOrdinalClick: (monsterIndex: number, anchor: HTMLElement) => void
   turnComplete: boolean
+  seActPhaseGlow: boolean
   onStaminaChange: (next: [number, number]) => void
   onConditionRemove: (conditionIndex: number) => void
   onConditionAddOrSet: (label: string, state: ConditionState) => void
@@ -152,6 +154,7 @@ export function MonsterRowCells({
             onRemove={onConditionRemove}
             onAddOrSetCondition={onConditionAddOrSet}
             turnComplete={turnComplete}
+            seActPhaseGlow={seActPhaseGlow}
             onConfirmEot={onConfirmEot}
             isEotConfirmed={isEotConfirmed}
           />

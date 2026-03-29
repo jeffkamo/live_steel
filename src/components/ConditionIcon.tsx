@@ -146,7 +146,14 @@ export function ConditionIcon({ label, className }: { label: string; className?:
 export const conditionIconHoverOutline =
   'motion-reduce:transition-none outline outline-2 outline-transparent outline-offset-0 transition-[outline-color,outline-offset,z-index] duration-150 hover:z-[1] hover:outline-amber-500/70 hover:outline-offset-0'
 
-export function conditionIconShellClass(isActive: boolean, state: ConditionState | null, turnActed = false): string {
+/** @param eotTurnGlow — pulse EoT icon (e.g. turn acted and not yet confirmed). @param seTurnGlow — pulse SE icon; omit to mirror eotTurnGlow for backward compatibility. */
+export function conditionIconShellClass(
+  isActive: boolean,
+  state: ConditionState | null,
+  eotTurnGlow = false,
+  seTurnGlow?: boolean,
+): string {
+  const seGlow = seTurnGlow ?? eotTurnGlow
   const base =
     'flex size-[1.625rem] shrink-0 items-center justify-center rounded-full border transition-[opacity,colors,box-shadow,outline-color] motion-reduce:transition-none'
   if (!isActive) {
@@ -156,9 +163,9 @@ export function conditionIconShellClass(isActive: boolean, state: ConditionState
     return `${base} border-zinc-600/80 bg-zinc-800/90 text-zinc-100 opacity-100`
   }
   if (state === 'se') {
-    const glow = turnActed ? ' animate-glow-se motion-reduce:animate-none' : ''
+    const glow = seGlow ? ' animate-glow-se motion-reduce:animate-none' : ''
     return `${base} border-purple-500/75 bg-purple-500/15 text-purple-100 opacity-100 ring-1 ring-purple-500/45${glow}`
   }
-  const glow = turnActed ? ' animate-glow-eot motion-reduce:animate-none' : ''
+  const glow = eotTurnGlow ? ' animate-glow-eot motion-reduce:animate-none' : ''
   return `${base} border-amber-500/75 bg-amber-500/15 text-amber-100 opacity-100 ring-1 ring-amber-500/45${glow}`
 }
