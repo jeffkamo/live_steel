@@ -2,7 +2,7 @@ import { act, fireEvent, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import App from './App'
-import { MONSTER_DRAG_MIME } from './data'
+import { CONDITION_DRAG_MIME, MONSTER_DRAG_MIME } from './data'
 
 function mockMonsterDataTransfer(): DataTransfer {
   const store = new Map<string, string>()
@@ -2270,5 +2270,37 @@ describe('App', () => {
     fireEvent.dragOver(emptyZone, { dataTransfer: dt })
     fireEvent.drop(emptyZone, { dataTransfer: dt })
     expect(within(last).getByText('Goblin Raider', { exact: true })).toBeInTheDocument()
+  })
+
+  it('transfers an active condition to another monster via drag-and-drop', () => {
+    render(<App />)
+    const groups = screen.getAllByTestId('encounter-group-drop-target')
+    const g0 = groups[0]!
+    const assassinConditions = within(g0).getByRole('group', { name: /^Conditions for Goblin Assassin 1\./i })
+    const weakenedBtn = within(assassinConditions).getByRole('button', { name: /^Remove Weakened$/i })
+    const raiderDrop = g0.querySelector('[data-testid="condition-drop-target"][data-monster-index="1"]')
+    expect(raiderDrop).toBeTruthy()
+    const dt = mockMonsterDataTransfer()
+    fireEvent.dragStart(weakenedBtn, { dataTransfer: dt })
+    expect(dt.getData(CONDITION_DRAG_MIME)).toContain('Weakened')
+    fireEvent.dragOver(raiderDrop!, { dataTransfer: dt })
+    fireEvent.drop(raiderDrop!, { dataTransfer: dt })
+    const raiderConditions = within(g0).getByRole('group', { name: /^Conditions for Goblin Raider\./i })
+    expect(within(raiderConditions).getByRole('button', { name: /^Remove Weakened$/i })).toBeInTheDocument()
+    expect(within(assassinConditions).queryByRole('button', { name: /^Remove Weakened$/i })).toBeNull()
+  })
+
+  it('does not remove condition when dropped on the same creature', () => {
+    render(<App />)
+    const groups = screen.getAllByTestId('encounter-group-drop-target')
+    const g0 = groups[0]!
+    const assassinConditions = within(g0).getByRole('group', { name: /^Conditions for Goblin Assassin 1\./i })
+    const weakenedBtn = within(assassinConditions).getByRole('button', { name: /^Remove Weakened$/i })
+    const assassinDrop = g0.querySelector('[data-testid="condition-drop-target"][data-monster-index="0"]')
+    const dt = mockMonsterDataTransfer()
+    fireEvent.dragStart(weakenedBtn, { dataTransfer: dt })
+    fireEvent.dragOver(assassinDrop!, { dataTransfer: dt })
+    fireEvent.drop(assassinDrop!, { dataTransfer: dt })
+    expect(within(assassinConditions).getByRole('button', { name: /^Remove Weakened$/i })).toBeInTheDocument()
   })
 })

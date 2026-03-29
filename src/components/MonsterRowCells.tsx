@@ -4,7 +4,7 @@ import { GROUP_COLOR_BADGE, GROUP_COLOR_LABEL } from '../data'
 import { EditableStaminaCell } from './EditableStaminaCell'
 import { MaripCluster } from './MaripCluster'
 import { StatCluster } from './StatCluster'
-import { CreatureConditionCell } from './CreatureConditionCell'
+import { CreatureConditionCell, type CreatureConditionDnDBinding } from './CreatureConditionCell'
 import { StatBlock } from './StatBlock'
 
 const statBlockChevronDown = (
@@ -62,6 +62,7 @@ export function MonsterRowCells({
   onConfirmEot,
   isEotConfirmed,
   monsterDrag,
+  conditionDnD,
 }: {
   monster: Monster
   row: number
@@ -94,6 +95,7 @@ export function MonsterRowCells({
     onDragLeave: (e: DragEvent) => void
     onDrop: (e: DragEvent) => void
   }
+  conditionDnD?: CreatureConditionDnDBinding
 }) {
   const [sc, sm] = monster.stamina
   const badge = GROUP_COLOR_BADGE[groupColor]
@@ -199,6 +201,7 @@ export function MonsterRowCells({
             seActPhaseGlow={seActPhaseGlow}
             onConfirmEot={onConfirmEot}
             isEotConfirmed={isEotConfirmed}
+            conditionDnD={conditionDnD}
           />
           {hasFeatures && onToggleStatBlock && (
             <button

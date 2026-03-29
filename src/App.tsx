@@ -4,6 +4,7 @@ import type { CaptainRef, ConditionState, GroupColorId, Monster } from './types'
 import {
   cloneEncounterGroups,
   cloneTerrainRows,
+  CONDITION_DRAG_MIME,
   ENCOUNTER_GROUP_DRAG_MIME,
   ENCOUNTER_GROUPS,
   MONSTER_DRAG_MIME,
@@ -11,10 +12,13 @@ import {
   moveMonsterInEncounterWithCaptainRemap,
   newEncounterGroupId,
   nextAvailableColor,
+  parseConditionDragPayload,
   remapEncounterGroupIndex,
   remapEotConfirmedAfterMonsterMove,
   reorderEncounterGroupsWithCaptainRemap,
   ROSTER_GRID_TEMPLATE,
+  transferConditionBetweenCreatures,
+  type ConditionCreatureRef,
 } from './data'
 import { TitleRule } from './components/TitleRule'
 import { GroupSection } from './components/GroupSection'
@@ -356,6 +360,98 @@ function App() {
     monsterIndex: number
   } | null>(null)
 
+  const [conditionDropTarget, setConditionDropTarget] = useState<{
+    groupIndex: number
+    monsterIndex: number
+    minionIndex: number | null
+  } | null>(null)
+
+  const clearEotOnConditionTransfer = useCallback(
+    (fromGroup: number, fromMonster: number, fromMinion: number | null, label: string) => {
+      const key =
+        fromMinion == null ? `${fromMonster}:${label}` : `${fromMonster}:${fromMinion}:${label}`
+      setEotConfirmed((prev) => {
+        const set = prev.get(fromGroup)
+        if (!set?.has(key)) return prev
+        const next = new Map(prev)
+        const copy = new Set(set)
+        copy.delete(key)
+        next.set(fromGroup, copy)
+        return next
+      })
+    },
+    [],
+  )
+
+  const onConditionDragStart = useCallback(
+    (gi: number, mi: number, mni: number | null, label: string, e: DragEvent) => {
+      e.dataTransfer.setData(
+        CONDITION_DRAG_MIME,
+        JSON.stringify({
+          fromGroup: gi,
+          fromMonster: mi,
+          ...(mni != null ? { fromMinion: mni } : {}),
+          label,
+        }),
+      )
+      e.dataTransfer.effectAllowed = 'move'
+    },
+    [],
+  )
+
+  const onConditionDragEnd = useCallback(() => {
+    setConditionDropTarget(null)
+  }, [])
+
+  const onConditionDragOver = useCallback((gi: number, mi: number, mni: number | null, e: DragEvent) => {
+    if (![...e.dataTransfer.types].includes(CONDITION_DRAG_MIME)) return
+    e.preventDefault()
+    e.dataTransfer.dropEffect = 'move'
+    setConditionDropTarget({ groupIndex: gi, monsterIndex: mi, minionIndex: mni })
+  }, [])
+
+  const onConditionDragLeave = useCallback((gi: number, mi: number, mni: number | null, e: DragEvent) => {
+    if (!e.currentTarget.contains(e.relatedTarget as Node | null)) {
+      setConditionDropTarget((v) =>
+        v?.groupIndex === gi && v?.monsterIndex === mi && v?.minionIndex === mni ? null : v,
+      )
+    }
+  }, [])
+
+  const onConditionDrop = useCallback(
+    (toG: number, toM: number, toMni: number | null, e: DragEvent) => {
+      e.preventDefault()
+      setConditionDropTarget(null)
+      const raw = e.dataTransfer.getData(CONDITION_DRAG_MIME)
+      const payload = parseConditionDragPayload(raw)
+      if (!payload) return
+      const from: ConditionCreatureRef = {
+        groupIndex: payload.fromGroup,
+        monsterIndex: payload.fromMonster,
+        minionIndex: payload.fromMinion,
+      }
+      const to: ConditionCreatureRef = {
+        groupIndex: toG,
+        monsterIndex: toM,
+        minionIndex: toMni,
+      }
+      setEncounterGroups((prev) => {
+        const next = transferConditionBetweenCreatures(prev, from, to, payload.label)
+        if (!next) return prev
+        queueMicrotask(() => {
+          clearEotOnConditionTransfer(
+            payload.fromGroup,
+            payload.fromMonster,
+            payload.fromMinion,
+            payload.label,
+          )
+        })
+        return next
+      })
+    },
+    [clearEotOnConditionTransfer],
+  )
+
   const moveMonsterInEncounter = useCallback(
     (fromG: number, fromM: number, toG: number, toM: number) => {
       setEncounterGroups((prev) => {
@@ -657,6 +753,14 @@ function App() {
                   onMonsterDragOver: (mi, e) => onMonsterDragOver(gi, mi, e),
                   onMonsterDragLeave: (mi, e) => onMonsterDragLeave(gi, mi, e),
                   onMonsterDrop: (mi, e) => onMonsterDrop(gi, mi, e),
+                }}
+                conditionDrag={{
+                  dropTarget: conditionDropTarget,
+                  onDragStart: (mi, mni, label, e) => onConditionDragStart(gi, mi, mni, label, e),
+                  onDragEnd: onConditionDragEnd,
+                  onDragOver: (mi, mni, e) => onConditionDragOver(gi, mi, mni, e),
+                  onDragLeave: (mi, mni, e) => onConditionDragLeave(gi, mi, mni, e),
+                  onDrop: (mi, mni, e) => onConditionDrop(gi, mi, mni, e),
                 }}
               />
             </div>

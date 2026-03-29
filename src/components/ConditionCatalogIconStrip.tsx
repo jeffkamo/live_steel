@@ -1,3 +1,4 @@
+import type { DragEvent } from 'react'
 import type { ConditionEntry } from '../types'
 import { CONDITION_CATALOG, conditionCatalogTooltip, findConditionOnMonster } from '../data'
 import { ConditionIcon, conditionIconHoverOutline, conditionIconShellClass } from './ConditionIcon'
@@ -13,6 +14,8 @@ export function ConditionCatalogIconStrip({
   turnActed = false,
   seActPhaseGlow,
   isEotConfirmed,
+  onActiveConditionDragStart,
+  onActiveConditionDragEnd,
 }: {
   conditions: readonly ConditionEntry[]
   interactive: boolean
@@ -21,6 +24,8 @@ export function ConditionCatalogIconStrip({
   /** When turn acted: SE pulse until post-act window ends (~30s). Defaults to turnActed when omitted. */
   seActPhaseGlow?: boolean
   isEotConfirmed?: (label: string) => boolean
+  onActiveConditionDragStart?: (label: string, e: DragEvent) => void
+  onActiveConditionDragEnd?: () => void
 }) {
   const seGlow = seActPhaseGlow ?? turnActed
   const iconRow = CONDITION_CATALOG.map((label) => {
@@ -30,11 +35,13 @@ export function ConditionCatalogIconStrip({
     const eotGlow = turnActed && !confirmed
     const shell = conditionIconShellClass(active !== undefined, active?.state ?? null, eotGlow, seGlow)
     if (interactive && onToggleLabel) {
+      const dragTransfer = active !== undefined && onActiveConditionDragStart
       return (
         <button
           key={label}
           type="button"
           data-condition-toggle
+          draggable={!!dragTransfer}
           title={tip}
           aria-label={active ? `Remove ${label}` : `Add ${label}`}
           aria-pressed={active !== undefined}
@@ -42,7 +49,16 @@ export function ConditionCatalogIconStrip({
             e.stopPropagation()
             onToggleLabel(label)
           }}
-          className={`${shell} ${conditionIconHoverOutline} cursor-pointer hover:brightness-110 focus-visible:z-[1] focus-visible:outline-amber-600/80 focus-visible:outline-offset-2`}
+          onDragStart={
+            dragTransfer
+              ? (e) => {
+                  e.stopPropagation()
+                  onActiveConditionDragStart(label, e)
+                }
+              : undefined
+          }
+          onDragEnd={onActiveConditionDragEnd ? () => onActiveConditionDragEnd() : undefined}
+          className={`${shell} ${conditionIconHoverOutline} cursor-pointer hover:brightness-110 focus-visible:z-[1] focus-visible:outline-amber-600/80 focus-visible:outline-offset-2 ${dragTransfer ? 'cursor-grab touch-none active:cursor-grabbing' : ''}`}
         >
           <ConditionIcon label={label} className="size-[0.875rem] shrink-0" />
         </button>

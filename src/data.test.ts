@@ -14,9 +14,11 @@ import {
   monsterFromBestiary,
   moveIndexInArray,
   moveMonsterInEncounterWithCaptainRemap,
+  parseConditionDragPayload,
   remapEncounterGroupIndex,
   remapEotConfirmedAfterMonsterMove,
   reorderEncounterGroupsWithCaptainRemap,
+  transferConditionBetweenCreatures,
   CONDITION_CATALOG,
   GROUP_COLOR_ORDER,
   MARIP_HEADERS,
@@ -436,5 +438,84 @@ describe('monsterFromBestiary', () => {
   it('derives initials from the monster name', () => {
     const m = monsterFromBestiary('Goblin Assassin')
     expect(m.initials).toBe('GA')
+  })
+})
+
+describe('parseConditionDragPayload', () => {
+  it('parses monster-row payload without fromMinion', () => {
+    expect(
+      parseConditionDragPayload(JSON.stringify({ fromGroup: 1, fromMonster: 2, label: 'Dazed' })),
+    ).toEqual({ fromGroup: 1, fromMonster: 2, fromMinion: null, label: 'Dazed' })
+  })
+
+  it('parses minion payload with fromMinion', () => {
+    expect(
+      parseConditionDragPayload(JSON.stringify({ fromGroup: 0, fromMonster: 1, fromMinion: 0, label: 'Taunted' })),
+    ).toEqual({ fromGroup: 0, fromMonster: 1, fromMinion: 0, label: 'Taunted' })
+  })
+
+  it('returns null for invalid JSON', () => {
+    expect(parseConditionDragPayload('not json')).toBeNull()
+  })
+
+  it('returns null when fields are wrong type', () => {
+    expect(parseConditionDragPayload(JSON.stringify({ fromGroup: 'x', fromMonster: 0, label: 'A' }))).toBeNull()
+  })
+})
+
+describe('transferConditionBetweenCreatures', () => {
+  const fresh = () => cloneEncounterGroups()
+
+  it('returns null when source and target are the same ref', () => {
+    const groups = fresh()
+    expect(
+      transferConditionBetweenCreatures(
+        groups,
+        { groupIndex: 0, monsterIndex: 0, minionIndex: null },
+        { groupIndex: 0, monsterIndex: 0, minionIndex: null },
+        'Weakened',
+      ),
+    ).toBeNull()
+  })
+
+  it('returns null when source lacks the label', () => {
+    const groups = fresh()
+    expect(
+      transferConditionBetweenCreatures(
+        groups,
+        { groupIndex: 0, monsterIndex: 0, minionIndex: null },
+        { groupIndex: 0, monsterIndex: 1, minionIndex: null },
+        'NonexistentCondition',
+      ),
+    ).toBeNull()
+  })
+
+  it('moves a condition between two monsters in the same group', () => {
+    const g = fresh()
+    const next = transferConditionBetweenCreatures(
+      g,
+      { groupIndex: 0, monsterIndex: 0, minionIndex: null },
+      { groupIndex: 0, monsterIndex: 1, minionIndex: null },
+      'Weakened',
+    )
+    expect(next).not.toBeNull()
+    expect(next![0]!.monsters[0]!.conditions.some((c) => c.label === 'Weakened')).toBe(false)
+    expect(next![0]!.monsters[1]!.conditions.find((c) => c.label === 'Weakened')).toEqual({
+      label: 'Weakened',
+      state: 'neutral',
+    })
+  })
+
+  it('preserves EoT state when transferring', () => {
+    const g = fresh()
+    g[0]!.monsters[0]!.conditions = [{ label: 'Slowed', state: 'eot' }]
+    g[0]!.monsters[1]!.conditions = []
+    const next = transferConditionBetweenCreatures(
+      g,
+      { groupIndex: 0, monsterIndex: 0, minionIndex: null },
+      { groupIndex: 0, monsterIndex: 1, minionIndex: null },
+      'Slowed',
+    )
+    expect(next![0]!.monsters[1]!.conditions[0]).toEqual({ label: 'Slowed', state: 'eot' })
   })
 })

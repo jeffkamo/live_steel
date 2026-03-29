@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import { ConditionCatalogIconStrip } from './ConditionCatalogIconStrip'
@@ -80,6 +80,38 @@ describe('ConditionCatalogIconStrip', () => {
       render(<ConditionCatalogIconStrip conditions={withBleeding} interactive onToggleLabel={onToggle} />)
       await user.click(screen.getByRole('button', { name: /^Remove Bleeding$/i }))
       expect(onToggle).toHaveBeenCalledWith('Bleeding')
+    })
+
+    it('makes active condition buttons draggable when onActiveConditionDragStart is set', () => {
+      const onToggle = vi.fn()
+      const onDragStart = vi.fn()
+      render(
+        <ConditionCatalogIconStrip
+          conditions={withBleeding}
+          interactive
+          onToggleLabel={onToggle}
+          onActiveConditionDragStart={onDragStart}
+        />,
+      )
+      const btn = screen.getByRole('button', { name: /^Remove Bleeding$/i })
+      expect(btn).toHaveAttribute('draggable', 'true')
+      fireEvent.dragStart(btn, { clientX: 0, clientY: 0 })
+      expect(onDragStart).toHaveBeenCalledWith('Bleeding', expect.any(Object))
+    })
+
+    it('does not make inactive condition buttons draggable', () => {
+      const onToggle = vi.fn()
+      const onDragStart = vi.fn()
+      render(
+        <ConditionCatalogIconStrip
+          conditions={noConditions}
+          interactive
+          onToggleLabel={onToggle}
+          onActiveConditionDragStart={onDragStart}
+        />,
+      )
+      const btn = screen.getByRole('button', { name: /^Add Bleeding$/i })
+      expect(btn).toHaveAttribute('draggable', 'false')
     })
   })
 

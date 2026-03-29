@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import type { DragEvent } from 'react'
 import type { ConditionEntry, ConditionState } from '../types'
 import { CONDITION_CATALOG, findConditionOnMonster } from '../data'
 import { ConditionIcon } from './ConditionIcon'
@@ -10,6 +11,20 @@ const conditionPickerRowBtn =
 const conditionPickerDurationPill =
   'shrink-0 rounded-full border px-1.5 py-0.5 font-sans text-[0.58rem] font-semibold tabular-nums transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-amber-600/70'
 
+export type CreatureConditionDnDBinding = {
+  groupIndex: number
+  monsterIndex: number
+  minionIndex: number | null
+  dropHighlight:
+    | { groupIndex: number; monsterIndex: number; minionIndex: number | null }
+    | null
+  onDragStart: (label: string, e: DragEvent) => void
+  onDragEnd: () => void
+  onDragOver: (e: DragEvent) => void
+  onDragLeave: (e: DragEvent) => void
+  onDrop: (e: DragEvent) => void
+}
+
 export function CreatureConditionCell({
   monsterName,
   conditions,
@@ -19,6 +34,7 @@ export function CreatureConditionCell({
   seActPhaseGlow,
   onConfirmEot,
   isEotConfirmed,
+  conditionDnD,
 }: {
   monsterName: string
   conditions: readonly ConditionEntry[]
@@ -28,6 +44,7 @@ export function CreatureConditionCell({
   seActPhaseGlow?: boolean
   onConfirmEot?: (label: string) => void
   isEotConfirmed?: (label: string) => boolean
+  conditionDnD?: CreatureConditionDnDBinding
 }) {
   const [open, setOpen] = useState(false)
   const cellRef = useRef<HTMLDivElement>(null)
@@ -59,10 +76,28 @@ export function CreatureConditionCell({
     'transition-opacity duration-200 ease-out motion-reduce:transition-none ' +
     (turnComplete ? 'opacity-[0.52]' : 'opacity-100')
 
+  const dropRing =
+    conditionDnD &&
+    conditionDnD.dropHighlight != null &&
+    conditionDnD.dropHighlight.groupIndex === conditionDnD.groupIndex &&
+    conditionDnD.dropHighlight.monsterIndex === conditionDnD.monsterIndex &&
+    conditionDnD.dropHighlight.minionIndex === conditionDnD.minionIndex
+      ? 'ring-2 ring-inset ring-emerald-500/45'
+      : ''
+
   return (
     <div
       ref={cellRef}
-      className={`relative flex h-full min-h-0 w-full cursor-pointer flex-col justify-center rounded-md p-3 outline-none transition-[background-color] duration-200 ease-out motion-reduce:transition-none hover:bg-zinc-800/35 focus-visible:ring-2 focus-visible:ring-amber-500/45 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950 sm:p-3.5 ${rowTone}`}
+      data-testid={conditionDnD ? 'condition-drop-target' : undefined}
+      data-group-index={conditionDnD?.groupIndex}
+      data-monster-index={conditionDnD?.monsterIndex}
+      data-minion-index={
+        conditionDnD ? (conditionDnD.minionIndex == null ? '' : String(conditionDnD.minionIndex)) : undefined
+      }
+      onDragOver={conditionDnD?.onDragOver}
+      onDragLeave={conditionDnD?.onDragLeave}
+      onDrop={conditionDnD?.onDrop}
+      className={`relative flex h-full min-h-0 w-full cursor-pointer flex-col justify-center rounded-md p-3 outline-none transition-[background-color,box-shadow] duration-200 ease-out motion-reduce:transition-none hover:bg-zinc-800/35 focus-visible:ring-2 focus-visible:ring-amber-500/45 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950 sm:p-3.5 ${rowTone} ${dropRing}`}
       role="group"
       tabIndex={0}
       aria-expanded={open}
@@ -83,6 +118,8 @@ export function CreatureConditionCell({
           turnActed={turnComplete}
           seActPhaseGlow={seActPhaseGlow}
           isEotConfirmed={isEotConfirmed}
+          onActiveConditionDragStart={conditionDnD?.onDragStart}
+          onActiveConditionDragEnd={conditionDnD?.onDragEnd}
           onToggleLabel={(label) => {
             const existing = conditions.find((c) => c.label === label)
             if (existing) {

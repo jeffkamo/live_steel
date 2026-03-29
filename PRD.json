@@ -233,7 +233,7 @@
         "Write specs covering condition drag, drop transfer, and source/target state updates",
         "Run the specs, fix any failures until all pass"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "TURN-001",

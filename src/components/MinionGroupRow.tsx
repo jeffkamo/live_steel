@@ -7,7 +7,7 @@ import { MinionStaminaDisplay } from './MinionStaminaDisplay'
 import { MinionStaminaEditor } from './MinionStaminaEditor'
 import { MaripCluster } from './MaripCluster'
 import { StatCluster } from './StatCluster'
-import { CreatureConditionCell } from './CreatureConditionCell'
+import { CreatureConditionCell, type CreatureConditionDnDBinding } from './CreatureConditionCell'
 import { StatBlock } from './StatBlock'
 
 const chevronDown = (
@@ -72,6 +72,8 @@ export function MinionGroupRow({
   onConfirmEot,
   isEotConfirmed,
   monsterDrag,
+  conditionDnDParent,
+  conditionDnDForMinion,
 }: {
   monster: Monster
   row: number
@@ -115,6 +117,8 @@ export function MinionGroupRow({
     onDragLeave: (e: DragEvent) => void
     onDrop: (e: DragEvent) => void
   }
+  conditionDnDParent?: CreatureConditionDnDBinding
+  conditionDnDForMinion?: (minionIndex: number) => CreatureConditionDnDBinding | undefined
 }) {
   const [sc, sm] = monster.stamina
   const badge = GROUP_COLOR_BADGE[groupColor]
@@ -393,6 +397,7 @@ export function MinionGroupRow({
             seActPhaseGlow={seActPhaseGlow}
             onConfirmEot={onConfirmEot ? (label) => onConfirmEot(label) : undefined}
             isEotConfirmed={isEotConfirmed ? (label) => isEotConfirmed(label) : undefined}
+            conditionDnD={conditionDnDParent}
           />
           {hasFeatures && onToggleStatBlock && (
             <button
@@ -448,6 +453,7 @@ export function MinionGroupRow({
               }
               onConfirmEot={onConfirmEot ? (label) => onConfirmEot(label, mi) : undefined}
               isEotConfirmed={isEotConfirmed ? (label) => isEotConfirmed(label, mi) : undefined}
+              conditionDnD={conditionDnDForMinion?.(mi)}
             />
           )
         })}
@@ -483,6 +489,7 @@ function MinionChildRow({
   onConditionAddOrSet,
   onConfirmEot,
   isEotConfirmed,
+  conditionDnD,
 }: {
   minion: { name: string; initials: string; conditions: readonly import('../types').ConditionEntry[]; dead: boolean }
   minionIndex: number
@@ -498,6 +505,7 @@ function MinionChildRow({
   onConditionAddOrSet: (label: string, state: ConditionState) => void
   onConfirmEot?: (label: string) => void
   isEotConfirmed?: (label: string) => boolean
+  conditionDnD?: CreatureConditionDnDBinding
 }) {
   const badge = GROUP_COLOR_BADGE[groupColor]
   const bodyCell =
@@ -588,6 +596,7 @@ function MinionChildRow({
           seActPhaseGlow={seActPhaseGlow}
           onConfirmEot={onConfirmEot}
           isEotConfirmed={isEotConfirmed}
+          conditionDnD={conditionDnD}
         />
       </div>
     </>

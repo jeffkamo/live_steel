@@ -423,3 +423,28 @@ Monster row DnD — 6-dot grip left of ordinal on each monster/minion parent row
 - src/components/MonsterRowCells.tsx
 - src/components/MinionGroupRow.tsx
 - PRD.json
+
+
+
+[DND-003]
+
+Condition DnD — active condition icon buttons draggable; drop on another creature condition cell transfers label+state; orthogonal MIME `CONDITION_DRAG_MIME` vs monster/group drags
+
+**Key decisions:**
+- `transferConditionBetweenCreatures` + `parseConditionDragPayload` in data.ts; same-monster parent↔minion path vs cross-creature path
+- Active strip buttons only `draggable`; `CreatureConditionCell` drop zone + emerald ring highlight; `data-testid=condition-drop-target` + indices for tests
+- EoT confirm key cleared on successful transfer from source (queueMicrotask) to avoid stale confirmation
+- Minion parent + child rows wired via `bindConditionDnD` in GroupSection
+
+**Files changed:**
+- src/data.ts
+- src/data.test.ts
+- src/App.tsx
+- src/App.test.tsx
+- src/components/ConditionCatalogIconStrip.tsx
+- src/components/ConditionCatalogIconStrip.test.tsx
+- src/components/CreatureConditionCell.tsx
+- src/components/GroupSection.tsx
+- src/components/MonsterRowCells.tsx
+- src/components/MinionGroupRow.tsx
+- PRD.json

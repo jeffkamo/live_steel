@@ -261,6 +261,177 @@ export const ENCOUNTER_GROUP_DRAG_MIME = 'application/x-live-steel-encounter-gro
 /** MIME type for HTML5 drag payload: JSON `{ fromGroup, fromMonster }`. */
 export const MONSTER_DRAG_MIME = 'application/x-live-steel-monster-ref'
 
+/** MIME type for HTML5 drag payload: JSON `{ fromGroup, fromMonster, fromMinion?, label }`. */
+export const CONDITION_DRAG_MIME = 'application/x-live-steel-condition-ref'
+
+/** Identifies a monster row or a specific minion child for condition transfer. */
+export type ConditionCreatureRef = {
+  groupIndex: number
+  monsterIndex: number
+  /** `null` = monster / minion parent row; otherwise minion slot index. */
+  minionIndex: number | null
+}
+
+export function parseConditionDragPayload(raw: string): {
+  fromGroup: number
+  fromMonster: number
+  fromMinion: number | null
+  label: string
+} | null {
+  try {
+    const o = JSON.parse(raw) as Record<string, unknown>
+    if (
+      typeof o.fromGroup !== 'number' ||
+      typeof o.fromMonster !== 'number' ||
+      typeof o.label !== 'string' ||
+      !Number.isInteger(o.fromGroup) ||
+      !Number.isInteger(o.fromMonster)
+    ) {
+      return null
+    }
+    let fromMinion: number | null = null
+    if (o.fromMinion != null) {
+      if (typeof o.fromMinion !== 'number' || !Number.isInteger(o.fromMinion)) return null
+      fromMinion = o.fromMinion
+    }
+    return { fromGroup: o.fromGroup, fromMonster: o.fromMonster, fromMinion, label: o.label }
+  } catch {
+    return null
+  }
+}
+
+function creatureRefEquals(a: ConditionCreatureRef, b: ConditionCreatureRef): boolean {
+  return (
+    a.groupIndex === b.groupIndex &&
+    a.monsterIndex === b.monsterIndex &&
+    a.minionIndex === b.minionIndex
+  )
+}
+
+function readConditionEntry(
+  groups: readonly EncounterGroup[],
+  ref: ConditionCreatureRef,
+  label: string,
+): ConditionEntry | null {
+  const m = groups[ref.groupIndex]?.monsters[ref.monsterIndex]
+  if (!m) return null
+  if (ref.minionIndex == null) {
+    const c = m.conditions.find((x) => x.label === label)
+    return c ? { ...c } : null
+  }
+  const mn = m.minions?.[ref.minionIndex]
+  if (!mn) return null
+  const c = mn.conditions.find((x) => x.label === label)
+  return c ? { ...c } : null
+}
+
+function removeConditionFromCreature(
+  m: Monster,
+  minionIndex: number | null,
+  label: string,
+): Monster {
+  if (minionIndex == null) {
+    const idx = m.conditions.findIndex((c) => c.label === label)
+    if (idx < 0) return m
+    return { ...m, conditions: m.conditions.filter((_, i) => i !== idx) }
+  }
+  const minions = m.minions
+  if (!minions) return m
+  const mi = minionIndex
+  if (mi < 0 || mi >= minions.length) return m
+  return {
+    ...m,
+    minions: minions.map((mn, i) => {
+      if (i !== mi) return mn
+      const idx = mn.conditions.findIndex((c) => c.label === label)
+      if (idx < 0) return mn
+      return { ...mn, conditions: mn.conditions.filter((_, j) => j !== idx) }
+    }),
+  }
+}
+
+function addOrSetConditionOnCreature(
+  m: Monster,
+  minionIndex: number | null,
+  entry: ConditionEntry,
+): Monster {
+  if (minionIndex == null) {
+    const idx = m.conditions.findIndex((c) => c.label === entry.label)
+    if (idx >= 0) {
+      return {
+        ...m,
+        conditions: m.conditions.map((c, i) => (i === idx ? { ...c, state: entry.state } : c)),
+      }
+    }
+    return { ...m, conditions: [...m.conditions, { ...entry }] }
+  }
+  const minions = m.minions
+  if (!minions) return m
+  const mi = minionIndex
+  if (mi < 0 || mi >= minions.length) return m
+  return {
+    ...m,
+    minions: minions.map((mn, i) => {
+      if (i !== mi) return mn
+      const idx = mn.conditions.findIndex((c) => c.label === entry.label)
+      if (idx >= 0) {
+        return {
+          ...mn,
+          conditions: mn.conditions.map((c, j) => (j === idx ? { ...c, state: entry.state } : c)),
+        }
+      }
+      return { ...mn, conditions: [...mn.conditions, { ...entry }] }
+    }),
+  }
+}
+
+/**
+ * Remove `label` from `from` and add/set it on `to` with the same {@link ConditionEntry.state}.
+ * Returns `null` if source has no such condition or refs are identical.
+ */
+export function transferConditionBetweenCreatures(
+  groups: EncounterGroup[],
+  from: ConditionCreatureRef,
+  to: ConditionCreatureRef,
+  label: string,
+): EncounterGroup[] | null {
+  if (creatureRefEquals(from, to)) return null
+  const entry = readConditionEntry(groups, from, label)
+  if (!entry) return null
+
+  if (from.groupIndex === to.groupIndex && from.monsterIndex === to.monsterIndex) {
+    const gi = from.groupIndex
+    const mi = from.monsterIndex
+    const g = groups[gi]
+    if (!g) return null
+    const m = g.monsters[mi]
+    if (!m) return null
+    const after = addOrSetConditionOnCreature(
+      removeConditionFromCreature(m, from.minionIndex, label),
+      to.minionIndex,
+      entry,
+    )
+    return groups.map((grp, idx) =>
+      idx === gi
+        ? { ...grp, monsters: grp.monsters.map((mm, i) => (i === mi ? after : mm)) }
+        : grp,
+    )
+  }
+
+  return groups.map((g, gi) => ({
+    ...g,
+    monsters: g.monsters.map((m, mi) => {
+      if (gi === from.groupIndex && mi === from.monsterIndex) {
+        return removeConditionFromCreature(m, from.minionIndex, label)
+      }
+      if (gi === to.groupIndex && mi === to.monsterIndex) {
+        return addOrSetConditionOnCreature(m, to.minionIndex, entry)
+      }
+      return m
+    }),
+  }))
+}
+
 /**
  * Insert index in the per-group monsters array after removing the source monster.
  * `toMonster` is "insert before this index" in pre-move coordinates (0..length inclusive for append).

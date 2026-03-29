@@ -2,6 +2,7 @@ import { useCallback, useState } from 'react'
 import type { DragEvent } from 'react'
 import type { CaptainRef, ConditionState, EncounterGroup, GroupColorId, GroupColorMenuState, Monster } from '../types'
 import { ROSTER_GRID_TEMPLATE } from '../data'
+import type { CreatureConditionDnDBinding } from './CreatureConditionCell'
 import { GroupTurnColumn } from './TurnColumnCell'
 import { GroupColorPickerPopover } from './GroupColorPickerPopover'
 import { MonsterRowCells } from './MonsterRowCells'
@@ -33,6 +34,7 @@ export function GroupSection({
   isEotConfirmed,
   encounterGroupDragHandle,
   monsterDrag,
+  conditionDrag,
 }: {
   group: EncounterGroup
   groupKey: string
@@ -70,6 +72,14 @@ export function GroupSection({
   onAddMonster?: (monster: Monster) => void
   onConfirmEot?: (monsterIndex: number, label: string, minionIndex?: number) => void
   isEotConfirmed?: (monsterIndex: number, label: string, minionIndex?: number) => boolean
+  conditionDrag?: {
+    dropTarget: { groupIndex: number; monsterIndex: number; minionIndex: number | null } | null
+    onDragStart: (monsterIndex: number, minionIndex: number | null, label: string, e: DragEvent) => void
+    onDragEnd: () => void
+    onDragOver: (monsterIndex: number, minionIndex: number | null, e: DragEvent) => void
+    onDragLeave: (monsterIndex: number, minionIndex: number | null, e: DragEvent) => void
+    onDrop: (monsterIndex: number, minionIndex: number | null, e: DragEvent) => void
+  }
 }): React.JSX.Element {
   const [expandedMinions, setExpandedMinions] = useState<Record<number, boolean>>({})
   const [expandedStatBlocks, setExpandedStatBlocks] = useState<Record<number, boolean>>({})
@@ -118,6 +128,22 @@ export function GroupSection({
     currentRow += count
   }
   const totalGridRows = Math.max(currentRow - 1, 1)
+
+  const bindConditionDnD = (mi: number, mni: number | null): CreatureConditionDnDBinding | undefined => {
+    if (conditionDrag == null) return undefined
+    const { dropTarget, onDragStart, onDragEnd, onDragOver, onDragLeave, onDrop } = conditionDrag
+    return {
+      groupIndex: thisGroupIndex,
+      monsterIndex: mi,
+      minionIndex: mni,
+      dropHighlight: dropTarget,
+      onDragStart: (label, e) => onDragStart(mi, mni, label, e),
+      onDragEnd,
+      onDragOver: (e) => onDragOver(mi, mni, e),
+      onDragLeave: (e) => onDragLeave(mi, mni, e),
+      onDrop: (e) => onDrop(mi, mni, e),
+    }
+  }
 
   const monsterRowDrag = (i: number) => {
     if (monsterDrag == null) return undefined
@@ -226,6 +252,8 @@ export function GroupSection({
               onConfirmEot={onConfirmEot ? (label, minionIndex) => onConfirmEot(i, label, minionIndex) : undefined}
               isEotConfirmed={isEotConfirmed ? (label, minionIndex) => isEotConfirmed(i, label, minionIndex) : undefined}
               monsterDrag={monsterRowDrag(i)}
+              conditionDnDParent={bindConditionDnD(i, null)}
+              conditionDnDForMinion={(mni) => bindConditionDnD(i, mni)}
             />
           )
         }
@@ -257,6 +285,7 @@ export function GroupSection({
             onConfirmEot={onConfirmEot ? (label) => onConfirmEot(i, label) : undefined}
             isEotConfirmed={isEotConfirmed ? (label) => isEotConfirmed(i, label) : undefined}
             monsterDrag={monsterRowDrag(i)}
+            conditionDnD={bindConditionDnD(i, null)}
           />
         )
       })}
