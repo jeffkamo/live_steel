@@ -1,0 +1,317 @@
+{
+  "prd_items": [
+    {
+      "id": "STAT-001",
+      "category": "stat_blocks",
+      "description": "Render expandable/collapsible stat blocks per monster and minion",
+      "steps": [
+        "Add a stat block component that can be expanded or collapsed",
+        "Render the stat block on each monster row and each minion row",
+        "Populate the stat block with the monster's list of attacks and abilities",
+        "Write specs covering expand/collapse behavior and correct data rendering",
+        "Run the specs, fix any failures until all pass"
+      ],
+      "passes": false
+    },
+    {
+      "id": "STAT-002",
+      "category": "stat_blocks",
+      "description": "Style stat blocks in the visual language of Draw Steel book using official glyphs",
+      "steps": [
+        "Import glyphs/icons from /home/kamo/Downloads/DrawSteelGlyphs",
+        "Match the layout and visual style of stat blocks as seen in the Draw Steel book",
+        "Use the glyphs inline within the stat block where appropriate (damage types, keywords, etc.)",
+        "Write specs verifying glyph rendering and visual layout structure",
+        "Run the specs, fix any failures until all pass"
+      ],
+      "passes": false
+    },
+    {
+      "id": "STAT-003",
+      "category": "stat_blocks",
+      "description": "Source stat block data from SteelCompendium bestiary repositories",
+      "steps": [
+        "Integrate data from https://github.com/SteelCompendium/data-bestiary-md and/or https://github.com/SteelCompendium/data-bestiary-json",
+        "Use the steel-compendium-sdk npm package (https://www.npmjs.com/package/steel-compendium-sdk) for parsing",
+        "Ensure parsed data maps correctly to the stat block component's expected props",
+        "Write specs covering data fetching, parsing, and correct prop mapping",
+        "Run the specs, fix any failures until all pass"
+      ],
+      "passes": false
+    },
+    {
+      "id": "STAT-004",
+      "category": "stat_blocks",
+      "description": "Render HP, MARIP, and other core stats from monster JSON data",
+      "steps": [
+        "Display the monster's default max stamina and current stamina",
+        "Display MARIP (Might, Agility, Reason, Intuition, Presence) values",
+        "Display any other relevant stats sourced from the monster's JSON data",
+        "Write specs verifying correct rendering of stamina, MARIP, and other stats from sample JSON",
+        "Run the specs, fix any failures until all pass"
+      ],
+      "passes": false
+    },
+    {
+      "id": "MINION-001",
+      "category": "minions",
+      "description": "Allow minions to be assigned a captain from among the encounter's monsters",
+      "steps": [
+        "Add a 'Captain' pill under the 'Minion' header in the parent minion row",
+        "Clicking the Captain pill reveals a dropdown listing all other monsters in the encounter",
+        "Selecting a monster from the dropdown assigns it as the minion group's captain",
+        "The Captain pill then renders the captain's colored ordinal number and monster name",
+        "Write specs covering pill click, dropdown display, captain assignment, and rendered output",
+        "Run the specs, fix any failures until all pass"
+      ],
+      "passes": false
+    },
+    {
+      "id": "MINION-002",
+      "category": "minions",
+      "description": "Allow removing an assigned captain from a minion group",
+      "steps": [
+        "Show an 'x' button next to the captain monster's name on the captain pill",
+        "Clicking the 'x' button unassigns the captain from the minion group",
+        "The Captain pill reverts to its unassigned state",
+        "Write specs covering captain removal and pill state reset",
+        "Run the specs, fix any failures until all pass"
+      ],
+      "passes": false
+    },
+    {
+      "id": "MINION-003",
+      "category": "minions",
+      "description": "Support marking individual child minions as dead or alive",
+      "steps": [
+        "Add a dead/alive toggle (checkbox) on each child minion instead of an individual stamina counter",
+        "Reflect the dead/alive state visually on the child minion row",
+        "Write specs covering toggle behavior and visual state changes",
+        "Run the specs, fix any failures until all pass"
+      ],
+      "passes": false
+    },
+    {
+      "id": "MINION-004",
+      "category": "minions",
+      "description": "Render minion stamina as interval-based shared pool display",
+      "steps": [
+        "Replace the standard stamina display for the parent minion with an interval layout (e.g. '5 / 10 / 15 / 20')",
+        "Calculate interval size based on the minion's stats from the bestiary data",
+        "Calculate the number of intervals based on how many minions are in the group",
+        "Make it visually clear at which stamina thresholds individual minions die",
+        "Write specs covering interval calculation, rendering, and threshold clarity",
+        "Run the specs, fix any failures until all pass"
+      ],
+      "passes": false
+    },
+    {
+      "id": "MINION-005",
+      "category": "minions",
+      "description": "Minion stamina popover with interval-based input",
+      "steps": [
+        "Show a popover on hover over the minion stamina display",
+        "Provide the same add/remove stamina controls as other monsters",
+        "Replace the 'currentStam / maxStam' text input with a 'lastInterval / interval / ... / firstInterval' layout",
+        "Dynamically adjust the number of interval segments based on the number of minions",
+        "Write specs covering popover display, stamina controls, and dynamic interval segments",
+        "Run the specs, fix any failures until all pass"
+      ],
+      "passes": false
+    },
+    {
+      "id": "MINION-006",
+      "category": "minions",
+      "description": "Subtly inform the director when stamina drops past an interval threshold",
+      "steps": [
+        "Detect when stamina crosses an interval boundary",
+        "Display a subtle visual cue informing the director that minions need to be killed or revived",
+        "Leave the actual dead/alive toggle to the director's manual action",
+        "Write specs covering threshold detection and visual cue display",
+        "Run the specs, fix any failures until all pass"
+      ],
+      "passes": false
+    },
+    {
+      "id": "MALICE-001",
+      "category": "malice",
+      "description": "Defer malice stat block rendering until design is decided",
+      "steps": [
+        "Do not render stat blocks for malice creatures",
+        "Leave a placeholder or skip malice entries in the stat block rendering logic",
+        "Write specs verifying malice creatures do not render stat blocks",
+        "Run the specs, fix any failures until all pass"
+      ],
+      "passes": false
+    },
+    {
+      "id": "DATA-001",
+      "category": "data",
+      "description": "Add monsters to an existing group",
+      "steps": [
+        "Provide a UI control on each group to add a new monster",
+        "Present a list of available monsters sourced from the JSON bestiary data",
+        "Insert the selected monster into the group",
+        "Write specs covering the add control, monster list population, and insertion into group state",
+        "Run the specs, fix any failures until all pass"
+      ],
+      "passes": false
+    },
+    {
+      "id": "DATA-002",
+      "category": "data",
+      "description": "Create a new blank group",
+      "steps": [
+        "Add a UI control to create a new empty encounter group",
+        "Initialize the group with default/empty state",
+        "Allow the user to then add monsters into the new group",
+        "Write specs covering group creation and initial empty state",
+        "Run the specs, fix any failures until all pass"
+      ],
+      "passes": false
+    },
+    {
+      "id": "DATA-003",
+      "category": "data",
+      "description": "Delete a monster from a group",
+      "steps": [
+        "Add a delete control on each monster within a group",
+        "Confirm or immediately remove the monster from the group",
+        "Handle cleanup of any references (e.g. captain assignments)",
+        "Write specs covering deletion, state cleanup, and reference handling",
+        "Run the specs, fix any failures until all pass"
+      ],
+      "passes": false
+    },
+    {
+      "id": "DND-001",
+      "category": "drag_and_drop",
+      "description": "Reorder encounter groups via drag and drop",
+      "steps": [
+        "Make encounter group rows draggable",
+        "Allow dropping a group at a new position to reorder (e.g. initiative or table preference)",
+        "Persist the new order in state",
+        "Write specs covering drag initiation, drop reordering, and state persistence",
+        "Run the specs, fix any failures until all pass"
+      ],
+      "passes": false
+    },
+    {
+      "id": "DND-002",
+      "category": "drag_and_drop",
+      "description": "Reorder monsters within a group or move between groups via drag and drop",
+      "steps": [
+        "Make individual monster rows draggable",
+        "Allow reordering within the same group",
+        "Allow dragging a monster into a different group",
+        "Persist the new order and group assignment in state",
+        "Write specs covering intra-group reorder, cross-group move, and state persistence",
+        "Run the specs, fix any failures until all pass"
+      ],
+      "passes": false
+    },
+    {
+      "id": "DND-003",
+      "category": "drag_and_drop",
+      "description": "Move conditions between monsters via drag and drop",
+      "steps": [
+        "Make condition pills draggable",
+        "Allow dropping a condition pill onto another monster to transfer it",
+        "Remove the condition from the source monster and add it to the target",
+        "Write specs covering condition drag, drop transfer, and source/target state updates",
+        "Run the specs, fix any failures until all pass"
+      ],
+      "passes": false
+    },
+    {
+      "id": "TURN-001",
+      "category": "advanced_turn_features",
+      "description": "Animate EoT and SE condition indicators when a monster's turn is set to acted",
+      "steps": [
+        "Detect when a monster's turn state changes to 'acted'",
+        "Apply a pulsate/glow animation to the EoT and SE condition pills",
+        "Keep the animation running until resolved or cancelled",
+        "Write specs covering animation trigger on turn state change and animation lifecycle",
+        "Run the specs, fix any failures until all pass"
+      ],
+      "passes": false
+    },
+    {
+      "id": "TURN-002",
+      "category": "advanced_turn_features",
+      "description": "Auto-disable EoT conditions after 30 seconds if not clicked",
+      "steps": [
+        "Start a 30-second timer when a monster's turn is set to 'acted'",
+        "If the EoT condition is not clicked within 30 seconds, disable/deactivate it",
+        "If the EoT condition IS clicked within 30 seconds, it stays active (the click means 'keep this condition')",
+        "Write specs covering timer behavior, auto-disable, and click-to-keep interactions",
+        "Run the specs, fix any failures until all pass"
+      ],
+      "passes": false
+    },
+    {
+      "id": "TURN-003",
+      "category": "advanced_turn_features",
+      "description": "SE conditions remain enabled by default after 30 seconds (assume save succeeded)",
+      "steps": [
+        "After 30 seconds without interaction, SE conditions remain active (save assumed successful)",
+        "Clicking the SE condition is the only way to remove it (indicating the save failed)",
+        "Ensure the glow/pulsate animation stops after the 30-second window",
+        "Write specs covering default persistence, click-to-remove, and animation stop",
+        "Run the specs, fix any failures until all pass"
+      ],
+      "passes": false
+    },
+    {
+      "id": "TURN-004",
+      "category": "advanced_turn_features",
+      "description": "No condition changes when resetting a group's turn state back to pending",
+      "steps": [
+        "When a group's turn state is set back to 'pending', leave all conditions unchanged",
+        "Conditions remain in their current active/inactive state",
+        "Write specs verifying conditions are untouched after a pending reset",
+        "Run the specs, fix any failures until all pass"
+      ],
+      "passes": false
+    },
+    {
+      "id": "TURN-005",
+      "category": "advanced_turn_features",
+      "description": "Cancel condition animations if a group is immediately set back to pending after acting",
+      "steps": [
+        "If a group is set to 'acted' and then immediately set back to 'pending', cancel the pulsate/glow animation",
+        "Leave all conditions unchanged and active",
+        "Cancel any running 30-second timers",
+        "Write specs covering rapid acted-to-pending transition, animation cancellation, and timer cleanup",
+        "Run the specs, fix any failures until all pass"
+      ],
+      "passes": false
+    },
+    {
+      "id": "A11Y-001",
+      "category": "accessibility",
+      "description": "Full keyboard-only navigation pass",
+      "steps": [
+        "Walk the entire app using keyboard only",
+        "Ensure all focus states are visible",
+        "Verify that activating controls with Enter/Space matches pointer behavior",
+        "Write specs covering focus order, visible focus states, and Enter/Space activation",
+        "Run the specs, fix any failures until all pass"
+      ],
+      "passes": false
+    },
+    {
+      "id": "A11Y-002",
+      "category": "accessibility",
+      "description": "Keyboard access for all dropdowns",
+      "steps": [
+        "Ensure dropdown options are reachable and activatable from the keyboard after opening",
+        "Implement focus trap and focus restore on open/close",
+        "Support arrow key navigation, Escape to close, and Enter/Space to select",
+        "Write specs covering focus trap, arrow key navigation, Escape, and Enter/Space behavior",
+        "Run the specs, fix any failures until all pass"
+      ],
+      "passes": false
+    }
+  ]
+}
