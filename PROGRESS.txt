@@ -39,3 +39,22 @@ Source stat block data from SteelCompendium bestiary — bestiary.ts loads data/
 - src/bestiary.test.ts (new)
 - src/data.ts
 - PRD.json
+
+
+[STAT-004]
+
+Core stats header in stat block — stamina, MARIP, speed, size, stability, free strike, EV, ancestry, immunities, weaknesses, with_captain rendered from bestiary JSON
+
+**Key decisions:**
+- CoreStatsHeader sub-component inside StatBlock.tsx; receives BestiaryStatblock directly
+- StatBlock calls lookupStatblock(monsterName) internally — no prop threading needed through MonsterRowCells/MinionGroupRow
+- baseName() stripping already handled by lookupStatblock, so "Goblin Assassin 1" resolves correctly
+- Empty-state logic updated: shows "No features available" only when both features[] is empty AND no bestiary match exists
+- Speed renders movement type in parens when present (e.g. "6 (Climb)")
+- Optional fields (immunities, weaknesses, with_captain) only rendered when present in bestiary data
+- 14 new tests covering: stamina, MARIP, speed+movement, size, stability, free strike, ancestry, EV, with_captain, immunities/weaknesses, ordinal stripping, unknown monster fallback, features-empty-but-bestiary-exists
+
+**Files changed:**
+- src/components/StatBlock.tsx
+- src/components/StatBlock.test.tsx
+- PRD.json

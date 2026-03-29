@@ -114,6 +114,89 @@ describe('StatBlock', () => {
   })
 })
 
+describe('StatBlock core stats from bestiary', () => {
+  it('renders default stamina from bestiary for Goblin Assassin', () => {
+    render(<StatBlock features={[sampleAbility]} monsterName="Goblin Assassin" />)
+    expect(screen.getByTestId('core-stats-header')).toBeInTheDocument()
+    expect(screen.getByText('15')).toBeInTheDocument()
+  })
+
+  it('renders MARIP values from bestiary', () => {
+    render(<StatBlock features={[sampleAbility]} monsterName="Goblin Assassin" />)
+    expect(screen.getByText('-2 / 2 / 0 / 0 / -2')).toBeInTheDocument()
+  })
+
+  it('renders speed and movement type', () => {
+    render(<StatBlock features={[sampleAbility]} monsterName="Goblin Assassin" />)
+    expect(screen.getByText('6 (Climb)')).toBeInTheDocument()
+  })
+
+  it('renders size', () => {
+    render(<StatBlock features={[sampleAbility]} monsterName="Goblin Assassin" />)
+    expect(screen.getByText('1S')).toBeInTheDocument()
+  })
+
+  it('renders stability and free strike', () => {
+    render(<StatBlock features={[sampleAbility]} monsterName="Goblin Assassin" />)
+    const header = screen.getByTestId('core-stats-header')
+    expect(header).toHaveTextContent('Stability')
+    expect(header).toHaveTextContent('Free Strike')
+  })
+
+  it('renders ancestry', () => {
+    render(<StatBlock features={[sampleAbility]} monsterName="Goblin Assassin" />)
+    expect(screen.getByText('Goblin · Humanoid')).toBeInTheDocument()
+  })
+
+  it('renders EV', () => {
+    render(<StatBlock features={[sampleAbility]} monsterName="Goblin Assassin" />)
+    expect(screen.getByText('EV 3')).toBeInTheDocument()
+  })
+
+  it('renders with_captain for minion statblocks', () => {
+    render(<StatBlock features={[sampleAbility]} monsterName="Goblin Spinecleaver" />)
+    expect(screen.getByText('+1 damage bonus to strikes')).toBeInTheDocument()
+    expect(screen.getByText('With Captain')).toBeInTheDocument()
+  })
+
+  it('renders immunities and weaknesses when present', () => {
+    render(<StatBlock features={[sampleAbility]} monsterName="Lich" />)
+    expect(screen.getByText('Immunities')).toBeInTheDocument()
+    expect(screen.getByText('Corruption 10, poison 10')).toBeInTheDocument()
+    expect(screen.getByText('Weaknesses')).toBeInTheDocument()
+    expect(screen.getByText('Holy 5')).toBeInTheDocument()
+  })
+
+  it('does not render core stats header for unknown monster', () => {
+    render(<StatBlock features={[sampleAbility]} monsterName="Test Monster" />)
+    expect(screen.queryByTestId('core-stats-header')).not.toBeInTheDocument()
+  })
+
+  it('strips trailing ordinal to find bestiary entry', () => {
+    render(<StatBlock features={[sampleAbility]} monsterName="Goblin Assassin 1" />)
+    expect(screen.getByTestId('core-stats-header')).toBeInTheDocument()
+    expect(screen.getByText('Goblin · Humanoid')).toBeInTheDocument()
+  })
+
+  it('renders speed without movement type when not present', () => {
+    render(<StatBlock features={[sampleAbility]} monsterName="Goblin Underboss" />)
+    const header = screen.getByTestId('core-stats-header')
+    expect(header).toHaveTextContent('Speed')
+  })
+
+  it('renders stat block with bestiary data even when no features', () => {
+    render(<StatBlock features={[]} monsterName="Goblin Assassin" />)
+    expect(screen.getByTestId('core-stats-header')).toBeInTheDocument()
+    expect(screen.queryByTestId('stat-block-empty')).not.toBeInTheDocument()
+  })
+
+  it('shows empty message only when no features and no bestiary match', () => {
+    render(<StatBlock features={[]} monsterName="Nonexistent Creature" />)
+    expect(screen.queryByTestId('core-stats-header')).not.toBeInTheDocument()
+    expect(screen.getByTestId('stat-block-empty')).toBeInTheDocument()
+  })
+})
+
 describe('MonsterRowCells stat block toggle', () => {
   const baseProps = {
     row: 1,

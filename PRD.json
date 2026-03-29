@@ -50,7 +50,7 @@
         "Write specs verifying correct rendering of stamina, MARIP, and other stats from sample JSON",
         "Run the specs, fix any failures until all pass"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "MINION-001",
