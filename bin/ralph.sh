@@ -18,9 +18,10 @@ PROMPT="@PRD.json @PROGRESS.txt
 - Any blockers or notes for next iteration
 - Keep entries concise. Sacrifice grammar for the sake of concision. This file helps future iterations skip exploration.
 - Two newlines between tasks (easier scannability)
-5. Make a git commit of that feature with the message prefixed with 'AGENT: '.
-6. ONLY WORK ON A SINGLE FEATURE.
-7. If, while implementing the feature, you notice that all work is complete, output <promise>COMPLETE</promise>.
+5. Run test suite and linters. If any issues arise, fix them until the pass.
+6. Make a git commit of that feature with the message prefixed with 'AGENT: '.
+7. ONLY WORK ON A SINGLE FEATURE.
+8. If, while implementing the feature, you notice that all work is complete, output <promise>COMPLETE</promise>.
 
 The progress updates should follow this template:
 
