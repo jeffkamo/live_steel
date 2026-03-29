@@ -79,3 +79,24 @@ Suppress stat block rendering for malice creatures (those with Malice-cost featu
 - src/components/GroupSection.tsx
 - src/components/StatBlock.test.tsx
 - PRD.json
+
+
+[MINION-003]
+
+Dead/alive toggle on individual child minion rows — replaces empty stamina cell with switch + visual dimming
+
+**Key decisions:**
+- Added `dead: boolean` to MinionEntry type; MinionEntrySeed gets optional `dead?` defaulting to false in cloneMinionEntries
+- Toggle rendered as styled checkbox switch in stamina column (col 3) with red/green color states and Dead/Alive label
+- Dead minions get `opacity-40` on name badge, MARIP, stats, and conditions cells; name text gets `line-through`
+- State managed via new `patchMinionDead` callback in App.tsx, threaded through GroupSection → MinionGroupRow → MinionChildRow
+- 7 new integration tests in App.test.tsx covering: default alive state, toggle to dead, strikethrough visual, toggle back to alive, label text switch, isolation between minions, toggle presence in stamina column
+
+**Files changed:**
+- src/types.ts
+- src/data.ts
+- src/App.tsx
+- src/components/GroupSection.tsx
+- src/components/MinionGroupRow.tsx
+- src/App.test.tsx
+- PRD.json

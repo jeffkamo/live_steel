@@ -89,7 +89,7 @@
         "Write specs covering toggle behavior and visual state changes",
         "Run the specs, fix any failures until all pass"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "MINION-004",

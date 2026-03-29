@@ -20,6 +20,7 @@ export function GroupSection({
   onMonsterStaminaChange,
   onMonsterConditionRemove,
   onMonsterConditionAddOrSet,
+  onMinionDeadChange,
   onMinionConditionRemove,
   onMinionConditionAddOrSet,
 }: {
@@ -35,6 +36,7 @@ export function GroupSection({
   onMonsterStaminaChange: (monsterIndex: number, stamina: [number, number]) => void
   onMonsterConditionRemove: (monsterIndex: number, conditionIndex: number) => void
   onMonsterConditionAddOrSet: (monsterIndex: number, label: string, state: ConditionState) => void
+  onMinionDeadChange?: (monsterIndex: number, minionIndex: number, dead: boolean) => void
   onMinionConditionRemove?: (monsterIndex: number, minionIndex: number, conditionIndex: number) => void
   onMinionConditionAddOrSet?: (monsterIndex: number, minionIndex: number, label: string, state: ConditionState) => void
 }) {
@@ -139,6 +141,9 @@ export function GroupSection({
               onConditionRemove={(ci) => onMonsterConditionRemove(i, ci)}
               onConditionAddOrSet={(label, state) =>
                 onMonsterConditionAddOrSet(i, label, state)
+              }
+              onMinionDeadChange={(mi, dead) =>
+                onMinionDeadChange?.(i, mi, dead)
               }
               onMinionConditionRemove={(mi, ci) =>
                 onMinionConditionRemove?.(i, mi, ci)

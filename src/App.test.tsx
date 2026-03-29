@@ -794,4 +794,99 @@ describe('App', () => {
     expect(scope.getByRole('button', { name: /creature 2 of 3/i })).toBeInTheDocument()
     expect(scope.getByRole('button', { name: /creature 3 of 3/i })).toBeInTheDocument()
   })
+
+  // --- Minion dead/alive toggle (MINION-003) ---
+
+  const expandMinions = async (user: ReturnType<typeof userEvent.setup>) => {
+    const grid = screen.getByText('Minions', { exact: true }).closest('div.grid.items-stretch.rounded-lg') as HTMLElement
+    const expandBtn = within(grid).getByRole('button', { name: /^Expand individual Minions$/i })
+    await user.click(expandBtn)
+    return grid
+  }
+
+  it('minion child rows default to alive state', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    const grid = await expandMinions(user)
+    const scope = within(grid)
+    const toggles = scope.getAllByRole('checkbox', { name: /alive$/i })
+    expect(toggles).toHaveLength(4)
+    for (const toggle of toggles) {
+      expect(toggle).not.toBeChecked()
+    }
+    expect(scope.getAllByText('Alive')).toHaveLength(4)
+  })
+
+  it('clicking the dead/alive toggle marks a minion as dead', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    const grid = await expandMinions(user)
+    const scope = within(grid)
+    const toggle = scope.getByRole('checkbox', { name: /Goblin Spinecleaver 1.*alive$/i })
+    await user.click(toggle)
+    expect(toggle).toBeChecked()
+    expect(scope.getByRole('checkbox', { name: /Goblin Spinecleaver 1.*dead$/i })).toBeInTheDocument()
+  })
+
+  it('toggling a minion dead applies visual dimming and strikethrough', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    const grid = await expandMinions(user)
+    const scope = within(grid)
+    const toggle = scope.getByRole('checkbox', { name: /Goblin Spinecleaver 2.*alive$/i })
+    await user.click(toggle)
+    const nameEl = scope.getByText('Goblin Spinecleaver 2', { exact: true })
+    expect(nameEl.className).toMatch(/line-through/)
+  })
+
+  it('toggling a dead minion back to alive removes visual state', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    const grid = await expandMinions(user)
+    const scope = within(grid)
+    const toggle = scope.getByRole('checkbox', { name: /Goblin Spinecleaver 1.*alive$/i })
+    await user.click(toggle)
+    expect(toggle).toBeChecked()
+    await user.click(toggle)
+    expect(toggle).not.toBeChecked()
+    const nameEl = scope.getByText('Goblin Spinecleaver 1', { exact: true })
+    expect(nameEl.className).not.toMatch(/line-through/)
+  })
+
+  it('dead/alive toggle label text switches between Dead and Alive', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    const grid = await expandMinions(user)
+    const scope = within(grid)
+    expect(scope.getAllByText('Alive')).toHaveLength(4)
+    expect(scope.queryByText('Dead')).toBeNull()
+    const toggle = scope.getByRole('checkbox', { name: /Goblin Spinecleaver 3.*alive$/i })
+    await user.click(toggle)
+    expect(scope.getAllByText('Alive')).toHaveLength(3)
+    expect(scope.getByText('Dead')).toBeInTheDocument()
+  })
+
+  it('dead minion toggle does not affect other minions in the group', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    const grid = await expandMinions(user)
+    const scope = within(grid)
+    await user.click(scope.getByRole('checkbox', { name: /Goblin Spinecleaver 1.*alive$/i }))
+    const otherToggles = [
+      scope.getByRole('checkbox', { name: /Goblin Spinecleaver 2/i }),
+      scope.getByRole('checkbox', { name: /Goblin Spinecleaver 3/i }),
+      scope.getByRole('checkbox', { name: /Goblin Spinecleaver 4/i }),
+    ]
+    for (const t of otherToggles) {
+      expect(t).not.toBeChecked()
+    }
+  })
+
+  it('minion child rows render toggle in stamina column (col 3)', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    await expandMinions(user)
+    const toggles = screen.getAllByRole('checkbox', { name: /alive$/i })
+    expect(toggles.length).toBeGreaterThanOrEqual(4)
+  })
 })

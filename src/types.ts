@@ -48,6 +48,7 @@ export type MinionEntry = {
   name: string
   initials: string
   conditions: readonly ConditionEntry[]
+  dead: boolean
 }
 
 export type GroupColorId =
@@ -71,6 +72,7 @@ export type MinionEntrySeed = {
   name: string
   initials: string
   conditions: readonly string[]
+  dead?: boolean
 }
 
 /** Static encounter data uses plain condition names; clone maps them to {@link ConditionEntry}. */

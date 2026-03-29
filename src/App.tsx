@@ -123,6 +123,29 @@ function App() {
     [],
   )
 
+  const patchMinionDead = useCallback(
+    (groupIndex: number, monsterIndex: number, minionIndex: number, dead: boolean) => {
+      setEncounterGroups((prev) =>
+        prev.map((g, gi) => {
+          if (gi !== groupIndex) return g
+          return {
+            ...g,
+            monsters: g.monsters.map((m, mi) => {
+              if (mi !== monsterIndex || !m.minions) return m
+              return {
+                ...m,
+                minions: m.minions.map((minion, mni) =>
+                  mni === minionIndex ? { ...minion, dead } : minion,
+                ),
+              }
+            }),
+          }
+        }),
+      )
+    },
+    [],
+  )
+
   const patchMinionConditionAddOrSet = useCallback(
     (groupIndex: number, monsterIndex: number, minionIndex: number, label: string, state: ConditionState) => {
       setEncounterGroups((prev) =>
@@ -246,6 +269,9 @@ function App() {
               onMonsterConditionRemove={(mi, ci) => patchMonsterConditionRemove(gi, mi, ci)}
               onMonsterConditionAddOrSet={(mi, label, state) =>
                 patchMonsterConditionAddOrSet(gi, mi, label, state)
+              }
+              onMinionDeadChange={(mi, mni, dead) =>
+                patchMinionDead(gi, mi, mni, dead)
               }
               onMinionConditionRemove={(mi, mni, ci) =>
                 patchMinionConditionRemove(gi, mi, mni, ci)

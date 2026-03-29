@@ -57,6 +57,7 @@ export function MinionGroupRow({
   onStaminaChange,
   onConditionRemove,
   onConditionAddOrSet,
+  onMinionDeadChange,
   onMinionConditionRemove,
   onMinionConditionAddOrSet,
   statBlockExpanded = false,
@@ -79,6 +80,7 @@ export function MinionGroupRow({
   onStaminaChange: (next: [number, number]) => void
   onConditionRemove: (conditionIndex: number) => void
   onConditionAddOrSet: (label: string, state: ConditionState) => void
+  onMinionDeadChange: (minionIndex: number, dead: boolean) => void
   onMinionConditionRemove: (minionIndex: number, conditionIndex: number) => void
   onMinionConditionAddOrSet: (
     minionIndex: number,
@@ -212,6 +214,7 @@ export function MinionGroupRow({
               groupColor={groupColor}
               groupNumber={groupNumber}
               turnComplete={turnComplete}
+              onDeadChange={(dead) => onMinionDeadChange(mi, dead)}
               onConditionRemove={(ci) => onMinionConditionRemove(mi, ci)}
               onConditionAddOrSet={(label, state) =>
                 onMinionConditionAddOrSet(mi, label, state)
@@ -245,10 +248,11 @@ function MinionChildRow({
   groupColor,
   groupNumber,
   turnComplete,
+  onDeadChange,
   onConditionRemove,
   onConditionAddOrSet,
 }: {
-  minion: { name: string; initials: string; conditions: readonly import('../types').ConditionEntry[] }
+  minion: { name: string; initials: string; conditions: readonly import('../types').ConditionEntry[]; dead: boolean }
   minionIndex: number
   minionCount: number
   parentMonster: Monster
@@ -256,12 +260,14 @@ function MinionChildRow({
   groupColor: GroupColorId
   groupNumber: number
   turnComplete: boolean
+  onDeadChange: (dead: boolean) => void
   onConditionRemove: (conditionIndex: number) => void
   onConditionAddOrSet: (label: string, state: ConditionState) => void
 }) {
   const badge = GROUP_COLOR_BADGE[groupColor]
   const bodyCell =
     'flex h-full min-h-[3rem] items-center p-2 sm:min-h-[3.25rem] sm:p-2.5'
+  const deadDim = minion.dead ? 'opacity-40' : ''
   const rowTone =
     'transition-opacity duration-200 ease-out motion-reduce:transition-none ' +
     (turnComplete ? 'opacity-[0.52]' : 'opacity-100')
@@ -272,7 +278,7 @@ function MinionChildRow({
         className={`${bodyCell} min-w-0 border-t border-zinc-800/60 ${rowTone}`}
         style={{ gridColumn: 2, gridRow: gridRow }}
       >
-        <div className="flex w-full min-w-0 items-center gap-3 pl-6">
+        <div className={`flex w-full min-w-0 items-center gap-3 pl-6 ${deadDim}`}>
           <span
             className={`flex size-7 shrink-0 items-center justify-center rounded-full border-2 text-[0.65rem] font-semibold tabular-nums leading-none sm:size-8 sm:text-xs ${badge.border} ${badge.bg} ${badge.text}`}
             aria-label={`${minion.name}: minion ${minionIndex + 1} of ${minionCount} in group ${groupNumber}`}
@@ -280,24 +286,52 @@ function MinionChildRow({
             {minionIndex + 1}
           </span>
           <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-medium leading-tight text-zinc-200">
+            <p className={`truncate text-sm font-medium leading-tight text-zinc-200 ${minion.dead ? 'line-through' : ''}`}>
               {minion.name}
             </p>
           </div>
         </div>
       </div>
       <div
-        className={`${bodyCell} border-t border-zinc-800/60 ${rowTone}`}
-        style={{ gridColumn: 3, gridRow: gridRow }}
-      />
-      <div
         className={`${bodyCell} justify-center border-t border-zinc-800/60 ${rowTone}`}
+        style={{ gridColumn: 3, gridRow: gridRow }}
+      >
+        <label className="relative inline-flex cursor-pointer items-center gap-2">
+          <input
+            type="checkbox"
+            checked={minion.dead}
+            onChange={(e) => onDeadChange(e.target.checked)}
+            className="peer sr-only"
+            aria-label={`${minion.name}: ${minion.dead ? 'dead' : 'alive'}`}
+          />
+          <span
+            className={`flex h-6 w-11 items-center rounded-full transition-colors duration-200 ${
+              minion.dead
+                ? 'bg-red-900/70'
+                : 'bg-emerald-900/50'
+            }`}
+          >
+            <span
+              className={`inline-block size-4 rounded-full transition-all duration-200 ${
+                minion.dead
+                  ? 'translate-x-[1.375rem] bg-red-400'
+                  : 'translate-x-1 bg-emerald-400'
+              }`}
+            />
+          </span>
+          <span className={`select-none text-xs font-medium ${minion.dead ? 'text-red-400' : 'text-emerald-400'}`}>
+            {minion.dead ? 'Dead' : 'Alive'}
+          </span>
+        </label>
+      </div>
+      <div
+        className={`${bodyCell} justify-center border-t border-zinc-800/60 ${rowTone} ${deadDim}`}
         style={{ gridColumn: 4, gridRow: gridRow }}
       >
         <MaripCluster values={parentMonster.marip} />
       </div>
       <div
-        className={`${bodyCell} justify-center border-t border-zinc-800/60 ${rowTone}`}
+        className={`${bodyCell} justify-center border-t border-zinc-800/60 ${rowTone} ${deadDim}`}
         style={{ gridColumn: 5, gridRow: gridRow }}
       >
         <StatCluster
@@ -307,7 +341,7 @@ function MinionChildRow({
         />
       </div>
       <div
-        className="relative z-0 flex h-full min-h-[3rem] w-full items-stretch overflow-visible border-t border-zinc-800/60 hover:z-20 focus-within:z-20 has-[[data-condition-picker]]:z-[100] sm:min-h-[3.25rem]"
+        className={`relative z-0 flex h-full min-h-[3rem] w-full items-stretch overflow-visible border-t border-zinc-800/60 hover:z-20 focus-within:z-20 has-[[data-condition-picker]]:z-[100] sm:min-h-[3.25rem] ${deadDim}`}
         style={{ gridColumn: 6, gridRow: gridRow }}
       >
         <CreatureConditionCell

@@ -260,12 +260,13 @@ export function conditionEntryFromLabel(label: string): ConditionEntry {
 }
 
 export function cloneMinionEntries(
-  seeds: readonly { name: string; initials: string; conditions: readonly string[] }[],
+  seeds: readonly { name: string; initials: string; conditions: readonly string[]; dead?: boolean }[],
 ): MinionEntry[] {
   return seeds.map((s) => ({
     name: s.name,
     initials: s.initials,
     conditions: s.conditions.map(conditionEntryFromLabel),
+    dead: s.dead ?? false,
   }))
 }
 
