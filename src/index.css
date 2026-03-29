@@ -31,10 +31,28 @@
   50%      { box-shadow: 0 0 10px 3px rgb(168 85 247 / 0.7); }
 }
 
+@keyframes glow-cue-kill {
+  0%, 100% { box-shadow: 0 0 4px 1px rgb(239 68 68 / 0.5); }
+  50%      { box-shadow: 0 0 14px 4px rgb(239 68 68 / 0.72); }
+}
+
+@keyframes glow-cue-revive {
+  0%, 100% { box-shadow: 0 0 4px 1px rgb(34 197 94 / 0.5); }
+  50%      { box-shadow: 0 0 14px 4px rgb(34 197 94 / 0.72); }
+}
+
 @utility animate-glow-eot {
   animation: glow-eot 1.6s ease-in-out infinite;
 }
 
 @utility animate-glow-se {
   animation: glow-se 1.6s ease-in-out infinite;
+}
+
+@utility animate-glow-cue-kill {
+  animation: glow-cue-kill 1.4s ease-in-out infinite;
+}
+
+@utility animate-glow-cue-revive {
+  animation: glow-cue-revive 1.4s ease-in-out infinite;
 }

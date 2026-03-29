@@ -8,7 +8,7 @@ import type {
   Monster,
   MonsterCardDrawerView,
 } from '../types'
-import { rosterCombatStats } from '../bestiary'
+import { minionInterval, rosterCombatStats, suggestedDeadCount } from '../bestiary'
 import { GROUP_COLOR_BADGE, GROUP_COLOR_LABEL } from '../data'
 import { EditableStaminaCell } from './EditableStaminaCell'
 import { MinionStaminaDisplay } from './MinionStaminaDisplay'
@@ -117,6 +117,17 @@ export function MinionGroupRow({
   const colorLabel = GROUP_COLOR_LABEL[groupColor]
   const minions = monster.minions ?? []
   const hasFeatures = (monster.features?.length ?? 0) > 0
+  const [poolStamina] = monster.stamina
+  const staminaInterval = minionInterval(monster.name, minions[0]?.name)
+  const actualDeadCount = minions.filter((m) => m.dead).length
+  const suggestedDead =
+    staminaInterval != null && minions.length > 0
+      ? suggestedDeadCount(poolStamina, staminaInterval, minions.length)
+      : 0
+  const staminaMismatch =
+    staminaInterval != null && minions.length > 0 && suggestedDead !== actualDeadCount
+  const needKillCue = staminaMismatch && suggestedDead > actualDeadCount
+  const needReviveCue = staminaMismatch && suggestedDead < actualDeadCount
 
   const [captainDropdownOpen, setCaptainDropdownOpen] = useState(false)
   const captainDropdownRef = useRef<HTMLDivElement>(null)
@@ -458,6 +469,9 @@ export function MinionGroupRow({
       {/* --- minion child rows --- */}
       {minions.map((minion, mi) => {
         const childRow = row + 1 + mi
+        let lifeToggleCue: 'kill' | 'revive' | null = null
+        if (needKillCue && !minion.dead) lifeToggleCue = 'kill'
+        else if (needReviveCue && minion.dead) lifeToggleCue = 'revive'
         return (
           <MinionChildRow
             key={`${groupKey}-minion-${mi}`}
@@ -470,6 +484,7 @@ export function MinionGroupRow({
             groupNumber={groupNumber}
             turnComplete={turnComplete}
             seActPhaseGlow={seActPhaseGlow}
+            lifeToggleCue={lifeToggleCue}
             onDeadChange={(dead) => onMinionDeadChange(mi, dead)}
             onConditionRemove={(ci) => onMinionConditionRemove(mi, ci)}
             onConditionAddOrSet={(label, state) =>
@@ -513,6 +528,7 @@ function MinionChildRow({
   monsterCardDrawerOpen = false,
   onMinionStatCardClick,
   minionDrag,
+  lifeToggleCue = null,
 }: {
   minion: { name: string; initials: string; conditions: readonly import('../types').ConditionEntry[]; dead: boolean }
   minionIndex: number
@@ -523,6 +539,7 @@ function MinionChildRow({
   groupNumber: number
   turnComplete: boolean
   seActPhaseGlow: boolean
+  lifeToggleCue?: 'kill' | 'revive' | null
   onDeadChange: (dead: boolean) => void
   onConditionRemove: (conditionIndex: number) => void
   onConditionAddOrSet: (label: string, state: ConditionState) => void
@@ -630,10 +647,16 @@ function MinionChildRow({
               : `${minion.name}: alive. Click to mark dead.`
           }
           onClick={() => onDeadChange(!minion.dead)}
-          className={`inline-flex size-9 shrink-0 items-center justify-center rounded-full border outline-none transition-[background-color,border-color,color,transform] duration-200 ease-out motion-reduce:transition-none hover:brightness-110 active:scale-[0.96] focus-visible:ring-2 focus-visible:ring-amber-500/45 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950 sm:size-10 ${
+          className={`inline-flex size-9 shrink-0 items-center justify-center rounded-full border outline-none transition-[background-color,border-color,color,transform,box-shadow] duration-200 ease-out motion-reduce:transition-none hover:brightness-110 active:scale-[0.96] focus-visible:ring-2 focus-visible:ring-amber-500/45 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950 sm:size-10 ${
             minion.dead
               ? 'border-red-800/70 bg-red-950/55 text-red-400'
               : 'border-emerald-800/55 bg-emerald-950/45 text-emerald-400'
+          } ${
+            lifeToggleCue === 'kill'
+              ? 'z-[1] ring-2 ring-red-500/80 ring-offset-2 ring-offset-zinc-950 motion-safe:animate-glow-cue-kill motion-reduce:shadow-[0_0_10px_rgba(239,68,68,0.45)]'
+              : lifeToggleCue === 'revive'
+                ? 'z-[1] ring-2 ring-emerald-500/80 ring-offset-2 ring-offset-zinc-950 motion-safe:animate-glow-cue-revive motion-reduce:shadow-[0_0_10px_rgba(34,197,94,0.45)]'
+                : ''
           }`}
         >
           {minion.dead ? (
