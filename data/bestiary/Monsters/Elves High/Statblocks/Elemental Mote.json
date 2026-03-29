@@ -1,0 +1,62 @@
+{
+  "type": "statblock",
+  "name": "Elemental Mote",
+  "level": 1,
+  "roles": [
+    "Minion Hexer"
+  ],
+  "ancestry": [
+    "Elemental",
+    "High Elf",
+    "Soulless"
+  ],
+  "ev": "3 for four minions",
+  "stamina": "3",
+  "speed": 5,
+  "movement": "Fly",
+  "size": "1T",
+  "stability": 0,
+  "free_strike": 1,
+  "with_captain": "+2 bonus to speed",
+  "might": 0,
+  "agility": 0,
+  "reason": 0,
+  "intuition": 0,
+  "presence": 2,
+  "features": [
+    {
+      "type": "feature",
+      "feature_type": "ability",
+      "name": "Dweomer Plume",
+      "icon": "🗡",
+      "ability_type": "Signature Ability",
+      "keywords": [
+        "Magic",
+        "Melee",
+        "Strike"
+      ],
+      "usage": "Main action",
+      "distance": "Melee 2",
+      "target": "One creature or object per minion",
+      "effects": [
+        {
+          "roll": "Power Roll + 2",
+          "tier1": "1 damage",
+          "tier2": "2 damage; R < 1 damage weakness 3 (save ends)",
+          "tier3": "3 damage; R < 2 damage weakness 3 (save ends)"
+        }
+      ]
+    },
+    {
+      "type": "feature",
+      "feature_type": "trait",
+      "name": "Spark of Life",
+      "icon": "⭐️",
+      "effects": [
+        {
+          "effect": "On their turn, the mote can leave the encounter in a flash of light to revive one adjacent dead soot crow, brambleguard, or ceramic horse. The revived creature returns with 3 Stamina."
+        }
+      ]
+    }
+  ]
+}

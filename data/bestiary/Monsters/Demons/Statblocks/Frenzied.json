@@ -1,0 +1,64 @@
+{
+  "type": "statblock",
+  "name": "Frenzied",
+  "level": 1,
+  "roles": [
+    "Minion Harrier"
+  ],
+  "ancestry": [
+    "Abyssal",
+    "Demon"
+  ],
+  "ev": "3 for four minions",
+  "stamina": "4",
+  "weaknesses": [
+    "Holy 3"
+  ],
+  "speed": 6,
+  "size": "1M",
+  "stability": 0,
+  "free_strike": 1,
+  "with_captain": "+2 bonus to speed",
+  "might": 0,
+  "agility": 2,
+  "reason": -1,
+  "intuition": -1,
+  "presence": -1,
+  "features": [
+    {
+      "type": "feature",
+      "feature_type": "ability",
+      "name": "Rip and Tear",
+      "icon": "🗡",
+      "ability_type": "Signature Ability",
+      "keywords": [
+        "Charge",
+        "Melee",
+        "Strike",
+        "Weapon"
+      ],
+      "usage": "Main action",
+      "distance": "Melee 1",
+      "target": "One creature or object per minion",
+      "effects": [
+        {
+          "roll": "Power Roll + 2",
+          "tier1": "1 damage",
+          "tier2": "2 damage",
+          "tier3": "3 damage"
+        }
+      ]
+    },
+    {
+      "type": "feature",
+      "feature_type": "trait",
+      "name": "Soulsight",
+      "icon": "⭐️",
+      "effects": [
+        {
+          "effect": "Any creature within 2 squares of the frenzied can't be hidden from them."
+        }
+      ]
+    }
+  ]
+}

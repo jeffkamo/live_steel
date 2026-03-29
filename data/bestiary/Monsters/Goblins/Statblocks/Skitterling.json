@@ -1,0 +1,54 @@
+{
+  "type": "statblock",
+  "name": "Skitterling",
+  "level": 1,
+  "roles": [
+    "Minion Hexer"
+  ],
+  "ancestry": [
+    "Animal",
+    "Goblin"
+  ],
+  "ev": "3 for four minions",
+  "stamina": "3",
+  "speed": 5,
+  "movement": "Fly",
+  "size": "1T",
+  "stability": 0,
+  "free_strike": 1,
+  "with_captain": "+3 bonus to speed",
+  "might": -5,
+  "agility": 2,
+  "reason": -4,
+  "intuition": 0,
+  "presence": -2,
+  "features": [
+    {
+      "type": "feature",
+      "feature_type": "ability",
+      "name": "Claws",
+      "icon": "🗡",
+      "ability_type": "Signature Ability",
+      "keywords": [
+        "Melee",
+        "Strike",
+        "Weapon"
+      ],
+      "usage": "Main action",
+      "distance": "Melee 1",
+      "target": "One creature per minion",
+      "effects": [
+        {
+          "roll": "Power Roll + 2",
+          "tier1": "1 poison damage",
+          "tier2": "2 poison damage",
+          "tier3": "3 poison damage"
+        },
+        {
+          "name": "Effect",
+          "effect": "The target takes a bane on their next strike."
+        }
+      ]
+    }
+  ]
+}
