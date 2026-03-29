@@ -10,6 +10,9 @@ import {
   minionInterval,
   minionThresholds,
   suggestedDeadCount,
+  bestiarySubtitle,
+  deriveInitials,
+  type BestiaryStatblock,
 } from './bestiary'
 import { cloneEncounterGroups } from './data'
 
@@ -410,5 +413,30 @@ describe('suggestedDeadCount', () => {
 
   it('returns 1 for a single minion at 0 stamina', () => {
     expect(suggestedDeadCount(0, 8, 1)).toBe(1)
+  })
+})
+
+describe('bestiarySubtitle', () => {
+  it('builds subtitle from level and roles', () => {
+    expect(bestiarySubtitle({ level: 2, roles: ['Solo', 'Commander'] } as BestiaryStatblock)).toBe('Level 2 · Solo · Commander')
+  })
+
+  it('omits level when undefined', () => {
+    expect(bestiarySubtitle({ roles: ['Minion'] } as BestiaryStatblock)).toBe('Minion')
+  })
+})
+
+describe('deriveInitials', () => {
+  it('takes first letter of each word, max 3', () => {
+    expect(deriveInitials('Goblin Assassin')).toBe('GA')
+    expect(deriveInitials('Ironwood Sentinel')).toBe('IS')
+  })
+
+  it('caps at 3 letters for long names', () => {
+    expect(deriveInitials('The Great Red Dragon')).toBe('TGR')
+  })
+
+  it('handles single-word names', () => {
+    expect(deriveInitials('Troll')).toBe('T')
   })
 })

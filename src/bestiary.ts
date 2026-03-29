@@ -170,6 +170,29 @@ export function suggestedDeadCount(
  * Returns true when a creature's bestiary entry contains at least one
  * feature or effect whose cost mentions "Malice".
  */
+/**
+ * Build a subtitle string from bestiary level and roles, e.g. "Level 2 Solo · Commander".
+ */
+export function bestiarySubtitle(sb: BestiaryStatblock): string {
+  const parts: string[] = []
+  if (sb.level != null) parts.push(`Level ${sb.level}`)
+  parts.push(...sb.roles)
+  return parts.join(' · ')
+}
+
+/**
+ * Derive 1–3 character initials from a monster name
+ * by taking the first letter of each word (max 3).
+ */
+export function deriveInitials(name: string): string {
+  return name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 3)
+    .map((w) => w[0]!.toUpperCase())
+    .join('')
+}
+
 export function isMaliceCreature(encounterName: string): boolean {
   const sb = lookupStatblock(encounterName)
   if (!sb?.features) return false

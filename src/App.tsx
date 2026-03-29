@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react'
-import type { CaptainRef, ConditionState, GroupColorId } from './types'
+import type { CaptainRef, ConditionState, GroupColorId, Monster } from './types'
 import {
   cloneEncounterGroups,
   cloneTerrainRows,
@@ -158,6 +158,18 @@ function App() {
               return { ...m, captainId }
             }),
           }
+        }),
+      )
+    },
+    [],
+  )
+
+  const addMonsterToGroup = useCallback(
+    (groupIndex: number, monster: Monster) => {
+      setEncounterGroups((prev) =>
+        prev.map((g, gi) => {
+          if (gi !== groupIndex) return g
+          return { ...g, monsters: [...g.monsters, monster] }
         }),
       )
     },
@@ -348,6 +360,7 @@ function App() {
                 patchMinionConditionAddOrSet(gi, mi, mni, label, state)
               }
               onDeleteMonster={(mi) => deleteMonster(gi, mi)}
+              onAddMonster={(monster) => addMonsterToGroup(gi, monster)}
             />
           ))}
         </section>

@@ -155,7 +155,7 @@
         "Write specs covering the add control, monster list population, and insertion into group state",
         "Run the specs, fix any failures until all pass"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "DATA-002",

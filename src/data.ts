@@ -5,12 +5,13 @@ import type {
   GroupColorId,
   Marip,
   MinionEntry,
+  Monster,
   MonsterFeature,
   MonsterSeed,
   TerrainRowSeed,
   TerrainRowState,
 } from './types'
-import { featuresForMonster } from './bestiary'
+import { bestiarySubtitle, deriveInitials, featuresForMonster, lookupStatblock, type BestiaryStatblock } from './bestiary'
 
 export const GROUP_COLOR_ORDER: readonly GroupColorId[] = [
   'red',
@@ -313,6 +314,44 @@ export function cloneTerrainRows(): TerrainRowState[] {
     note: r.note,
     conditions: r.conditions.map(conditionEntryFromLabel),
   }))
+}
+
+/**
+ * Create a Monster from a bestiary entry name, with optional ordinal suffix
+ * to disambiguate duplicates (e.g. "Goblin Assassin 2").
+ */
+export function monsterFromBestiary(bestiaryName: string, ordinalSuffix?: number): Monster {
+  const sb: BestiaryStatblock | undefined = lookupStatblock(bestiaryName)
+  const displayName = ordinalSuffix != null ? `${bestiaryName} ${ordinalSuffix}` : bestiaryName
+  if (!sb) {
+    return {
+      name: displayName,
+      subtitle: '',
+      initials: deriveInitials(bestiaryName),
+      stamina: [0, 0],
+      marip: null,
+      fs: 0,
+      dist: 0,
+      stab: 0,
+      conditions: [],
+      features: [],
+    }
+  }
+  const stam = Number.parseInt(sb.stamina, 10)
+  const stamina: [number, number] = Number.isNaN(stam) ? [0, 0] : [stam, stam]
+  const features = featuresForMonster(bestiaryName) ?? []
+  return {
+    name: displayName,
+    subtitle: bestiarySubtitle(sb),
+    initials: deriveInitials(bestiaryName),
+    stamina,
+    marip: [sb.might, sb.agility, sb.reason, sb.intuition, sb.presence],
+    fs: sb.free_strike,
+    dist: sb.speed,
+    stab: sb.stability,
+    conditions: [],
+    features,
+  }
 }
 
 export function findConditionOnMonster(

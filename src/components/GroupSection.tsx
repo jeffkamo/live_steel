@@ -1,10 +1,11 @@
 import { useCallback, useState } from 'react'
-import type { CaptainRef, ConditionState, EncounterGroup, GroupColorId, GroupColorMenuState } from '../types'
+import type { CaptainRef, ConditionState, EncounterGroup, GroupColorId, GroupColorMenuState, Monster } from '../types'
 import { ROSTER_GRID_TEMPLATE } from '../data'
 import { GroupTurnColumn } from './TurnColumnCell'
 import { GroupColorPickerPopover } from './GroupColorPickerPopover'
 import { MonsterRowCells } from './MonsterRowCells'
 import { MinionGroupRow } from './MinionGroupRow'
+import { AddMonsterButton } from './AddMonsterButton'
 
 export function GroupSection({
   group,
@@ -25,6 +26,7 @@ export function GroupSection({
   onMinionConditionRemove,
   onMinionConditionAddOrSet,
   onDeleteMonster,
+  onAddMonster,
 }: {
   group: EncounterGroup
   groupKey: string
@@ -44,7 +46,8 @@ export function GroupSection({
   onMinionConditionRemove?: (monsterIndex: number, minionIndex: number, conditionIndex: number) => void
   onMinionConditionAddOrSet?: (monsterIndex: number, minionIndex: number, label: string, state: ConditionState) => void
   onDeleteMonster?: (monsterIndex: number) => void
-}) {
+  onAddMonster?: (monster: Monster) => void
+}): React.JSX.Element {
   const [expandedMinions, setExpandedMinions] = useState<Record<number, boolean>>({})
   const [expandedStatBlocks, setExpandedStatBlocks] = useState<Record<number, boolean>>({})
   const [colorMenu, setColorMenu] = useState<GroupColorMenuState>({
@@ -191,6 +194,14 @@ export function GroupSection({
           />
         )
       })}
+      {onAddMonster && (
+        <div
+          style={{ gridColumn: '2 / -1', gridRow: totalGridRows + 1 }}
+          className="px-3 pb-2"
+        >
+          <AddMonsterButton onAdd={onAddMonster} />
+        </div>
+      )}
     </div>
   )
 }

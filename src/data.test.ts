@@ -9,6 +9,7 @@ import {
   normalizeStamina,
   applyStaminaDelta,
   otherGroupIndexForColor,
+  monsterFromBestiary,
   CONDITION_CATALOG,
   GROUP_COLOR_ORDER,
   MARIP_HEADERS,
@@ -225,5 +226,41 @@ describe('CONDITION_CATALOG', () => {
 describe('MARIP_HEADERS', () => {
   it('has 5 entries for M, A, R, I, P', () => {
     expect(MARIP_HEADERS.map((h) => h.letter)).toEqual(['M', 'A', 'R', 'I', 'P'])
+  })
+})
+
+describe('monsterFromBestiary', () => {
+  it('creates a Monster with bestiary stats for a known monster', () => {
+    const m = monsterFromBestiary('Goblin Assassin')
+    expect(m.name).toBe('Goblin Assassin')
+    expect(m.marip).not.toBeNull()
+    expect(m.stamina[0]).toBeGreaterThan(0)
+    expect(m.stamina[1]).toBeGreaterThan(0)
+    expect(m.subtitle).toContain('Level')
+    expect(m.conditions).toEqual([])
+  })
+
+  it('appends ordinal suffix to name when provided', () => {
+    const m = monsterFromBestiary('Goblin Assassin', 3)
+    expect(m.name).toBe('Goblin Assassin 3')
+  })
+
+  it('returns a blank monster for unknown bestiary name', () => {
+    const m = monsterFromBestiary('Totally Fake Monster')
+    expect(m.name).toBe('Totally Fake Monster')
+    expect(m.marip).toBeNull()
+    expect(m.stamina).toEqual([0, 0])
+    expect(m.subtitle).toBe('')
+  })
+
+  it('populates features from the bestiary', () => {
+    const m = monsterFromBestiary('Goblin Assassin')
+    expect(m.features).toBeDefined()
+    expect(m.features!.length).toBeGreaterThan(0)
+  })
+
+  it('derives initials from the monster name', () => {
+    const m = monsterFromBestiary('Goblin Assassin')
+    expect(m.initials).toBe('GA')
   })
 })

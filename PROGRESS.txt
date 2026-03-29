@@ -227,3 +227,30 @@ Subtle threshold mismatch cue — compares stamina-suggested dead count vs actua
 - src/components/MinionGroupRow.tsx
 - src/App.test.tsx
 - PRD.json
+
+
+[DATA-001]
+
+Add monsters to existing group — "Add monster" button per group, opens searchable bestiary picker (416 monsters), inserts fully-formed Monster into group state
+
+**Key decisions:**
+- AddMonsterButton component: collapsed = dashed-border button; expanded = search input + scrollable listbox of bestiary entries, sorted alphabetically
+- monsterFromBestiary() in data.ts creates a complete Monster from bestiary name — pulls stamina, MARIP, speed/stab/fs, subtitle, features; supports ordinal suffix for duplicates
+- bestiarySubtitle() and deriveInitials() helpers in bestiary.ts; initials take first letter of each word (max 3)
+- Unknown bestiary names produce a blank monster (null marip, 0/0 stamina, empty subtitle) — no crash
+- addMonsterToGroup callback in App.tsx appends monster to group's monsters array; threaded via onAddMonster prop through GroupSection
+- AddMonsterButton placed below monster rows in group grid, spanning columns 2–end
+- Picker closes on: select, Escape key, close button, outside click
+- 24 new tests: 5 monsterFromBestiary unit, 5 deriveInitials/bestiarySubtitle unit, 9 AddMonsterButton component, 4 App integration (button presence, search/select, ordinal update, stamina interaction)
+
+**Files changed:**
+- src/bestiary.ts
+- src/bestiary.test.ts
+- src/data.ts
+- src/data.test.ts
+- src/App.tsx
+- src/components/AddMonsterButton.tsx (new)
+- src/components/AddMonsterButton.test.tsx (new)
+- src/components/GroupSection.tsx
+- src/App.test.tsx
+- PRD.json

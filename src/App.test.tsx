@@ -1290,6 +1290,85 @@ describe('App', () => {
     expect(within(pool).queryByTestId('threshold-mismatch-cue')).not.toBeInTheDocument()
   })
 
+  // --- Add monster to group (DATA-001) ---
+
+  it('each group has an "Add monster" button', () => {
+    render(<App />)
+    const buttons = screen.getAllByRole('button', { name: /Add monster to group/i })
+    expect(buttons.length).toBe(4)
+  })
+
+  it('clicking "Add monster" opens a bestiary search dropdown', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    const addButtons = screen.getAllByRole('button', { name: /Add monster to group/i })
+    await user.click(addButtons[0]!)
+    expect(screen.getByRole('textbox', { name: /Search bestiary/i })).toBeInTheDocument()
+    expect(screen.getByRole('listbox', { name: /Available monsters/i })).toBeInTheDocument()
+  })
+
+  it('selecting a monster from the picker adds it to the group', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    const group1grid = screen.getByText('Goblin Assassin 1', { exact: true })
+      .closest('div.grid.items-stretch.rounded-lg') as HTMLElement
+    expect(within(group1grid).queryByText('Troll Whelp', { exact: true })).not.toBeInTheDocument()
+
+    const addBtn = within(group1grid).getByRole('button', { name: /Add monster to group/i })
+    await user.click(addBtn)
+    const input = screen.getByRole('textbox', { name: /Search bestiary/i })
+    await user.type(input, 'Troll Whelp')
+    const listbox = screen.getByRole('listbox', { name: /Available monsters/i })
+    const option = within(listbox).getAllByRole('option').find(
+      (el) => el.textContent === 'Troll Whelp',
+    )
+    expect(option).toBeTruthy()
+    await user.click(within(option!).getByRole('button'))
+
+    expect(within(group1grid).getByText('Troll Whelp', { exact: true })).toBeInTheDocument()
+  })
+
+  it('added monster has correct ordinal and stamina from bestiary', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    const group1grid = screen.getByText('Goblin Assassin 1', { exact: true })
+      .closest('div.grid.items-stretch.rounded-lg') as HTMLElement
+
+    const addBtn = within(group1grid).getByRole('button', { name: /Add monster to group/i })
+    await user.click(addBtn)
+    const input = screen.getByRole('textbox', { name: /Search bestiary/i })
+    await user.type(input, 'Troll Whelp')
+    const listbox = screen.getByRole('listbox', { name: /Available monsters/i })
+    const option = within(listbox).getAllByRole('option').find(
+      (el) => el.textContent === 'Troll Whelp',
+    )
+    await user.click(within(option!).getByRole('button'))
+
+    expect(within(group1grid).getByRole('button', { name: /creature 3 of 3/i })).toBeInTheDocument()
+  })
+
+  it('added monster is fully functional (stamina, conditions)', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    const group2grid = screen.getByText('Goblin Underboss', { exact: true })
+      .closest('div.grid.items-stretch.rounded-lg') as HTMLElement
+
+    await user.click(within(group2grid).getByRole('button', { name: /Add monster to group/i }))
+    const input = screen.getByRole('textbox', { name: /Search bestiary/i })
+    await user.type(input, 'Goblin Sniper')
+    const listbox = screen.getByRole('listbox', { name: /Available monsters/i })
+    const option = within(listbox).getAllByRole('option').find(
+      (el) => el.textContent === 'Goblin Sniper',
+    )
+    await user.click(within(option!).getByRole('button'))
+
+    const staminaGroup = screen.getByRole('group', { name: /^Edit stamina for Goblin Sniper$/i })
+    expect(group2grid.contains(staminaGroup)).toBe(true)
+    await user.hover(staminaGroup)
+    const dialog = within(staminaGroup).getByRole('dialog', { name: /adjust values/i })
+    await user.click(within(dialog).getByRole('button', { name: /^Decrease stamina by 1$/i }))
+  })
+
   it('shows "Revive" cue when minions are dead but stamina is restored', async () => {
     const user = userEvent.setup()
     render(<App />)
