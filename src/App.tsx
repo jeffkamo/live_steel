@@ -17,13 +17,24 @@ import {
   ENCOUNTER_GROUPS,
   MONSTER_DRAG_MIME,
   mapMinionIndexAfterReorder,
+  mapMinionDrawerSlotAfterMinionInserted,
+  mapMinionDrawerSlotAfterMinionRemoved,
+  mergeTopLevelMonsterIntoHorde,
   monsterDragDropIsValid,
   moveIndexInArray,
   moveMonsterInEncounterWithCaptainRemap,
   parseMonsterDragPayload,
   type MonsterDragPayload,
-  reorderMinionsInHorde,
+  nextHordePoolStamina,
+  hordePoolStaminaAfterMinionDeadToggle,
+  staminaAfterConvertSoloToHorde,
+  staminaAfterHordeDemotedToSolo,
+  transferMinionBetweenHordes,
   remapEotConfirmedAfterMinionReorder,
+  remapEotConfirmedAfterMinionRemoved,
+  remapEotConfirmedAfterMinionTransferBetweenHordes,
+  remapEotConfirmedAfterSoloMergedIntoHorde,
+  remapEotConfirmedAfterConvertToSquad,
   newEncounterGroupId,
   nextAvailableColor,
   parseConditionDragPayload,
@@ -177,9 +188,16 @@ function App() {
           }
           return {
             ...g,
-            monsters: g.monsters.map((m, mi) =>
-              mi === monsterIndex ? { ...m, stamina: [stamina[0], stamina[1]] } : m,
-            ),
+            monsters: g.monsters.map((m, mi) => {
+              if (mi !== monsterIndex) return m
+              if (m.minions?.length) {
+                return {
+                  ...m,
+                  stamina: nextHordePoolStamina({ ...m, stamina: [stamina[0], stamina[1]] }, m.minions),
+                }
+              }
+              return { ...m, stamina: [stamina[0], stamina[1]] }
+            }),
           }
         }),
       )
@@ -282,11 +300,13 @@ function App() {
             ...g,
             monsters: g.monsters.map((m, mi) => {
               if (mi !== monsterIndex || !m.minions) return m
+              const nextMinions = m.minions.map((minion, mni) =>
+                mni === minionIndex ? { ...minion, dead } : minion,
+              )
               return {
                 ...m,
-                minions: m.minions.map((minion, mni) =>
-                  mni === minionIndex ? { ...minion, dead } : minion,
-                ),
+                minions: nextMinions,
+                stamina: hordePoolStaminaAfterMinionDeadToggle(m, nextMinions),
               }
             }),
           }
@@ -325,6 +345,164 @@ function App() {
     },
     [],
   )
+
+  const deleteMinionFromHorde = useCallback(
+    (groupIndex: number, monsterIndex: number, minionIndex: number) => {
+      let applied = false
+      let demotedToSolo = false
+      let groupCount = 0
+      setEncounterGroups((prev) => {
+        groupCount = prev.length
+        const g = prev[groupIndex]
+        const m = g?.monsters[monsterIndex]
+        const minions = m?.minions
+        if (!g || !m || !minions || minionIndex < 0 || minionIndex >= minions.length) {
+          return prev
+        }
+        applied = true
+        const nextMinions = minions.filter((_, i) => i !== minionIndex)
+        demotedToSolo = nextMinions.length === 0
+        if (demotedToSolo) {
+          return prev.map((gr, gi) => {
+            if (gi !== groupIndex) return gr
+            return {
+              ...gr,
+              monsters: gr.monsters.map((mon, mi) => {
+                if (mi !== monsterIndex) return mon
+                const { minions: _removed, ...solo } = mon
+                return { ...solo, stamina: staminaAfterHordeDemotedToSolo(mon) }
+              }),
+            }
+          })
+        }
+        return prev.map((gr, gi) => {
+          if (gi !== groupIndex) return gr
+          return {
+            ...gr,
+            monsters: gr.monsters.map((mon, mi) =>
+              mi === monsterIndex
+                ? {
+                    ...mon,
+                    minions: nextMinions,
+                    stamina: nextHordePoolStamina(mon, nextMinions),
+                  }
+                : mon,
+            ),
+          }
+        })
+      })
+      if (applied) {
+        setEotConfirmed((eotPrev) =>
+          remapEotConfirmedAfterMinionRemoved(
+            eotPrev,
+            groupCount,
+            groupIndex,
+            monsterIndex,
+            minionIndex,
+            demotedToSolo,
+          ),
+        )
+      }
+    },
+    [],
+  )
+
+  const convertMonsterToSquad = useCallback((groupIndex: number, monsterIndex: number) => {
+    let applied = false
+    let groupCount = 0
+    setEncounterGroups((prev) => {
+      groupCount = prev.length
+      const g = prev[groupIndex]
+      const m = g?.monsters[monsterIndex]
+      if (!g || !m || (m.minions && m.minions.length > 0)) return prev
+      applied = true
+      return prev.map((gr, gi) => {
+        if (gi !== groupIndex) return gr
+        return {
+          ...gr,
+          monsters: gr.monsters.map((mon, mi) => {
+            if (mi !== monsterIndex) return mon
+            const minions = [
+              {
+                name: `${mon.name} 1`,
+                initials: mon.initials,
+                conditions: [...mon.conditions],
+                dead: false,
+              },
+            ]
+            return {
+              ...mon,
+              conditions: [],
+              minions,
+              stamina: staminaAfterConvertSoloToHorde(mon, minions),
+            }
+          }),
+        }
+      })
+    })
+    if (applied) {
+      setEotConfirmed((eotPrev) =>
+        remapEotConfirmedAfterConvertToSquad(eotPrev, groupCount, groupIndex, monsterIndex),
+      )
+    }
+  }, [])
+
+  const deleteEncounterGroup = useCallback((groupIndex: number) => {
+    const timer = eotTimersRef.current.get(groupIndex)
+    if (timer != null) {
+      clearTimeout(timer)
+      eotTimersRef.current.delete(groupIndex)
+    }
+    setEncounterGroups((prev) =>
+      prev
+        .filter((_, i) => i !== groupIndex)
+        .map((g) => ({
+          ...g,
+          monsters: g.monsters.map((m) => {
+            if (!m.captainId) return m
+            const ref = m.captainId
+            if (ref.groupIndex === groupIndex) return { ...m, captainId: null }
+            if (ref.groupIndex > groupIndex) {
+              return {
+                ...m,
+                captainId: { groupIndex: ref.groupIndex - 1, monsterIndex: ref.monsterIndex },
+              }
+            }
+            return m
+          }),
+        })),
+    )
+    setGroupTurnActed((prev) => {
+      const next = prev.filter((_, i) => i !== groupIndex)
+      prevTurnActedRef.current = next
+      return next
+    })
+    setEotConfirmed((prev) => {
+      const next = new Map<number, Set<string>>()
+      for (const [gi, set] of prev) {
+        if (gi === groupIndex) continue
+        const newGi = gi > groupIndex ? gi - 1 : gi
+        next.set(newGi, new Set(set))
+      }
+      return next
+    })
+    setSeActWindowElapsedGroup((prev) => {
+      const next = new Set<number>()
+      for (const gi of prev) {
+        if (gi === groupIndex) continue
+        next.add(gi > groupIndex ? gi - 1 : gi)
+      }
+      return next
+    })
+    setMonsterCardDrawer((prev) => {
+      if (prev == null) return null
+      if (prev.groupIndex === groupIndex) return null
+      if (prev.groupIndex > groupIndex) {
+        return { ...prev, groupIndex: prev.groupIndex - 1 }
+      }
+      return prev
+    })
+  }, [])
 
   const deleteMonster = useCallback(
     (groupIndex: number, monsterIndex: number) => {
@@ -525,7 +703,7 @@ function App() {
       const source = monsterDragSourceRef.current
       if (!source) return
       e.preventDefault()
-      const valid = monsterDragDropIsValid(source, toG, toM, toMinion)
+      const valid = monsterDragDropIsValid(source, toG, toM, toMinion, encounterGroups)
       e.dataTransfer.dropEffect = valid ? 'move' : 'none'
       setMonsterDropTarget({
         groupIndex: toG,
@@ -534,7 +712,7 @@ function App() {
         invalid: !valid,
       })
     },
-    [],
+    [encounterGroups],
   )
 
   const onMonsterDragLeave = useCallback(
@@ -573,52 +751,77 @@ function App() {
       const raw = e.dataTransfer.getData(MONSTER_DRAG_MIME)
       const payload = parseMonsterDragPayload(raw)
       if (!payload) return
-      if (!monsterDragDropIsValid(payload, toG, toM, toMinion)) {
+      if (!monsterDragDropIsValid(payload, toG, toM, toMinion, encounterGroups)) {
         triggerMonsterDropRejectFlash(toG, toM, toMinion)
         return
       }
       if (payload.fromMinion != null) {
         if (toMinion == null) return
+        const fromMinion = payload.fromMinion
+        const sameParentReorder =
+          payload.fromGroup === toG && payload.fromMonster === toM
         let reorderFailed = false
         setEncounterGroups((prev) => {
-          const next = reorderMinionsInHorde(
+          const next = transferMinionBetweenHordes(
             prev,
             payload.fromGroup,
             payload.fromMonster,
-            payload.fromMinion,
+            fromMinion,
+            toG,
+            toM,
             toMinion,
           )
           if (!next) {
             reorderFailed = true
             return prev
           }
+          const groupCount = next.length
           queueMicrotask(() => {
             setEotConfirmed((eMap) =>
-              remapEotConfirmedAfterMinionReorder(
+              remapEotConfirmedAfterMinionTransferBetweenHordes(
                 eMap,
-                next.length,
+                groupCount,
                 payload.fromGroup,
                 payload.fromMonster,
-                payload.fromMinion!,
+                fromMinion,
+                toG,
+                toM,
                 toMinion,
               ),
             )
             setMonsterCardDrawer((drawer) => {
-              if (
-                drawer == null ||
-                drawer.groupIndex !== payload.fromGroup ||
-                drawer.monsterIndex !== payload.fromMonster ||
-                drawer.view.kind !== 'minion'
-              ) {
-                return drawer
+              if (drawer == null || drawer.view.kind !== 'minion') return drawer
+              const { groupIndex: dg, monsterIndex: dm, view } = drawer
+              const slot = view.slot
+              if (dg === payload.fromGroup && dm === payload.fromMonster && slot === fromMinion) {
+                return {
+                  ...drawer,
+                  groupIndex: toG,
+                  monsterIndex: toM,
+                  view: { kind: 'minion', slot: toMinion },
+                }
               }
-              const newSlot = mapMinionIndexAfterReorder(
-                payload.fromMinion!,
-                toMinion,
-                drawer.view.slot,
-              )
-              if (newSlot === drawer.view.slot) return drawer
-              return { ...drawer, view: { kind: 'minion', slot: newSlot } }
+              if (sameParentReorder) {
+                const newSlot = mapMinionIndexAfterReorder(fromMinion, toMinion, slot)
+                if (newSlot === slot) return drawer
+                return { ...drawer, view: { kind: 'minion', slot: newSlot } }
+              }
+              let nextDrawer = drawer
+              if (dg === payload.fromGroup && dm === payload.fromMonster) {
+                const ns = mapMinionDrawerSlotAfterMinionRemoved(fromMinion, slot)
+                if (ns === null) return drawer
+                if (ns !== slot) {
+                  nextDrawer = { ...nextDrawer, view: { kind: 'minion', slot: ns } }
+                }
+              }
+              if (dg === toG && dm === toM) {
+                const slotNow = nextDrawer.view.kind === 'minion' ? nextDrawer.view.slot : slot
+                const ns = mapMinionDrawerSlotAfterMinionInserted(toMinion, slotNow)
+                if (ns !== slotNow) {
+                  nextDrawer = { ...nextDrawer, view: { kind: 'minion', slot: ns } }
+                }
+              }
+              return nextDrawer
             })
           })
           return next
@@ -626,9 +829,73 @@ function App() {
         if (reorderFailed) triggerMonsterDropRejectFlash(toG, toM, toMinion)
         return
       }
+      if (toMinion != null) {
+        let mergeFailed = false
+        setEncounterGroups((prev) => {
+          const merged = mergeTopLevelMonsterIntoHorde(
+            prev,
+            payload.fromGroup,
+            payload.fromMonster,
+            toG,
+            toM,
+            toMinion,
+          )
+          if (merged == null) {
+            mergeFailed = true
+            return prev
+          }
+          const gc = merged.length
+          queueMicrotask(() => {
+            setEotConfirmed((e) =>
+              remapEotConfirmedAfterSoloMergedIntoHorde(
+                e,
+                gc,
+                payload.fromGroup,
+                payload.fromMonster,
+                toG,
+                toM,
+                toMinion,
+              ),
+            )
+            setMonsterCardDrawer((drawer) => {
+              if (
+                drawer != null &&
+                drawer.groupIndex === payload.fromGroup &&
+                drawer.monsterIndex === payload.fromMonster &&
+                drawer.view.kind === 'standard'
+              ) {
+                const toMi =
+                  payload.fromGroup === toG && payload.fromMonster < toM ? toM - 1 : toM
+                return {
+                  groupIndex: toG,
+                  monsterIndex: toMi,
+                  view: { kind: 'minion', slot: toMinion },
+                }
+              }
+              if (drawer == null) return drawer
+              let d = drawer
+              if (d.groupIndex === payload.fromGroup && d.monsterIndex > payload.fromMonster) {
+                d = { ...d, monsterIndex: d.monsterIndex - 1 }
+              }
+              const targetMi =
+                payload.fromGroup === toG && payload.fromMonster < toM ? toM - 1 : toM
+              if (d.groupIndex === toG && d.monsterIndex === targetMi && d.view.kind === 'minion') {
+                const ns = mapMinionDrawerSlotAfterMinionInserted(toMinion, d.view.slot)
+                if (ns !== d.view.slot) {
+                  d = { ...d, view: { kind: 'minion', slot: ns } }
+                }
+              }
+              return d
+            })
+          })
+          return merged
+        })
+        if (mergeFailed) triggerMonsterDropRejectFlash(toG, toM, toMinion)
+        return
+      }
       moveMonsterInEncounter(payload.fromGroup, payload.fromMonster, toG, toM)
     },
-    [moveMonsterInEncounter, triggerMonsterDropRejectFlash],
+    [encounterGroups, moveMonsterInEncounter, triggerMonsterDropRejectFlash],
   )
 
   const reorderEncounterGroups = useCallback(
@@ -940,6 +1207,15 @@ function App() {
                     }
                     onDeleteMonster={
                       uiLocked ? undefined : (mi) => deleteMonster(gi, mi)
+                    }
+                    onDeleteMinion={
+                      uiLocked ? undefined : (mi, mni) => deleteMinionFromHorde(gi, mi, mni)
+                    }
+                    onConvertMonsterToSquad={
+                      uiLocked ? undefined : (mi) => convertMonsterToSquad(gi, mi)
+                    }
+                    onDeleteEncounterGroup={
+                      uiLocked ? undefined : () => deleteEncounterGroup(gi)
                     }
                     onAddMonster={
                       uiLocked ? undefined : (monster) => addMonsterToGroup(gi, monster)

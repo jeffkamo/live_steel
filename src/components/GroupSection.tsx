@@ -10,7 +10,7 @@ import type {
   MonsterCardDrawerState,
   MonsterCardDrawerView,
 } from '../types'
-import { ROSTER_GRID_TEMPLATE } from '../data'
+import { ROSTER_GRID_TEMPLATE, buildCreatureOrdinalMap, totalCreaturesInGroup } from '../data'
 import type { CreatureConditionDnDBinding } from './CreatureConditionCell'
 import { GroupTurnColumn } from './TurnColumnCell'
 import { GroupColorPickerPopover } from './GroupColorPickerPopover'
@@ -38,6 +38,9 @@ export function GroupSection({
   onMinionConditionRemove,
   onMinionConditionAddOrSet,
   onDeleteMonster,
+  onDeleteMinion,
+  onConvertMonsterToSquad,
+  onDeleteEncounterGroup,
   onAddMonster,
   onConfirmEot,
   isEotConfirmed,
@@ -91,6 +94,9 @@ export function GroupSection({
   onMinionConditionRemove?: (monsterIndex: number, minionIndex: number, conditionIndex: number) => void
   onMinionConditionAddOrSet?: (monsterIndex: number, minionIndex: number, label: string, state: ConditionState) => void
   onDeleteMonster?: (monsterIndex: number) => void
+  onDeleteMinion?: (monsterIndex: number, minionIndex: number) => void
+  onConvertMonsterToSquad?: (monsterIndex: number) => void
+  onDeleteEncounterGroup?: () => void
   onAddMonster?: (monster: Monster) => void
   onConfirmEot?: (monsterIndex: number, label: string, minionIndex?: number) => void
   isEotConfirmed?: (monsterIndex: number, label: string, minionIndex?: number) => boolean
@@ -126,6 +132,9 @@ export function GroupSection({
     },
     [],
   )
+
+  const creatureOrdinalMap = buildCreatureOrdinalMap(group.monsters)
+  const totalCreatures = totalCreaturesInGroup(group.monsters)
 
   let currentRow = 1
   const monsterRows: { monsterIndex: number; startRow: number; rowCount: number }[] = []
@@ -231,6 +240,7 @@ export function GroupSection({
         onToggle={onToggleTurn}
         turnAriaLabel={turnAriaLabel}
         encounterGroupDragHandle={encounterGroupDragHandle}
+        onDeleteEncounterGroup={onDeleteEncounterGroup}
       />
       {monsterDrag != null && group.monsters.length === 0 && (
         <div
@@ -283,9 +293,9 @@ export function GroupSection({
               key={`${groupKey}-${monster.name}-${i}`}
               monster={monster}
               row={startRow}
-              ordinal={i + 1}
+              creatureOrdinalMap={creatureOrdinalMap}
               monsterIndex={i}
-              monsterCount={group.monsters.length}
+              totalCreatures={totalCreatures}
               groupKey={groupKey}
               groupNumber={groupNumber}
               groupColor={group.color}
@@ -321,6 +331,11 @@ export function GroupSection({
               onDelete={
                 onDeleteMonster != null ? () => onDeleteMonster(i) : undefined
               }
+              onDeleteMinion={
+                onDeleteMinion != null
+                  ? (minionIndex) => onDeleteMinion(i, minionIndex)
+                  : undefined
+              }
               onConfirmEot={onConfirmEot ? (label, minionIndex) => onConfirmEot(i, label, minionIndex) : undefined}
               isEotConfirmed={isEotConfirmed ? (label, minionIndex) => isEotConfirmed(i, label, minionIndex) : undefined}
               monsterDrag={monsterRowDrag(i)}
@@ -336,9 +351,9 @@ export function GroupSection({
             key={`${groupKey}-${monster.name}-${i}`}
             monster={monster}
             row={startRow}
-            ordinal={i + 1}
+            ordinal={creatureOrdinalMap.get(`${i}`)!}
             monsterIndex={i}
-            monsterCount={group.monsters.length}
+            totalCreatures={totalCreatures}
             groupKey={groupKey}
             groupNumber={groupNumber}
             groupColor={group.color}
@@ -356,6 +371,9 @@ export function GroupSection({
             onMonsterCardNameClick={onMonsterCardNameClick}
             onDelete={
               onDeleteMonster != null ? () => onDeleteMonster(i) : undefined
+            }
+            onConvertToSquad={
+              onConvertMonsterToSquad != null ? () => onConvertMonsterToSquad(i) : undefined
             }
             onConfirmEot={onConfirmEot ? (label) => onConfirmEot(i, label) : undefined}
             isEotConfirmed={isEotConfirmed ? (label) => isEotConfirmed(i, label) : undefined}

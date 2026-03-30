@@ -12,7 +12,15 @@ import type {
   TerrainRowSeed,
   TerrainRowState,
 } from './types'
-import { bestiarySubtitle, deriveInitials, featuresForMonster, lookupStatblock, type BestiaryStatblock } from './bestiary'
+import {
+  bestiarySubtitle,
+  deriveInitials,
+  featuresForMonster,
+  lookupStatblock,
+  maxStaminaForBestiaryName,
+  minionInterval,
+  type BestiaryStatblock,
+} from './bestiary'
 
 export const GROUP_COLOR_ORDER: readonly GroupColorId[] = [
   'red',
@@ -125,6 +133,37 @@ export const GROUP_COLOR_PREVIEW_HEX: Record<GroupColorId, string> = {
   white: '#f4f4f5',
   grey: '#a1a1aa',
   black: '#18181b',
+}
+
+/**
+ * Solo rows and horde minions each get a unique ordinal within the encounter group; squad parent
+ * rows are not numbered. Keys: `${monsterIndex}` for solo, `${monsterIndex}:${minionIndex}` for minions.
+ */
+export function buildCreatureOrdinalMap(monsters: readonly Monster[]): Map<string, number> {
+  const map = new Map<string, number>()
+  let n = 0
+  for (let i = 0; i < monsters.length; i++) {
+    const m = monsters[i]!
+    if (m.minions?.length) {
+      for (let j = 0; j < m.minions.length; j++) {
+        n++
+        map.set(`${i}:${j}`, n)
+      }
+    } else {
+      n++
+      map.set(`${i}`, n)
+    }
+  }
+  return map
+}
+
+export function totalCreaturesInGroup(monsters: readonly Monster[]): number {
+  let n = 0
+  for (const m of monsters) {
+    if (m.minions?.length) n += m.minions.length
+    else n += 1
+  }
+  return n
 }
 
 export const ENCOUNTER_GROUPS: readonly EncounterGroupSeed[] = [
@@ -302,22 +341,36 @@ export function parseMonsterDragPayload(raw: string): MonsterDragPayload | null 
 }
 
 /**
- * Whether a drop target accepts the current drag: minions may only reorder within their parent
- * horde; top-level monsters may only drop on top-level rows (not minion lines).
+ * Whether a drop target accepts the current drag: top-level monsters on top-level rows, or solo
+ * creatures onto a horde minion row to join that squad; minions on horde minion rows (reorder / move).
  */
 export function monsterDragDropIsValid(
   source: MonsterDragPayload,
   toGroup: number,
   toMonster: number,
   toMinion: number | null,
+  groups: readonly EncounterGroup[],
 ): boolean {
+  const destMonster = groups[toGroup]?.monsters[toMonster]
+  const destHorde = (destMonster?.minions?.length ?? 0) > 0
+
   const fromMini = source.fromMinion
   const fromG = source.fromGroup
   const fromParent = source.fromMonster
   if (fromMini == null) {
-    return toMinion == null && !(fromG === toGroup && fromParent === toMonster)
+    const src = groups[fromG]?.monsters[fromParent]
+    const srcIsSolo = (src?.minions?.length ?? 0) === 0
+    if (toMinion == null) {
+      return !(fromG === toGroup && fromParent === toMonster)
+    }
+    if (!destHorde || !srcIsSolo) return false
+    return !(fromG === toGroup && fromParent === toMonster)
   }
-  return fromG === toGroup && fromParent === toMonster && toMinion != null && fromMini !== toMinion
+  if (toMinion == null || !destHorde) return false
+  if (fromG === toGroup && fromParent === toMonster) {
+    return fromMini !== toMinion
+  }
+  return true
 }
 
 /** Reorder minions within one parent monster; returns null if indices are invalid or no-op. */
@@ -344,11 +397,476 @@ export function reorderMinionsInHorde(
     if (gi !== groupIndex) return gr
     return {
       ...gr,
-      monsters: gr.monsters.map((mon, mi) =>
-        mi === parentMonsterIndex ? { ...mon, minions: nextMinions } : mon,
-      ),
+      monsters: gr.monsters.map((mon, mi) => {
+        if (mi !== parentMonsterIndex) return mon
+        const st = nextHordePoolStamina(mon, nextMinions)
+        return { ...mon, minions: nextMinions, stamina: st }
+      }),
     }
   })
+}
+
+/**
+ * Move one minion from a horde into another (or reorder within the same horde).
+ * If the source horde becomes empty, the parent becomes a solo monster (`minions` removed).
+ */
+export function transferMinionBetweenHordes(
+  groups: EncounterGroup[],
+  fromGroup: number,
+  fromMonster: number,
+  fromMinion: number,
+  toGroup: number,
+  toMonster: number,
+  toMinion: number,
+): EncounterGroup[] | null {
+  if (fromGroup === toGroup && fromMonster === toMonster) {
+    return reorderMinionsInHorde(groups, fromGroup, fromMonster, fromMinion, toMinion)
+  }
+
+  const fromG = groups[fromGroup]
+  const toG = groups[toGroup]
+  if (!fromG || !toG) return null
+  const fromParent = fromG.monsters[fromMonster]
+  const toParent = toG.monsters[toMonster]
+  const fromList = fromParent?.minions
+  const toList = toParent?.minions
+  if (!fromList || fromMinion < 0 || fromMinion >= fromList.length) return null
+  if (!toList || toList.length === 0) return null
+  if (toMinion < 0 || toMinion > toList.length) return null
+
+  const moved = fromList[fromMinion]!
+  const movedMax = minionAliveMaxContribution(moved, fromParent.name, fromList)
+  const oldFromMax = hordePoolMaxAliveFromMinions(fromParent.name, fromList)
+  const share =
+    oldFromMax > 0 ? Math.min(fromParent.stamina[0], Math.round((fromParent.stamina[0] * movedMax) / oldFromMax)) : 0
+
+  const nextFromMinions = [...fromList]
+  nextFromMinions.splice(fromMinion, 1)
+  const fromParentNext: Monster =
+    nextFromMinions.length === 0
+      ? (() => {
+          const { minions: _drop, ...rest } = fromParent
+          return { ...rest, stamina: staminaAfterHordeDemotedToSolo(fromParent) }
+        })()
+      : {
+          ...fromParent,
+          minions: nextFromMinions,
+          stamina: normalizeStamina(
+            fromParent.stamina[0] - share,
+            hordePoolMaxFromMinions(fromParent.name, nextFromMinions),
+          ),
+        }
+
+  const nextToMinions = [...toList]
+  nextToMinions.splice(toMinion, 0, moved)
+  const toStamina = nextHordePoolStamina(toParent, nextToMinions, { addCurrent: share })
+  const toParentNext: Monster = { ...toParent, minions: nextToMinions, stamina: toStamina }
+
+  return groups.map((gr, gi) => {
+    if (gi !== fromGroup && gi !== toGroup) return gr
+    return {
+      ...gr,
+      monsters: gr.monsters.map((m, mi) => {
+        if (gi === fromGroup && mi === fromMonster) return fromParentNext
+        if (gi === toGroup && mi === toMonster) return toParentNext
+        return m
+      }),
+    }
+  })
+}
+
+export function remapCaptainIdsAfterMonsterRemovedFromGroup(
+  groups: EncounterGroup[],
+  groupIndex: number,
+  removedMonsterIndex: number,
+): EncounterGroup[] {
+  return groups.map((g) => ({
+    ...g,
+    monsters: g.monsters.map((m) => {
+      if (!m.captainId) return m
+      const ref = m.captainId
+      if (ref.groupIndex === groupIndex && ref.monsterIndex === removedMonsterIndex) {
+        return { ...m, captainId: null }
+      }
+      if (ref.groupIndex === groupIndex && ref.monsterIndex > removedMonsterIndex) {
+        return { ...m, captainId: { ...ref, monsterIndex: ref.monsterIndex - 1 } }
+      }
+      return m
+    }),
+  }))
+}
+
+/**
+ * Merge a solo top-level monster into another creature's horde at `toMinion` (insert-before index).
+ * Removes the solo row and remaps captain ids that referenced it.
+ */
+export function mergeTopLevelMonsterIntoHorde(
+  groups: EncounterGroup[],
+  fromGroup: number,
+  fromMonster: number,
+  toGroup: number,
+  toMonster: number,
+  toMinion: number,
+): EncounterGroup[] | null {
+  const solo = groups[fromGroup]?.monsters[fromMonster]
+  const targetPre = groups[toGroup]?.monsters[toMonster]
+  if (!solo || (solo.minions?.length ?? 0) > 0) return null
+  const horde = targetPre?.minions
+  if (!targetPre || !horde || horde.length === 0) return null
+  if (toMinion < 0 || toMinion > horde.length) return null
+  if (fromGroup === toGroup && fromMonster === toMonster) return null
+
+  const entry: MinionEntry = {
+    name: solo.name,
+    initials: solo.initials,
+    conditions: [...solo.conditions],
+    dead: false,
+  }
+
+  let next: EncounterGroup[]
+
+  if (fromGroup === toGroup) {
+    next = groups.map((g, gi) => {
+      if (gi !== fromGroup) return g
+      const monsters = g.monsters.map((m) => ({
+        ...m,
+        minions: m.minions ? m.minions.map((x) => ({ ...x })) : undefined,
+      }))
+      if (!monsters[fromMonster]) return g
+      monsters.splice(fromMonster, 1)
+      const targetIdx = fromMonster < toMonster ? toMonster - 1 : toMonster
+      const parent = monsters[targetIdx]
+      if (!parent?.minions) return g
+      const nextH = [...parent.minions]
+      nextH.splice(toMinion, 0, entry)
+      const st = nextHordePoolStamina(parent, nextH, { addCurrent: solo.stamina[0] })
+      monsters[targetIdx] = { ...parent, minions: nextH, stamina: st }
+      return { ...g, monsters }
+    })
+  } else {
+    next = groups.map((g, gi) => {
+      if (gi === fromGroup) {
+        const monsters = g.monsters
+          .filter((_, i) => i !== fromMonster)
+          .map((m) => ({
+            ...m,
+            minions: m.minions ? m.minions.map((x) => ({ ...x })) : undefined,
+          }))
+        return { ...g, monsters }
+      }
+      if (gi === toGroup) {
+        const monsters = g.monsters.map((m) => ({
+          ...m,
+          minions: m.minions ? m.minions.map((x) => ({ ...x })) : undefined,
+        }))
+        const parent = monsters[toMonster]
+        if (!parent?.minions) return g
+        const nextH = [...parent.minions]
+        nextH.splice(toMinion, 0, entry)
+        const st = nextHordePoolStamina(parent, nextH, { addCurrent: solo.stamina[0] })
+        monsters[toMonster] = { ...parent, minions: nextH, stamina: st }
+        return { ...g, monsters }
+      }
+      return g
+    })
+  }
+
+  return remapCaptainIdsAfterMonsterRemovedFromGroup(next, fromGroup, fromMonster)
+}
+
+export function remapEotConfirmedAfterSoloMergedIntoHorde(
+  prev: ReadonlyMap<number, ReadonlySet<string>>,
+  groupCount: number,
+  fromGroup: number,
+  fromMonster: number,
+  toGroup: number,
+  toMonsterBeforeRemove: number,
+  toMinion: number,
+): Map<number, Set<string>> {
+  const out = new Map<number, Set<string>>()
+  const targetMonsterSameGroup =
+    fromGroup === toGroup && fromMonster < toMonsterBeforeRemove
+      ? toMonsterBeforeRemove - 1
+      : toMonsterBeforeRemove
+
+  if (fromGroup === toGroup) {
+    for (let gi = 0; gi < groupCount; gi++) {
+      const src = prev.get(gi) ?? new Set<string>()
+      if (gi !== fromGroup) {
+        out.set(gi, new Set(src))
+        continue
+      }
+      const movedTails: string[] = []
+      const dst = new Set<string>()
+      for (const key of src) {
+        const parts = key.split(':')
+        if (parts.length < 2) {
+          dst.add(key)
+          continue
+        }
+        const mi = Number(parts[0])
+        if (!Number.isFinite(mi)) {
+          dst.add(key)
+          continue
+        }
+        if (parts.length === 2) {
+          const tail = parts[1]!
+          if (mi === fromMonster) {
+            movedTails.push(tail)
+            continue
+          }
+          const nmi = mi > fromMonster ? mi - 1 : mi
+          dst.add(`${nmi}:${tail}`)
+          continue
+        }
+        const mni = Number(parts[1])
+        if (!Number.isFinite(mni)) {
+          dst.add(key)
+          continue
+        }
+        const tail = parts.slice(2).join(':')
+        const nmi = mi > fromMonster ? mi - 1 : mi
+        let nmni = mni
+        if (nmi === targetMonsterSameGroup && mni >= toMinion) nmni += 1
+        dst.add(`${nmi}:${nmni}:${tail}`)
+      }
+      for (const t of movedTails) {
+        dst.add(`${targetMonsterSameGroup}:${toMinion}:${t}`)
+      }
+      out.set(gi, dst)
+    }
+    return out
+  }
+
+  const extractFrom = (
+    src: Set<string>,
+  ): { next: Set<string>; movedTails: string[] } => {
+    const movedTails: string[] = []
+    const dst = new Set<string>()
+    for (const key of src) {
+      const parts = key.split(':')
+      if (parts.length < 2) {
+        dst.add(key)
+        continue
+      }
+      const mi = Number(parts[0])
+      if (!Number.isFinite(mi)) {
+        dst.add(key)
+        continue
+      }
+      if (parts.length === 2) {
+        const tail = parts[1]!
+        if (mi === fromMonster) {
+          movedTails.push(tail)
+          continue
+        }
+        const nmi = mi > fromMonster ? mi - 1 : mi
+        dst.add(`${nmi}:${tail}`)
+        continue
+      }
+      const mni = Number(parts[1])
+      if (!Number.isFinite(mni)) {
+        dst.add(key)
+        continue
+      }
+      const tail = parts.slice(2).join(':')
+      const nmi = mi > fromMonster ? mi - 1 : mi
+      dst.add(`${nmi}:${mni}:${tail}`)
+    }
+    return { next: dst, movedTails }
+  }
+
+  const mergeDest = (src: Set<string>, tails: readonly string[]): Set<string> => {
+    const dst = new Set<string>()
+    for (const key of src) {
+      const parts = key.split(':')
+      if (parts.length < 3) {
+        dst.add(key)
+        continue
+      }
+      const mi = Number(parts[0])
+      const mni = Number(parts[1])
+      if (!Number.isFinite(mi) || !Number.isFinite(mni)) {
+        dst.add(key)
+        continue
+      }
+      const tail = parts.slice(2).join(':')
+      if (mi === toMonsterBeforeRemove && mni >= toMinion) {
+        dst.add(`${mi}:${mni + 1}:${tail}`)
+        continue
+      }
+      dst.add(key)
+    }
+    for (const t of tails) {
+      dst.add(`${toMonsterBeforeRemove}:${toMinion}:${t}`)
+    }
+    return dst
+  }
+
+  const { next: afterFrom, movedTails } = extractFrom(prev.get(fromGroup) ?? new Set<string>())
+
+  for (let gi = 0; gi < groupCount; gi++) {
+    if (gi === fromGroup) {
+      out.set(gi, afterFrom)
+    } else if (gi === toGroup) {
+      out.set(gi, mergeDest(prev.get(toGroup) ?? new Set<string>(), movedTails))
+    } else {
+      out.set(gi, new Set(prev.get(gi) ?? []))
+    }
+  }
+  return out
+}
+
+/** Remap minion-slot EoT keys after moving a minion to another horde (or another parent in the same group). */
+export function remapEotConfirmedAfterMinionTransferBetweenHordes(
+  prev: ReadonlyMap<number, ReadonlySet<string>>,
+  groupCount: number,
+  fromGroup: number,
+  fromMonster: number,
+  fromMinion: number,
+  toGroup: number,
+  toMonster: number,
+  toMinion: number,
+): Map<number, Set<string>> {
+  if (fromGroup === toGroup && fromMonster === toMonster) {
+    return remapEotConfirmedAfterMinionReorder(
+      prev,
+      groupCount,
+      fromGroup,
+      fromMonster,
+      fromMinion,
+      toMinion,
+    )
+  }
+
+  const out = new Map<number, Set<string>>()
+
+  if (fromGroup === toGroup) {
+    for (let gi = 0; gi < groupCount; gi++) {
+      const src = prev.get(gi) ?? new Set<string>()
+      if (gi !== fromGroup) {
+        out.set(gi, new Set(src))
+        continue
+      }
+      const movedTails: string[] = []
+      const dst = new Set<string>()
+      for (const key of src) {
+        const parts = key.split(':')
+        if (parts.length < 3) {
+          dst.add(key)
+          continue
+        }
+        const mi = Number(parts[0])
+        const mni = Number(parts[1])
+        if (!Number.isFinite(mi) || !Number.isFinite(mni)) {
+          dst.add(key)
+          continue
+        }
+        const tail = parts.slice(2).join(':')
+        if (mi === fromMonster && mni === fromMinion) {
+          movedTails.push(tail)
+          continue
+        }
+        let nmni = mni
+        if (mi === fromMonster && mni > fromMinion) nmni = mni - 1
+        if (mi === toMonster && mni >= toMinion) nmni += 1
+        dst.add(`${mi}:${nmni}:${tail}`)
+      }
+      for (const t of movedTails) {
+        dst.add(`${toMonster}:${toMinion}:${t}`)
+      }
+      out.set(gi, dst)
+    }
+    return out
+  }
+
+  const extractFromSource = (
+    src: Set<string>,
+  ): { next: Set<string>; movedTails: string[] } => {
+    const movedTails: string[] = []
+    const dst = new Set<string>()
+    for (const key of src) {
+      const parts = key.split(':')
+      if (parts.length < 3) {
+        dst.add(key)
+        continue
+      }
+      const mi = Number(parts[0])
+      const mni = Number(parts[1])
+      if (!Number.isFinite(mi) || !Number.isFinite(mni)) {
+        dst.add(key)
+        continue
+      }
+      const tail = parts.slice(2).join(':')
+      if (mi === fromMonster && mni === fromMinion) {
+        movedTails.push(tail)
+        continue
+      }
+      if (mi === fromMonster && mni > fromMinion) {
+        dst.add(`${mi}:${mni - 1}:${tail}`)
+        continue
+      }
+      dst.add(key)
+    }
+    return { next: dst, movedTails }
+  }
+
+  const mergeIntoDest = (
+    src: Set<string>,
+    movedTails: readonly string[],
+  ): Set<string> => {
+    const dst = new Set<string>()
+    for (const key of src) {
+      const parts = key.split(':')
+      if (parts.length < 3) {
+        dst.add(key)
+        continue
+      }
+      const mi = Number(parts[0])
+      const mni = Number(parts[1])
+      if (!Number.isFinite(mi) || !Number.isFinite(mni)) {
+        dst.add(key)
+        continue
+      }
+      const tail = parts.slice(2).join(':')
+      if (mi === toMonster && mni >= toMinion) {
+        dst.add(`${mi}:${mni + 1}:${tail}`)
+        continue
+      }
+      dst.add(key)
+    }
+    for (const t of movedTails) {
+      dst.add(`${toMonster}:${toMinion}:${t}`)
+    }
+    return dst
+  }
+
+  const { next: afterFrom, movedTails } = extractFromSource(prev.get(fromGroup) ?? new Set<string>())
+
+  for (let gi = 0; gi < groupCount; gi++) {
+    if (gi === fromGroup) {
+      out.set(gi, afterFrom)
+    } else if (gi === toGroup) {
+      out.set(gi, mergeIntoDest(prev.get(toGroup) ?? new Set<string>(), movedTails))
+    } else {
+      out.set(gi, new Set(prev.get(gi) ?? []))
+    }
+  }
+
+  return out
+}
+
+/** After a minion is removed from its parent, map an open minion stat-card slot on that parent. */
+export function mapMinionDrawerSlotAfterMinionRemoved(fromMinion: number, slot: number): number | null {
+  if (slot === fromMinion) return null
+  if (slot > fromMinion) return slot - 1
+  return slot
+}
+
+/** After a minion is inserted into a parent, map an open minion stat-card slot on that parent. */
+export function mapMinionDrawerSlotAfterMinionInserted(toMinion: number, slot: number): number {
+  if (slot >= toMinion) return slot + 1
+  return slot
 }
 
 /** Map a minion slot index after reordering minions `fromMinion` → drop target `toMinion`. */
@@ -411,6 +929,88 @@ export function remapEotConfirmedAfterMinionReorder(
         if (mni2 >= ins) mni2 += 1
         dst.add(`${mi}:${mni2}:${tail}`)
       }
+    }
+    out.set(gi, dst)
+  }
+  return out
+}
+
+/** Remap EoT keys after removing one minion from a horde (or demoting the parent to solo when the last minion is removed). */
+export function remapEotConfirmedAfterMinionRemoved(
+  prev: ReadonlyMap<number, ReadonlySet<string>>,
+  groupCount: number,
+  groupIndex: number,
+  parentMonsterIndex: number,
+  removedMinionIndex: number,
+  demotedToSolo: boolean,
+): Map<number, Set<string>> {
+  const out = new Map<number, Set<string>>()
+  for (let gi = 0; gi < groupCount; gi++) {
+    const src = prev.get(gi) ?? new Set<string>()
+    const dst = new Set<string>()
+    if (gi !== groupIndex) {
+      for (const key of src) dst.add(key)
+      out.set(gi, dst)
+      continue
+    }
+    for (const key of src) {
+      const parts = key.split(':')
+      if (parts.length < 3) {
+        dst.add(key)
+        continue
+      }
+      const mi = Number(parts[0])
+      const mni = Number(parts[1])
+      if (!Number.isFinite(mi) || !Number.isFinite(mni)) {
+        dst.add(key)
+        continue
+      }
+      const tail = parts.slice(2).join(':')
+      if (mi !== parentMonsterIndex) {
+        dst.add(key)
+        continue
+      }
+      if (demotedToSolo) {
+        continue
+      }
+      if (mni === removedMinionIndex) continue
+      const mni2 = mni > removedMinionIndex ? mni - 1 : mni
+      dst.add(`${mi}:${mni2}:${tail}`)
+    }
+    out.set(gi, dst)
+  }
+  return out
+}
+
+/** Move parent-level EoT keys (`mi:label`) to first minion slot (`mi:0:label`) after converting a solo monster to a squad. */
+export function remapEotConfirmedAfterConvertToSquad(
+  prev: ReadonlyMap<number, ReadonlySet<string>>,
+  groupCount: number,
+  groupIndex: number,
+  monsterIndex: number,
+): Map<number, Set<string>> {
+  const out = new Map<number, Set<string>>()
+  for (let gi = 0; gi < groupCount; gi++) {
+    const src = prev.get(gi) ?? new Set<string>()
+    const dst = new Set<string>()
+    if (gi !== groupIndex) {
+      for (const key of src) dst.add(key)
+      out.set(gi, dst)
+      continue
+    }
+    for (const key of src) {
+      const parts = key.split(':')
+      const mi = Number(parts[0])
+      if (!Number.isFinite(mi) || mi !== monsterIndex) {
+        dst.add(key)
+        continue
+      }
+      if (parts.length >= 3) {
+        dst.add(key)
+        continue
+      }
+      const tail = parts.slice(1).join(':')
+      dst.add(`${mi}:0:${tail}`)
     }
     out.set(gi, dst)
   }
@@ -962,6 +1562,89 @@ export function normalizeStamina(cur: number, max: number): [number, number] {
   }
   const c = Math.min(m, Math.max(0, Math.round(cur)))
   return [c, m]
+}
+
+/** Per-minion max stamina for one roster entry (alive or dead slot). */
+function minionSlotMaxContribution(
+  mn: MinionEntry,
+  parentName: string,
+  contextMinions: readonly MinionEntry[],
+): number {
+  const per = maxStaminaForBestiaryName(mn.name)
+  if (per > 0) return per
+  const iv = minionInterval(parentName, contextMinions[0]?.name)
+  return iv ?? 0
+}
+
+/** Sum of per-minion max stamina for alive minions only (for proportional pool splits). */
+export function hordePoolMaxAliveFromMinions(parentName: string, minions: readonly MinionEntry[]): number {
+  const fallbackInterval = minionInterval(parentName, minions[0]?.name)
+  let sum = 0
+  for (const mn of minions) {
+    if (mn.dead) continue
+    const per = maxStaminaForBestiaryName(mn.name)
+    if (per > 0) sum += per
+    else if (fallbackInterval != null) sum += fallbackInterval
+  }
+  return sum
+}
+
+/**
+ * Pool stamina ceiling: sum of every minion slot (dead or alive each counts its slot max).
+ * Stored as stamina[1] so the pool can be healed up to full roster capacity; current is capped by
+ * {@link hordePoolMaxAliveFromMinions} when the roster changes.
+ */
+export function hordePoolMaxFromMinions(parentName: string, minions: readonly MinionEntry[]): number {
+  let sum = 0
+  for (const mn of minions) {
+    sum += minionSlotMaxContribution(mn, parentName, minions)
+  }
+  return sum
+}
+
+function minionAliveMaxContribution(
+  mn: MinionEntry,
+  parentName: string,
+  contextMinions: readonly MinionEntry[],
+): number {
+  if (mn.dead) return 0
+  return minionSlotMaxContribution(mn, parentName, contextMinions)
+}
+
+/** Pool stamina after minion roster change; optional extra current (e.g. incoming solo's current). */
+export function nextHordePoolStamina(
+  parent: Monster,
+  nextMinions: readonly MinionEntry[],
+  opts?: { addCurrent?: number },
+): [number, number] {
+  const fullMax = hordePoolMaxFromMinions(parent.name, nextMinions)
+  let cur = parent.stamina[0]
+  if (opts?.addCurrent != null) {
+    cur += opts.addCurrent
+  }
+  return normalizeStamina(cur, fullMax)
+}
+
+/** After toggling a minion dead/alive: cap current to what living minions can hold, keep full-roster pool ceiling. */
+export function hordePoolStaminaAfterMinionDeadToggle(
+  parent: Monster,
+  nextMinions: readonly MinionEntry[],
+): [number, number] {
+  const fullMax = hordePoolMaxFromMinions(parent.name, nextMinions)
+  const aliveMax = hordePoolMaxAliveFromMinions(parent.name, nextMinions)
+  const cur = Math.min(parent.stamina[0], aliveMax)
+  return normalizeStamina(cur, fullMax)
+}
+
+/** Solo creature stamina after its horde is removed (bestiary max, current capped). */
+export function staminaAfterHordeDemotedToSolo(parent: Monster): [number, number] {
+  const max = maxStaminaForBestiaryName(parent.name) || parent.stamina[1]
+  return normalizeStamina(parent.stamina[0], max)
+}
+
+/** Stamina when a solo becomes a one-minion horde (carry over current, new max from roster). */
+export function staminaAfterConvertSoloToHorde(parent: Monster, minions: readonly MinionEntry[]): [number, number] {
+  return nextHordePoolStamina(parent, minions)
 }
 
 export function applyStaminaDelta(current: number, max: number, delta: number): [number, number] {

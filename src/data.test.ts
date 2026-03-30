@@ -15,10 +15,15 @@ import {
   moveIndexInArray,
   mapMinionIndexAfterReorder,
   monsterDragDropIsValid,
+  mapMinionDrawerSlotAfterMinionInserted,
+  mapMinionDrawerSlotAfterMinionRemoved,
+  mergeTopLevelMonsterIntoHorde,
   moveMonsterInEncounterWithCaptainRemap,
   parseConditionDragPayload,
   parseMonsterDragPayload,
+  remapEotConfirmedAfterMinionTransferBetweenHordes,
   reorderMinionsInHorde,
+  transferMinionBetweenHordes,
   remapEotConfirmedAfterMinionReorder,
   remapEncounterGroupIndex,
   remapEotConfirmedAfterMonsterMove,
@@ -29,12 +34,48 @@ import {
   MARIP_HEADERS,
   ENCOUNTER_GROUPS,
   TERRAIN_ROWS,
+  buildCreatureOrdinalMap,
+  totalCreaturesInGroup,
 } from './data'
-import type { ConditionEntry, EncounterGroup, GroupColorId, Monster } from './types'
+import type { ConditionEntry, EncounterGroup, GroupColorId, MinionEntry, Monster } from './types'
 
 describe('conditionEntryFromLabel', () => {
   it('creates a neutral condition entry', () => {
     expect(conditionEntryFromLabel('Bleeding')).toEqual({ label: 'Bleeding', state: 'neutral' })
+  })
+})
+
+describe('buildCreatureOrdinalMap', () => {
+  const base: Omit<Monster, 'name' | 'minions'> = {
+    subtitle: '',
+    initials: 'X',
+    stamina: [1, 1],
+    marip: null,
+    fs: 0,
+    dist: 0,
+    stab: 0,
+    conditions: [],
+  }
+
+  it('assigns unique ordinals to solos and minions; squad parent row has no entry', () => {
+    const monsters: Monster[] = [
+      { ...base, name: 'Solo A' },
+      {
+        ...base,
+        name: 'Squad',
+        minions: [
+          { name: 'm1', initials: '1', conditions: [], dead: false },
+          { name: 'm2', initials: '2', conditions: [], dead: false },
+        ],
+      },
+      { ...base, name: 'Solo B' },
+    ]
+    const map = buildCreatureOrdinalMap(monsters)
+    expect(map.get('0')).toBe(1)
+    expect(map.get('1:0')).toBe(2)
+    expect(map.get('1:1')).toBe(3)
+    expect(map.get('2')).toBe(4)
+    expect(totalCreaturesInGroup(monsters)).toBe(4)
   })
 })
 
@@ -281,19 +322,94 @@ describe('parseMonsterDragPayload', () => {
   })
 })
 
+function monsterDragDropFixtureGroups(): EncounterGroup[] {
+  const solo = (name: string): Monster => ({
+    name,
+    subtitle: 's',
+    initials: 'S',
+    stamina: [1, 1],
+    marip: null,
+    fs: 0,
+    dist: 0,
+    stab: 0,
+    conditions: [],
+  })
+  const horde = (name: string): Monster => ({
+    ...solo(name),
+    minions: [
+      { name: `${name}-m0`, initials: 'a', conditions: [], dead: false },
+      { name: `${name}-m1`, initials: 'b', conditions: [], dead: false },
+    ],
+  })
+  return [
+    { id: 'g0', color: 'red', monsters: [solo('A'), solo('B'), horde('H0')] },
+    { id: 'g1', color: 'blue', monsters: [solo('C'), solo('D'), horde('H1')] },
+  ]
+}
+
 describe('monsterDragDropIsValid', () => {
+  const g = monsterDragDropFixtureGroups()
+
   it('allows top-level only onto top-level rows (not same slot)', () => {
-    expect(monsterDragDropIsValid({ fromGroup: 0, fromMonster: 0 }, 0, 1, null)).toBe(true)
-    expect(monsterDragDropIsValid({ fromGroup: 0, fromMonster: 0 }, 0, 0, null)).toBe(false)
-    expect(monsterDragDropIsValid({ fromGroup: 0, fromMonster: 0 }, 0, 0, 2)).toBe(false)
+    expect(monsterDragDropIsValid({ fromGroup: 0, fromMonster: 0 }, 0, 1, null, g)).toBe(true)
+    expect(monsterDragDropIsValid({ fromGroup: 0, fromMonster: 0 }, 0, 0, null, g)).toBe(false)
+    expect(monsterDragDropIsValid({ fromGroup: 0, fromMonster: 0 }, 0, 0, 2, g)).toBe(false)
   })
 
-  it('allows minion reorder only within same parent horde', () => {
-    expect(monsterDragDropIsValid({ fromGroup: 0, fromMonster: 2, fromMinion: 0 }, 0, 2, 1)).toBe(true)
-    expect(monsterDragDropIsValid({ fromGroup: 0, fromMonster: 2, fromMinion: 0 }, 0, 2, 0)).toBe(false)
-    expect(monsterDragDropIsValid({ fromGroup: 0, fromMonster: 2, fromMinion: 0 }, 0, 2, null)).toBe(false)
-    expect(monsterDragDropIsValid({ fromGroup: 0, fromMonster: 2, fromMinion: 0 }, 0, 1, 0)).toBe(false)
-    expect(monsterDragDropIsValid({ fromGroup: 0, fromMonster: 2, fromMinion: 0 }, 1, 2, 0)).toBe(false)
+  it('allows minion reorder within a horde or drop onto another horde minion row', () => {
+    expect(monsterDragDropIsValid({ fromGroup: 0, fromMonster: 2, fromMinion: 0 }, 0, 2, 1, g)).toBe(true)
+    expect(monsterDragDropIsValid({ fromGroup: 0, fromMonster: 2, fromMinion: 0 }, 0, 2, 0, g)).toBe(false)
+    expect(monsterDragDropIsValid({ fromGroup: 0, fromMonster: 2, fromMinion: 0 }, 0, 2, null, g)).toBe(false)
+    expect(monsterDragDropIsValid({ fromGroup: 0, fromMonster: 2, fromMinion: 0 }, 0, 1, 0, g)).toBe(false)
+    expect(monsterDragDropIsValid({ fromGroup: 0, fromMonster: 2, fromMinion: 0 }, 1, 2, 0, g)).toBe(true)
+  })
+
+  it('allows a solo top-level creature onto a horde minion row (draft into squad)', () => {
+    expect(monsterDragDropIsValid({ fromGroup: 0, fromMonster: 0 }, 0, 2, 1, g)).toBe(true)
+    expect(monsterDragDropIsValid({ fromGroup: 0, fromMonster: 0 }, 0, 2, 0, g)).toBe(true)
+    expect(monsterDragDropIsValid({ fromGroup: 0, fromMonster: 0 }, 1, 2, 0, g)).toBe(true)
+    expect(monsterDragDropIsValid({ fromGroup: 0, fromMonster: 0 }, 0, 0, 0, g)).toBe(false)
+  })
+
+  it('blocks dropping a squad parent onto a minion row', () => {
+    expect(monsterDragDropIsValid({ fromGroup: 0, fromMonster: 2 }, 0, 1, 0, g)).toBe(false)
+  })
+})
+
+describe('mergeTopLevelMonsterIntoHorde', () => {
+  it('removes the solo row, appends the creature as a minion, and recomputes pool max from bestiary', () => {
+    const solo: Monster = {
+      name: 'Goblin Warrior',
+      subtitle: '',
+      initials: 'W',
+      stamina: [10, 15],
+      marip: null,
+      fs: 0,
+      dist: 0,
+      stab: 0,
+      conditions: [],
+    }
+    const hordeParent: Monster = {
+      name: 'Minions',
+      subtitle: '',
+      initials: 'M',
+      stamina: [5, 5],
+      marip: null,
+      fs: 0,
+      dist: 0,
+      stab: 0,
+      conditions: [],
+      minions: [
+        { name: 'Goblin Spinecleaver 1', initials: '1', conditions: [], dead: false },
+      ],
+    }
+    const groups: EncounterGroup[] = [{ id: 'g', color: 'red', monsters: [solo, hordeParent] }]
+    const next = mergeTopLevelMonsterIntoHorde(groups, 0, 0, 0, 1, 1)
+    expect(next).not.toBeNull()
+    expect(next![0]!.monsters).toHaveLength(1)
+    const parent = next![0]!.monsters[0]!
+    expect(parent.minions!.map((m) => m.name)).toEqual(['Goblin Spinecleaver 1', 'Goblin Warrior'])
+    expect(parent.stamina).toEqual([15, 20])
   })
 })
 
@@ -331,6 +447,129 @@ describe('reorderMinionsInHorde', () => {
   it('returns null for invalid indices', () => {
     expect(reorderMinionsInHorde(horde(), 0, 0, 0, 0)).toBeNull()
     expect(reorderMinionsInHorde(horde(), 0, 0, 9, 1)).toBeNull()
+  })
+})
+
+describe('transferMinionBetweenHordes', () => {
+  it('moves a minion into a horde in another encounter group', () => {
+    const groups = monsterDragDropFixtureGroups()
+    const next = transferMinionBetweenHordes(groups, 0, 2, 0, 1, 2, 0)!
+    expect(next[0]!.monsters[2]!.minions!.map((m) => m.name)).toEqual(['H0-m1'])
+    expect(next[1]!.monsters[2]!.minions!.map((m) => m.name)).toEqual(['H0-m0', 'H1-m0', 'H1-m1'])
+  })
+
+  it('moves a minion between two hordes in the same encounter group', () => {
+    const solo = (name: string): Monster => ({
+      name,
+      subtitle: 's',
+      initials: 'S',
+      stamina: [1, 1],
+      marip: null,
+      fs: 0,
+      dist: 0,
+      stab: 0,
+      conditions: [],
+    })
+    const horde = (name: string, n: number): Monster => ({
+      ...solo(name),
+      minions: Array.from({ length: n }, (_, i) => ({
+        name: `${name}-${i}`,
+        initials: 'x',
+        conditions: [] as const,
+        dead: false,
+      })),
+    })
+    const oneGroup: EncounterGroup[] = [
+      { id: 'g', color: 'red', monsters: [horde('A', 2), horde('B', 1)] },
+    ]
+    const next = transferMinionBetweenHordes(oneGroup, 0, 0, 0, 0, 1, 0)!
+    expect(next[0]!.monsters[0]!.minions!.map((m) => m.name)).toEqual(['A-1'])
+    expect(next[0]!.monsters[1]!.minions!.map((m) => m.name)).toEqual(['A-0', 'B-0'])
+  })
+
+  it('full-roster pool ceiling after moving a dead minion allows healing with +1', () => {
+    const mk = (n: number, dead: boolean) => ({
+      name: `Goblin Spinecleaver ${n}`,
+      initials: 'x',
+      conditions: [] as const,
+      dead,
+    })
+    const hordeParent = (minions: MinionEntry[], stamina: [number, number]): Monster => ({
+      name: 'Minions',
+      subtitle: '',
+      initials: 'M',
+      stamina,
+      marip: null,
+      fs: 0,
+      dist: 0,
+      stab: 0,
+      conditions: [],
+      minions,
+    })
+    const groups: EncounterGroup[] = [
+      { id: 'g0', color: 'red', monsters: [hordeParent([mk(1, false), mk(2, true)], [5, 10])] },
+      { id: 'g1', color: 'blue', monsters: [hordeParent([mk(3, false), mk(4, false)], [10, 10])] },
+    ]
+    const next = transferMinionBetweenHordes(groups, 0, 0, 1, 1, 0, 0)!
+    const dest = next[1]!.monsters[0]!
+    expect(dest.stamina).toEqual([10, 15])
+    expect(applyStaminaDelta(dest.stamina[0], dest.stamina[1], 1)).toEqual([11, 15])
+  })
+
+  it('demotes the source parent when its last minion leaves', () => {
+    const solo = (name: string): Monster => ({
+      name,
+      subtitle: 's',
+      initials: 'S',
+      stamina: [1, 1],
+      marip: null,
+      fs: 0,
+      dist: 0,
+      stab: 0,
+      conditions: [],
+    })
+    const horde = (name: string, n: number): Monster => ({
+      ...solo(name),
+      minions: Array.from({ length: n }, (_, i) => ({
+        name: `${name}-${i}`,
+        initials: 'x',
+        conditions: [] as const,
+        dead: false,
+      })),
+    })
+    const groups: EncounterGroup[] = [
+      { id: 'g', color: 'red', monsters: [horde('A', 1), horde('B', 2)] },
+    ]
+    const next = transferMinionBetweenHordes(groups, 0, 0, 0, 0, 1, 0)!
+    expect(next[0]!.monsters[0]!.minions).toBeUndefined()
+    expect(next[0]!.monsters[1]!.minions!.map((m) => m.name)).toEqual(['A-0', 'B-0', 'B-1'])
+  })
+})
+
+describe('remapEotConfirmedAfterMinionTransferBetweenHordes', () => {
+  it('migrates keys across encounter groups', () => {
+    const prev = new Map<number, Set<string>>([
+      [0, new Set(['2:0:Bleeding'])],
+      [1, new Set(['2:1:Slow'])],
+    ])
+    const next = remapEotConfirmedAfterMinionTransferBetweenHordes(prev, 2, 0, 2, 0, 1, 2, 0)
+    expect(next.get(0)).toEqual(new Set())
+    expect(next.get(1)).toEqual(new Set(['2:2:Slow', '2:0:Bleeding']))
+  })
+})
+
+describe('mapMinionDrawerSlotAfterMinionRemoved', () => {
+  it('shifts slots after the removed index', () => {
+    expect(mapMinionDrawerSlotAfterMinionRemoved(1, 0)).toBe(0)
+    expect(mapMinionDrawerSlotAfterMinionRemoved(1, 2)).toBe(1)
+    expect(mapMinionDrawerSlotAfterMinionRemoved(1, 1)).toBeNull()
+  })
+})
+
+describe('mapMinionDrawerSlotAfterMinionInserted', () => {
+  it('shifts slots at or after the insert index', () => {
+    expect(mapMinionDrawerSlotAfterMinionInserted(1, 0)).toBe(0)
+    expect(mapMinionDrawerSlotAfterMinionInserted(1, 2)).toBe(3)
   })
 })
 

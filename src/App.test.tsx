@@ -23,6 +23,14 @@ function mockMonsterDataTransfer(): DataTransfer {
   } as unknown as DataTransfer
 }
 
+async function chooseDeleteFromEncounterRowGrip(
+  user: ReturnType<typeof userEvent.setup>,
+  monsterName: string,
+) {
+  await user.click(screen.getByRole('button', { name: `Reorder ${monsterName} within encounter` }))
+  await user.click(screen.getByTestId('grip-menu-delete'))
+}
+
 /** Accessible names use `Encounter group ${n}: …`; avoid `/group 1/` matching `group 10`. */
 const turnButton = (n: number, state: 'pending' | 'acted') =>
   new RegExp(`^Encounter group ${n}: turn ${state}$`, 'i')
@@ -837,13 +845,15 @@ describe('App', () => {
     expect(screen.queryAllByLabelText(/Reorder .* within encounter/i)).toHaveLength(0)
     expect(screen.queryAllByLabelText(/^Add monster to group$/i)).toHaveLength(0)
     expect(screen.queryByRole('button', { name: /Add new encounter group/i })).not.toBeInTheDocument()
-    expect(screen.queryAllByRole('button', { name: /^Delete /i })).toHaveLength(0)
+    expect(screen.queryAllByTestId('grip-menu-delete')).toHaveLength(0)
 
     await user.click(screen.getByRole('button', { name: /Unlock encounter editing controls/i }))
     expect(screen.getAllByLabelText(/^Reorder encounter group \d+$/i).length).toBeGreaterThanOrEqual(2)
     expect(screen.getAllByLabelText(/^Add monster to group$/i).length).toBeGreaterThan(0)
     expect(screen.getByRole('button', { name: /Add new encounter group/i })).toBeInTheDocument()
-    expect(screen.getAllByRole('button', { name: /^Delete /i }).length).toBeGreaterThan(0)
+    await user.click(screen.getByRole('button', { name: 'Reorder Goblin Warrior within encounter' }))
+    expect(screen.getByTestId('grip-menu-delete')).toBeInTheDocument()
+    await user.keyboard('{Escape}')
   })
 
   // --- Group ordinal badges show correct numbers per group ---
@@ -1192,22 +1202,30 @@ describe('App', () => {
 
   // --- Delete monster from group (DATA-003) ---
 
-  it('each monster row has a delete button', () => {
+  it('each top-level creature row exposes delete via the reorder grip menu', async () => {
+    const user = userEvent.setup()
     render(<App />)
-    expect(screen.getByRole('button', { name: /^Delete Goblin Assassin 1$/i })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /^Delete Goblin Warrior$/i })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /^Delete Goblin Underboss$/i })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /^Delete Minions$/i })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /^Delete Minotaur Sunderer$/i })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /^Delete Gnoll Cackler$/i })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /^Delete Goblin Stinker$/i })).toBeInTheDocument()
+    const names = [
+      'Goblin Assassin 1',
+      'Goblin Warrior',
+      'Goblin Underboss',
+      'Minions',
+      'Minotaur Sunderer',
+      'Gnoll Cackler',
+      'Goblin Stinker',
+    ]
+    for (const name of names) {
+      await user.click(screen.getByRole('button', { name: `Reorder ${name} within encounter` }))
+      expect(screen.getByTestId('grip-menu-delete')).toBeInTheDocument()
+      await user.keyboard('{Escape}')
+    }
   })
 
   it('clicking delete removes the monster from its group', async () => {
     const user = userEvent.setup()
     render(<App />)
     expect(screen.getByText('Goblin Warrior', { exact: true })).toBeInTheDocument()
-    await user.click(screen.getByRole('button', { name: /^Delete Goblin Warrior$/i }))
+    await chooseDeleteFromEncounterRowGrip(user, 'Goblin Warrior')
     expect(screen.queryByText('Goblin Warrior', { exact: true })).not.toBeInTheDocument()
     expect(screen.getByText('Goblin Assassin 1', { exact: true })).toBeInTheDocument()
   })
@@ -1221,7 +1239,7 @@ describe('App', () => {
     expect(within(group4grid).getByRole('button', { name: /creature 2 of 3/i })).toBeInTheDocument()
     expect(within(group4grid).getByRole('button', { name: /creature 3 of 3/i })).toBeInTheDocument()
 
-    await user.click(screen.getByRole('button', { name: /^Delete Gnoll Cackler$/i }))
+    await chooseDeleteFromEncounterRowGrip(user, 'Gnoll Cackler')
 
     expect(within(group4grid).getByRole('button', { name: /creature 1 of 2/i })).toBeInTheDocument()
     expect(within(group4grid).getByRole('button', { name: /creature 2 of 2/i })).toBeInTheDocument()
@@ -1234,7 +1252,7 @@ describe('App', () => {
     expect(screen.getByText('Goblin Underboss', { exact: true })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: turnButton(2, 'pending') })).toBeInTheDocument()
 
-    await user.click(screen.getByRole('button', { name: /^Delete Goblin Underboss$/i }))
+    await chooseDeleteFromEncounterRowGrip(user, 'Goblin Underboss')
 
     expect(screen.queryByText('Goblin Underboss', { exact: true })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: turnButton(4, 'pending') })).not.toBeInTheDocument()
@@ -1248,7 +1266,7 @@ describe('App', () => {
     await user.click(within(minionGrid).getByText('Goblin Assassin 1'))
     expect(within(minionGrid).getByTestId('captain-pill')).toHaveTextContent('Goblin Assassin 1')
 
-    await user.click(screen.getByRole('button', { name: /^Delete Goblin Assassin 1$/i }))
+    await chooseDeleteFromEncounterRowGrip(user, 'Goblin Assassin 1')
 
     const pill = within(minionGrid).getByTestId('captain-pill')
     expect(pill).not.toHaveTextContent('Goblin Assassin 1')
@@ -1263,7 +1281,7 @@ describe('App', () => {
     await user.click(within(minionGrid).getByText('Goblin Warrior'))
     expect(within(minionGrid).getByTestId('captain-pill')).toHaveTextContent('Goblin Warrior')
 
-    await user.click(screen.getByRole('button', { name: /^Delete Goblin Assassin 1$/i }))
+    await chooseDeleteFromEncounterRowGrip(user, 'Goblin Assassin 1')
 
     expect(within(minionGrid).getByTestId('captain-pill')).toHaveTextContent('Goblin Warrior')
   })
@@ -1274,7 +1292,7 @@ describe('App', () => {
     expect(screen.getByText('Goblin Assassin 1', { exact: true })).toBeInTheDocument()
     expect(screen.getByText('Minotaur Sunderer', { exact: true })).toBeInTheDocument()
 
-    await user.click(screen.getByRole('button', { name: /^Delete Gnoll Cackler$/i }))
+    await chooseDeleteFromEncounterRowGrip(user, 'Gnoll Cackler')
 
     expect(screen.getByText('Goblin Assassin 1', { exact: true })).toBeInTheDocument()
     expect(screen.getByText('Minotaur Sunderer', { exact: true })).toBeInTheDocument()
@@ -1286,7 +1304,7 @@ describe('App', () => {
     render(<App />)
     expect(screen.getByText('Minions', { exact: true })).toBeInTheDocument()
 
-    await user.click(screen.getByRole('button', { name: /^Delete Minions$/i }))
+    await chooseDeleteFromEncounterRowGrip(user, 'Minions')
 
     expect(screen.queryByText('Minions', { exact: true })).not.toBeInTheDocument()
     expect(screen.queryByText('Goblin Spinecleaver 1', { exact: true })).not.toBeInTheDocument()
@@ -1295,12 +1313,30 @@ describe('App', () => {
   it('other monsters remain functional after a deletion', async () => {
     const user = userEvent.setup()
     render(<App />)
-    await user.click(screen.getByRole('button', { name: /^Delete Goblin Stinker$/i }))
+    await chooseDeleteFromEncounterRowGrip(user, 'Goblin Stinker')
 
     const staminaGroup = screen.getByRole('group', { name: /^Edit stamina for Minotaur Sunderer$/i })
     await user.hover(staminaGroup)
     await user.click(within(staminaGroup).getByRole('button', { name: /^Increase stamina by 1$/i }))
     expect(screen.getByText('9 / 120')).toBeInTheDocument()
+  })
+
+  it('solo creature reorder grip offers Convert to Squad and adds a minion row', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    await user.click(screen.getByRole('button', { name: 'Reorder Goblin Warrior within encounter' }))
+    await user.click(screen.getByTestId('grip-menu-convert-squad'))
+    expect(screen.getByText('Goblin Warrior 1', { exact: true })).toBeInTheDocument()
+  })
+
+  it('deletes an encounter group from the turn column grip menu', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    const initial = screen.getAllByTestId('encounter-group-drop-target').length
+    await user.click(screen.getByLabelText(/^Reorder encounter group 2$/i))
+    await user.click(screen.getByTestId('grip-menu-delete-group'))
+    expect(screen.getAllByTestId('encounter-group-drop-target').length).toBe(initial - 1)
+    expect(screen.queryByText('Goblin Underboss', { exact: true })).not.toBeInTheDocument()
   })
 
   // --- Threshold mismatch cue (MINION-006) ---
@@ -1607,17 +1643,15 @@ describe('App', () => {
     expect(screen.getByText('4 / 15')).toBeInTheDocument()
   })
 
-  it('shows "Revive" cue when minions are dead but stamina is restored', async () => {
+  it('recalibrates pool max/current when a minion is marked dead so the threshold cue stays in sync', async () => {
     const user = userEvent.setup()
     render(<App />)
 
     const toggle4 = screen.getByRole('button', { name: /Goblin Spinecleaver 4: alive/i })
     await user.click(toggle4)
 
-    const pool = screen.getByRole('group', { name: /Minion stamina pool/i })
-    const cue = within(pool).getByTestId('threshold-mismatch-cue')
-    expect(cue).toBeInTheDocument()
-    expect(cue.textContent).toMatch(/Revive 1/)
+    const pool = screen.getByRole('group', { name: /Minion stamina pool: 15 of 20/i })
+    expect(within(pool).queryByTestId('threshold-mismatch-cue')).not.toBeInTheDocument()
   })
 
   // --- EoT/SE condition glow animation on turn acted (TURN-001) ---
@@ -2287,6 +2321,27 @@ describe('App', () => {
     const targets = grid.querySelectorAll('[data-testid="minion-drop-target"]')
     expect(targets[0]).toHaveTextContent('Goblin Spinecleaver 2')
     expect(targets[1]).toHaveTextContent('Goblin Spinecleaver 1')
+  })
+
+  it('moves a minion into a horde in another encounter group', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    await user.click(screen.getByRole('button', { name: 'Reorder Goblin Warrior within encounter' }))
+    await user.click(screen.getByTestId('grip-menu-convert-squad'))
+    const groups = screen.getAllByTestId('encounter-group-drop-target')
+    const g0 = groups[0]!
+    const g2 = groups[2]!
+    const spineGrip = within(g2).getByLabelText('Reorder Goblin Spinecleaver 1 within horde')
+    const dropEl = g0.querySelector(
+      '[data-testid="minion-drop-target"][data-monster-index="1"][data-minion-index="0"]',
+    )
+    expect(dropEl).toBeTruthy()
+    const dt = mockMonsterDataTransfer()
+    fireEvent.dragStart(spineGrip, { dataTransfer: dt })
+    fireEvent.dragOver(dropEl!, { dataTransfer: dt })
+    fireEvent.drop(dropEl!, { dataTransfer: dt })
+    expect(within(g0).getByText('Goblin Spinecleaver 1', { exact: true })).toBeInTheDocument()
+    expect(within(g2).queryByText('Goblin Spinecleaver 1', { exact: true })).not.toBeInTheDocument()
   })
 
   it('moves a monster into another group on drop', () => {

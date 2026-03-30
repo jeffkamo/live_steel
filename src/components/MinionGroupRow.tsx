@@ -9,7 +9,7 @@ import type {
   MonsterCardDrawerView,
 } from '../types'
 import { minionInterval, rosterCombatStats, suggestedDeadCount } from '../bestiary'
-import { GROUP_COLOR_BADGE, GROUP_COLOR_LABEL } from '../data'
+import { GROUP_COLOR_BADGE, GROUP_COLOR_LABEL, buildCreatureOrdinalMap } from '../data'
 import { EditableStaminaCell } from './EditableStaminaCell'
 import { MinionStaminaDisplay } from './MinionStaminaDisplay'
 import { MinionStaminaEditor } from './MinionStaminaEditor'
@@ -17,7 +17,7 @@ import { MaripCluster } from './MaripCluster'
 import { StaminaHeartFullIcon, StaminaSkullIcon } from './StaminaGlyph'
 import { StatCluster } from './StatCluster'
 import { CreatureConditionCell, type CreatureConditionDnDBinding } from './CreatureConditionCell'
-import { ReorderGripIcon } from './ReorderGripIcon'
+import { ReorderGripWithMenu } from './ReorderGripWithMenu'
 import { focusRelativeIn, listFocusableIn, tabWrapKeyDown } from '../dropdownA11y'
 
 type MinionRowDragBinding = {
@@ -37,9 +37,9 @@ type MinionRowDragBinding = {
 export function MinionGroupRow({
   monster,
   row,
-  ordinal,
+  creatureOrdinalMap,
   monsterIndex,
-  monsterCount,
+  totalCreatures,
   groupKey,
   groupNumber,
   groupColor,
@@ -59,6 +59,7 @@ export function MinionGroupRow({
   statCardDrawerView = null,
   onStatCardToggle,
   onDelete,
+  onDeleteMinion,
   onConfirmEot,
   isEotConfirmed,
   monsterDrag,
@@ -68,9 +69,9 @@ export function MinionGroupRow({
 }: {
   monster: Monster
   row: number
-  ordinal: number
+  creatureOrdinalMap: Map<string, number>
   monsterIndex: number
-  monsterCount: number
+  totalCreatures: number
   groupKey: string
   groupNumber: number
   groupColor: GroupColorId
@@ -94,6 +95,7 @@ export function MinionGroupRow({
   statCardDrawerView?: MonsterCardDrawerView | null
   onStatCardToggle?: (view: MonsterCardDrawerView) => void
   onDelete?: () => void
+  onDeleteMinion?: (minionIndex: number) => void
   onConfirmEot?: (label: string, minionIndex?: number) => void
   isEotConfirmed?: (label: string, minionIndex?: number) => boolean
   monsterDrag?: {
@@ -170,19 +172,26 @@ export function MinionGroupRow({
   const captainGroupColor = captainRef && allGroups
     ? allGroups[captainRef.groupIndex]?.color
     : undefined
+  const captainCreatureOrdinal =
+    captainRef && allGroups
+      ? buildCreatureOrdinalMap(allGroups[captainRef.groupIndex]!.monsters).get(`${captainRef.monsterIndex}`)
+      : undefined
 
   const candidateMonsters: { groupIndex: number; monsterIndex: number; name: string; ordinal: number; color: GroupColorId }[] = []
   if (allGroups) {
     for (let gi = 0; gi < allGroups.length; gi++) {
       const g = allGroups[gi]!
+      const ordMap = buildCreatureOrdinalMap(g.monsters)
       for (let mi = 0; mi < g.monsters.length; mi++) {
         const m = g.monsters[mi]!
         if (m.minions && m.minions.length > 0) continue
+        const ord = ordMap.get(`${mi}`)
+        if (ord == null) continue
         candidateMonsters.push({
           groupIndex: gi,
           monsterIndex: mi,
           name: m.name,
-          ordinal: mi + 1,
+          ordinal: ord,
           color: g.color,
         })
       }
@@ -197,6 +206,11 @@ export function MinionGroupRow({
   const rowTone =
     'transition-opacity duration-200 ease-out motion-reduce:transition-none ' +
     (turnComplete ? 'opacity-[0.52]' : 'opacity-100')
+
+  const parentGripMenuItems =
+    onDelete != null
+      ? ([{ id: 'delete', label: 'Delete', onSelect: onDelete, destructive: true }] as const)
+      : []
 
   const parentMonsterDropRing =
     monsterDrag?.dropHighlighted
@@ -222,28 +236,25 @@ export function MinionGroupRow({
       >
         <div className="flex min-h-0 min-w-0 flex-1 items-stretch gap-3">
           {monsterDrag != null && (
-            <div
-              draggable
+            <ReorderGripWithMenu
+              reorderAriaLabel={`Reorder ${monster.name} within encounter`}
               onDragStart={monsterDrag.onDragStart}
               onDragEnd={monsterDrag.onDragEnd}
-              aria-label={`Reorder ${monster.name} within encounter`}
+              menuItems={parentGripMenuItems}
               className="group flex w-9 shrink-0 cursor-grab touch-none select-none items-center justify-center rounded-md border border-transparent transition-[background-color,border-color,box-shadow,color] duration-150 ease-out hover:border-zinc-700/45 hover:bg-zinc-800/55 hover:shadow-sm active:cursor-grabbing motion-reduce:transition-none sm:w-10"
-            >
-              <ReorderGripIcon className="size-3.5 text-zinc-500 transition-colors group-hover:text-zinc-200 sm:size-4" />
-            </div>
+              iconClassName="size-3.5 text-zinc-500 transition-colors group-hover:text-zinc-200 sm:size-4"
+            />
           )}
           <div className="flex min-w-0 flex-1 items-center gap-3">
           <button
             type="button"
             data-group-color-trigger={groupKey}
-            aria-label={`Encounter group ${groupNumber}: creature ${ordinal} of ${monsterCount}. Group color ${colorLabel}. Activate to change group color.`}
+            aria-label={`Encounter group ${groupNumber}: Squad ${monster.name}, group color ${colorLabel}. Activate to change group color.`}
             aria-expanded={colorMenuOpen && colorMenuMonsterIndex === monsterIndex}
             aria-haspopup="dialog"
             className={`flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-full border-2 text-sm font-semibold tabular-nums leading-none outline-none transition-[filter,transform] duration-150 ease-out motion-reduce:transition-none hover:brightness-110 focus-visible:ring-2 focus-visible:ring-amber-500/45 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950 active:scale-[0.97] sm:size-10 sm:text-base ${badge.border} ${badge.bg} ${badge.text}`}
             onClick={(e) => onGroupColorOrdinalClick(monsterIndex, e.currentTarget)}
-          >
-            <span className="sr-only">{ordinal}</span>
-          </button>
+          ></button>
           <div className="min-w-0 flex-1">
             {hasFeatures && onStatCardToggle ? (
               <button
@@ -285,7 +296,7 @@ export function MinionGroupRow({
                     <span
                       className={`inline-flex size-5 shrink-0 items-center justify-center rounded-full border text-[0.6rem] font-semibold tabular-nums leading-none ${GROUP_COLOR_BADGE[captainGroupColor].border} ${GROUP_COLOR_BADGE[captainGroupColor].bg} ${GROUP_COLOR_BADGE[captainGroupColor].text}`}
                     >
-                      {captainRef!.monsterIndex + 1}
+                      {captainCreatureOrdinal ?? captainRef!.monsterIndex + 1}
                     </span>
                     <span className="min-w-0 truncate text-zinc-200">{captainMonster.name}</span>
                   </button>
@@ -390,18 +401,6 @@ export function MinionGroupRow({
               )}
             </div>
           </div>
-          {onDelete && (
-            <button
-              type="button"
-              aria-label={`Delete ${monster.name}`}
-              onClick={onDelete}
-              className="ml-1 shrink-0 cursor-pointer rounded p-1 text-zinc-500 transition-colors duration-150 hover:text-red-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-amber-500/70"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="size-3.5" aria-hidden>
-                <path fillRule="evenodd" d="M5 3.25V4H2.75a.75.75 0 0 0 0 1.5h.3l.815 8.15A1.5 1.5 0 0 0 5.357 15h5.285a1.5 1.5 0 0 0 1.493-1.35l.815-8.15h.3a.75.75 0 0 0 0-1.5H11v-.75A2.25 2.25 0 0 0 8.75 1h-1.5A2.25 2.25 0 0 0 5 3.25Zm2.25-.75a.75.75 0 0 0-.75.75V4h3v-.75a.75.75 0 0 0-.75-.75h-1.5ZM6.05 6a.75.75 0 0 1 .787.713l.275 5.5a.75.75 0 0 1-1.498.075l-.275-5.5A.75.75 0 0 1 6.05 6Zm3.9 0a.75.75 0 0 1 .712.787l-.275 5.5a.75.75 0 0 1-1.498-.075l.275-5.5A.75.75 0 0 1 9.95 6Z" clipRule="evenodd" />
-              </svg>
-            </button>
-          )}
           </div>
         </div>
       </div>
@@ -477,7 +476,8 @@ export function MinionGroupRow({
             key={`${groupKey}-minion-${mi}`}
             minion={minion}
             minionIndex={mi}
-            minionCount={minions.length}
+            creatureOrdinal={creatureOrdinalMap.get(`${monsterIndex}:${mi}`)!}
+            totalCreatures={totalCreatures}
             parentMonster={monster}
             gridRow={childRow}
             groupColor={groupColor}
@@ -502,6 +502,7 @@ export function MinionGroupRow({
                   : undefined
             }
             minionDrag={minionRowDrag?.(mi)}
+            onDeleteMinion={onDeleteMinion != null ? () => onDeleteMinion(mi) : undefined}
           />
         )
       })}
@@ -512,7 +513,8 @@ export function MinionGroupRow({
 function MinionChildRow({
   minion,
   minionIndex,
-  minionCount,
+  creatureOrdinal,
+  totalCreatures,
   parentMonster,
   gridRow,
   groupColor,
@@ -527,12 +529,14 @@ function MinionChildRow({
   conditionDnD,
   monsterCardDrawerOpen = false,
   onMinionStatCardClick,
+  onDeleteMinion,
   minionDrag,
   lifeToggleCue = null,
 }: {
   minion: { name: string; initials: string; conditions: readonly import('../types').ConditionEntry[]; dead: boolean }
   minionIndex: number
-  minionCount: number
+  creatureOrdinal: number
+  totalCreatures: number
   parentMonster: Monster
   gridRow: number
   groupColor: GroupColorId
@@ -548,8 +552,13 @@ function MinionChildRow({
   conditionDnD?: CreatureConditionDnDBinding
   monsterCardDrawerOpen?: boolean
   onMinionStatCardClick?: () => void
+  onDeleteMinion?: () => void
   minionDrag?: MinionRowDragBinding
 }) {
+  const minionGripMenuItems =
+    onDeleteMinion != null
+      ? ([{ id: 'delete', label: 'Delete', onSelect: onDeleteMinion, destructive: true }] as const)
+      : []
   const badge = GROUP_COLOR_BADGE[groupColor]
   const childCombat = rosterCombatStats(parentMonster)
   const bodyCell =
@@ -585,22 +594,21 @@ function MinionChildRow({
       >
         <div className={`flex min-h-0 min-w-0 flex-1 items-stretch gap-2 pl-6 sm:gap-3 ${deadDim}`}>
           {minionDrag != null && (
-            <div
-              draggable
+            <ReorderGripWithMenu
+              reorderAriaLabel={`Reorder ${minion.name} within horde`}
               onDragStart={minionDrag.onDragStart}
               onDragEnd={minionDrag.onDragEnd}
-              aria-label={`Reorder ${minion.name} within horde`}
+              menuItems={minionGripMenuItems}
               className="group flex w-8 shrink-0 cursor-grab touch-none select-none items-center justify-center rounded-md border border-transparent transition-[background-color,border-color,box-shadow,color] duration-150 ease-out hover:border-zinc-700/45 hover:bg-zinc-800/55 hover:shadow-sm active:cursor-grabbing motion-reduce:transition-none sm:w-9"
-            >
-              <ReorderGripIcon className="size-3.5 text-zinc-500 transition-colors group-hover:text-zinc-200" />
-            </div>
+              iconClassName="size-3.5 text-zinc-500 transition-colors group-hover:text-zinc-200"
+            />
           )}
           <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-3">
             <span
               className={`flex size-7 shrink-0 items-center justify-center rounded-full border-2 text-[0.65rem] font-semibold tabular-nums leading-none sm:size-8 sm:text-xs ${badge.border} ${badge.bg} ${badge.text}`}
-              aria-label={`${minion.name}: minion ${minionIndex + 1} of ${minionCount} in group ${groupNumber}`}
+              aria-label={`${minion.name}: creature ${creatureOrdinal} of ${totalCreatures} in encounter group ${groupNumber}`}
             >
-              {minionIndex + 1}
+              {creatureOrdinal}
             </span>
             <div className="min-w-0 flex-1">
               {onMinionStatCardClick ? (

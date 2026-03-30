@@ -6,14 +6,14 @@ import { EditableStaminaCell } from './EditableStaminaCell'
 import { MaripCluster } from './MaripCluster'
 import { StatCluster } from './StatCluster'
 import { CreatureConditionCell, type CreatureConditionDnDBinding } from './CreatureConditionCell'
-import { ReorderGripIcon } from './ReorderGripIcon'
+import { ReorderGripWithMenu } from './ReorderGripWithMenu'
 
 export function MonsterRowCells({
   monster,
   row,
   ordinal,
   monsterIndex,
-  monsterCount,
+  totalCreatures,
   groupKey,
   groupNumber,
   groupColor,
@@ -28,6 +28,7 @@ export function MonsterRowCells({
   monsterCardDrawerOpen = false,
   onMonsterCardNameClick,
   onDelete,
+  onConvertToSquad,
   onConfirmEot,
   isEotConfirmed,
   monsterDrag,
@@ -37,7 +38,7 @@ export function MonsterRowCells({
   row: number
   ordinal: number
   monsterIndex: number
-  monsterCount: number
+  totalCreatures: number
   groupKey: string
   groupNumber: number
   groupColor: GroupColorId
@@ -52,6 +53,7 @@ export function MonsterRowCells({
   monsterCardDrawerOpen?: boolean
   onMonsterCardNameClick?: () => void
   onDelete?: () => void
+  onConvertToSquad?: () => void
   onConfirmEot?: (label: string) => void
   isEotConfirmed?: (label: string) => boolean
   monsterDrag?: {
@@ -77,6 +79,14 @@ export function MonsterRowCells({
   const creatureNameColCell =
     'flex h-full min-h-[3.75rem] items-stretch px-2 py-2 sm:min-h-[4rem] sm:px-2.5 sm:py-2.5'
   const combat = rosterCombatStats(monster)
+  const gripMenuItems = [
+    ...(onConvertToSquad != null
+      ? [{ id: 'convert-squad', label: 'Convert to Squad', onSelect: onConvertToSquad } as const]
+      : []),
+    ...(onDelete != null
+      ? [{ id: 'delete', label: 'Delete', onSelect: onDelete, destructive: true } as const]
+      : []),
+  ]
   const rowTone =
     'transition-opacity duration-200 ease-out motion-reduce:transition-none ' +
     (turnComplete ? 'opacity-[0.52]' : 'opacity-100')
@@ -104,21 +114,20 @@ export function MonsterRowCells({
       >
         <div className="flex min-h-0 min-w-0 flex-1 items-stretch gap-3">
           {monsterDrag != null && (
-            <div
-              draggable
+            <ReorderGripWithMenu
+              reorderAriaLabel={`Reorder ${monster.name} within encounter`}
               onDragStart={monsterDrag.onDragStart}
               onDragEnd={monsterDrag.onDragEnd}
-              aria-label={`Reorder ${monster.name} within encounter`}
+              menuItems={gripMenuItems}
               className="group flex w-9 shrink-0 cursor-grab touch-none select-none items-center justify-center rounded-md border border-transparent transition-[background-color,border-color,box-shadow,color] duration-150 ease-out hover:border-zinc-700/45 hover:bg-zinc-800/55 hover:shadow-sm active:cursor-grabbing motion-reduce:transition-none sm:w-10"
-            >
-              <ReorderGripIcon className="size-3.5 text-zinc-500 transition-colors group-hover:text-zinc-200 sm:size-4" />
-            </div>
+              iconClassName="size-3.5 text-zinc-500 transition-colors group-hover:text-zinc-200 sm:size-4"
+            />
           )}
           <div className="flex min-w-0 flex-1 items-center gap-3">
           <button
             type="button"
             data-group-color-trigger={groupKey}
-            aria-label={`Encounter group ${groupNumber}: creature ${ordinal} of ${monsterCount}. Group color ${colorLabel}. Activate to change group color.`}
+            aria-label={`Encounter group ${groupNumber}: creature ${ordinal} of ${totalCreatures}. Group color ${colorLabel}. Activate to change group color.`}
             aria-expanded={colorMenuOpen && colorMenuMonsterIndex === monsterIndex}
             aria-haspopup="dialog"
             className={`flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-full border-2 text-sm font-semibold tabular-nums leading-none outline-none transition-[filter,transform] duration-150 ease-out motion-reduce:transition-none hover:brightness-110 focus-visible:ring-2 focus-visible:ring-amber-500/45 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950 active:scale-[0.97] sm:size-10 sm:text-base ${badge.border} ${badge.bg} ${badge.text}`}
@@ -150,18 +159,6 @@ export function MonsterRowCells({
               </>
             )}
           </div>
-          {onDelete && (
-            <button
-              type="button"
-              aria-label={`Delete ${monster.name}`}
-              onClick={onDelete}
-              className="ml-1 shrink-0 cursor-pointer rounded p-1 text-zinc-500 transition-colors duration-150 hover:text-red-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-amber-500/70"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="size-3.5" aria-hidden>
-                <path fillRule="evenodd" d="M5 3.25V4H2.75a.75.75 0 0 0 0 1.5h.3l.815 8.15A1.5 1.5 0 0 0 5.357 15h5.285a1.5 1.5 0 0 0 1.493-1.35l.815-8.15h.3a.75.75 0 0 0 0-1.5H11v-.75A2.25 2.25 0 0 0 8.75 1h-1.5A2.25 2.25 0 0 0 5 3.25Zm2.25-.75a.75.75 0 0 0-.75.75V4h3v-.75a.75.75 0 0 0-.75-.75h-1.5ZM6.05 6a.75.75 0 0 1 .787.713l.275 5.5a.75.75 0 0 1-1.498.075l-.275-5.5A.75.75 0 0 1 6.05 6Zm3.9 0a.75.75 0 0 1 .712.787l-.275 5.5a.75.75 0 0 1-1.498-.075l.275-5.5A.75.75 0 0 1 9.95 6Z" clipRule="evenodd" />
-              </svg>
-            </button>
-          )}
           </div>
         </div>
       </div>

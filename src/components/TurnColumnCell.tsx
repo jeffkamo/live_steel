@@ -1,5 +1,5 @@
 import type { DragEvent } from 'react'
-import { ReorderGripIcon } from './ReorderGripIcon'
+import { ReorderGripWithMenu } from './ReorderGripWithMenu'
 
 export function TurnColumnCell({
   acted,
@@ -37,6 +37,7 @@ export function GroupTurnColumn({
   onToggle,
   turnAriaLabel,
   encounterGroupDragHandle,
+  onDeleteEncounterGroup,
 }: {
   gridRowSpan: number
   acted: boolean
@@ -47,21 +48,34 @@ export function GroupTurnColumn({
     onDragEnd: (e: DragEvent) => void
     ariaLabel: string
   }
+  onDeleteEncounterGroup?: () => void
 }) {
+  const encounterGripMenuItems =
+    onDeleteEncounterGroup != null
+      ? ([
+          {
+            id: 'delete-group',
+            label: 'Delete',
+            onSelect: onDeleteEncounterGroup,
+            destructive: true,
+          },
+        ] as const)
+      : []
   return (
     <div
       style={{ gridColumn: 1, gridRow: `1 / span ${gridRowSpan}` }}
-      className="flex min-h-0 w-full min-w-0 flex-row items-stretch overflow-visible border-r border-zinc-800/60 bg-zinc-900/80"
+      className="flex h-full min-h-0 w-full min-w-0 flex-row items-stretch overflow-visible border-r border-zinc-800/60 bg-zinc-900/80"
     >
       {encounterGroupDragHandle != null && (
-        <div
-          draggable
-          onDragStart={encounterGroupDragHandle.onDragStart}
-          onDragEnd={encounterGroupDragHandle.onDragEnd}
-          aria-label={encounterGroupDragHandle.ariaLabel}
-          className="group flex w-7 shrink-0 cursor-grab touch-none select-none items-center justify-center self-stretch border-r border-zinc-800/60 px-0.5 transition-[background-color,border-color,box-shadow,color] duration-150 ease-out hover:border-zinc-600/55 hover:bg-zinc-800/55 active:cursor-grabbing motion-reduce:transition-none sm:w-8"
-        >
-          <ReorderGripIcon className="size-3.5 text-zinc-500 transition-colors group-hover:text-zinc-200 sm:size-4" />
+        <div className="flex h-full min-h-0 shrink-0 self-stretch border-r border-zinc-800/60 px-0.5 sm:px-0">
+          <ReorderGripWithMenu
+            reorderAriaLabel={encounterGroupDragHandle.ariaLabel}
+            onDragStart={encounterGroupDragHandle.onDragStart}
+            onDragEnd={encounterGroupDragHandle.onDragEnd}
+            menuItems={encounterGripMenuItems}
+            className="group flex w-7 cursor-grab touch-none select-none items-center justify-center transition-[background-color,border-color,box-shadow,color] duration-150 ease-out hover:border-zinc-600/55 hover:bg-zinc-800/55 active:cursor-grabbing motion-reduce:transition-none sm:w-8"
+            iconClassName="size-3.5 text-zinc-500 transition-colors group-hover:text-zinc-200 sm:size-4"
+          />
         </div>
       )}
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">

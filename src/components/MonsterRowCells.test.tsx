@@ -23,7 +23,7 @@ const baseProps = {
   row: 1,
   ordinal: 1,
   monsterIndex: 0,
-  monsterCount: 2,
+  totalCreatures: 2,
   groupKey: 'g0',
   groupNumber: 1,
   groupColor: 'red' as const,

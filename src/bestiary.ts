@@ -70,6 +70,14 @@ export function lookupStatblock(name: string): BestiaryStatblock | undefined {
   return bestiaryMap.get(name) ?? bestiaryMap.get(baseName(name))
 }
 
+/** Parsed max stamina from the bestiary for this creature name (0 if unknown). */
+export function maxStaminaForBestiaryName(name: string): number {
+  const sb = lookupStatblock(name)
+  if (!sb) return 0
+  const n = Number.parseInt(sb.stamina, 10)
+  return Number.isNaN(n) ? 0 : n
+}
+
 export function statblockNames(): readonly string[] {
   return [...bestiaryMap.keys()]
 }
