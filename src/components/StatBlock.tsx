@@ -181,14 +181,14 @@ function CoreStatsSection({ sb }: { sb: BestiaryStatblock }) {
 
       <StatBlockSeparator />
 
-      <div className="flex gap-x-2 gap-y-2">
+      <div className="grid w-full min-w-0 grid-cols-5 gap-x-1 sm:gap-x-1.5">
         {maripRow.map(({ letter, title, value }) => {
           const signed = formatSigned(value)
           return (
             <div
               key={letter}
               title={title}
-              className="flex min-w-0 flex-1 basis-[4.5rem] items-center justify-center gap-2"
+              className="flex min-w-0 items-center justify-start gap-1.5 whitespace-nowrap"
               aria-label={`${title} ${signed}`}
             >
               <span
