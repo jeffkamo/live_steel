@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type { DragEvent } from 'react'
 import type {
   CaptainRef,
@@ -51,6 +51,15 @@ import { GroupSection } from './components/GroupSection'
 import { StatBlock } from './components/StatBlock'
 import { TerrainRow } from './components/TerrainRow'
 
+const DRAWER_PANEL_W_CLASS = 'w-[min(20rem,calc(100vw-2rem))]'
+const MONSTER_DRAWER_CLOSE_MS = 300
+
+function prefersReducedMotion(): boolean {
+  if (typeof window === 'undefined') return false
+  const mq = window.matchMedia?.('(prefers-reduced-motion: reduce)')
+  return mq?.matches === true
+}
+
 function App() {
   const [encounterGroups, setEncounterGroups] = useState(cloneEncounterGroups)
   const [terrainRows, setTerrainRows] = useState(cloneTerrainRows)
@@ -60,6 +69,12 @@ function App() {
   )
   const [uiLocked, setUiLocked] = useState(false)
   const [monsterCardDrawer, setMonsterCardDrawer] = useState<MonsterCardDrawerState | null>(null)
+  const [drawerAnimatingOut, setDrawerAnimatingOut] = useState(false)
+  const [drawerEntered, setDrawerEntered] = useState(false)
+
+  const monsterCardDrawerRef = useRef(monsterCardDrawer)
+  monsterCardDrawerRef.current = monsterCardDrawer
+  const prevDrawerForEnterRef = useRef<MonsterCardDrawerState | null>(null)
 
   const eotTimersRef = useRef<Map<number, ReturnType<typeof setTimeout>>>(new Map())
   const [seActWindowElapsedGroup, setSeActWindowElapsedGroup] = useState<Set<number>>(() => new Set())
@@ -1027,20 +1042,33 @@ function App() {
         if (!m.minions || view.slot < 0 || view.slot >= m.minions.length) return
       }
       if (view.kind === 'minionParent' && (!m.minions || m.minions.length === 0)) return
-      setMonsterCardDrawer((prev) => {
-        if (
-          prev != null &&
-          prev.groupIndex === groupIndex &&
-          prev.monsterIndex === monsterIndex &&
-          monsterCardDrawerViewEquals(prev.view, view)
-        ) {
-          return null
+      const prev = monsterCardDrawerRef.current
+      if (
+        prev != null &&
+        prev.groupIndex === groupIndex &&
+        prev.monsterIndex === monsterIndex &&
+        monsterCardDrawerViewEquals(prev.view, view)
+      ) {
+        if (prefersReducedMotion()) {
+          setMonsterCardDrawer(null)
+        } else {
+          setDrawerAnimatingOut(true)
         }
-        return { groupIndex, monsterIndex, view }
-      })
+        return
+      }
+      setDrawerAnimatingOut(false)
+      setMonsterCardDrawer({ groupIndex, monsterIndex, view })
     },
     [encounterGroups],
   )
+
+  const requestMonsterDrawerClose = useCallback(() => {
+    if (prefersReducedMotion()) {
+      setMonsterCardDrawer(null)
+      return
+    }
+    setDrawerAnimatingOut(true)
+  }, [])
 
   useEffect(() => {
     if (!monsterCardDrawer) return
@@ -1058,6 +1086,48 @@ function App() {
       setMonsterCardDrawer(null)
     }
   }, [encounterGroups, monsterCardDrawer])
+
+  useLayoutEffect(() => {
+    if (!monsterCardDrawer) {
+      setDrawerEntered(false)
+      prevDrawerForEnterRef.current = null
+      return
+    }
+    if (drawerAnimatingOut) return
+
+    const hadPrevious = prevDrawerForEnterRef.current != null
+    prevDrawerForEnterRef.current = monsterCardDrawer
+
+    if (hadPrevious) {
+      setDrawerEntered(true)
+      return
+    }
+
+    if (prefersReducedMotion()) {
+      setDrawerEntered(true)
+      return
+    }
+    setDrawerEntered(false)
+    const id = requestAnimationFrame(() => {
+      requestAnimationFrame(() => setDrawerEntered(true))
+    })
+    return () => cancelAnimationFrame(id)
+  }, [monsterCardDrawer, drawerAnimatingOut])
+
+  useEffect(() => {
+    if (!drawerAnimatingOut) return
+    const t = window.setTimeout(() => {
+      setMonsterCardDrawer(null)
+      setDrawerAnimatingOut(false)
+    }, MONSTER_DRAWER_CLOSE_MS)
+    return () => clearTimeout(t)
+  }, [drawerAnimatingOut])
+
+  useEffect(() => {
+    if (monsterCardDrawer == null) {
+      setDrawerAnimatingOut(false)
+    }
+  }, [monsterCardDrawer])
 
   const drawerMonster =
     monsterCardDrawer != null
@@ -1295,50 +1365,56 @@ function App() {
           </div>
         </div>
 
-        <aside
-          id="monster-stat-card-drawer"
-          aria-label={drawerAsideAriaLabel}
-          aria-hidden={!statCardDrawerOpen}
-          className={`shrink-0 bg-zinc-950 transition-[width] duration-300 ease-out motion-reduce:transition-none ${
-            statCardDrawerOpen
-              ? 'w-[min(20rem,calc(100vw-2rem))] overflow-x-hidden'
-              : 'w-0 overflow-hidden'
+        <div
+          className={`sticky top-4 z-10 shrink-0 self-start overflow-hidden md:top-8 ${
+            monsterCardDrawer != null ? DRAWER_PANEL_W_CLASS : 'w-0'
           }`}
         >
-          {statCardDrawerOpen && drawerMonster && (
-            <div className="box-border flex w-[min(20rem,calc(100vw-2rem))] flex-col font-sans">
-              <div className="flex shrink-0 items-start justify-between gap-2 border-b border-zinc-800/60 px-3 py-2.5">
-                <h2 className="flex min-w-0 flex-1 items-center gap-1.5 text-sm font-medium tracking-wide">
-                  {drawerOrdinalBadge != null ? (
-                    <span
-                      className={`inline-flex size-7 shrink-0 items-center justify-center rounded-full border-2 text-xs font-semibold tabular-nums leading-none ${drawerOrdinalBadge.border} ${drawerOrdinalBadge.bg} ${drawerOrdinalBadge.text}`}
+          {monsterCardDrawer != null && (
+            <aside
+              id="monster-stat-card-drawer"
+              aria-label={drawerAsideAriaLabel}
+              aria-hidden={!statCardDrawerOpen}
+              className={`box-border flex h-[calc(100svh-2rem)] ${DRAWER_PANEL_W_CLASS} flex-col overflow-hidden bg-zinc-950 transition-transform duration-300 ease-out motion-reduce:transition-none md:h-[calc(100svh-4rem)] ${
+                drawerEntered && !drawerAnimatingOut ? 'translate-x-0' : 'translate-x-full'
+              }`}
+            >
+              {statCardDrawerOpen && drawerMonster && (
+                <div className="box-border flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden font-sans">
+                  <div className="flex shrink-0 items-start justify-between gap-2 border-b border-zinc-800/60 px-3 py-2.5">
+                    <h2 className="flex min-w-0 flex-1 items-center gap-1.5 text-sm font-medium tracking-wide">
+                      {drawerOrdinalBadge != null ? (
+                        <span
+                          className={`inline-flex size-7 shrink-0 items-center justify-center rounded-full border-2 text-xs font-semibold tabular-nums leading-none ${drawerOrdinalBadge.border} ${drawerOrdinalBadge.bg} ${drawerOrdinalBadge.text}`}
+                        >
+                          {drawerOrdinalInCircle != null ? drawerOrdinalInCircle : '\u00a0'}
+                        </span>
+                      ) : null}
+                      <span className="min-w-0 truncate text-zinc-200">{drawerTitleName}</span>
+                    </h2>
+                    <button
+                      type="button"
+                      aria-label="Close stat card drawer"
+                      onClick={requestMonsterDrawerClose}
+                      className="shrink-0 cursor-pointer rounded p-1 text-zinc-500 transition-colors hover:bg-zinc-800/80 hover:text-zinc-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500/60"
                     >
-                      {drawerOrdinalInCircle != null ? drawerOrdinalInCircle : '\u00a0'}
-                    </span>
-                  ) : null}
-                  <span className="min-w-0 truncate text-zinc-200">{drawerTitleName}</span>
-                </h2>
-                <button
-                  type="button"
-                  aria-label="Close stat card drawer"
-                  onClick={() => setMonsterCardDrawer(null)}
-                  className="shrink-0 cursor-pointer rounded p-1 text-zinc-500 transition-colors hover:bg-zinc-800/80 hover:text-zinc-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500/60"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="size-5" aria-hidden>
-                    <path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z" />
-                  </svg>
-                </button>
-              </div>
-              <div className="px-3 pb-4 pt-2">
-                <StatBlock
-                  features={drawerFeatures ?? []}
-                  monsterName={drawerMonster.name}
-                  encounterGroupColor={drawerGroupColor}
-                />
-              </div>
-            </div>
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="size-5" aria-hidden>
+                        <path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z" />
+                      </svg>
+                    </button>
+                  </div>
+                  <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-contain px-3 pb-4 pt-2">
+                    <StatBlock
+                      features={drawerFeatures ?? []}
+                      monsterName={drawerMonster.name}
+                      encounterGroupColor={drawerGroupColor}
+                    />
+                  </div>
+                </div>
+              )}
+            </aside>
           )}
-        </aside>
+        </div>
       </div>
     </div>
   )

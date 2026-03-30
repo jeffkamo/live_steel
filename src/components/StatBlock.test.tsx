@@ -472,9 +472,16 @@ function GroupSectionWithDrawerHarness(
         monsterCardDrawer={drawer}
         onToggleMonsterCard={toggle}
       />
-      <aside id="monster-stat-card-drawer" className="w-80 shrink-0 overflow-auto">
+      <aside
+        id="monster-stat-card-drawer"
+        className="sticky top-4 z-10 flex h-[calc(100svh-2rem)] w-80 shrink-0 flex-col self-start overflow-hidden"
+      >
         {openMonster && (openMonster.features?.length ?? 0) > 0 && (
-          <StatBlock features={openMonster.features!} monsterName={openMonster.name} />
+          <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+              <StatBlock features={openMonster.features!} monsterName={openMonster.name} />
+            </div>
+          </div>
         )}
       </aside>
     </div>
