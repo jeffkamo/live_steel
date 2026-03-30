@@ -1413,7 +1413,12 @@ describe('App', () => {
     expect(option).toBeTruthy()
     await user.click(within(option!).getByRole('button'))
 
-    expect(within(group1grid).getByText('Troll Whelp', { exact: true })).toBeInTheDocument()
+    expect(
+      within(group1grid).getByText('Troll Whelp', {
+        exact: true,
+        selector: 'span.block.truncate',
+      }),
+    ).toBeInTheDocument()
   })
 
   it('added monster has correct ordinal and stamina from bestiary', async () => {
@@ -1507,7 +1512,9 @@ describe('App', () => {
     expect(option).toBeTruthy()
     await user.click(within(option!).getByRole('button'))
 
-    expect(screen.getByText('Troll Whelp', { exact: true })).toBeInTheDocument()
+    expect(
+      screen.getByText('Troll Whelp', { exact: true, selector: 'span.block.truncate' }),
+    ).toBeInTheDocument()
   })
 
   it('new group turn toggle works independently', async () => {

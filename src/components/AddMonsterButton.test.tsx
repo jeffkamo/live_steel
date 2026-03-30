@@ -61,18 +61,22 @@ describe('AddMonsterButton', () => {
     expect(onAdd.mock.calls[0]![0]).toMatchObject({ name: 'Goblin Assassin' })
   })
 
-  it('closes the picker after selecting a monster', async () => {
+  it('keeps the picker open after selecting a monster so multiple can be added', async () => {
     const user = userEvent.setup()
-    render(<AddMonsterButton onAdd={vi.fn()} />)
+    const onAdd = vi.fn()
+    render(<AddMonsterButton onAdd={onAdd} />)
     await user.click(screen.getByRole('button', { name: /Add monster to group/i }))
-    await user.type(screen.getByRole('textbox', { name: /Search bestiary/i }), 'Goblin Assassin')
+    const input = screen.getByRole('textbox', { name: /Search bestiary/i })
+    await user.type(input, 'Goblin Assassin')
     const listbox = screen.getByRole('listbox', { name: /Available monsters/i })
     const option = within(listbox).getAllByRole('option').find(
       (el) => el.textContent === 'Goblin Assassin',
     )
     await user.click(within(option!).getByRole('button'))
-    expect(screen.queryByRole('textbox', { name: /Search bestiary/i })).not.toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /Add monster to group/i })).toBeInTheDocument()
+    expect(onAdd).toHaveBeenCalledTimes(1)
+    expect(screen.getByRole('textbox', { name: /Search bestiary/i })).toBeInTheDocument()
+    await user.click(within(option!).getByRole('button'))
+    expect(onAdd).toHaveBeenCalledTimes(2)
   })
 
   it('closes the picker when Escape is pressed', async () => {

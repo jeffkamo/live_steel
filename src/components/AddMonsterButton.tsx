@@ -38,9 +38,8 @@ export function AddMonsterButton({
   const handleSelect = useCallback(
     (name: string) => {
       onAdd(monsterFromBestiary(name))
-      handleClose()
     },
-    [onAdd, handleClose],
+    [onAdd],
   )
 
   useEffect(() => {
