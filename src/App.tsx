@@ -27,7 +27,6 @@ import {
   cloneTerrainRows,
   CONDITION_DRAG_MIME,
   ENCOUNTER_GROUP_DRAG_MIME,
-  ENCOUNTER_GROUPS,
   MONSTER_DRAG_MIME,
   mapMinionIndexAfterReorder,
   mapMinionDrawerSlotAfterMinionInserted,
@@ -123,7 +122,7 @@ function initStateFromStorage(): {
   return {
     encounterGroups: cloneEncounterGroups(),
     terrainRows: cloneTerrainRows(),
-    groupTurnActed: ENCOUNTER_GROUPS.map(() => false),
+    groupTurnActed: [],
     encounterIndex: newIndex,
     activeEncounterId: id,
     encounterName: name,

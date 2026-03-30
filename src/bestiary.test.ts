@@ -16,7 +16,7 @@ import {
   deriveInitials,
   type BestiaryStatblock,
 } from './bestiary'
-import { cloneEncounterGroups } from './data'
+import { cloneExampleEncounterGroups } from './data'
 import type { Monster } from './types'
 
 describe('baseName', () => {
@@ -292,9 +292,9 @@ describe('isMaliceCreature', () => {
   })
 })
 
-describe('cloneEncounterGroups bestiary integration', () => {
+describe('cloneExampleEncounterGroups bestiary integration', () => {
   it('populates features from bestiary for Goblin Assassin 1', () => {
-    const groups = cloneEncounterGroups()
+    const groups = cloneExampleEncounterGroups()
     const goblinAssassin = groups[0]!.monsters[0]!
     expect(goblinAssassin.name).toBe('Goblin Assassin 1')
     expect(goblinAssassin.features).toBeDefined()
@@ -303,7 +303,7 @@ describe('cloneEncounterGroups bestiary integration', () => {
   })
 
   it('populates features from bestiary for Goblin Underboss', () => {
-    const groups = cloneEncounterGroups()
+    const groups = cloneExampleEncounterGroups()
     const underboss = groups[1]!.monsters[0]!
     expect(underboss.name).toBe('Goblin Underboss')
     expect(underboss.features).toBeDefined()
@@ -311,7 +311,7 @@ describe('cloneEncounterGroups bestiary integration', () => {
   })
 
   it('populates minion group features from first minion name', () => {
-    const groups = cloneEncounterGroups()
+    const groups = cloneExampleEncounterGroups()
     const minionGroup = groups[2]!.monsters[0]!
     expect(minionGroup.name).toBe('Minions')
     expect(minionGroup.features).toBeDefined()
@@ -320,7 +320,7 @@ describe('cloneEncounterGroups bestiary integration', () => {
   })
 
   it('populates features from bestiary for Goblin Stinker in default encounter', () => {
-    const groups = cloneEncounterGroups()
+    const groups = cloneExampleEncounterGroups()
     const stinker = groups[3]!.monsters[2]!
     expect(stinker.name).toBe('Goblin Stinker')
     expect(stinker.features).toBeDefined()
@@ -328,7 +328,7 @@ describe('cloneEncounterGroups bestiary integration', () => {
   })
 
   it('features from bestiary have correct MonsterFeature shape', () => {
-    const groups = cloneEncounterGroups()
+    const groups = cloneExampleEncounterGroups()
     const features = groups[0]!.monsters[0]!.features!
     for (const f of features) {
       expect(f.type).toBe('feature')
@@ -338,7 +338,7 @@ describe('cloneEncounterGroups bestiary integration', () => {
   })
 
   it('bestiary features contain power roll effects with tier data', () => {
-    const groups = cloneEncounterGroups()
+    const groups = cloneExampleEncounterGroups()
     const features = groups[0]!.monsters[0]!.features!
     const withRoll = features.flatMap((f) => f.effects ?? []).filter((e) => e.roll)
     expect(withRoll.length).toBeGreaterThan(0)

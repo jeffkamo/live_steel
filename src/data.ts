@@ -1461,6 +1461,15 @@ function resolveFeatures(m: MonsterSeed): MonsterFeature[] {
 }
 
 export function cloneEncounterGroups(): EncounterGroup[] {
+  return []
+}
+
+export function cloneTerrainRows(): TerrainRowState[] {
+  return []
+}
+
+/** Build encounter groups from the example seed data (for tests). */
+export function cloneExampleEncounterGroups(): EncounterGroup[] {
   return ENCOUNTER_GROUPS.map((group, groupIndex) => ({
     id: newEncounterGroupId(),
     color: GROUP_COLOR_ORDER[groupIndex % GROUP_COLOR_ORDER.length]!,
@@ -1480,7 +1489,8 @@ export function cloneEncounterGroups(): EncounterGroup[] {
   }))
 }
 
-export function cloneTerrainRows(): TerrainRowState[] {
+/** Build terrain rows from the example seed data (for tests). */
+export function cloneExampleTerrainRows(): TerrainRowState[] {
   return TERRAIN_ROWS.map((r) => ({
     object: r.object,
     stamina: [r.stamina[0], r.stamina[1]] as [number, number],

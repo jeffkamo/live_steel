@@ -16,14 +16,14 @@ import {
   INDEX_KEY,
   type PersistedEncounterIndex,
 } from './persistence'
-import { cloneEncounterGroups, cloneTerrainRows, ENCOUNTER_GROUPS } from './data'
+import { cloneExampleEncounterGroups, cloneExampleTerrainRows, ENCOUNTER_GROUPS } from './data'
 
 function makeGroups(): EncounterGroup[] {
-  return cloneEncounterGroups()
+  return cloneExampleEncounterGroups()
 }
 
 function makeTerrain(): TerrainRowState[] {
-  return cloneTerrainRows()
+  return cloneExampleTerrainRows()
 }
 
 function makeTurnActed(): boolean[] {

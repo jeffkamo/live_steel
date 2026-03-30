@@ -3,6 +3,8 @@ import {
   conditionEntryFromLabel,
   cloneEncounterGroups,
   cloneTerrainRows,
+  cloneExampleEncounterGroups,
+  cloneExampleTerrainRows,
   computeMonsterInsertIndex,
   findConditionOnMonster,
   conditionStateTitle,
@@ -643,8 +645,20 @@ describe('reorderEncounterGroupsWithCaptainRemap', () => {
 })
 
 describe('cloneEncounterGroups', () => {
+  it('returns an empty array for a blank slate', () => {
+    expect(cloneEncounterGroups()).toEqual([])
+  })
+})
+
+describe('cloneTerrainRows', () => {
+  it('returns an empty array for a blank slate', () => {
+    expect(cloneTerrainRows()).toEqual([])
+  })
+})
+
+describe('cloneExampleEncounterGroups', () => {
   it('assigns a non-empty id on each group', () => {
-    const groups = cloneEncounterGroups()
+    const groups = cloneExampleEncounterGroups()
     for (const g of groups) {
       expect(typeof g.id).toBe('string')
       expect(g.id.length).toBeGreaterThan(0)
@@ -652,32 +666,32 @@ describe('cloneEncounterGroups', () => {
   })
 
   it('returns deep copies that are independent of seed data', () => {
-    const a = cloneEncounterGroups()
-    const b = cloneEncounterGroups()
+    const a = cloneExampleEncounterGroups()
+    const b = cloneExampleEncounterGroups()
     a[0]!.monsters[0]!.stamina[0] = 999
     expect(b[0]!.monsters[0]!.stamina[0]).not.toBe(999)
   })
 
   it('assigns sequential colors from GROUP_COLOR_ORDER', () => {
-    const groups = cloneEncounterGroups()
+    const groups = cloneExampleEncounterGroups()
     groups.forEach((g, i) => {
       expect(g.color).toBe(GROUP_COLOR_ORDER[i % GROUP_COLOR_ORDER.length])
     })
   })
 
   it('converts string conditions into ConditionEntry objects', () => {
-    const groups = cloneEncounterGroups()
+    const groups = cloneExampleEncounterGroups()
     const first = groups[0]!.monsters[0]!
     expect(first.conditions[0]).toEqual({ label: 'Weakened', state: 'neutral' })
   })
 
   it('produces the correct number of groups', () => {
-    expect(cloneEncounterGroups().length).toBe(ENCOUNTER_GROUPS.length)
+    expect(cloneExampleEncounterGroups().length).toBe(ENCOUNTER_GROUPS.length)
   })
 
   it('deeply clones marip arrays', () => {
-    const a = cloneEncounterGroups()
-    const b = cloneEncounterGroups()
+    const a = cloneExampleEncounterGroups()
+    const b = cloneExampleEncounterGroups()
     const marip = a[0]!.monsters[0]!.marip
     if (marip) {
       ;(marip as unknown as number[])[0] = 999
@@ -686,28 +700,28 @@ describe('cloneEncounterGroups', () => {
   })
 
   it('clones marip for Goblin Stinker from seed', () => {
-    const groups = cloneEncounterGroups()
+    const groups = cloneExampleEncounterGroups()
     const stinker = groups[3]!.monsters[2]!
     expect(stinker.name).toBe('Goblin Stinker')
     expect(stinker.marip).toEqual([-2, 1, 0, 0, 2])
   })
 })
 
-describe('cloneTerrainRows', () => {
+describe('cloneExampleTerrainRows', () => {
   it('returns deep copies independent of seed data', () => {
-    const a = cloneTerrainRows()
-    const b = cloneTerrainRows()
+    const a = cloneExampleTerrainRows()
+    const b = cloneExampleTerrainRows()
     a[0]!.stamina[0] = 999
     expect(b[0]!.stamina[0]).not.toBe(999)
   })
 
   it('converts string conditions into ConditionEntry objects', () => {
-    const rows = cloneTerrainRows()
+    const rows = cloneExampleTerrainRows()
     expect(rows[0]!.conditions[0]).toEqual({ label: 'Slowed', state: 'neutral' })
   })
 
   it('produces the correct number of rows', () => {
-    expect(cloneTerrainRows().length).toBe(TERRAIN_ROWS.length)
+    expect(cloneExampleTerrainRows().length).toBe(TERRAIN_ROWS.length)
   })
 })
 
@@ -807,7 +821,7 @@ describe('parseConditionDragPayload', () => {
 })
 
 describe('transferConditionBetweenCreatures', () => {
-  const fresh = () => cloneEncounterGroups()
+  const fresh = () => cloneExampleEncounterGroups()
 
   it('returns null when source and target are the same ref', () => {
     const groups = fresh()

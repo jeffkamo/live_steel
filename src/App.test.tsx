@@ -10,7 +10,7 @@ import {
   serializeEncounterState,
   type PersistedEncounterIndex,
 } from './persistence'
-import { cloneEncounterGroups, cloneTerrainRows, ENCOUNTER_GROUPS } from './data'
+import { cloneExampleEncounterGroups, cloneExampleTerrainRows, ENCOUNTER_GROUPS } from './data'
 
 function mockMonsterDataTransfer(): DataTransfer {
   const store = new Map<string, string>()
@@ -43,7 +43,42 @@ async function chooseDeleteFromEncounterRowGrip(
 const turnButton = (n: number, state: 'pending' | 'acted') =>
   new RegExp(`^Encounter group ${n}: turn ${state}$`, 'i')
 
+const SEED_ENCOUNTER_ID = 'test-encounter-1'
+
+function seedExampleEncounterInLocalStorage() {
+  const groups = cloneExampleEncounterGroups()
+  const terrain = cloneExampleTerrainRows()
+  const turns = groups.map(() => false)
+  const index: PersistedEncounterIndex = {
+    version: 1,
+    encounters: [{ id: SEED_ENCOUNTER_ID, name: 'Encounter 1' }],
+    activeId: SEED_ENCOUNTER_ID,
+  }
+  localStorage.setItem(INDEX_KEY, JSON.stringify(index))
+  localStorage.setItem(
+    encounterStorageKey(SEED_ENCOUNTER_ID),
+    serializeEncounterState(groups, terrain, turns),
+  )
+}
+
 describe('App', () => {
+  let appStore: Record<string, string>
+  beforeEach(() => {
+    appStore = {}
+    vi.stubGlobal('localStorage', {
+      getItem: (key: string) => appStore[key] ?? null,
+      setItem: (key: string, value: string) => { appStore[key] = value },
+      removeItem: (key: string) => { delete appStore[key] },
+      clear: () => { appStore = {} },
+      get length() { return Object.keys(appStore).length },
+      key: (i: number) => Object.keys(appStore)[i] ?? null,
+    } as Storage)
+    seedExampleEncounterInLocalStorage()
+  })
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
   it('renders app name, encounter name, and terrain section title', () => {
     render(<App />)
     expect(screen.getByRole('heading', { level: 1, name: /^Live Steel$/i })).toBeInTheDocument()
@@ -2444,6 +2479,7 @@ describe('ADV-001 — local storage persistence', () => {
   beforeEach(() => {
     store = {}
     vi.stubGlobal('localStorage', mockStorage())
+    seedExampleEncounterInLocalStorage()
   })
   afterEach(() => {
     vi.unstubAllGlobals()
@@ -2494,11 +2530,12 @@ describe('ADV-001 — local storage persistence', () => {
     expect(screen.getByText('4 / 15')).toBeInTheDocument()
   })
 
-  it('falls back to default state when localStorage contains corrupt data', () => {
+  it('falls back to empty default state when localStorage contains corrupt data', () => {
+    localStorage.clear()
     localStorage.setItem(STORAGE_KEY, '{invalid json!!!}')
     render(<App />)
-    expect(screen.getByText('Goblin Assassin 1', { exact: true })).toBeInTheDocument()
-    expect(screen.getByText('5 / 15')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 1, name: /^Live Steel$/i })).toBeInTheDocument()
+    expect(screen.queryByText('Goblin Assassin 1', { exact: true })).not.toBeInTheDocument()
   })
 
   it('does not crash when localStorage.setItem throws quota error', () => {
@@ -2525,6 +2562,7 @@ describe('ADV-002 — reload local storage state on page load', () => {
   beforeEach(() => {
     store = {}
     vi.stubGlobal('localStorage', mockStorage())
+    seedExampleEncounterInLocalStorage()
   })
   afterEach(() => {
     vi.unstubAllGlobals()
@@ -2556,43 +2594,45 @@ describe('ADV-002 — reload local storage state on page load', () => {
     expect(within(condGroupAfter).getByRole('button', { name: /^Remove Bleeding$/i })).toBeInTheDocument()
   })
 
-  it('falls back to defaults when localStorage is empty (no saved data)', () => {
+  it('starts with empty encounter when localStorage has no saved data', () => {
+    localStorage.clear()
     render(<App />)
-    expect(screen.getByText('Goblin Assassin 1', { exact: true })).toBeInTheDocument()
-    expect(screen.getByText('5 / 15')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 1, name: /^Live Steel$/i })).toBeInTheDocument()
+    expect(screen.queryByText('Goblin Assassin 1', { exact: true })).not.toBeInTheDocument()
   })
 
-  it('falls back to defaults on version mismatch', () => {
-    const groups = cloneEncounterGroups()
+  it('falls back to empty default on version mismatch', () => {
+    localStorage.clear()
+    const groups = cloneExampleEncounterGroups()
     groups[0]!.monsters[0]!.stamina = [1, 15]
     const payload = {
       version: 999,
       encounterGroups: groups,
-      terrainRows: cloneTerrainRows(),
+      terrainRows: cloneExampleTerrainRows(),
       groupTurnActed: ENCOUNTER_GROUPS.map(() => false),
     }
     localStorage.setItem(STORAGE_KEY, JSON.stringify(payload))
     render(<App />)
-    expect(screen.getByText('5 / 15')).toBeInTheDocument()
+    expect(screen.queryByText('1 / 15')).not.toBeInTheDocument()
   })
 
-  it('falls back to defaults when localStorage.getItem throws SecurityError', () => {
+  it('falls back to empty default when localStorage.getItem throws SecurityError', () => {
     vi.stubGlobal('localStorage', {
       ...mockStorage(),
       getItem: () => { throw new Error('SecurityError') },
       setItem: () => { throw new Error('SecurityError') },
     } as unknown as Storage)
     expect(() => render(<App />)).not.toThrow()
-    expect(screen.getByText('Goblin Assassin 1', { exact: true })).toBeInTheDocument()
+    expect(screen.queryByText('Goblin Assassin 1', { exact: true })).not.toBeInTheDocument()
   })
 
   it('restores added-then-deleted group state across reload', async () => {
-    const groups = cloneEncounterGroups()
+    const groups = cloneExampleEncounterGroups()
     groups.splice(0, 1)
-    const terrain = cloneTerrainRows()
+    const terrain = cloneExampleTerrainRows()
     const turns = groups.map(() => false)
     const json = serializeEncounterState(groups, terrain, turns)
-    localStorage.setItem(STORAGE_KEY, json)
+    localStorage.setItem(encounterStorageKey('test-encounter-1'), json)
 
     render(<App />)
     expect(screen.queryByText('Goblin Assassin 1', { exact: true })).not.toBeInTheDocument()
@@ -2615,6 +2655,7 @@ describe('ADV-003 — create new encounters and name them', () => {
   beforeEach(() => {
     store = {}
     vi.stubGlobal('localStorage', mockStorage())
+    seedExampleEncounterInLocalStorage()
   })
   afterEach(() => {
     vi.unstubAllGlobals()
@@ -2658,18 +2699,15 @@ describe('ADV-003 — create new encounters and name them', () => {
     expect(screen.getByText('Goblin Ambush')).toBeInTheDocument()
   })
 
-  it('new encounter starts with default seed data', async () => {
+  it('new encounter starts with a blank slate', async () => {
     const user = userEvent.setup()
     render(<App />)
-    const staminaGroup = screen.getByRole('group', { name: /^Edit stamina for Goblin Assassin 1$/i })
-    await user.hover(staminaGroup)
-    await user.click(within(staminaGroup).getByRole('button', { name: /^Decrease stamina by 1$/i }))
-    expect(screen.getByText('4 / 15')).toBeInTheDocument()
+    expect(screen.getByText('Goblin Assassin 1', { exact: true })).toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: /create new encounter/i }))
     await user.type(screen.getByRole('textbox', { name: /encounter name/i }), 'Fresh{Enter}')
 
-    expect(screen.getByText('5 / 15')).toBeInTheDocument()
+    expect(screen.queryByText('Goblin Assassin 1', { exact: true })).not.toBeInTheDocument()
   })
 
   it('cancels encounter creation via Cancel button', async () => {
@@ -2729,9 +2767,10 @@ describe('ADV-003 — create new encounters and name them', () => {
   })
 
   it('migrates legacy single-encounter data and displays default name', () => {
-    const groups = cloneEncounterGroups()
+    localStorage.clear()
+    const groups = cloneExampleEncounterGroups()
     groups[0]!.monsters[0]!.stamina = [3, 15]
-    const json = serializeEncounterState(groups, cloneTerrainRows(), ENCOUNTER_GROUPS.map(() => false))
+    const json = serializeEncounterState(groups, cloneExampleTerrainRows(), ENCOUNTER_GROUPS.map(() => false))
     localStorage.setItem(STORAGE_KEY, json)
 
     render(<App />)
@@ -2755,6 +2794,7 @@ describe('ADV-004 — switch between encounters', () => {
   beforeEach(() => {
     store = {}
     vi.stubGlobal('localStorage', mockStorage())
+    seedExampleEncounterInLocalStorage()
   })
   afterEach(() => {
     vi.unstubAllGlobals()
@@ -2807,7 +2847,7 @@ describe('ADV-004 — switch between encounters', () => {
     await user.click(screen.getByRole('button', { name: /create new encounter/i }))
     await user.type(screen.getByRole('textbox', { name: /encounter name/i }), 'Dungeon{Enter}')
     expect(screen.getByRole('button', { name: /switch encounter/i })).toHaveTextContent('Dungeon')
-    expect(screen.getByText('5 / 15')).toBeInTheDocument()
+    expect(screen.queryByText('Goblin Assassin 1', { exact: true })).not.toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: /switch encounter/i }))
     const options = screen.getAllByRole('option')
@@ -2819,20 +2859,17 @@ describe('ADV-004 — switch between encounters', () => {
   it('saves current state before switching away', async () => {
     const user = userEvent.setup()
     render(<App />)
-    await user.click(screen.getByRole('button', { name: /create new encounter/i }))
-    await user.type(screen.getByRole('textbox', { name: /encounter name/i }), 'Second{Enter}')
-
     const staminaGroup = screen.getByRole('group', { name: /^Edit stamina for Goblin Assassin 1$/i })
     await user.hover(staminaGroup)
     await user.click(within(staminaGroup).getByRole('button', { name: /^Decrease stamina by 1$/i }))
     expect(screen.getByText('4 / 15')).toBeInTheDocument()
 
-    await user.click(screen.getByRole('button', { name: /switch encounter/i }))
-    await user.click(screen.getAllByRole('option')[0]!)
-    expect(screen.getByText('5 / 15')).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: /create new encounter/i }))
+    await user.type(screen.getByRole('textbox', { name: /encounter name/i }), 'Second{Enter}')
+    expect(screen.queryByText('Goblin Assassin 1', { exact: true })).not.toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: /switch encounter/i }))
-    await user.click(screen.getAllByRole('option')[1]!)
+    await user.click(screen.getAllByRole('option')[0]!)
     expect(screen.getByText('4 / 15')).toBeInTheDocument()
   })
 
@@ -2891,8 +2928,7 @@ describe('ADV-004 — switch between encounters', () => {
     await user.click(screen.getByRole('button', { name: /create new encounter/i }))
     await user.type(screen.getByRole('textbox', { name: /encounter name/i }), 'Clean{Enter}')
 
-    const cleanCondCell = screen.getAllByTestId(/^condition-drop-target/)[0]!
-    expect(within(cleanCondCell).getByRole('button', { name: /bleeding/i })).toHaveAttribute('aria-pressed', 'false')
+    expect(screen.queryAllByTestId(/^condition-drop-target/).length).toBe(0)
 
     await user.click(screen.getByRole('button', { name: /switch encounter/i }))
     await user.click(screen.getAllByRole('option')[0]!)
