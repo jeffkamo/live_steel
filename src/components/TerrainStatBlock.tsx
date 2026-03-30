@@ -1,5 +1,5 @@
 import { lookupTerrain, terrainFeatures, type TerrainStatblock } from '../terrainBestiary'
-import { StatBlock } from './StatBlock'
+import { FeatureList } from './StatBlock'
 
 function TerrainCoreStats({ sb }: { sb: TerrainStatblock }) {
   const statValueClass = 'text-base font-medium tabular-nums leading-tight text-zinc-100'
@@ -60,18 +60,16 @@ export function TerrainStatBlock({ terrainName }: { terrainName: string }) {
   }
 
   return (
-    <div role="region" aria-label={`Stat block for ${terrainName}`}>
-      {sb && (
-        <div className="mb-3 rounded-md border border-amber-950/55 border-l-2 border-l-amber-700/45 bg-[linear-gradient(165deg,rgb(39_39_42/0.95)_0%,rgb(9_9_11/0.98)_55%)] px-3 pt-2.5 pb-3 shadow-[inset_0_1px_0_rgb(251_191_36/0.07)]">
-          <TerrainCoreStats sb={sb} />
-        </div>
-      )}
-      {features.length > 0 && (
-        <StatBlock
-          features={features}
-          monsterName={terrainName}
-        />
-      )}
+    <div role="region" aria-label={`Stat block for ${terrainName}`} className="py-2">
+      <div className="rounded-md border border-amber-950/55 border-l-2 border-l-amber-700/45 bg-[linear-gradient(165deg,rgb(39_39_42/0.95)_0%,rgb(9_9_11/0.98)_55%)] px-3 pt-2.5 pb-3 shadow-[inset_0_1px_0_rgb(251_191_36/0.07)]">
+        {sb && <TerrainCoreStats sb={sb} />}
+        {sb && features.length > 0 && (
+          <div className="mt-3 border-t border-zinc-700/40 pt-3">
+            <FeatureList features={features} />
+          </div>
+        )}
+        {!sb && features.length > 0 && <FeatureList features={features} />}
+      </div>
     </div>
   )
 }

@@ -8,6 +8,7 @@ export type PowerRollEffect = {
   tier2?: string
   tier3?: string
   name?: string
+  cost?: string
   effect?: string
 }
 
@@ -21,6 +22,7 @@ export type MonsterFeature = {
   usage?: string
   distance?: string
   target?: string
+  trigger?: string
   cost?: string
   effects?: PowerRollEffect[]
 }

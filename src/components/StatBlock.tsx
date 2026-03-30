@@ -1,4 +1,4 @@
-import { Fragment, useId, useLayoutEffect, useRef, useState } from 'react'
+import { Fragment, type ReactNode, useId, useLayoutEffect, useRef, useState } from 'react'
 import type { MonsterFeature, PowerRollEffect } from '../types'
 import type { BestiaryStatblock } from '../bestiary'
 import { lookupStatblock } from '../bestiary'
@@ -10,6 +10,54 @@ import {
   featureIconToDrawSteelGlyph,
   keywordDrawSteelGlyph,
 } from '../drawSteelGlyphs'
+
+/**
+ * Renders plain text with lightweight markdown: **bold** and bullet lists
+ * (`\n\n- item`). Everything else is passed through as-is.
+ */
+function RichText({ text }: { text: string }) {
+  const blocks = text.split(/\n\n/)
+  const result: ReactNode[] = []
+
+  for (let bi = 0; bi < blocks.length; bi++) {
+    const block = blocks[bi]
+    const bulletLines = block.split(/\n/).filter((l) => l.startsWith('- '))
+
+    if (bulletLines.length > 0 && bulletLines.length === block.split(/\n/).filter(Boolean).length) {
+      result.push(
+        <ul key={bi} className="mt-1.5 list-disc space-y-1 pl-4">
+          {bulletLines.map((line, li) => (
+            <li key={li}>{renderInlineBold(line.slice(2))}</li>
+          ))}
+        </ul>,
+      )
+    } else {
+      if (bi > 0) result.push(' ')
+      result.push(<Fragment key={bi}>{renderInlineBold(block)}</Fragment>)
+    }
+  }
+
+  return <>{result}</>
+}
+
+function renderInlineBold(text: string): ReactNode {
+  const parts = text.split(/(\*\*[^*]+\*\*)/)
+  if (parts.length === 1) return text
+  return (
+    <>
+      {parts.map((part, i) => {
+        if (part.startsWith('**') && part.endsWith('**')) {
+          return (
+            <span key={i} className="font-semibold text-zinc-200">
+              {part.slice(2, -2)}
+            </span>
+          )
+        }
+        return <Fragment key={i}>{part}</Fragment>
+      })}
+    </>
+  )
+}
 
 /** Shared stat-block panel finish (gradient + inner highlight) */
 const statBlockVeneerClass =
@@ -217,7 +265,9 @@ function CoreStatsSection({ sb }: { sb: BestiaryStatblock }) {
 }
 
 function PowerRollTiers({ effect }: { effect: PowerRollEffect }) {
-  if (!effect.roll) return null
+  const hasTiers = effect.tier1 || effect.tier2 || effect.tier3
+  if (!hasTiers) return null
+
   const tiers: { band: string; tierIdx: 0 | 1 | 2; text: string | undefined }[] = [
     { band: '≤11', tierIdx: 0, text: effect.tier1 },
     { band: '12–16', tierIdx: 1, text: effect.tier2 },
@@ -225,7 +275,9 @@ function PowerRollTiers({ effect }: { effect: PowerRollEffect }) {
   ]
   return (
     <div className="mt-2">
-      <div className="mb-1 text-[0.65rem] font-semibold tracking-wide text-zinc-400">{effect.roll}</div>
+      {effect.roll && (
+        <div className="mb-1 text-[0.65rem] font-semibold tracking-wide text-zinc-400">{effect.roll}</div>
+      )}
       <div className="grid grid-cols-[max-content_minmax(0,1fr)] items-center gap-x-2 gap-y-1 text-[0.72rem] leading-snug">
         {tiers.map(({ band, tierIdx, text }) =>
           text ? (
@@ -239,13 +291,53 @@ function PowerRollTiers({ effect }: { effect: PowerRollEffect }) {
                   {DRAW_STEEL_TIER_GLYPHS[tierIdx]}
                 </span>
               </div>
-              <span className="min-w-0 text-zinc-300">{text}</span>
+              <span className="min-w-0 text-zinc-300"><RichText text={text} /></span>
             </Fragment>
           ) : null,
         )}
       </div>
     </div>
   )
+}
+
+/**
+ * Renders a single effect entry. Handles:
+ * - Pure power rolls (roll + tiers, no effect text)
+ * - Pure text effects (with optional name label)
+ * - Hybrid effects that have both effect text and tier data (e.g. terrain
+ *   traits where the effect paragraph is followed by a Presence test table)
+ */
+function EffectBlock({ eff }: { eff: PowerRollEffect }) {
+  const hasTiers = eff.tier1 || eff.tier2 || eff.tier3
+  const hasRoll = !!eff.roll
+
+  if (hasRoll && !eff.effect) {
+    return <PowerRollTiers effect={eff} />
+  }
+
+  if (eff.effect) {
+    return (
+      <div className="text-[0.72rem] leading-snug text-zinc-300">
+        {eff.name ? (
+          <>
+            <span className="font-semibold text-zinc-200">
+              {eff.name}
+              {eff.cost ? ` (${eff.cost})` : ''}
+              :
+            </span>{' '}
+          </>
+        ) : null}
+        <RichText text={eff.effect} />
+        {hasTiers && <PowerRollTiers effect={eff} />}
+      </div>
+    )
+  }
+
+  if (hasTiers) {
+    return <PowerRollTiers effect={eff} />
+  }
+
+  return null
 }
 
 function StatBlockFeatureIcon({ icon }: { icon?: string }) {
@@ -345,25 +437,18 @@ function AbilityBlock({ feature }: { feature: MonsterFeature }) {
           </div>
         )}
 
+        {feature.trigger && (
+          <p className="text-[0.72rem] leading-snug text-zinc-300">
+            <span className="font-semibold text-zinc-200">Trigger:</span>{' '}
+            <RichText text={feature.trigger} />
+          </p>
+        )}
+
         {feature.effects && feature.effects.length > 0 && (
           <div className="space-y-1 pt-0.5">
-            {feature.effects.map((eff, i) => {
-              if (eff.roll) {
-                return <PowerRollTiers key={i} effect={eff} />
-              }
-              if (eff.effect) {
-                return (
-                  <p key={i} className="text-[0.72rem] leading-snug text-zinc-300">
-                    {eff.name ? (
-                      <span className="font-semibold text-zinc-200">{eff.name}.</span>
-                    ) : null}
-                    {eff.name ? ' ' : null}
-                    {eff.effect}
-                  </p>
-                )
-              }
-              return null
-            })}
+            {feature.effects.map((eff, i) => (
+              <EffectBlock key={i} eff={eff} />
+            ))}
           </div>
         )}
       </div>
@@ -372,24 +457,57 @@ function AbilityBlock({ feature }: { feature: MonsterFeature }) {
 }
 
 function TraitBlock({ feature }: { feature: MonsterFeature }) {
-  const body =
-    feature.effects?.map((e) => e.effect).filter(Boolean).join(' ') ?? ''
+  const effects = feature.effects ?? []
+  const hasStructuredEffects = effects.some((e) => e.name || e.roll || e.tier1)
 
   return (
     <div className="grid grid-cols-[2rem_minmax(0,1fr)] gap-x-2 sm:grid-cols-[2.25rem_minmax(0,1fr)]">
       <div className="flex justify-center pt-0.5 text-lg leading-none" aria-hidden>
         <StatBlockFeatureIcon icon={feature.icon} />
       </div>
-      <p className="min-w-0 text-[0.72rem] leading-snug text-zinc-300">
+      <div className="min-w-0 text-[0.72rem] leading-snug text-zinc-300">
         <span className="font-semibold text-zinc-100">{feature.name}</span>
-        {body ? (
-          <>
-            {' '}
-            {body}
-          </>
-        ) : null}
-      </p>
+        {effects.length > 0 && !hasStructuredEffects && (
+          <>{' '}{effects.filter((e) => e.effect).map((e, i) => (
+            <Fragment key={i}>
+              {i > 0 ? ' ' : null}
+              <RichText text={e.effect!} />
+            </Fragment>
+          ))}</>
+        )}
+        {hasStructuredEffects && (
+          <div className="mt-1.5 space-y-2">
+            {effects.map((eff, i) => (
+              <EffectBlock key={i} eff={eff} />
+            ))}
+          </div>
+        )}
+      </div>
     </div>
+  )
+}
+
+/** Renders abilities + traits with separators between them. No wrapper card. */
+export function FeatureList({ features }: { features: MonsterFeature[] }) {
+  const abilities = features.filter((f) => f.feature_type === 'ability')
+  const traits = features.filter((f) => f.feature_type === 'trait')
+
+  return (
+    <>
+      {abilities.map((f, i) => (
+        <div key={`ability-${i}`}>
+          {i > 0 && <StatBlockSeparator />}
+          <AbilityBlock feature={f} />
+        </div>
+      ))}
+
+      {traits.map((f, i) => (
+        <div key={`trait-${i}`}>
+          {((abilities.length > 0 && i === 0) || i > 0) && <StatBlockSeparator />}
+          <TraitBlock feature={f} />
+        </div>
+      ))}
+    </>
   )
 }
 
@@ -417,9 +535,7 @@ export function StatBlock({
     )
   }
 
-  const abilities = features.filter((f) => f.feature_type === 'ability')
-  const traits = features.filter((f) => f.feature_type === 'trait')
-  const hasFeatures = abilities.length > 0 || traits.length > 0
+  const hasFeatures = features.some((f) => f.feature_type === 'ability' || f.feature_type === 'trait')
 
   return (
     <div
@@ -437,19 +553,7 @@ export function StatBlock({
 
         {statblock && hasFeatures && <StatBlockSeparator />}
 
-        {abilities.map((f, i) => (
-          <div key={`ability-${i}`}>
-            {i > 0 && <StatBlockSeparator />}
-            <AbilityBlock feature={f} />
-          </div>
-        ))}
-
-        {traits.map((f, i) => (
-          <div key={`trait-${i}`}>
-            {((abilities.length > 0 && i === 0) || i > 0) && <StatBlockSeparator />}
-            <TraitBlock feature={f} />
-          </div>
-        ))}
+        <FeatureList features={features} />
       </div>
     </div>
   )

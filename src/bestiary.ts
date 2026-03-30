@@ -45,6 +45,7 @@ type RawFeature = {
   usage?: string
   distance?: string
   target?: string
+  trigger?: string
   effects?: RawEffect[]
 }
 
@@ -97,6 +98,7 @@ function mapEffect(raw: RawEffect): PowerRollEffect {
     ...(raw.tier2 != null ? { tier2: raw.tier2 } : {}),
     ...(raw.tier3 != null ? { tier3: raw.tier3 } : {}),
     ...(raw.name != null ? { name: raw.name } : {}),
+    ...(raw.cost != null ? { cost: raw.cost } : {}),
     ...(raw.effect != null ? { effect: raw.effect } : {}),
   }
 }
@@ -118,6 +120,7 @@ export function mapFeatures(raw: RawFeature[] | undefined): MonsterFeature[] {
         ...(f.usage != null ? { usage: f.usage } : {}),
         ...(f.distance != null ? { distance: f.distance } : {}),
         ...(f.target != null ? { target: f.target } : {}),
+        ...(f.trigger != null ? { trigger: f.trigger } : {}),
         ...(f.cost != null ? { cost: f.cost } : {}),
         ...(effects && effects.length > 0
           ? { effects: effects.map(mapEffect) }
