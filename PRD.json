@@ -300,19 +300,6 @@
       "passes": true
     },
     {
-      "id": "A11Y-001",
-      "category": "accessibility",
-      "description": "Full keyboard-only navigation pass",
-      "steps": [
-        "Walk the entire app using keyboard only",
-        "Ensure all focus states are visible",
-        "Verify that activating controls with Enter/Space matches pointer behavior",
-        "Write specs covering focus order, visible focus states, and Enter/Space activation",
-        "Run the specs, fix any failures until all pass"
-      ],
-      "passes": false
-    },
-    {
       "id": "A11Y-002",
       "category": "accessibility",
       "description": "Keyboard access for all dropdowns",
@@ -324,6 +311,57 @@
         "Run the specs, fix any failures until all pass"
       ],
       "passes": true
+    },
+    {
+      "id": "ADV-001",
+      "category": "advanced",
+      "description": "Persist encounter data in local storage",
+      "steps": [
+        "Serialize the current encounter state to a format suitable for local storage",
+        "Save encounter state to local storage on every meaningful state change",
+        "Handle storage quota errors gracefully",
+        "Write specs covering serialization, storage writes, and error handling",
+        "Run the specs, fix any failures until all pass"
+      ],
+      "passes": false
+    },
+    {
+      "id": "ADV-002",
+      "category": "advanced",
+      "description": "Reload local storage state on page load",
+      "steps": [
+        "On app initialization, check local storage for saved encounter state",
+        "Deserialize and restore the encounter state if found",
+        "Fall back to default/empty state if no saved data exists or data is corrupt",
+        "Write specs covering state restoration, fallback behavior, and corrupt data handling",
+        "Run the specs, fix any failures until all pass"
+      ],
+      "passes": false
+    },
+    {
+      "id": "ADV-003",
+      "category": "advanced",
+      "description": "Create new, empty encounters and name them",
+      "steps": [
+        "Add a UI control to create a new encounter",
+        "Prompt the user to provide a name for the encounter",
+        "Initialize the encounter with empty state and store it",
+        "Write specs covering encounter creation, naming, and initial state",
+        "Run the specs, fix any failures until all pass"
+      ],
+      "passes": false
+    },
+    {
+      "id": "ADV-004",
+      "category": "advanced",
+      "description": "Switch between encounters",
+      "steps": [
+        "Add a UI control to list and select from available encounters",
+        "Save the current encounter state before switching",
+        "Load the selected encounter's state and render it",
+        "Write specs covering encounter listing, save-before-switch, and state loading",
+        "Run the specs, fix any failures until all pass"
+      ],
+      "passes": false
     }
   ]
-}
