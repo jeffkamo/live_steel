@@ -18,6 +18,7 @@ import {
   saveEncounterIndex,
   migrateFromLegacyStorage,
   newEncounterId,
+  deleteEncounterFromStorage,
   type PersistedEncounterIndex,
   type EncounterIndexEntry,
 } from './persistence'
@@ -1114,6 +1115,90 @@ function App() {
     setShowEncounterSwitcher(false)
   }, [encounterGroups, terrainRows, groupTurnActed, activeEncounterId, encounterIndex])
 
+  const renameEncounter = useCallback((targetId: string, newName: string) => {
+    const trimmed = newName.trim()
+    if (!trimmed) return
+    setEncounterIndex((prev) => ({
+      ...prev,
+      encounters: prev.encounters.map((e) =>
+        e.id === targetId ? { ...e, name: trimmed } : e,
+      ),
+    }))
+    if (targetId === activeEncounterId) {
+      setEncounterName(trimmed)
+    }
+  }, [activeEncounterId])
+
+  const deleteEncounter = useCallback((targetId: string) => {
+    setEncounterIndex((prev) => {
+      const remaining = prev.encounters.filter((e) => e.id !== targetId)
+      if (remaining.length === 0) return prev
+
+      deleteEncounterFromStorage(targetId)
+
+      if (targetId !== activeEncounterId) {
+        return { ...prev, encounters: remaining }
+      }
+
+      const nextActive = remaining[0]!
+      const loaded = loadFromLocalStorage(nextActive.id)
+
+      if (loaded.ok) {
+        setEncounterGroups(loaded.state.encounterGroups)
+        setTerrainRows(loaded.state.terrainRows)
+        setGroupTurnActed(loaded.state.groupTurnActed)
+        prevTurnActedRef.current = [...loaded.state.groupTurnActed]
+      } else {
+        const newGroups = cloneEncounterGroups()
+        const newTerrain = cloneTerrainRows()
+        const newTurns = newGroups.map(() => false)
+        setEncounterGroups(newGroups)
+        setTerrainRows(newTerrain)
+        setGroupTurnActed(newTurns)
+        prevTurnActedRef.current = [...newTurns]
+      }
+
+      setActiveEncounterId(nextActive.id)
+      setEncounterName(nextActive.name)
+      setMonsterCardDrawer(null)
+
+      for (const t of eotTimersRef.current.values()) clearTimeout(t)
+      eotTimersRef.current.clear()
+      setEotConfirmed(() => new Map())
+      setSeActWindowElapsedGroup(() => new Set())
+
+      return { ...prev, encounters: remaining, activeId: nextActive.id }
+    })
+  }, [activeEncounterId])
+
+  const [renamingEncounterId, setRenamingEncounterId] = useState<string | null>(null)
+  const [renameInputValue, setRenameInputValue] = useState('')
+  const renameInputRef = useRef<HTMLInputElement>(null)
+
+  const startRenamingEncounter = useCallback((entry: EncounterIndexEntry) => {
+    setRenamingEncounterId(entry.id)
+    setRenameInputValue(entry.name)
+  }, [])
+
+  const commitRename = useCallback(() => {
+    if (renamingEncounterId && renameInputValue.trim()) {
+      renameEncounter(renamingEncounterId, renameInputValue)
+    }
+    setRenamingEncounterId(null)
+  }, [renamingEncounterId, renameInputValue, renameEncounter])
+
+  const cancelRename = useCallback(() => {
+    setRenamingEncounterId(null)
+  }, [])
+
+  useEffect(() => {
+    if (renamingEncounterId) {
+      requestAnimationFrame(() => renameInputRef.current?.focus())
+    }
+  }, [renamingEncounterId])
+
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
+
   useEffect(() => {
     if (showNewEncounterPrompt) {
       requestAnimationFrame(() => newEncounterInputRef.current?.focus())
@@ -1121,7 +1206,11 @@ function App() {
   }, [showNewEncounterPrompt])
 
   useEffect(() => {
-    if (!showEncounterSwitcher) return
+    if (!showEncounterSwitcher) {
+      setRenamingEncounterId(null)
+      setConfirmDeleteId(null)
+      return
+    }
     const handleMouseDown = (e: MouseEvent) => {
       if (encounterSwitcherRef.current && !encounterSwitcherRef.current.contains(e.target as Node)) {
         setShowEncounterSwitcher(false)
@@ -1379,31 +1468,98 @@ function App() {
                     ref={encounterSwitcherRef}
                     role="listbox"
                     aria-label="Select encounter"
-                    className="absolute top-full z-20 mt-1 max-h-60 min-w-[12rem] overflow-y-auto rounded-lg border border-zinc-700 bg-zinc-900 py-1 shadow-xl"
+                    className="absolute top-full z-20 mt-1 max-h-72 min-w-[14rem] overflow-y-auto rounded-lg border border-zinc-700 bg-zinc-900 py-1 shadow-xl"
                   >
                     {encounterIndex.encounters.map((entry) => (
-                      <button
-                        key={entry.id}
-                        type="button"
-                        role="option"
-                        aria-selected={entry.id === activeEncounterId}
-                        onClick={() => switchToEncounter(entry.id)}
-                        className={`flex w-full cursor-pointer items-center gap-2 px-3 py-1.5 text-left font-sans text-xs transition-colors hover:bg-zinc-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-amber-500/60 ${
-                          entry.id === activeEncounterId
-                            ? 'text-amber-400'
-                            : 'text-zinc-300'
-                        }`}
-                      >
-                        {entry.id === activeEncounterId && (
-                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5 shrink-0" aria-hidden>
-                            <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clipRule="evenodd" />
-                          </svg>
+                      <div key={entry.id} className="group/entry relative flex items-center">
+                        {renamingEncounterId === entry.id ? (
+                          <div className="flex w-full items-center gap-1 px-2 py-1">
+                            <input
+                              ref={renameInputRef}
+                              type="text"
+                              value={renameInputValue}
+                              onChange={(e) => setRenameInputValue(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') commitRename()
+                                if (e.key === 'Escape') cancelRename()
+                              }}
+                              onBlur={commitRename}
+                              aria-label="Rename encounter"
+                              className="min-w-0 flex-1 rounded border border-zinc-600 bg-zinc-800 px-1.5 py-1 font-sans text-xs text-zinc-100 outline-none focus:border-amber-500/60 focus:ring-1 focus:ring-amber-500/40"
+                            />
+                          </div>
+                        ) : (
+                          <>
+                            <button
+                              type="button"
+                              role="option"
+                              aria-selected={entry.id === activeEncounterId}
+                              onClick={() => switchToEncounter(entry.id)}
+                              className={`flex min-w-0 flex-1 cursor-pointer items-center gap-2 py-1.5 pl-3 pr-1 text-left font-sans text-xs transition-colors hover:bg-zinc-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-amber-500/60 ${
+                                entry.id === activeEncounterId
+                                  ? 'text-amber-400'
+                                  : 'text-zinc-300'
+                              }`}
+                            >
+                              {entry.id === activeEncounterId ? (
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5 shrink-0" aria-hidden>
+                                  <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clipRule="evenodd" />
+                                </svg>
+                              ) : (
+                                <span className="inline-block h-3.5 w-3.5 shrink-0" aria-hidden />
+                              )}
+                              <span className="min-w-0 truncate">{entry.name}</span>
+                            </button>
+                            <div className="flex shrink-0 items-center gap-0.5 pr-1.5 opacity-0 transition-opacity group-hover/entry:opacity-100 focus-within:opacity-100">
+                              <button
+                                type="button"
+                                aria-label={`Rename encounter "${entry.name}"`}
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  startRenamingEncounter(entry)
+                                }}
+                                className="cursor-pointer rounded p-1 text-zinc-500 transition-colors hover:bg-zinc-700/80 hover:text-zinc-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-amber-500/60"
+                              >
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3 w-3" aria-hidden>
+                                  <path d="m5.433 13.917 1.262-3.155A4 4 0 0 1 7.58 9.42l6.92-6.918a2.121 2.121 0 0 1 3 3l-6.92 6.918c-.383.383-.84.685-1.343.886l-3.154 1.262a.5.5 0 0 1-.65-.65Z" />
+                                  <path d="M3.5 5.75c0-.69.56-1.25 1.25-1.25H10A.75.75 0 0 0 10 3H4.75A2.75 2.75 0 0 0 2 5.75v9.5A2.75 2.75 0 0 0 4.75 18h9.5A2.75 2.75 0 0 0 17 15.25V10a.75.75 0 0 0-1.5 0v5.25c0 .69-.56 1.25-1.25 1.25h-9.5c-.69 0-1.25-.56-1.25-1.25v-9.5Z" />
+                                </svg>
+                              </button>
+                              {encounterIndex.encounters.length > 1 && (
+                                confirmDeleteId === entry.id ? (
+                                  <button
+                                    type="button"
+                                    aria-label={`Confirm delete encounter "${entry.name}"`}
+                                    onClick={(e) => {
+                                      e.stopPropagation()
+                                      deleteEncounter(entry.id)
+                                      setConfirmDeleteId(null)
+                                    }}
+                                    onBlur={() => setConfirmDeleteId(null)}
+                                    className="cursor-pointer rounded px-1.5 py-0.5 font-sans text-[0.6rem] font-medium text-red-400 transition-colors hover:bg-red-950/60 hover:text-red-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-amber-500/60"
+                                  >
+                                    Delete?
+                                  </button>
+                                ) : (
+                                  <button
+                                    type="button"
+                                    aria-label={`Delete encounter "${entry.name}"`}
+                                    onClick={(e) => {
+                                      e.stopPropagation()
+                                      setConfirmDeleteId(entry.id)
+                                    }}
+                                    className="cursor-pointer rounded p-1 text-zinc-500 transition-colors hover:bg-zinc-700/80 hover:text-red-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-amber-500/60"
+                                  >
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3 w-3" aria-hidden>
+                                      <path fillRule="evenodd" d="M8.75 1A2.75 2.75 0 0 0 6 3.75v.443c-.795.077-1.584.176-2.365.298a.75.75 0 1 0 .23 1.482l.149-.022.841 10.518A2.75 2.75 0 0 0 7.596 19h4.807a2.75 2.75 0 0 0 2.742-2.53l.841-10.519.149.023a.75.75 0 0 0 .23-1.482A41.03 41.03 0 0 0 14 4.193V3.75A2.75 2.75 0 0 0 11.25 1h-2.5ZM10 4c.84 0 1.673.025 2.5.075V3.75c0-.69-.56-1.25-1.25-1.25h-2.5c-.69 0-1.25.56-1.25 1.25v.325C8.327 4.025 9.16 4 10 4ZM8.58 7.72a.75.75 0 0 0-1.5.06l.3 7.5a.75.75 0 1 0 1.5-.06l-.3-7.5Zm4.34.06a.75.75 0 1 0-1.5-.06l-.3 7.5a.75.75 0 1 0 1.5.06l.3-7.5Z" clipRule="evenodd" />
+                                    </svg>
+                                  </button>
+                                )
+                              )}
+                            </div>
+                          </>
                         )}
-                        {entry.id !== activeEncounterId && (
-                          <span className="inline-block h-3.5 w-3.5 shrink-0" aria-hidden />
-                        )}
-                        {entry.name}
-                      </button>
+                      </div>
                     ))}
                   </div>
                 )}
