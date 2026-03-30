@@ -715,11 +715,6 @@ describe('cloneExampleTerrainRows', () => {
     expect(b[0]!.stamina[0]).not.toBe(999)
   })
 
-  it('converts string conditions into ConditionEntry objects', () => {
-    const rows = cloneExampleTerrainRows()
-    expect(rows[0]!.conditions[0]).toEqual({ label: 'Slowed', state: 'neutral' })
-  })
-
   it('produces the correct number of rows', () => {
     expect(cloneExampleTerrainRows().length).toBe(TERRAIN_ROWS.length)
   })

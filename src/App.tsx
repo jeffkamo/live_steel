@@ -28,6 +28,7 @@ import {
   CONDITION_DRAG_MIME,
   ENCOUNTER_GROUP_DRAG_MIME,
   MONSTER_DRAG_MIME,
+  TERRAIN_DRAG_MIME,
   mapMinionIndexAfterReorder,
   mapMinionDrawerSlotAfterMinionInserted,
   mapMinionDrawerSlotAfterMinionRemoved,
@@ -61,6 +62,8 @@ import { TitleRule } from './components/TitleRule'
 import { GroupSection } from './components/GroupSection'
 import { StatBlock } from './components/StatBlock'
 import { TerrainRow } from './components/TerrainRow'
+import { AddTerrainButton } from './components/AddTerrainButton'
+import { TerrainStatBlock } from './components/TerrainStatBlock'
 
 const DRAWER_PANEL_W_CLASS = 'w-[min(20rem,calc(100vw-2rem))]'
 const MONSTER_DRAWER_CLOSE_MS = 300
@@ -143,8 +146,10 @@ function App() {
   const [groupTurnActed, setGroupTurnActed] = useState(() => initTurns)
   const [uiLocked, setUiLocked] = useState(false)
   const [monsterCardDrawer, setMonsterCardDrawer] = useState<MonsterCardDrawerState | null>(null)
+  const [terrainDrawerIndex, setTerrainDrawerIndex] = useState<number | null>(null)
   const [drawerAnimatingOut, setDrawerAnimatingOut] = useState(false)
   const [drawerEntered, setDrawerEntered] = useState(false)
+  const [dropTargetTerrainIndex, setDropTargetTerrainIndex] = useState<number | null>(null)
 
   const [encounterIndex, setEncounterIndex] = useState<PersistedEncounterIndex>(() => initIndex)
   const [activeEncounterId, setActiveEncounterId] = useState(() => initEncId)
@@ -1071,6 +1076,7 @@ function App() {
     setGroupTurnActed(newTurns)
     prevTurnActedRef.current = [...newTurns]
     setMonsterCardDrawer(null)
+    setTerrainDrawerIndex(null)
 
     for (const t of eotTimersRef.current.values()) clearTimeout(t)
     eotTimersRef.current.clear()
@@ -1106,6 +1112,7 @@ function App() {
     setEncounterName(entry.name)
     setEncounterIndex((prev) => ({ ...prev, activeId: targetId }))
     setMonsterCardDrawer(null)
+    setTerrainDrawerIndex(null)
 
     for (const t of eotTimersRef.current.values()) clearTimeout(t)
     eotTimersRef.current.clear()
@@ -1160,6 +1167,7 @@ function App() {
       setActiveEncounterId(nextActive.id)
       setEncounterName(nextActive.name)
       setMonsterCardDrawer(null)
+      setTerrainDrawerIndex(null)
 
       for (const t of eotTimersRef.current.values()) clearTimeout(t)
       eotTimersRef.current.clear()
@@ -1270,6 +1278,48 @@ function App() {
     )
   }, [])
 
+  const addTerrainRow = useCallback((row: TerrainRowState) => {
+    setTerrainRows((prev) => [...prev, row])
+  }, [])
+
+  const deleteTerrainRow = useCallback((rowIndex: number) => {
+    setTerrainRows((prev) => prev.filter((_, i) => i !== rowIndex))
+    setTerrainDrawerIndex((prev) => {
+      if (prev === null) return null
+      if (prev === rowIndex) return null
+      if (prev > rowIndex) return prev - 1
+      return prev
+    })
+  }, [])
+
+  const reorderTerrainRows = useCallback((from: number, to: number) => {
+    if (from === to) return
+    setTerrainRows((prev) => moveIndexInArray(prev, from, to))
+    setTerrainDrawerIndex((prev) => {
+      if (prev === null) return null
+      if (prev === from) return to
+      if (from < to) {
+        if (prev > from && prev <= to) return prev - 1
+      } else {
+        if (prev >= to && prev < from) return prev + 1
+      }
+      return prev
+    })
+  }, [])
+
+  const toggleTerrainDrawer = useCallback((rowIndex: number) => {
+    setTerrainDrawerIndex((prev) => {
+      if (prev === rowIndex) {
+        if (prefersReducedMotion()) return null
+        setDrawerAnimatingOut(true)
+        return prev
+      }
+      setDrawerAnimatingOut(false)
+      setMonsterCardDrawer(null)
+      return rowIndex
+    })
+  }, [])
+
   const patchGroupColor = useCallback((groupIndex: number, newColor: GroupColorId) => {
     setEncounterGroups((prev) => {
       const otherIdx = prev.findIndex((g, i) => i !== groupIndex && g.color === newColor)
@@ -1328,13 +1378,15 @@ function App() {
       }
       setDrawerAnimatingOut(false)
       setMonsterCardDrawer({ groupIndex, monsterIndex, view })
+      setTerrainDrawerIndex(null)
     },
     [encounterGroups],
   )
 
-  const requestMonsterDrawerClose = useCallback(() => {
+  const requestDrawerClose = useCallback(() => {
     if (prefersReducedMotion()) {
       setMonsterCardDrawer(null)
+      setTerrainDrawerIndex(null)
       return
     }
     setDrawerAnimatingOut(true)
@@ -1357,15 +1409,17 @@ function App() {
     }
   }, [encounterGroups, monsterCardDrawer])
 
+  const anyDrawerOpen = monsterCardDrawer != null || terrainDrawerIndex != null
+
   useLayoutEffect(() => {
-    if (!monsterCardDrawer) {
+    if (!anyDrawerOpen) {
       setDrawerEntered(false)
       prevDrawerForEnterRef.current = null
       return
     }
     if (drawerAnimatingOut) return
 
-    const hadPrevious = prevDrawerForEnterRef.current != null
+    const hadPrevious = prevDrawerForEnterRef.current != null || terrainDrawerIndex != null
     prevDrawerForEnterRef.current = monsterCardDrawer
 
     if (hadPrevious) {
@@ -1382,22 +1436,23 @@ function App() {
       requestAnimationFrame(() => setDrawerEntered(true))
     })
     return () => cancelAnimationFrame(id)
-  }, [monsterCardDrawer, drawerAnimatingOut])
+  }, [anyDrawerOpen, monsterCardDrawer, terrainDrawerIndex, drawerAnimatingOut])
 
   useEffect(() => {
     if (!drawerAnimatingOut) return
     const t = window.setTimeout(() => {
       setMonsterCardDrawer(null)
+      setTerrainDrawerIndex(null)
       setDrawerAnimatingOut(false)
     }, MONSTER_DRAWER_CLOSE_MS)
     return () => clearTimeout(t)
   }, [drawerAnimatingOut])
 
   useEffect(() => {
-    if (monsterCardDrawer == null) {
+    if (monsterCardDrawer == null && terrainDrawerIndex == null) {
       setDrawerAnimatingOut(false)
     }
-  }, [monsterCardDrawer])
+  }, [monsterCardDrawer, terrainDrawerIndex])
 
   const drawerMonster =
     monsterCardDrawer != null
@@ -1439,6 +1494,11 @@ function App() {
             ? `Stat card for creature ${drawerOrdinalInCircle}: ${drawerTitleName}`
             : `Stat card for ${drawerTitleName}`
       : undefined
+
+  const terrainDrawerRow =
+    terrainDrawerIndex != null ? terrainRows[terrainDrawerIndex] : undefined
+  const terrainDrawerOpen =
+    terrainDrawerRow != null && terrainDrawerRow.terrainName != null
 
   return (
     <div className="min-h-svh bg-zinc-950 p-4 font-serif text-zinc-100 antialiased md:p-8">
@@ -1796,27 +1856,101 @@ function App() {
                 <TitleRule />
               </header>
               {terrainRows.map((row, i) => (
-                <TerrainRow key={i} row={row} onStaminaChange={(st) => patchTerrainStamina(i, st)} />
+                <div
+                  key={i}
+                  className={`rounded-lg transition-[box-shadow] duration-150 ${
+                    dropTargetTerrainIndex === i ? 'ring-2 ring-amber-500/45 ring-offset-2 ring-offset-zinc-950' : ''
+                  }`}
+                  onDragOver={(e) => {
+                    if (![...e.dataTransfer.types].includes(TERRAIN_DRAG_MIME)) return
+                    e.preventDefault()
+                    e.dataTransfer.dropEffect = 'move'
+                    setDropTargetTerrainIndex(i)
+                  }}
+                  onDragLeave={(e) => {
+                    if (!e.currentTarget.contains(e.relatedTarget as Node | null)) {
+                      setDropTargetTerrainIndex((v) => (v === i ? null : v))
+                    }
+                  }}
+                  onDrop={(e) => {
+                    e.preventDefault()
+                    setDropTargetTerrainIndex(null)
+                    const raw = e.dataTransfer.getData(TERRAIN_DRAG_MIME)
+                    const from = Number.parseInt(raw, 10)
+                    if (Number.isNaN(from) || from === i) return
+                    reorderTerrainRows(from, i)
+                  }}
+                >
+                  <TerrainRow
+                    row={row}
+                    rowIndex={i}
+                    onStaminaChange={(st) => patchTerrainStamina(i, st)}
+                    onClick={() => toggleTerrainDrawer(i)}
+                    isDrawerOpen={terrainDrawerIndex === i}
+                    uiLocked={uiLocked}
+                    onDelete={uiLocked ? undefined : () => deleteTerrainRow(i)}
+                    dragHandle={
+                      uiLocked
+                        ? undefined
+                        : {
+                            onDragStart: (e) => {
+                              e.dataTransfer.setData(TERRAIN_DRAG_MIME, String(i))
+                              e.dataTransfer.effectAllowed = 'move'
+                            },
+                            onDragEnd: () => setDropTargetTerrainIndex(null),
+                            ariaLabel: `Reorder terrain ${i + 1}`,
+                          }
+                    }
+                  />
+                </div>
               ))}
+              {!uiLocked && (
+                <AddTerrainButton onAdd={addTerrainRow} />
+              )}
             </section>
           </div>
         </div>
 
         <div
           className={`sticky top-4 z-10 shrink-0 self-start overflow-hidden md:top-8 ${
-            monsterCardDrawer != null ? DRAWER_PANEL_W_CLASS : 'w-0'
+            anyDrawerOpen ? DRAWER_PANEL_W_CLASS : 'w-0'
           }`}
         >
-          {monsterCardDrawer != null && (
+          {anyDrawerOpen && (
             <aside
-              id="monster-stat-card-drawer"
-              aria-label={drawerAsideAriaLabel}
-              aria-hidden={!statCardDrawerOpen}
+              id="stat-card-drawer"
+              aria-label={
+                terrainDrawerOpen && terrainDrawerRow
+                  ? `Stat block for ${terrainDrawerRow.object}`
+                  : drawerAsideAriaLabel
+              }
+              aria-hidden={!statCardDrawerOpen && !terrainDrawerOpen}
               className={`box-border flex h-[calc(100svh-2rem)] ${DRAWER_PANEL_W_CLASS} flex-col overflow-hidden bg-zinc-950 transition-transform duration-300 ease-out motion-reduce:transition-none md:h-[calc(100svh-4rem)] ${
                 drawerEntered && !drawerAnimatingOut ? 'translate-x-0' : 'translate-x-full'
               }`}
             >
-              {statCardDrawerOpen && drawerMonster && (
+              {terrainDrawerOpen && terrainDrawerRow ? (
+                <div className="box-border flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden font-sans">
+                  <div className="flex shrink-0 items-start justify-between gap-2 border-b border-zinc-800/60 px-3 py-2.5">
+                    <h2 className="flex min-w-0 flex-1 items-center gap-1.5 text-sm font-medium tracking-wide">
+                      <span className="min-w-0 truncate text-zinc-200">{terrainDrawerRow.object}</span>
+                    </h2>
+                    <button
+                      type="button"
+                      aria-label="Close stat card drawer"
+                      onClick={requestDrawerClose}
+                      className="shrink-0 cursor-pointer rounded p-1 text-zinc-500 transition-colors hover:bg-zinc-800/80 hover:text-zinc-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500/60"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="size-5" aria-hidden>
+                        <path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z" />
+                      </svg>
+                    </button>
+                  </div>
+                  <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-contain px-3 pb-4 pt-2">
+                    <TerrainStatBlock terrainName={terrainDrawerRow.terrainName!} />
+                  </div>
+                </div>
+              ) : statCardDrawerOpen && drawerMonster ? (
                 <div className="box-border flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden font-sans">
                   <div className="flex shrink-0 items-start justify-between gap-2 border-b border-zinc-800/60 px-3 py-2.5">
                     <h2 className="flex min-w-0 flex-1 items-center gap-1.5 text-sm font-medium tracking-wide">
@@ -1832,7 +1966,7 @@ function App() {
                     <button
                       type="button"
                       aria-label="Close stat card drawer"
-                      onClick={requestMonsterDrawerClose}
+                      onClick={requestDrawerClose}
                       className="shrink-0 cursor-pointer rounded p-1 text-zinc-500 transition-colors hover:bg-zinc-800/80 hover:text-zinc-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500/60"
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="size-5" aria-hidden>
@@ -1848,7 +1982,7 @@ function App() {
                     />
                   </div>
                 </div>
-              )}
+              ) : null}
             </aside>
           )}
         </div>

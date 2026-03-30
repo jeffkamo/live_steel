@@ -116,10 +116,11 @@ export type TerrainRowState = {
   object: string
   stamina: [number, number]
   note: string
-  conditions: readonly ConditionEntry[]
+  /** Bestiary terrain name for stat-block lookup; absent on legacy/custom rows. */
+  terrainName?: string
 }
 
-export type TerrainRowSeed = Omit<TerrainRowState, 'conditions'> & { conditions: readonly string[] }
+export type TerrainRowSeed = TerrainRowState
 
 export type GroupColorMenuState = {
   open: boolean

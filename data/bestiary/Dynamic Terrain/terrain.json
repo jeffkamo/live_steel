@@ -1,0 +1,2912 @@
+{
+  "terrain": [
+    {
+      "type": "featureblock",
+      "featureblock_type": "Hazard Hexer",
+      "name": "Angry Beehive",
+      "level": 2,
+      "ev": "2",
+      "flavor": "This beehive is full of angry bees who swarm and attack with little provocation.",
+      "stamina": "3",
+      "size": "1S",
+      "features": [
+        {
+          "type": "feature",
+          "feature_type": "trait",
+          "name": "Deactivate",
+          "icon": "🌀",
+          "effects": [
+            {
+              "effect": "The beehive can't be deactivated. If it takes damage or is destroyed, the hive unleashes a swarm of bees."
+            }
+          ]
+        },
+        {
+          "type": "feature",
+          "feature_type": "trait",
+          "name": "Activate",
+          "icon": "❕",
+          "effects": [
+            {
+              "effect": "A creature enters the hive's space or an adjacent space without shifting."
+            },
+            {
+              "name": "Effect",
+              "effect": "The hive is removed from the encounter map and a swarm of bees is placed in one square of the space of the triggering creature. Any creature who starts their turn in the swarm's space takes 3 poison damage. At the start of each round, the swarm moves 1 square and its size increases by 1 square (to 2 squares by 2 squares, 3 squares by 3 squares, and so forth), preferring squares in a creature's space. After 3 rounds, the swarm dissipates."
+            }
+          ]
+        },
+        {
+          "type": "feature",
+          "feature_type": "trait",
+          "name": "Upgrades",
+          "icon": "⭐️",
+          "effects": [
+            {
+              "name": "Concealed Hive",
+              "cost": "+1 EV",
+              "effect": "The hive is hidden until the swarm is unleashed."
+            },
+            {
+              "name": "Killer Bees",
+              "cost": "+2 EV",
+              "effect": "The bees are a particularly aggressive and dangerous species. The hive triggers even if a creature shifts into or while adjacent to it, and the swarm deals 1d6 + 3 poison damage."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "featureblock",
+      "featureblock_type": "Fortification Defender",
+      "name": "Archer's Stakes",
+      "level": 1,
+      "ev": "2",
+      "flavor": "A series of sharp stakes have been placed point-out to protect defenders against charges and other direct attacks.",
+      "stamina": "3 per square",
+      "size": "One or more squares of difficult terrain",
+      "stats": [
+        {
+          "name": "Typical Space",
+          "value": "4 x 1-square area"
+        },
+        {
+          "name": "Direction",
+          "value": "One side of the stakes is defined as the front."
+        }
+      ],
+      "features": [
+        {
+          "type": "feature",
+          "feature_type": "trait",
+          "name": "Deactivate",
+          "icon": "🌀",
+          "effects": [
+            {
+              "effect": "Each square of stakes must be individually destroyed."
+            }
+          ]
+        },
+        {
+          "type": "feature",
+          "feature_type": "trait",
+          "name": "Activate",
+          "icon": "❕",
+          "effects": [
+            {
+              "effect": "A creature enters an area of stakes from the front."
+            },
+            {
+              "name": "Effect",
+              "effect": "The triggering creature takes 2 damage per square of stakes they enter. If they are force moved into an area of stakes, they take an additional 3 damage."
+            }
+          ]
+        },
+        {
+          "type": "feature",
+          "feature_type": "trait",
+          "name": "Upgrades",
+          "icon": "⭐️",
+          "effects": [
+            {
+              "name": "Poison",
+              "cost": "+2 EV",
+              "effect": "The tips of the stakes have poison applied to them. Any creature who takes damage from the stakes also takes 1d6 poison damage at the start of each of their turns (save ends)."
+            },
+            {
+              "name": "Sticky",
+              "cost": "+3 EV",
+              "effect": "A sticky slime or webbing has been applied to the stakes and the ground between them. Any creature who enters an area of stakes triggers the **Sticky Stakes** ability in addition to suffering the stakes' other effects."
+            }
+          ]
+        },
+        {
+          "type": "feature",
+          "feature_type": "ability",
+          "name": "Sticky Stakes",
+          "icon": "❗️",
+          "keywords": [
+            "Melee",
+            "Strike",
+            "Weapon"
+          ],
+          "usage": "Free triggered action",
+          "distance": "Melee 0",
+          "target": "The triggering creature or object",
+          "trigger": "A creature or object enters an area of sticky stakes.",
+          "effects": [
+            {
+              "roll": "Power Roll + 2",
+              "tier1": "No effect.",
+              "tier2": "A < 1 slowed (save ends)",
+              "tier3": "A < 2 restrained (save ends)"
+            }
+          ]
+        },
+        {
+          "type": "feature",
+          "feature_type": "trait",
+          "name": "Allied Awareness",
+          "icon": "⭐️",
+          "effects": [
+            {
+              "effect": "Allies of this object ignore the difficult terrain created by the stakes, take no damage from moving through the stakes unless they are force moved, and have cover while in an area of archer's stakes."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "featureblock",
+      "featureblock_type": "Siege Engine Artillery",
+      "name": "Arrow Launcher",
+      "level": 2,
+      "ev": "8",
+      "flavor": "A small wooden cart uses alchemical rockets to launch up to a hundred arrows at a time across a wide area.",
+      "stamina": "30",
+      "size": "1L",
+      "features": [
+        {
+          "type": "feature",
+          "feature_type": "trait",
+          "name": "Deactivate",
+          "icon": "🌀",
+          "effects": [
+            {
+              "effect": "As a maneuver, a creature adjacent to an arrow launcher can make an **Agility test**.",
+              "tier1": "The creature accidentally activates the **Arrow Storm** ability.",
+              "tier2": "The arrow launcher is deactivated but the creature is slowed (EoT).",
+              "tier3": "The arrow launcher is deactivated and can't be used."
+            }
+          ]
+        },
+        {
+          "type": "feature",
+          "feature_type": "ability",
+          "name": "Arrow Storm",
+          "icon": "🔳",
+          "keywords": [
+            "- Area",
+            "Ranged",
+            "Weapon"
+          ],
+          "usage": "Main action (Adjacent creature)",
+          "distance": "5 cube within 20",
+          "target": "Each creature and object in the area",
+          "effects": [
+            {
+              "roll": "Power Roll + 2",
+              "tier1": "5 damage",
+              "tier2": "8 damage",
+              "tier3": "11 damage"
+            },
+            {
+              "name": "Effect",
+              "effect": "This ability can't be used again until the arrow launcher is reloaded."
+            }
+          ]
+        },
+        {
+          "type": "feature",
+          "feature_type": "ability",
+          "name": "Reload",
+          "icon": "⭐️",
+          "keywords": [
+            "-"
+          ],
+          "usage": "Main action (Adjacent creature)",
+          "distance": "-",
+          "target": "-",
+          "effects": [
+            {
+              "name": "Effect",
+              "effect": "The arrow launcher is reloaded, allowing **Arrow Storm** to be used again. This action can be used only once per round."
+            }
+          ]
+        },
+        {
+          "type": "feature",
+          "feature_type": "ability",
+          "name": "Spot",
+          "icon": "⭐️",
+          "keywords": [
+            "-"
+          ],
+          "usage": "Main action (Adjacent creature)",
+          "distance": "-",
+          "target": "-",
+          "effects": [
+            {
+              "name": "Effect",
+              "effect": "The next use of **Arrow Storm** gains an edge and has a +10 bonus to ranged distance. This action can be used only once per round."
+            }
+          ]
+        },
+        {
+          "type": "feature",
+          "feature_type": "ability",
+          "name": "Move",
+          "icon": "⭐️",
+          "keywords": [
+            "-"
+          ],
+          "usage": "Main action (Adjacent creature)",
+          "distance": "-",
+          "target": "-",
+          "effects": [
+            {
+              "name": "Effect",
+              "effect": "The arrow launcher and the creature using this action move together up to 3 squares."
+            }
+          ]
+        },
+        {
+          "type": "feature",
+          "feature_type": "trait",
+          "name": "Upgrades",
+          "icon": "⭐️",
+          "effects": [
+            {
+              "name": "Flaming Arrows",
+              "cost": "+1 EV",
+              "effect": "deals fire damage, and can ignite flammable objects in its area."
+            },
+            {
+              "name": "Screamers",
+              "cost": "+3 EV",
+              "effect": "The arrows make a high-pitched screaming noise as they are fired and descend onto their targets. The **Screamers** ability replaces **Arrow Storm**."
+            }
+          ]
+        },
+        {
+          "type": "feature",
+          "feature_type": "ability",
+          "name": "Screamers",
+          "icon": "🔳",
+          "keywords": [
+            "Area",
+            "Ranged",
+            "Weapon"
+          ],
+          "usage": "Main action (Adjacent creature)",
+          "distance": "5 cube within 20",
+          "target": "Each creature and object in the area",
+          "effects": [
+            {
+              "roll": "Power Roll + 2",
+              "tier1": "5 damage; R < 0 dazed (save ends)",
+              "tier2": "8 damage; R < 1 dazed (save ends)",
+              "tier3": "11 damage; R < 2 frightened (save ends)"
+            },
+            {
+              "name": "Effect",
+              "effect": "This ability can't be used again until the arrow launcher is reloaded."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "featureblock",
+      "featureblock_type": "Trap Ambusher",
+      "name": "Bear Trap",
+      "level": 1,
+      "ev": "2",
+      "flavor": "A set of spring-loaded steel jaws stands ready to snap shut when stepped on.",
+      "stamina": "6",
+      "size": "1S",
+      "features": [
+        {
+          "type": "feature",
+          "feature_type": "trait",
+          "name": "Deactivate",
+          "icon": "🌀",
+          "effects": [
+            {
+              "effect": "As a maneuver, a creature adjacent to a bear trap can make an **Agility test**.",
+              "tier1": "The creature triggers the trap and is affected as if in its space.",
+              "tier2": "The trap is deactivated but the creature is slowed (EoT).",
+              "tier3": "The trap is deactivated and doesn't trigger."
+            }
+          ]
+        },
+        {
+          "type": "feature",
+          "feature_type": "trait",
+          "name": "Activate",
+          "icon": "❕",
+          "effects": [
+            {
+              "effect": "The bear trap is calibrated to be triggered by creatures or objects of a particular size or larger. The trap triggers when a creature or object of the appropriate size enters its space."
+            },
+            {
+              "name": "Effect",
+              "effect": "A triggering creature or object ends their movement and is targeted by the **Bear Trap** ability."
+            }
+          ]
+        },
+        {
+          "type": "feature",
+          "feature_type": "ability",
+          "name": "Bear Trap",
+          "icon": "❗️",
+          "keywords": [
+            "Melee",
+            "Strike",
+            "Weapon"
+          ],
+          "usage": "Free triggered action",
+          "distance": "Melee 0",
+          "target": "The triggering creature or object",
+          "trigger": "A creature or object of the appropriate size enters the trap's space.",
+          "effects": [
+            {
+              "roll": "Power Roll + 2",
+              "tier1": "1 The target shifts 1 square away from the trap.",
+              "tier2": "3 damage; A < 1 slowed (save ends)",
+              "tier3": "5 damage; A < 2 slowed (save ends)"
+            },
+            {
+              "name": "Effect",
+              "effect": "The bear trap must be manually reset."
+            }
+          ]
+        },
+        {
+          "type": "feature",
+          "feature_type": "trait",
+          "name": "Upgrade",
+          "icon": "⭐️",
+          "effects": [
+            {
+              "name": "Chain",
+              "cost": "+1 EV",
+              "effect": "The bear trap is attached to the ground by a steel chain. A target who would be made slowed by the trap is restrained instead."
+            }
+          ]
+        },
+        {
+          "type": "feature",
+          "feature_type": "trait",
+          "name": "Hidden",
+          "icon": "⭐️",
+          "effects": [
+            {
+              "effect": "The bear trap is hidden until triggered or detected."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "featureblock",
+      "featureblock_type": "Fortification Defender",
+      "name": "Boiling Oil Cauldron",
+      "level": 3,
+      "ev": "10",
+      "flavor": "A large cauldron of boiling oil stands ready to be poured onto enemies.",
+      "stamina": "50",
+      "size": "1L",
+      "features": [
+        {
+          "type": "feature",
+          "feature_type": "trait",
+          "name": "Deactivate",
+          "icon": "🌀",
+          "effects": [
+            {
+              "effect": "As a maneuver, a creature adjacent to a boiling oil cauldron can make an **Agility test**.",
+              "tier1": "The creature accidentally activates the **Boiling Oil** ability.",
+              "tier2": "The boiling oil cauldron is deactivated but the creature is slowed (EoT).",
+              "tier3": "The boiling oil cauldron is deactivated and can't be used."
+            }
+          ]
+        },
+        {
+          "type": "feature",
+          "feature_type": "ability",
+          "name": "Boiling Oil",
+          "icon": "🔳",
+          "keywords": [
+            "Area",
+            "Weapon"
+          ],
+          "usage": "Main action (Adjacent creature)",
+          "distance": "3 cube within 1",
+          "target": "Each creature and object in the area",
+          "effects": [
+            {
+              "roll": "Power Roll + 2",
+              "tier1": "5 fire damage; M < 1 burning (save ends)",
+              "tier2": "9 fire damage; M < 2 burning (save ends)",
+              "tier3": "12 fire damage; M < 3 burning (save ends)"
+            },
+            {
+              "name": "Effect",
+              "effect": "If the boiling oil is poured down on targets from above, it has high ground and gains an edge on the power roll. A burning creature takes 1d6 fire damage at the start of each of their turns. A burning object takes 1d6 fire damage at the end of each round. This ability can't be used again until the boiling oil cauldron is reloaded."
+            }
+          ]
+        },
+        {
+          "type": "feature",
+          "feature_type": "ability",
+          "name": "Reload",
+          "icon": "⭐️",
+          "keywords": [
+            "-"
+          ],
+          "usage": "Main action (Adjacent creature)",
+          "distance": "-",
+          "target": "-",
+          "effects": [
+            {
+              "name": "Effect",
+              "effect": "The boiling oil cauldron is reloaded, allowing **Boiling Oil** to be used again. This action can be used only once per round."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "featureblock",
+      "featureblock_type": "Hazard Defender",
+      "name": "Brambles",
+      "level": 1,
+      "ev": "1 per 10 x 10 thicket",
+      "flavor": "This thicket features close-growing vines tipped with sharp thorns.",
+      "stamina": "3 per square",
+      "size": "One or more squares of difficult terrain",
+      "features": [
+        {
+          "type": "feature",
+          "feature_type": "trait",
+          "name": "Deactivate",
+          "icon": "🌀",
+          "effects": [
+            {
+              "effect": "Each square of brambles must be individually destroyed."
+            }
+          ]
+        },
+        {
+          "type": "feature",
+          "feature_type": "trait",
+          "name": "Activate",
+          "icon": "❕",
+          "effects": [
+            {
+              "effect": "A creature enters a square of brambles without shifting."
+            },
+            {
+              "name": "Effect",
+              "effect": "A creature takes 1 damage per square of brambles they enter."
+            }
+          ]
+        },
+        {
+          "type": "feature",
+          "feature_type": "trait",
+          "name": "Upgrade",
+          "icon": "⭐️",
+          "effects": [
+            {
+              "name": "Poisonous Thorns",
+              "cost": "+1 EV",
+              "effect": "The brambles are poisonous. Any creature who takes damage from brambles is also bleeding (save ends)."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "featureblock",
+      "featureblock_type": "Siege Engine Artillery",
+      "name": "Catapult",
+      "level": 3,
+      "ev": "10",
+      "flavor": "This massive counterweighted engine hurls a heavy projectile for a devastating assault.",
+      "stamina": "50",
+      "size": "2",
+      "features": [
+        {
+          "type": "feature",
+          "feature_type": "trait",
+          "name": "Deactivate",
+          "icon": "🌀",
+          "effects": [
+            {
+              "effect": "As a maneuver, a creature adjacent to a catapult can make an **Agility test**.",
+              "tier1": "The creature accidentally activates the **Arcing Shot** ability.",
+              "tier2": "The catapult is deactivated but the creature is slowed (EoT).",
+              "tier3": "The catapult is deactivated and can't be used."
+            }
+          ]
+        },
+        {
+          "type": "feature",
+          "feature_type": "ability",
+          "name": "Arcing Shot",
+          "icon": "🔳",
+          "keywords": [
+            "- Area",
+            "Ranged",
+            "Weapon"
+          ],
+          "usage": "Main action (Adjacent creature)",
+          "distance": "3 cube within 20",
+          "target": "Each creature and object in the area",
+          "effects": [
+            {
+              "roll": "Power Roll + 2",
+              "tier1": "5 damage",
+              "tier2": "9 damage; A < 0 push 1",
+              "tier3": "12 damage; A < 1 push 2"
+            },
+            {
+              "name": "Effect",
+              "effect": "Line of effect for this ability is an arc that can be traced over obstacles between the catapult and the target area. This ability can't be used again until the catapult is reloaded."
+            }
+          ]
+        },
+        {
+          "type": "feature",
+          "feature_type": "ability",
+          "name": "Reload",
+          "icon": "⭐️",
+          "keywords": [
+            "-"
+          ],
+          "usage": "Main action (Adjacent creature)",
+          "distance": "-",
+          "target": "-",
+          "effects": [
+            {
+              "name": "Effect",
+              "effect": "The catapult is reloaded, allowing **Arcing Shot** to be used again. This action can be used only once per round."
+            }
+          ]
+        },
+        {
+          "type": "feature",
+          "feature_type": "ability",
+          "name": "Spot",
+          "icon": "⭐️",
+          "keywords": [
+            "-"
+          ],
+          "usage": "Main action (Adjacent creature)",
+          "distance": "-",
+          "target": "-",
+          "effects": [
+            {
+              "name": "Effect",
+              "effect": "The next use of **Arcing Shot** gains an edge and has a +10 bonus to ranged distance. This action can be used only once per round."
+            }
+          ]
+        },
+        {
+          "type": "feature",
+          "feature_type": "ability",
+          "name": "Move",
+          "icon": "⭐️",
+          "keywords": [
+            "-"
+          ],
+          "usage": "Main action (Adjacent creature)",
+          "distance": "-",
+          "target": "-",
+          "effects": [
+            {
+              "name": "Effect",
+              "effect": "The catapult and the creature using this action move together up to 2 squares."
+            }
+          ]
+        },
+        {
+          "type": "feature",
+          "feature_type": "trait",
+          "name": "Upgrades",
+          "icon": "⭐️",
+          "effects": [
+            {
+              "name": "Air Assault",
+              "cost": "+2 EV",
+              "effect": "The side fielding the catapult has trained their forces to safely use the siege engine to launch them across the battlefield. As an adjacent creature main action, the catapult can be used to vertical push 10 any ally of size 1L or less. If the ally lands in an unoccupied space, they take no damage."
+            },
+            {
+              "name": "Flammable",
+              "cost": "+2 EV",
+              "effect": "deals fire damage, and the area of that ability is on fire until the end of the encounter. Any creature who enters the area for the first time in a round or starts their turn there takes 2 fire damage."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "featureblock",
+      "featureblock_type": "Fortification Defender",
+      "name": "Column of Blades",
+      "level": 3,
+      "ev": "3",
+      "flavor": "A spinning wooden column is affixed with sharp blades to slash the unwary.",
+      "stamina": "5",
+      "size": "1L",
+      "features": [
+        {
+          "type": "feature",
+          "feature_type": "trait",
+          "name": "Deactivate",
+          "icon": "🌀",
+          "effects": [
+            {
+              "effect": "The column of blades must be completely destroyed."
+            }
+          ]
+        },
+        {
+          "type": "feature",
+          "feature_type": "trait",
+          "name": "Activate",
+          "icon": "❕",
+          "effects": [
+            {
+              "effect": "A creature or object moves adjacent to the column of blades."
+            },
+            {
+              "name": "Effect",
+              "effect": "The **Spinning Blades** ability."
+            }
+          ]
+        },
+        {
+          "type": "feature",
+          "feature_type": "ability",
+          "name": "Spinning Blades",
+          "icon": "❗️",
+          "keywords": [
+            "Melee",
+            "Strike",
+            "Weapon"
+          ],
+          "usage": "Free triggered action",
+          "distance": "Melee 1",
+          "target": "The triggering creature or object",
+          "trigger": "A creature or object moves within distance of the column.",
+          "effects": [
+            {
+              "roll": "Power Roll + 2",
+              "tier1": "4 damage",
+              "tier2": "6 damage; M < 2 bleeding (save ends)",
+              "tier3": "9 damage; M < 3 bleeding (save ends)"
+            }
+          ]
+        },
+        {
+          "type": "feature",
+          "feature_type": "trait",
+          "name": "Upgrades",
+          "icon": "⭐️",
+          "effects": [
+            {
+              "name": "Stone Column",
+              "cost": "+1 EV",
+              "effect": "The column is made of stone and has 8 Stamina."
+            },
+            {
+              "name": "Metal Column",
+              "cost": "+1 EV",
+              "effect": "The column is made of metal and has 11 Stamina."
+            },
+            {
+              "name": "Concealed",
+              "cost": "+1 EV",
+              "effect": "The blades are concealed inside the column, which remains motionless until triggered."
+            },
+            {
+              "name": "Spiked Flails",
+              "cost": "+4 EV",
+              "effect": "Instead of blades, the column is affixed with heavy spiked balls attached by long chains. The **Whirling Flails** ability replaces **Spinning Blades**."
+            }
+          ]
+        },
+        {
+          "type": "feature",
+          "feature_type": "ability",
+          "name": "Whirling Flails",
+          "icon": "❗️",
+          "keywords": [
+            "Melee",
+            "Strike",
+            "Weapon"
+          ],
+          "usage": "Free triggered action",
+          "distance": "Melee 2",
+          "target": "The triggering creature or object",
+          "trigger": "A creature or object moves within distance of the column.",
+          "effects": [
+            {
+              "tier1": "5 damage",
+              "tier2": "8 damage; M < 2 dazed (save ends)",
+              "tier3": "11 damage; M < 3 dazed (save ends)"
+            }
+          ]
+        },
+        {
+          "type": "feature",
+          "feature_type": "trait",
+          "name": "Allied Awareness",
+          "icon": "⭐️",
+          "effects": [
+            {
+              "effect": "Allies who shift don't trigger the column. A creature observing an ally shift this way can make an **Intuition test** to shift in imitation of their movements."
+            },
+            {
+              "roll": "Power Roll + 2",
+              "tier1": "The creature triggers the column and the column's ability gains an edge.",
+              "tier2": "The creature triggers the column.",
+              "tier3": "The creature doesn't trigger the column."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "featureblock",
+      "featureblock_type": "Hazard Hexer",
+      "name": "Corrosive Pool",
+      "level": 2,
+      "ev": "3 per 10 x 10 pool",
+      "flavor": "This shallow pool bubbles with acid or some other corrosive liquid.",
+      "stamina": "12 per square",
+      "size": "One or more squares of difficult terrain",
+      "stats": [
+        {
+          "name": "Immunity",
+          "value": "20 to all damage except cold or fire damage"
+        }
+      ],
+      "features": [
+        {
+          "type": "feature",
+          "feature_type": "trait",
+          "name": "Deactivate",
+          "icon": "🌀",
+          "effects": [
+            {
+              "effect": "The pool must be completely destroyed."
+            }
+          ]
+        },
+        {
+          "type": "feature",
+          "feature_type": "trait",
+          "name": "Activate",
+          "icon": "❕",
+          "effects": [
+            {
+              "effect": "A creature or object enters the corrosive pool or starts their turn there. The liquid in the pool is also highly volatile (see **Explosive Reaction** below)."
+            },
+            {
+              "name": "Effect",
+              "effect": "A creature or object takes 3 acid damage if they start their turn in the pool, and takes 3 acid damage for each square of the pool they enter."
+            }
+          ]
+        },
+        {
+          "type": "feature",
+          "feature_type": "ability",
+          "name": "Explosive Reaction",
+          "icon": "❗️",
+          "keywords": [
+            "Area"
+          ],
+          "usage": "Free triggered action",
+          "distance": "3 burst",
+          "target": "Each creature and object in the area",
+          "trigger": "The pool takes fire damage.",
+          "effects": [
+            {
+              "roll": "Power Roll + 2",
+              "tier1": "3 fire damage; M < 1 the target is burning (save ends)",
+              "tier2": "6 fire damage; M < 2 the target is burning (save ends)",
+              "tier3": "9 fire damage; M < 3 the target is burning (save ends)"
+            },
+            {
+              "name": "Effect",
+              "effect": "The liquid in the pool is consumed. This ability has a double edge against any target in the pool. A burning creature takes 1d6 fire damage at the start of each of their turns. A burning object takes 1d6 fire damage at the end of each round. Any target with acid weakness takes extra damage from this ability and while burning as if the fire damage were acid damage."
+            }
+          ]
+        },
+        {
+          "type": "feature",
+          "feature_type": "trait",
+          "name": "Allied Awareness",
+          "icon": "⭐️",
+          "effects": [
+            {
+              "effect": "Allies who have weapons are equipped with torches. Any ally can use a maneuver to throw a torch up to 5 squares and deal 1 fire damage to the pool, triggering Explosive Reaction."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "featureblock",
+      "featureblock_type": "Trap Ambusher",
+      "name": "Dart Trap",
+      "level": 1,
+      "ev": "1",
+      "flavor": "A concealed dart thrower hurls missiles at short range.",
+      "stamina": "3",
+      "size": "1S",
+      "stats": [
+        {
+          "name": "Direction",
+          "value": "The dart trap fires in a fixed direction."
+        }
+      ],
+      "features": [
+        {
+          "type": "feature",
+          "feature_type": "trait",
+          "name": "Deactivate",
+          "icon": "🌀",
+          "effects": [
+            {
+              "effect": "As a maneuver, a creature adjacent to a dart trap can make an **Agility test**.",
+              "tier1": "The creature triggers the trap and is targeted by it.",
+              "tier2": "The trap is deactivated but the creature is slowed (EoT).",
+              "tier3": "The trap is deactivated and doesn't trigger."
+            }
+          ]
+        },
+        {
+          "type": "feature",
+          "feature_type": "trait",
+          "name": "Activate",
+          "icon": "❕",
+          "effects": [
+            {
+              "effect": "A pressure plate, switch, or other linked trigger is activated."
+            },
+            {
+              "name": "Effect",
+              "effect": "The **Dart** ability."
+            }
+          ]
+        },
+        {
+          "type": "feature",
+          "feature_type": "ability",
+          "name": "Dart",
+          "icon": "❗️",
+          "keywords": [
+            "Ranged",
+            "Strike",
+            "Weapon"
+          ],
+          "usage": "Free triggered action",
+          "distance": "Ranged 5",
+          "target": "One creature or object",
+          "trigger": "A pressure plate, switch, or other linked trigger is activated.",
+          "effects": [
+            {
+              "roll": "Power Roll + 2",
+              "tier1": "2 damage",
+              "tier2": "4 damage",
+              "tier3": "5 damage"
+            }
+          ]
+        },
+        {
+          "type": "feature",
+          "feature_type": "trait",
+          "name": "Upgrades",
+          "icon": "⭐️",
+          "effects": [
+            {
+              "name": "Poison Darts",
+              "cost": "+2 EV",
+              "effect": "The darts are tipped with poison. Any creature who takes damage from a dart also takes 1d6 poison damage at the start of each of their turns (save ends)."
+            },
+            {
+              "name": "Large Darts",
+              "cost": "+1 EV",
+              "effect": "Larger, heavier darts impart kinetic force to the trap's attack. A target of the **Dart** ability is pushed 1 square on a tier 1 outcome, 2 squares on a tier 2 outcome, or 3 squares on a tier 3 outcome."
+            },
+            {
+              "name": "Gatling Darts",
+              "cost": "+4 EV",
+              "effect": "The dart trap is equipped with multiple barrels to launch darts at a high rate of fire. The **Dart** ability loses the Ranged and Strike and takes the Area keyword, its area becomes a 5 x 1 line within 1, and it deals an extra 1d6 damage."
+            }
+          ]
+        },
+        {
+          "type": "feature",
+          "feature_type": "trait",
+          "name": "Hidden",
+          "icon": "⭐️",
+          "effects": [
+            {
+              "effect": "The dart trap is hidden until triggered or detected."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "featureblock",
+      "featureblock_type": "Siege Engine Artillery",
+      "name": "Exploding Mill Wheel",
+      "level": 3,
+      "ev": "10",
+      "flavor": "A massive wooden wheel is loaded with explosives and rolled toward enemy forces or fortifications, ready to explode.",
+      "stamina": "25",
+      "size": "2",
+      "features": [
+        {
+          "type": "feature",
+          "feature_type": "trait",
+          "name": "Deactivate",
+          "icon": "🌀",
+          "effects": [
+            {
+              "effect": "As a maneuver, a creature adjacent to an exploding mill wheel that isn't rolling can make an **Agility test**.",
+              "tier1": "The creature accidentally activates the **Roll the Wheel** ability.",
+              "tier2": "The exploding mill wheel is deactivated but the creature is slowed (EoT).",
+              "tier3": "The exploding mill wheel is deactivated and can't be used."
+            },
+            {
+              "effect": "Once the wheel is rolling, it can't be deactivated. However, it can be exploded early by destroying it or blocking its movement with a suitably large creature or object."
+            }
+          ]
+        },
+        {
+          "type": "feature",
+          "feature_type": "ability",
+          "name": "Roll the Wheel",
+          "icon": "🌀",
+          "keywords": [
+            "Area"
+          ],
+          "usage": "Main action (Adjacent creature)",
+          "distance": "Special",
+          "target": "Each creature and object in the area",
+          "effects": [
+            {
+              "name": "Effect",
+              "effect": "When this ability is used and at the start of every turn thereafter, the exploding mill wheel rolls, moving 2 squares in a straight line. Each creature and object of size 2 or smaller in the area defined by the wheel's movement is targeted by the following power roll. A target force moved this way is moved to either side of the wheel, as the Director determines."
+            },
+            {
+              "effect": "If the wheel enters the space of any creature or object of size 3 or larger, or if it is reduced to 0 Stamina, its movement stops and it explodes. Each creature and object in a 5 burst centered on the wheel is targeted by the following power roll.",
+              "roll": "Power Roll + 2",
+              "tier1": "5 damage; push 1; M < 0 burning (save ends)",
+              "tier2": "9 damage; push 2; M < 1 burning (save ends)",
+              "tier3": "12 damage; push 3; M < 2 burning (save ends)"
+            },
+            {
+              "effect": "A burning creature takes 1d6 fire damage at the start of each of their turns. A burning object takes 1d6 fire damage at the end of each round."
+            }
+          ]
+        },
+        {
+          "type": "feature",
+          "feature_type": "trait",
+          "name": "Upgrade",
+          "icon": "⭐️",
+          "effects": [
+            {
+              "name": "Piloted",
+              "cost": "+4 EV",
+              "effect": "The wheel has been fitted with a control mechanism and a pilot's seat for a creature of size 1M or smaller. As a move action, the pilot can turn the wheel in any direction while it is moving. As a main action, the pilot can leap out of the pilot's seat, landing in an adjacent space while the wheel continues moving in a straight line.\nWithout proper training, determining how to pilot the wheel requires a **Reason test**.",
+              "tier1": "The wheel immediately explodes as if striking a size 3 or larger creature or object.",
+              "tier2": "The creature fails to pilot the wheel.",
+              "tier3": "The creature can pilot the wheel."
+            },
+            {
+              "effect": "On a natural 19 or 20, a creature can both pilot the wheel and can disarm its explosives as a maneuver."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "featureblock",
+      "featureblock_type": "Siege Engine Artillery",
+      "name": "Field Ballista",
+      "level": 2,
+      "ev": "8",
+      "flavor": "A massive crossbow fires thick metal bolts with devastating effect.",
+      "stamina": "40",
+      "size": "2",
+      "features": [
+        {
+          "type": "feature",
+          "feature_type": "trait",
+          "name": "Deactivate",
+          "icon": "🌀",
+          "effects": [
+            {
+              "effect": "As a maneuver, a creature adjacent to a field ballista can make an **Agility test**.",
+              "tier1": "The creature accidentally activates the **Release Bolt** ability.",
+              "tier2": "The field ballista is deactivated but the creature is slowed (EoT).",
+              "tier3": "The field ballista is deactivated and can't be used."
+            }
+          ]
+        },
+        {
+          "type": "feature",
+          "feature_type": "ability",
+          "name": "Release Bolt",
+          "icon": "🏹",
+          "keywords": [
+            "Ranged",
+            "Strike",
+            "Weapon"
+          ],
+          "usage": "Main action (Adjacent creature)",
+          "distance": "Ranged 20",
+          "target": "One creature or object",
+          "effects": [
+            {
+              "roll": "Power Roll + 2",
+              "tier1": "5 damage",
+              "tier2": "8 damage; M < 1 push 1",
+              "tier3": "11 damage; M < 2 push 2"
+            },
+            {
+              "name": "Effect",
+              "effect": "This ability can't be used again until the field ballista is reloaded."
+            }
+          ]
+        },
+        {
+          "type": "feature",
+          "feature_type": "ability",
+          "name": "Reload",
+          "icon": "⭐️",
+          "keywords": [
+            "-"
+          ],
+          "usage": "Main action (Adjacent creature)",
+          "distance": "-",
+          "target": "-",
+          "effects": [
+            {
+              "name": "Effect",
+              "effect": "The field ballista is reloaded, allowing **Release Bolt** to be used again. This action can be used only once per round."
+            }
+          ]
+        },
+        {
+          "type": "feature",
+          "feature_type": "ability",
+          "name": "Spot",
+          "icon": "⭐️",
+          "keywords": [
+            "-"
+          ],
+          "usage": "Main action (Adjacent creature)",
+          "distance": "-",
+          "target": "-",
+          "effects": []
+        },
+        {
+          "type": "feature",
+          "feature_type": "ability",
+          "name": "Move",
+          "icon": "⭐️",
+          "keywords": [
+            "-"
+          ],
+          "usage": "Main action (Adjacent creature)",
+          "distance": "-",
+          "target": "-",
+          "effects": [
+            {
+              "name": "Effect",
+              "effect": "The field ballista and the creature using this action move together up to 3 squares."
+            }
+          ]
+        },
+        {
+          "type": "feature",
+          "feature_type": "trait",
+          "name": "Upgrades",
+          "icon": "⭐️",
+          "effects": [
+            {
+              "name": "Penetrating Bolt",
+              "cost": "+2 EV",
+              "effect": "The field ballista targets the nearest two additional creatures or objects in a straight line beyond the initial target."
+            },
+            {
+              "name": "Chain Bolt",
+              "cost": "+2 EV",
+              "effect": "The field ballista's bolts are set with heavy chains that wrap around targets. The **Chain Bolt** ability replaces **Release Bolt**, and the field ballista gains the **Crank the Chain** ability.\n🏹 **Chain Bolt**\n| **- - Ranged, Strike, Weapon** | **Main action (Adjacent creature)** |\n| ------------------------------ | ----------------------------------: |\n| **📏 Ranged 20**               |       **🎯 One creature or object** |"
+            },
+            {
+              "roll": "Power Roll + 2",
+              "tier1": "4 damage",
+              "tier2": "7 damage; M < 1 slowed (save ends)",
+              "tier3": "10 damage; M < 2 slowed (save ends)"
+            },
+            {
+              "name": "Effect",
+              "effect": "This ability can't be used again until the field ballista is reloaded.\n🏹 **Crank the Chain**\n| **Ranged, Strike, Weapon** | **Main action (Adjacent creature)** |\n| -------------------------- | ----------------------------------: |\n| **📏 Ranged 20**           |                 **🎯 One creature** |"
+            },
+            {
+              "name": "Special",
+              "effect": "The target must be slowed by the field ballista."
+            },
+            {
+              "roll": "Power Roll + 2",
+              "tier1": "Pull 1",
+              "tier2": "Pull",
+              "tier3": "3 Pull 5"
+            },
+            {
+              "name": "Effect",
+              "effect": "This forced movement triggers opportunity attacks."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "featureblock",
+      "featureblock_type": "Trap Ambusher",
+      "name": "Flammable Oil",
+      "level": 1,
+      "ev": "2 per 10 x 10 patch",
+      "flavor": "A patch of flammable oil or pitch on the ground is ready to be ignited.",
+      "stamina": "-",
+      "size": "One or more squares",
+      "features": [
+        {
+          "type": "feature",
+          "feature_type": "trait",
+          "name": "Deactivate",
+          "icon": "🌀",
+          "effects": [
+            {
+              "effect": "As a maneuver, a creature adjacent to a patch of flammable oil can make an **Agility test**.",
+              "tier1": "The creature ignites the oil and is affected as if in its area.",
+              "tier2": "The oil temporarily ignites before safely burning out, and the creature takes 3 fire damage and is burning (save ends).",
+              "tier3": "The oil is rendered safe and can't be ignited."
+            }
+          ]
+        },
+        {
+          "type": "feature",
+          "feature_type": "trait",
+          "name": "Activate",
+          "icon": "❕",
+          "effects": [
+            {
+              "effect": "A creature or object in a square of oil takes fire damage, or a creature or object enters a square of burning oil or starts their turn there."
+            },
+            {
+              "name": "Effect",
+              "effect": "The triggering creature or object takes 3 fire damage and is burning (save ends). A burning creature takes 1d6 fire damage at the start of each of their turns. A burning object takes 1d6 fire damage at the end of each round."
+            }
+          ]
+        },
+        {
+          "type": "feature",
+          "feature_type": "trait",
+          "name": "Upgrade",
+          "icon": "⭐️",
+          "effects": [
+            {
+              "name": "Concealed Oil",
+              "cost": "+1 EV",
+              "effect": "The oil is hidden until it ignites."
+            }
+          ]
+        },
+        {
+          "type": "feature",
+          "feature_type": "trait",
+          "name": "Allied Awareness",
+          "icon": "⭐️",
+          "effects": [
+            {
+              "effect": "Allies who have weapons are equipped with torches. Any ally can use a maneuver to throw a torch up to 5 squares and ignite the flammable oil."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "featureblock",
+      "featureblock_type": "Hazard Hexer",
+      "name": "Frozen Pond",
+      "level": 1,
+      "ev": "1 per 10 x 10 pond",
+      "flavor": "A shallow, frozen patch of water features ice thick enough that it won't break, but its surface is slick and treacherous to navigate.",
+      "stamina": "3 per square",
+      "size": "One or more squares of difficult terrain",
+      "stats": [
+        {
+          "name": "Immunity",
+          "value": "5 to all damage except fire damage"
+        }
+      ],
+      "features": [
+        {
+          "type": "feature",
+          "feature_type": "trait",
+          "name": "Deactivate",
+          "icon": "🌀",
+          "effects": [
+            {
+              "effect": "Destroying a square of the frozen pond turns the square into shallow icy water."
+            }
+          ]
+        },
+        {
+          "type": "feature",
+          "feature_type": "trait",
+          "name": "Activate",
+          "icon": "❕",
+          "effects": [
+            {
+              "effect": "A creature or object enters a square of the frozen pond without shifting."
+            },
+            {
+              "name": "Effect",
+              "effect": "The **Slippery Surface** ability."
+            }
+          ]
+        },
+        {
+          "type": "feature",
+          "feature_type": "ability",
+          "name": "Slippery Surface",
+          "icon": "❗️",
+          "keywords": [
+            "Melee",
+            "Strike"
+          ],
+          "usage": "Free triggered action",
+          "distance": "Melee 0",
+          "target": "The triggering creature or object",
+          "trigger": "A creature or object enters a square of the frozen pond without shifting.",
+          "effects": [
+            {
+              "roll": "Power Roll + 2",
+              "tier1": "Push 1 in the direction the target was moving",
+              "tier2": "Push 2 in the direction the target was moving; A < 1 slowed (save ends)",
+              "tier3": "Push 3 in the direction the target was moving; A < 2 prone and can't stand (save ends)"
+            },
+            {
+              "name": "Effect",
+              "effect": "The triggering creature's movement ends, then they are force moved. If the target triggered this ability by being force moved, this ability gains an edge and any remaining forced movement distance is added to the ability's forced movement. The ability's forced movement doesn't trigger the ability again."
+            }
+          ]
+        },
+        {
+          "type": "feature",
+          "feature_type": "trait",
+          "name": "Upgrade",
+          "icon": "⭐️",
+          "effects": [
+            {
+              "name": "Thin Ice",
+              "cost": "+1 EV",
+              "effect": "The ice covering the pond is thin and the water is deeper. Whenever a creature or object enters or falls prone in a square of the frozen pond, that square is destroyed and replaced with icy water. The **Icy Water** ability replaces **Slippery Surface**.\nAny creature who starts their turn in the icy water takes 1 cold damage. If the water is deep enough, a creature can swim beneath the surface of the frozen pond, but takes this cold damage while doing so."
+            }
+          ]
+        },
+        {
+          "type": "feature",
+          "feature_type": "ability",
+          "name": "Power Roll + 2:",
+          "keywords": [
+            "Melee",
+            "Strike"
+          ],
+          "usage": "Free triggered action",
+          "distance": "Melee 0",
+          "target": "The triggering creature or object",
+          "trigger": "A creature or object enters or falls prone in a square of the frozen pond.",
+          "effects": [
+            {
+              "tier1": "Slide 1",
+              "tier2": "1 cold damage; M < 1 slowed (save ends)",
+              "tier3": "3 cold damage; M < 2 restrained (save ends)"
+            },
+            {
+              "name": "Effect",
+              "effect": "The triggering creature's movement ends, then they are force moved if applicable."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "featureblock",
+      "featureblock_type": "Fortification Ambusher",
+      "name": "Hidey-Hole",
+      "level": 1,
+      "ev": "1",
+      "flavor": "A cavity in a floor, wall, or ceiling might hold hidden threats.",
+      "stamina": "-",
+      "size": "One or more squares",
+      "features": [
+        {
+          "type": "feature",
+          "feature_type": "trait",
+          "name": "Deactivate",
+          "icon": "🌀",
+          "effects": [
+            {
+              "effect": "As a maneuver, a creature adjacent to a hidey-hole can make a **Might test**.",
+              "tier1": "The creature is restrained (save ends).",
+              "tier2": "The hidey-hole collapses but the creature is slowed (save ends).",
+              "tier3": "The hidey-hole collapses and can no longer be used until repaired."
+            }
+          ]
+        },
+        {
+          "type": "feature",
+          "feature_type": "trait",
+          "name": "Activate",
+          "icon": "❕",
+          "effects": [
+            {
+              "effect": "A creature starts the encounter in the hidey-hole or ends their turn there."
+            },
+            {
+              "name": "Effect",
+              "effect": "The triggering creature can attempt to hide as a free triggered action."
+            }
+          ]
+        },
+        {
+          "type": "feature",
+          "feature_type": "trait",
+          "name": "Upgrade",
+          "icon": "⭐️",
+          "effects": [
+            {
+              "name": "Network",
+              "cost": "+1 EV per hidey-hole",
+              "effect": "The hidey-hole is connected to a tunnel network. A creature familiar with the network can move from one hidey-hole to any space adjacent to a connected hidey-hole if they have movement available equal to the straight-line distance to that space. A creature unfamiliar with the network can use a maneuver to make a **hard Intuition test** to discover a connected hidey-hole."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "featureblock",
+      "featureblock_type": "Relic Support",
+      "name": "Holy Idol",
+      "level": 5,
+      "ev": "7",
+      "flavor": "An empowering monument to a higher power enables a villain's machinations.",
+      "stamina": "35",
+      "size": "2",
+      "features": [
+        {
+          "type": "feature",
+          "feature_type": "trait",
+          "name": "Deactivate",
+          "icon": "🌀",
+          "effects": [
+            {
+              "effect": "The holy idol must be completely destroyed."
+            }
+          ]
+        },
+        {
+          "type": "feature",
+          "feature_type": "trait",
+          "name": "Empowered Will",
+          "icon": "⭐️",
+          "effects": [
+            {
+              "effect": "At the start of each round while the holy idol is intact, the Director gains a d6 that lasts until the end of the round. When a Director-controlled creature deals or takes damage, the Director can roll the d6 to increase the damage the creature deals or reduce the damage the creature takes by an amount equal to the roll (to a minimum of 2 damage). If multiple idols are in play, only one d6 can be applied to a single instance of damage."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "featureblock",
+      "featureblock_type": "Siege Engine Artillery",
+      "name": "Iron Dragon",
+      "level": 4,
+      "ev": "12",
+      "flavor": "A massive metal device uses a bellows system and liquid fuel to shoot out gouts of flame.",
+      "stamina": "60",
+      "size": "2",
+      "features": [
+        {
+          "type": "feature",
+          "feature_type": "trait",
+          "name": "Deactivate",
+          "icon": "🌀",
+          "effects": [
+            {
+              "effect": "As a maneuver, a creature adjacent to an iron dragon can make an **Agility test**.",
+              "tier1": "The creature accidentally activates the **Gout of Flame** ability.",
+              "tier2": "The iron dragon is deactivated but the creature is slowed (EoT).",
+              "tier3": "The iron dragon is deactivated and can't be used."
+            }
+          ]
+        },
+        {
+          "type": "feature",
+          "feature_type": "ability",
+          "name": "Gout of Flame",
+          "icon": "🔳",
+          "keywords": [
+            "Area",
+            "Weapon"
+          ],
+          "usage": "Main action (Adjacent creature)",
+          "distance": "8 x 2 line within 1",
+          "target": "Each creature and object in the area",
+          "effects": [
+            {
+              "roll": "Power Roll + 2",
+              "tier1": "6 fire damage; A < 0 the target is burning (save ends)",
+              "tier2": "10 fire damage; A < 1 the target is burning (save ends)",
+              "tier3": "13 fire damage; A < 2 the target is burning (save ends)"
+            },
+            {
+              "name": "Effect",
+              "effect": "A burning creature takes 1d6 fire damage at the start of each of their turns. A burning object takes 1d6 fire damage at the end of each round. This ability can't be used again until the iron dragon is reloaded."
+            }
+          ]
+        },
+        {
+          "type": "feature",
+          "feature_type": "ability",
+          "name": "Reload",
+          "icon": "⭐️",
+          "keywords": [
+            "-"
+          ],
+          "usage": "Main action (Adjacent creature)",
+          "distance": "-",
+          "target": "-",
+          "effects": [
+            {
+              "name": "Effect",
+              "effect": "The iron dragon is reloaded, allowing **Gout of Flame** to be used again. This action can be used only once per round."
+            }
+          ]
+        },
+        {
+          "type": "feature",
+          "feature_type": "ability",
+          "name": "Spot",
+          "icon": "⭐️",
+          "keywords": [
+            "-"
+          ],
+          "usage": "Main action (Adjacent creature)",
+          "distance": "-",
+          "target": "-",
+          "effects": [
+            {
+              "name": "Effect",
+              "effect": "The next use of **Gout of Flame** gains an edge and has a +10 bonus to ranged distance. This action can be used only once per round."
+            }
+          ]
+        },
+        {
+          "type": "feature",
+          "feature_type": "ability",
+          "name": "Move",
+          "icon": "⭐️",
+          "keywords": [
+            "-"
+          ],
+          "usage": "Main action (Adjacent creature)",
+          "distance": "-",
+          "target": "-",
+          "effects": [
+            {
+              "name": "Effect",
+              "effect": "The iron dragon and the creature using this action move together up to 2 squares."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "featureblock",
+      "featureblock_type": "Hazard Hexer",
+      "name": "Lava",
+      "level": 3,
+      "ev": "4 per 10 x 10 patch",
+      "flavor": "A patch of blisteringly hot molten rock wells up from the ground, threatening anyone who gets close to it.",
+      "stamina": "12 per square",
+      "size": "One or more squares of difficult terrain",
+      "stats": [
+        {
+          "name": "Immunity",
+          "value": "20 to all damage except cold damage"
+        }
+      ],
+      "features": [
+        {
+          "type": "feature",
+          "feature_type": "trait",
+          "name": "Deactivate",
+          "icon": "🌀",
+          "effects": [
+            {
+              "effect": "Each square of lava must be individually destroyed."
+            }
+          ]
+        },
+        {
+          "type": "feature",
+          "feature_type": "trait",
+          "name": "Activate",
+          "icon": "❕",
+          "effects": [
+            {
+              "effect": "A creature or object enters the lava or starts their turn there, or starts their turn adjacent to the lava."
+            },
+            {
+              "name": "Effect",
+              "effect": "The **Liquid Hot Magma** ability."
+            }
+          ]
+        },
+        {
+          "type": "feature",
+          "feature_type": "ability",
+          "name": "Liquid Hot Magma",
+          "icon": "❗️",
+          "keywords": [
+            "Melee",
+            "Strike"
+          ],
+          "usage": "Free triggered action",
+          "distance": "Melee 1",
+          "target": "The triggering creature or object",
+          "trigger": "A creature or object enters the lava or starts their turn there, or starts their turn adjacent to the lava.",
+          "effects": [
+            {
+              "roll": "Power Roll + 2",
+              "tier1": "5 fire damage; M < 1 the target is burning (save ends)",
+              "tier2": "9 fire damage; M < 2 the target is burning (save ends)",
+              "tier3": "12 fire damage; M < 3 the target is burning (save ends)"
+            },
+            {
+              "name": "Effect",
+              "effect": "If the target is adjacent to lava but not in it, this ability takes a bane. A burning creature takes 1d6 fire damage at the start of each of their turns. A burning object takes 1d6 fire damage at the end of each round."
+            }
+          ]
+        },
+        {
+          "type": "feature",
+          "feature_type": "trait",
+          "name": "Upgrade",
+          "icon": "⭐️",
+          "effects": [
+            {
+              "name": "Magma Flow",
+              "cost": "+4 EV",
+              "effect": "The lava is flowing! At the start of each round, add one square of lava adjacent to an existing square of lava."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "featureblock",
+      "featureblock_type": "Fortification Defender",
+      "name": "Pavise Shield",
+      "level": 1,
+      "ev": "1",
+      "flavor": "A reinforced metal shield embedded in the ground acts as cover for the creature controlling it.",
+      "stamina": "9",
+      "size": "1M",
+      "features": [
+        {
+          "type": "feature",
+          "feature_type": "trait",
+          "name": "Deactivate",
+          "icon": "🌀",
+          "effects": [
+            {
+              "effect": "As a maneuver, a creature adjacent to a pavise shield controlled by another creature can make a **Might test**.",
+              "tier1": "The creature controlling the shield retains control of it and can make an opportunity attack against the creature making the test.",
+              "tier2": "The creature controlling the shield retains control of it.",
+              "tier3": "The creature making the test grabs the shield and takes control of it."
+            }
+          ]
+        },
+        {
+          "type": "feature",
+          "feature_type": "trait",
+          "name": "Controlling the Shield",
+          "icon": "⭐️",
+          "effects": [
+            {
+              "effect": "While a creature has the pavise shield grabbed, they have cover and take half damage from abilities whose line of effect extends through the shield. The pavise shield takes the other half of the damage.\n\nWhile a creature has a pavise shield grabbed, their speed is halved and they move the shield like a grabbed creature."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "featureblock",
+      "featureblock_type": "Hazard Hexer",
+      "name": "Pillar",
+      "level": 2,
+      "ev": "3",
+      "flavor": "This stone pillar can be toppled onto unsuspecting foes with the right amount of damage or a well-engineered trigger mechanism.",
+      "stamina": "6",
+      "size": "One square that can't be moved through",
+      "stats": [
+        {
+          "name": "Direction",
+          "value": "The pillar topples in a preset direction."
+        }
+      ],
+      "features": [
+        {
+          "type": "feature",
+          "feature_type": "trait",
+          "name": "Deactivate",
+          "icon": "🌀",
+          "effects": [
+            {
+              "effect": "The pillar's linked trigger must be deactivated."
+            }
+          ]
+        },
+        {
+          "type": "feature",
+          "feature_type": "trait",
+          "name": "Activate",
+          "icon": "❕",
+          "effects": [
+            {
+              "effect": "The pillar is destroyed, or a pressure plate, switch, or other linked trigger is activated."
+            },
+            {
+              "name": "Effect",
+              "effect": "The **Toppling Pillar** ability."
+            }
+          ]
+        },
+        {
+          "type": "feature",
+          "feature_type": "ability",
+          "name": "Toppling Pillar",
+          "icon": "❗️",
+          "keywords": [
+            "Area"
+          ],
+          "usage": "Free triggered action",
+          "distance": "4 x 1 line within 1",
+          "target": "Each creature and object in the area",
+          "trigger": "The pillar is destroyed, or a pressure plate, switch, or other linked trigger is activated.",
+          "effects": [
+            {
+              "roll": "Power Roll + 2",
+              "tier1": "4 damage",
+              "tier2": "6 damage; M < 1 restrained (save ends)",
+              "tier3": "9 damage; M < 2 restrained (save ends)"
+            },
+            {
+              "name": "Effect",
+              "effect": "The area is difficult terrain."
+            }
+          ]
+        },
+        {
+          "type": "feature",
+          "feature_type": "trait",
+          "name": "Upgrades",
+          "icon": "⭐️",
+          "effects": [
+            {
+              "name": "Metal Pillar",
+              "cost": "+1 EV",
+              "effect": "The pillar is made of metal, has 9 Stamina, and deals 1d6 extra damage."
+            },
+            {
+              "name": "Multiple Pillars",
+              "cost": "+3 EV per additional pillar",
+              "effect": "Multiple pillars can be used to represent a larger toppling object such as a wall. If triggered by destruction, all individual pillars need to be destroyed before the object falls."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "featureblock",
+      "featureblock_type": "Trap Ambusher",
+      "name": "Portcullis",
+      "level": 3,
+      "ev": "4",
+      "flavor": "A portcullis is hidden in the ceiling of a passage or choke point, waiting to drop when activated.",
+      "stamina": "9 per square",
+      "size": "The area of the corridor to be blocked",
+      "stats": [
+        {
+          "name": "Typical Space",
+          "value": "2 x 1-square area, up to a 4 x 2-square area"
+        }
+      ],
+      "features": [
+        {
+          "type": "feature",
+          "feature_type": "trait",
+          "name": "Deactivate",
+          "icon": "🌀",
+          "effects": [
+            {
+              "effect": "As a maneuver, a creature adjacent to a portcullis can make an **Agility test**.",
+              "tier1": "The creature triggers the portcullis and is affected as if in its area.",
+              "tier2": "The portcullis is deactivated but the creature is slowed (EoT).",
+              "tier3": "The portcullis is deactivated and doesn't trigger."
+            }
+          ]
+        },
+        {
+          "type": "feature",
+          "feature_type": "trait",
+          "name": "Activate",
+          "icon": "❕",
+          "effects": [
+            {
+              "effect": "A pressure plate, switch, or other linked trigger is activated."
+            },
+            {
+              "name": "Effect",
+              "effect": "The **Heavy Gate** ability."
+            }
+          ]
+        },
+        {
+          "type": "feature",
+          "feature_type": "ability",
+          "name": "Heavy Gate",
+          "icon": "❗️",
+          "keywords": [
+            "Area",
+            "Weapon"
+          ],
+          "usage": "Free triggered action",
+          "distance": "Special",
+          "target": "Each creature and object in the area",
+          "trigger": "A pressure plate, switch, or other linked trigger is activated.",
+          "effects": [
+            {
+              "name": "Special",
+              "effect": "The area of this ability is the area directly beneath the portcullis when it falls."
+            },
+            {
+              "roll": "Power Roll + 2",
+              "tier1": "3 damage; slide 1, ignoring stability",
+              "tier2": "7 damage; A < 2 restrained (save ends)",
+              "tier3": "10 damage; A < 3 restrained (save ends)"
+            },
+            {
+              "name": "Effect",
+              "effect": "The portcullis blocks movement from one side of it to the other. A target slid by the portcullis ends up on one side of it or the other (choose randomly). The portcullis must be manually reset."
+            }
+          ]
+        },
+        {
+          "type": "feature",
+          "feature_type": "trait",
+          "name": "Hidden",
+          "icon": "⭐️",
+          "effects": [
+            {
+              "effect": "The portcullis is hidden until triggered or detected."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "featureblock",
+      "featureblock_type": "Trigger Support",
+      "name": "Pressure Plate",
+      "level": 1,
+      "ev": "2",
+      "flavor": "This mechanism acts as a trigger for another linked mechanism, and is skillfully hidden from view in the floor.",
+      "stamina": "-",
+      "size": "Any area",
+      "stats": [
+        {
+          "name": "Typical Space",
+          "value": "One square, up to a 4 x 4-square area"
+        },
+        {
+          "name": "Link",
+          "value": "A pressure plate is linked to another mechanism that it activates when triggered."
+        }
+      ],
+      "features": [
+        {
+          "type": "feature",
+          "feature_type": "trait",
+          "name": "Deactivate",
+          "icon": "🌀",
+          "effects": [
+            {
+              "effect": "As a maneuver, a creature adjacent to a pressure plate can make an **Agility test**.",
+              "tier1": "The creature triggers the pressure plate.",
+              "tier2": "The pressure plate is deactivated but the creature is slowed (EoT).",
+              "tier3": "The pressure plate is deactivated and doesn't trigger."
+            }
+          ]
+        },
+        {
+          "type": "feature",
+          "feature_type": "trait",
+          "name": "Activate",
+          "icon": "❕",
+          "effects": [
+            {
+              "effect": "The pressure plate is calibrated to be triggered by creatures or objects of a particular size. The pressure plate triggers when a creature or object of the appropriate size enters its area."
+            },
+            {
+              "name": "Effect",
+              "effect": "The linked mechanism is activated. A pressure plate automatically resets and can be triggered repeatedly."
+            }
+          ]
+        },
+        {
+          "type": "feature",
+          "feature_type": "trait",
+          "name": "Upgrade",
+          "icon": "⭐️",
+          "effects": [
+            {
+              "name": "Tripwire",
+              "cost": "−1 EV",
+              "effect": "The pressure plate is a tripwire, which can trigger once and must be manually reset. A concealed tripwire can be discovered with an **easy Intuition test**."
+            }
+          ]
+        },
+        {
+          "type": "feature",
+          "feature_type": "trait",
+          "name": "Hidden",
+          "icon": "⭐️",
+          "effects": [
+            {
+              "effect": "The pressure plate is hidden until triggered or detected."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "featureblock",
+      "featureblock_type": "Fortification Defender",
+      "name": "Psionic Shard",
+      "level": 5,
+      "ev": "7",
+      "flavor": "A massive humming crystal makes the air around it feel thick.",
+      "stamina": "40",
+      "size": "2",
+      "features": [
+        {
+          "type": "feature",
+          "feature_type": "trait",
+          "name": "Deactivate",
+          "icon": "🌀",
+          "effects": [
+            {
+              "effect": "The psionic shard must be completely destroyed."
+            }
+          ]
+        },
+        {
+          "type": "feature",
+          "feature_type": "trait",
+          "name": "Psionic Barrier",
+          "icon": "⭐️",
+          "effects": [
+            {
+              "effect": "A psionic shard is attuned to one side in an encounter. While a psionic shard is intact, any damage dealt to each ally of the shard in the encounter is halved."
+            }
+          ]
+        },
+        {
+          "type": "feature",
+          "feature_type": "ability",
+          "name": "Psionic Pulse",
+          "icon": "❗️",
+          "keywords": [
+            "-"
+          ],
+          "usage": "Free triggered action",
+          "distance": "Special",
+          "target": "Special",
+          "trigger": "The shard is destroyed.",
+          "effects": [
+            {
+              "name": "Effect",
+              "effect": "The shard releases a shockwave channeled through each creature affected by Psionic Barrier. Each ally in the encounter is dazed until the end of their next turn."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "featureblock",
+      "featureblock_type": "Trigger Support",
+      "name": "Pulley",
+      "level": 1,
+      "ev": "1",
+      "flavor": "A counterweighted pulley system can be used to quickly ascend to the top of a wall, scaffold, tower, or other structure.",
+      "stamina": "1",
+      "size": "1S",
+      "features": [
+        {
+          "type": "feature",
+          "feature_type": "trait",
+          "name": "Deactivate",
+          "icon": "🌀",
+          "effects": [
+            {
+              "effect": "As a maneuver, a creature adjacent to a pulley can make an **Agility test**.",
+              "tier1": "The creature triggers the pulley.",
+              "tier2": "The pulley is deactivated but the creature is slowed (EoT).",
+              "tier3": "The pulley is deactivated and doesn't trigger."
+            }
+          ]
+        },
+        {
+          "type": "feature",
+          "feature_type": "trait",
+          "name": "Activate",
+          "icon": "❕",
+          "effects": [
+            {
+              "effect": "A creature adjacent to the pulley uses a maneuver to release the pulley."
+            },
+            {
+              "name": "Effect",
+              "effect": "The triggering creature is lifted to the top of the structure the pulley is attached to. The pulley must be manually reset."
+            }
+          ]
+        },
+        {
+          "type": "feature",
+          "feature_type": "trait",
+          "name": "Climbable",
+          "icon": "⭐️",
+          "effects": [
+            {
+              "effect": "A creature adjacent to the pulley can climb its ropes with an **easy Agility test** to ascend to the top of the structure it's attached to."
+            }
+          ]
+        },
+        {
+          "type": "feature",
+          "feature_type": "trait",
+          "name": "Upgrade",
+          "icon": "⭐️",
+          "effects": [
+            {
+              "name": "Looped Chain",
+              "cost": "+1 EV",
+              "effect": "Instead of a rope and pulley, the system uses a counterweighted looped chain. A looped chain automatically resets and can be triggered repeatedly."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "featureblock",
+      "featureblock_type": "Hazard Hexer",
+      "name": "Quicksand",
+      "level": 3,
+      "ev": "3 per 10 x 10 patch",
+      "flavor": "When this patch of sand is stepped on, it is revealed to be a slurry saturated by water—and ready to draw creatures down to their doom.",
+      "stamina": "-",
+      "size": "One or more squares",
+      "features": [
+        {
+          "type": "feature",
+          "feature_type": "trait",
+          "name": "Deactivate",
+          "icon": "🌀",
+          "effects": []
+        },
+        {
+          "type": "feature",
+          "feature_type": "trait",
+          "name": "Activate",
+          "icon": "❕",
+          "effects": [
+            {
+              "effect": "A creature or object enters the quicksand or starts their turn there."
+            },
+            {
+              "name": "Effect",
+              "effect": "The **Grasping Depths** ability."
+            }
+          ]
+        },
+        {
+          "type": "feature",
+          "feature_type": "ability",
+          "name": "Grasping Depths",
+          "icon": "❗️",
+          "keywords": [
+            "Melee",
+            "Strike"
+          ],
+          "usage": "Free triggered action",
+          "distance": "Melee 0",
+          "target": "The triggering creature or object",
+          "trigger": "A creature or object enters the quicksand or starts their turn there.",
+          "effects": [
+            {
+              "roll": "Power Roll + 2",
+              "tier1": "M < 0 slowed (save ends)",
+              "tier2": "M < 1 restrained (save ends)",
+              "tier3": "M < 2 restrained (save ends)"
+            },
+            {
+              "name": "Effect",
+              "effect": "This ability takes a bane if a triggering creature shifted into the quicksand. A character who starts their turn restrained this way is suffocating."
+            }
+          ]
+        },
+        {
+          "type": "feature",
+          "feature_type": "trait",
+          "name": "Hidden",
+          "icon": "⭐️",
+          "effects": [
+            {
+              "effect": "The quicksand is hidden until triggered or detected."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "featureblock",
+      "featureblock_type": "Trap Ambusher",
+      "name": "Ram",
+      "level": 2,
+      "ev": "3",
+      "flavor": "A heavy wooden ram drops down or swings into the fray, crushing all in its path.",
+      "stamina": "3 per square",
+      "size": "Any area; the area can't be moved through",
+      "stats": [
+        {
+          "name": "Typical Space",
+          "value": "1 x 3-square area or a 2 x 2-square area"
+        },
+        {
+          "name": "Direction",
+          "value": "One side of the ram is defined as the front."
+        }
+      ],
+      "features": [
+        {
+          "type": "feature",
+          "feature_type": "trait",
+          "name": "Deactivate",
+          "icon": "🌀",
+          "effects": [
+            {
+              "effect": "As a maneuver, a creature adjacent to a ram can make an **Agility test**.",
+              "tier1": "The creature triggers the ram and is affected as if in its space.",
+              "tier2": "The ram is deactivated but the creature is slowed (EoT).",
+              "tier3": "The ram is deactivated and doesn't trigger."
+            }
+          ]
+        },
+        {
+          "type": "feature",
+          "feature_type": "trait",
+          "name": "Activate",
+          "icon": "❕",
+          "effects": [
+            {
+              "effect": "A pressure plate, switch, or other linked trigger is activated."
+            },
+            {
+              "name": "Effect",
+              "effect": "The **Ram** ability."
+            }
+          ]
+        },
+        {
+          "type": "feature",
+          "feature_type": "ability",
+          "name": "Ram",
+          "icon": "❗️",
+          "keywords": [
+            "Area",
+            "Weapon"
+          ],
+          "usage": "Free triggered action",
+          "distance": "Special",
+          "target": "Each creature and object in the area",
+          "trigger": "A pressure plate, switch, or other linked trigger is activated.",
+          "effects": [
+            {
+              "name": "Special",
+              "effect": "The area of this ability is the path the ram moves through from its starting position."
+            },
+            {
+              "roll": "Power Roll + 2",
+              "tier1": "3 damage; slide 1, ignoring stability",
+              "tier2": "6 damage; push 3",
+              "tier3": "9 damage; push 5"
+            },
+            {
+              "name": "Effect",
+              "effect": "A target slid by the ram ends up on one side of it or the other (choose randomly). The ram must be manually reset."
+            }
+          ]
+        },
+        {
+          "type": "feature",
+          "feature_type": "trait",
+          "name": "Upgrades",
+          "icon": "⭐️",
+          "effects": [
+            {
+              "name": "Stone",
+              "cost": "+1 EV",
+              "effect": "The ram is made of stone, has 6 Stamina per square, and deals an extra 1d3 damage."
+            },
+            {
+              "name": "Metal",
+              "cost": "+2 EV",
+              "effect": "The ram is made of metal, has 9 Stamina per square, and deals an extra 1d6 damage."
+            },
+            {
+              "name": "Repeating",
+              "cost": "+1 EV",
+              "effect": "The ram automatically resets at the start of each round."
+            },
+            {
+              "name": "Rapid Repeating",
+              "cost": "+3 EV",
+              "effect": "The ram automatically resets at the start of each turn."
+            },
+            {
+              "name": "Multiple Rams",
+              "cost": "+3 EV per additional ram",
+              "effect": "Multiple rams can be used to represent a larger mechanism, such as a stack of tumbling logs."
+            }
+          ]
+        },
+        {
+          "type": "feature",
+          "feature_type": "trait",
+          "name": "Hidden",
+          "icon": "⭐️",
+          "effects": [
+            {
+              "effect": "The ram is hidden until triggered or detected."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "featureblock",
+      "featureblock_type": "Trap Ambusher",
+      "name": "Snare Trap",
+      "level": 1,
+      "ev": "1",
+      "flavor": "A rope snare is set to grab a target, leaving them hanging upside down.",
+      "stamina": "1",
+      "size": "1S",
+      "features": [
+        {
+          "type": "feature",
+          "feature_type": "trait",
+          "name": "Deactivate",
+          "icon": "🌀",
+          "effects": [
+            {
+              "effect": "As a maneuver, a creature adjacent to a snare trap can make an **Agility test**.",
+              "tier1": "The creature triggers the trap and is affected as if in its space.",
+              "tier2": "The trap is deactivated but the creature is slowed (EoT).",
+              "tier3": "The trap is deactivated and doesn't trigger."
+            }
+          ]
+        },
+        {
+          "type": "feature",
+          "feature_type": "trait",
+          "name": "Activate",
+          "icon": "❕",
+          "effects": [
+            {
+              "effect": "The snare trap is calibrated to be triggered by creatures or objects of a particular size or larger. The trap triggers when a creature or object of the appropriate size enters its space."
+            },
+            {
+              "name": "Effect",
+              "effect": "A triggering creature or object ends their movement and is targeted by the **Snare** ability."
+            }
+          ]
+        },
+        {
+          "type": "feature",
+          "feature_type": "ability",
+          "name": "Snare",
+          "icon": "❗️",
+          "keywords": [
+            "Melee",
+            "Strike",
+            "Weapon"
+          ],
+          "usage": "Free triggered action",
+          "distance": "Melee 0",
+          "target": "The triggering creature or object",
+          "trigger": "A creature or object of the appropriate size enters the trap's space.",
+          "effects": [
+            {
+              "roll": "Power Roll + 2",
+              "tier1": "The target shifts 1 square away from the snare.",
+              "tier2": "1 damage; A < 1 restrained (save ends)",
+              "tier3": "3 damage; A < 2 restrained (save ends)"
+            },
+            {
+              "name": "Effect",
+              "effect": "A creature restrained this way is vertical pulled 2 squares and suspended in the air by the snare line. On a successful save, the snare is cut or breaks and the creature falls to the ground. The snare must be manually reset."
+            }
+          ]
+        },
+        {
+          "type": "feature",
+          "feature_type": "trait",
+          "name": "Upgrade",
+          "icon": "⭐️",
+          "effects": [
+            {
+              "name": "Net Trap",
+              "cost": "+1 EV",
+              "effect": "The snare becomes a net that can wrap up multiple targets. The net has 3 Stamina and fills an area of 3 squares by 3 squares. The Snare ability loses its existing keywords, gains the Area keyword, and targets each creature or object in the area. The trap can be triggered by a target moving through one specific square, or by requiring multiple squares to be moved through. Any creature who makes their save to end the restrained effect ends that effect for all targets, who all fall to the ground."
+            }
+          ]
+        },
+        {
+          "type": "feature",
+          "feature_type": "trait",
+          "name": "Hidden",
+          "icon": "⭐️",
+          "effects": [
+            {
+              "effect": "The snare trap is hidden until triggered or detected."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "featureblock",
+      "featureblock_type": "Trap Ambusher",
+      "name": "Spike Trap",
+      "level": 2,
+      "ev": "3",
+      "flavor": "A pit dug into the ground is filled with spikes, and camouflaged to avoid detection.",
+      "stamina": "6",
+      "size": "One or more squares",
+      "stats": [
+        {
+          "name": "Typical Space",
+          "value": "2 x 2-square area"
+        }
+      ],
+      "features": [
+        {
+          "type": "feature",
+          "feature_type": "trait",
+          "name": "Deactivate",
+          "icon": "🌀",
+          "effects": [
+            {
+              "effect": "As a maneuver, a creature adjacent to a spike trap can make an **Agility test**.",
+              "tier1": "The creature triggers the trap and is affected as if in its area.",
+              "tier2": "The trap is deactivated but the creature is slowed (EoT).",
+              "tier3": "The trap is deactivated and doesn't trigger."
+            }
+          ]
+        },
+        {
+          "type": "feature",
+          "feature_type": "trait",
+          "name": "Activate",
+          "icon": "❕",
+          "effects": [
+            {
+              "effect": "The spike trap is calibrated to be triggered by creatures or objects of a particular size or larger. The trap triggers when a creature or object of the appropriate size enters its area."
+            },
+            {
+              "name": "Effect",
+              "effect": "The **Spike Trap** ability."
+            }
+          ]
+        },
+        {
+          "type": "feature",
+          "feature_type": "ability",
+          "name": "Spike Trap",
+          "icon": "❗️",
+          "keywords": [
+            "Area",
+            "Weapon"
+          ],
+          "usage": "Free triggered action",
+          "distance": "Melee 0",
+          "target": "The triggering creature or object",
+          "trigger": "A creature or object of the appropriate size enters the trap's area.",
+          "effects": [
+            {
+              "roll": "Power Roll + 2",
+              "tier1": "3 damage; the target shifts 1 square away from the trap",
+              "tier2": "4 damage; the target falls into the pit; A < 0 prone",
+              "tier3": "6 damage; the target falls into the pit; A < 1 prone; restrained (save ends)"
+            },
+            {
+              "name": "Effect",
+              "effect": "The target ends their movement when they enter the trap's area. The pit is typically 2 squares deep. The trap must be manually reset."
+            }
+          ]
+        },
+        {
+          "type": "feature",
+          "feature_type": "trait",
+          "name": "Hidden",
+          "icon": "⭐️",
+          "effects": [
+            {
+              "effect": "The spike trap is hidden until triggered or detected."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "featureblock",
+      "featureblock_type": "Trigger Support",
+      "name": "Switch",
+      "level": 1,
+      "ev": "1",
+      "flavor": "Set into any surface, this mechanism acts as a trigger for another linked mechanism.",
+      "stamina": "3",
+      "size": "1T",
+      "stats": [
+        {
+          "name": "Link",
+          "value": "A switch is linked to another mechanism that it activates when triggered."
+        }
+      ],
+      "features": [
+        {
+          "type": "feature",
+          "feature_type": "trait",
+          "name": "Deactivate",
+          "icon": "🌀",
+          "effects": [
+            {
+              "effect": "As a maneuver, a creature adjacent to a switch can make an **Agility test**.",
+              "tier1": "The creature triggers the switch.",
+              "tier2": "The switch is deactivated but the creature is slowed (EoT).",
+              "tier3": "The switch is deactivated and doesn't trigger."
+            }
+          ]
+        },
+        {
+          "type": "feature",
+          "feature_type": "trait",
+          "name": "Activate",
+          "icon": "❕",
+          "effects": [
+            {
+              "effect": "A creature adjacent to the switch uses a maneuver to trigger it."
+            },
+            {
+              "name": "Effect",
+              "effect": "The linked mechanism is activated. A switch automatically resets and can be triggered repeatedly."
+            }
+          ]
+        },
+        {
+          "type": "feature",
+          "feature_type": "trait",
+          "name": "Upgrade",
+          "icon": "⭐️",
+          "effects": [
+            {
+              "name": "Concealed",
+              "cost": "+1 EV",
+              "effect": "The switch is hidden."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "featureblock",
+      "featureblock_type": "Relic Controller",
+      "name": "The Black Obelisk",
+      "level": 3,
+      "ev": "20",
+      "flavor": "A foreboding obelisk shaped of dark stone harrows the minds and spirits of those around it.",
+      "stamina": "100",
+      "size": "2",
+      "features": [
+        {
+          "type": "feature",
+          "feature_type": "trait",
+          "name": "Deactivate",
+          "icon": "🌀",
+          "effects": [
+            {
+              "effect": "As a maneuver, a creature adjacent to the black obelisk can make a **Reason test**.",
+              "tier1": "The creature accidentally activates the **Your Fears Become Manifest** ability, which gains an edge.",
+              "tier2": "The creature must make another test to deactivate the obelisk. If they obtain this outcome a second time, they accidentally activate **Your Fears Become Manifest**.",
+              "tier3": "The obelisk is deactivated until the end of the encounter."
+            }
+          ]
+        },
+        {
+          "type": "feature",
+          "feature_type": "trait",
+          "name": "Activate",
+          "icon": "❕",
+          "effects": [
+            {
+              "effect": "A new round starts."
+            },
+            {
+              "name": "Effect",
+              "effect": "The **Your Fears Become Manifest** ability."
+            }
+          ]
+        },
+        {
+          "type": "feature",
+          "feature_type": "ability",
+          "name": "Your Fears Become Manifest",
+          "icon": "❗️",
+          "keywords": [
+            "Area",
+            "Magic"
+          ],
+          "usage": "Free triggered action",
+          "distance": "10 burst",
+          "target": "Each enemy in the area",
+          "trigger": "A new round starts.",
+          "effects": [
+            {
+              "roll": "Power Roll + 2",
+              "tier1": "P < 1 slowed (EoT)",
+              "tier2": "P < 2 slowed and weakened (EoT)",
+              "tier3": "P < 3 frightened, slowed, and weakened (EoT)"
+            },
+            {
+              "name": "Effect",
+              "effect": "The target is pushed 2 squares."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "featureblock",
+      "featureblock_type": "Relic Controller",
+      "name": "The Chronal Hypercube",
+      "level": 3,
+      "ev": "20",
+      "flavor": "This unnatural object twists space around it in a reflection of its own unnatural form.",
+      "stamina": "80",
+      "size": "1M",
+      "features": [
+        {
+          "type": "feature",
+          "feature_type": "trait",
+          "name": "Deactivate",
+          "icon": "🌀",
+          "effects": [
+            {
+              "effect": "A creature who has the Psionics skill can deactivate and take control of the chronal hypercube by making a **Reason test** while within 10 squares of the hypercube.",
+              "tier1": "The creature takes 1d6 psychic damage.",
+              "tier2": "The creature fails to deactivate the hypercube.",
+              "tier3": "The hypercube teleports adjacent to the creature at the start of the next round and becomes an ally to the creature and their allies."
+            }
+          ]
+        },
+        {
+          "type": "feature",
+          "feature_type": "trait",
+          "name": "Dimensional Flicker",
+          "icon": "⭐️",
+          "effects": [
+            {
+              "effect": "At the start of each round while the hypercube is present, roll a d10. On a 7 or higher, the hypercube teleports to a square of one ally's choice within 10 squares and is hidden. While the hypercube is hidden, Psionics is the only skill that can be applied to a test made to find it."
+            }
+          ]
+        },
+        {
+          "type": "feature",
+          "feature_type": "trait",
+          "name": "Chronal Superhighway",
+          "icon": "⭐️",
+          "effects": [
+            {
+              "effect": "Any ally within 10 squares of the hypercube can teleport when they move. An ally who teleports gains an edge on the next power roll they make."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "featureblock",
+      "featureblock_type": "Relic Controller",
+      "name": "The Throne of A'An",
+      "level": 4,
+      "ev": "24",
+      "flavor": "The throne of A'An, sun god of the Antical Protectorate in what is now Vanigar, retains some of her power from the age before she was slain to end the Age of Suns—and plunge the region into eternal winter.",
+      "stamina": "140",
+      "size": "2",
+      "features": [
+        {
+          "type": "feature",
+          "feature_type": "trait",
+          "name": "Deactivate",
+          "icon": "🌀",
+          "effects": [
+            {
+              "effect": "The throne of A'An can be deactivated only by the current hierophant of A'An (see **Sitting on the Throne**), who must succeed on a **Presence test** that takes a bane to do so.",
+              "tier1": "The hierophant triggers the **Nova** ability.",
+              "tier2": "The hierophant fails to deactivate the throne.",
+              "tier3": "The throne is deactivated until the end of the encounter."
+            }
+          ]
+        },
+        {
+          "type": "feature",
+          "feature_type": "trait",
+          "name": "Light of the Northern Sun",
+          "icon": "⭐️",
+          "effects": [
+            {
+              "effect": "In the Age of Suns, there was no darkness and no night. Even among the many suns of that time, the light of A'An was the brightest. The throne of A'An manifests the sun powers of that god, even when no one is seated in it. The following effects always occur within 10 squares of the throne:\n\n- The throne sheds bright light that negates all darkness and concealment, and which prevents creatures from being hidden.\n- Any creature with cold immunity has fire weakness 10.\n- Any creature who uses an ability that deals cold damage takes 11 fire damage."
+            }
+          ]
+        },
+        {
+          "type": "feature",
+          "feature_type": "trait",
+          "name": "Sitting on the Throne",
+          "icon": "⭐️",
+          "effects": [
+            {
+              "effect": "Only a creature attuned to the throne can sit on it. A creature adjacent to the throne can use a main action to attune to it by succeeding on a **Presence test**.",
+              "tier1": "The creature takes 11 fire damage.",
+              "tier2": "The creature fails to attune to the throne.",
+              "tier3": "The creature attunes to the throne and can sit on it."
+            },
+            {
+              "effect": "A creature seated on the throne becomes the hierophant of A'An and gains the following benefits:\n\n- The hierophant and each of their allies within 10 squares of the throne have fire immunity 10.\n- The hierophant and each of their allies within 10 squares of the throne can choose to have their abilities deal fire damage instead of their usual damage.\n- The hierophant has a +5 bonus to stability, and any strike made against them takes a bane unless the attacker is also attuned to the throne.\n- The hierophant can use the **Primordial Flare** and **Solar Accretion** abilities."
+            }
+          ]
+        },
+        {
+          "type": "feature",
+          "feature_type": "ability",
+          "name": "Primordial Flare",
+          "icon": "🏹",
+          "keywords": [
+            "Magic",
+            "Ranged",
+            "Strike"
+          ],
+          "usage": "Maneuver",
+          "distance": "Ranged 20",
+          "target": "One creature or object",
+          "effects": [
+            {
+              "roll": "Power Roll + 3",
+              "tier1": "6 fire damage",
+              "tier2": "11 fire damage",
+              "tier3": "14 fire damage"
+            },
+            {
+              "name": "Effect",
+              "effect": "The target has fire weakness 10 until the start of the hierophant's next turn."
+            }
+          ]
+        },
+        {
+          "type": "feature",
+          "feature_type": "ability",
+          "name": "Solar Accretion",
+          "icon": "❗️",
+          "keywords": [
+            "Magic",
+            "Ranged"
+          ],
+          "usage": "Free triggered action",
+          "distance": "Ranged 10",
+          "target": "One creature",
+          "trigger": "A target within distance is made winded or is reduced to 0 Stamina by fire damage.",
+          "effects": [
+            {
+              "name": "Effect",
+              "effect": "If the hierophant is a hero, they gain 3 of their Heroic Resource. If the hierophant is a Director-controlled creature, the Director gains 3 Malice."
+            }
+          ]
+        },
+        {
+          "type": "feature",
+          "feature_type": "ability",
+          "name": "Nova",
+          "icon": "❗️",
+          "keywords": [
+            "Area",
+            "Magic"
+          ],
+          "usage": "Free triggered action",
+          "distance": "10 burst",
+          "target": "Each creature and object in the area",
+          "trigger": "The throne is destroyed or the hierophant obtains a tier 1 outcome on the test to deactivate it.",
+          "effects": [
+            {
+              "name": "Effect",
+              "effect": "Each target takes 14 fire damage and the Hierophant gains the Incubator of A'An complication (see the sidebar). If there is no hierophant, one creature within 10 squares of the throne chosen by the Director gains this complication."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "featureblock",
+      "featureblock_type": "Hazard Hexer",
+      "name": "Toxic Plants",
+      "level": 2,
+      "ev": "2 per 10 x 10 field",
+      "flavor": "Colorful mushrooms or lovely flowering plants release a cloud of spores or pollen when disturbed, causing creatures to fall into a magical slumber.",
+      "stamina": "3 per square",
+      "size": "One or more squares",
+      "features": [
+        {
+          "type": "feature",
+          "feature_type": "trait",
+          "name": "Deactivate",
+          "icon": "🌀",
+          "effects": [
+            {
+              "effect": "Each square of plants must be individually destroyed."
+            }
+          ]
+        },
+        {
+          "type": "feature",
+          "feature_type": "trait",
+          "name": "Activate",
+          "icon": "❕",
+          "effects": [
+            {
+              "effect": "A creature starts their turn in the area of the toxic plants, or enters a square of toxic plants without shifting."
+            },
+            {
+              "name": "Effect",
+              "effect": "The **Sleep Spores** ability."
+            }
+          ]
+        },
+        {
+          "type": "feature",
+          "feature_type": "ability",
+          "name": "Sleep Spores",
+          "icon": "❗️",
+          "keywords": [
+            "Magic",
+            "Melee",
+            "Strike"
+          ],
+          "usage": "Free triggered action",
+          "distance": "Melee 0",
+          "target": "The triggering creature",
+          "trigger": "A creature starts their turn in the area of the toxic plants, or enters a square of toxic plants without shifting.",
+          "effects": [
+            {
+              "roll": "Power Roll + 2",
+              "tier1": "M < 0 dazed (save ends)",
+              "tier2": "M < 1 dazed (save ends)",
+              "tier3": "M < 2 dazed (save ends)"
+            },
+            {
+              "name": "Effect",
+              "effect": "While dazed this way, a target who starts their turn in the area of the toxic plants falls prone and can't stand."
+            }
+          ]
+        },
+        {
+          "type": "feature",
+          "feature_type": "trait",
+          "name": "Upgrades",
+          "icon": "⭐️",
+          "effects": [
+            {
+              "name": "Poisonous Spores",
+              "cost": "+2 EV",
+              "effect": "Any creature dazed by this hazard takes 1d6 poison damage at the start of each of their turns."
+            },
+            {
+              "name": "Carnivorous Plants",
+              "cost": "+2 EV",
+              "effect": "The plants are carnivorous and attempt to slowly digest any creature who falls among them. Any creature who starts their turn prone in the area takes 4 acid damage."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "featureblock",
+      "featureblock_type": "Hazard Hexer",
+      "name": "Tree of Might",
+      "level": 5,
+      "ev": "14",
+      "flavor": "A gnarled tree has unearthed roots that writhe and curl.",
+      "stamina": "60",
+      "size": "3",
+      "stats": [
+        {
+          "name": "Immunity",
+          "value": "5 to all damage except corruption or fire damage"
+        }
+      ],
+      "features": [
+        {
+          "type": "feature",
+          "feature_type": "trait",
+          "name": "Deactivate",
+          "icon": "🌀",
+          "effects": [
+            {
+              "effect": "The tree of might must be completely destroyed."
+            }
+          ]
+        },
+        {
+          "type": "feature",
+          "feature_type": "trait",
+          "name": "Tree's Nourishment",
+          "icon": "⭐️",
+          "effects": [
+            {
+              "effect": "At the start of each round while the tree of might is intact, each enemy touching the ground in the encounter area who has M < 0 takes 10 corruption damage, and the tree of might grows a fruit. The potency increases by 1 each subsequent round."
+            }
+          ]
+        },
+        {
+          "type": "feature",
+          "feature_type": "trait",
+          "name": "Mighty Fruit",
+          "icon": "⭐️",
+          "effects": [
+            {
+              "effect": "Once per round, any creature adjacent to the tree of might can take a fruit from the tree and eat it (no action required). The creature gains 10 temporary Stamina and has their Might score increased by 1 (to a maximum of 6) until the end of the encounter."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "featureblock",
+      "featureblock_type": "Fortification Defender",
+      "name": "Watchtower",
+      "level": 2,
+      "ev": "8",
+      "flavor": "A sturdy wooden tower accessed by interior ladders or stairs provides cover and high ground for attackers.",
+      "stamina": "50",
+      "size": "3",
+      "features": [
+        {
+          "type": "feature",
+          "feature_type": "trait",
+          "name": "Deactivate",
+          "icon": "🌀",
+          "effects": [
+            {
+              "effect": "The watchtower must be completely destroyed."
+            }
+          ]
+        },
+        {
+          "type": "feature",
+          "feature_type": "trait",
+          "name": "High Ground and Cover",
+          "icon": "⭐️",
+          "effects": [
+            {
+              "effect": "Creatures who have access to the watchtower's interior ladders or stairs have high ground and cover against creatures outside the watchtower."
+            }
+          ]
+        },
+        {
+          "type": "feature",
+          "feature_type": "trait",
+          "name": "Getting Inside",
+          "icon": "🌀",
+          "effects": [
+            {
+              "effect": "A creature outside and adjacent to the watchtower can gain access to the interior by climbing it as an **Agility test** or breaking into it with a **Might test**.",
+              "tier1": "1d6 damage; the creature remains outside the watchtower",
+              "tier2": "The creature remains outside the watchtower.",
+              "tier3": "The creature gains access to the watchtower."
+            }
+          ]
+        },
+        {
+          "type": "feature",
+          "feature_type": "trait",
+          "name": "Upgrades",
+          "icon": "⭐️",
+          "effects": [
+            {
+              "name": "Ballista Emplacement",
+              "cost": "+12 EV",
+              "effect": "The watchtower is equipped with a field ballista that can be used by creatures in the watchtower. The ballista can't be moved."
+            },
+            {
+              "name": "Boiling Oil Cauldron",
+              "cost": "+17 EV",
+              "effect": "The watchtower is equipped with a boiling oil cauldron that can be used by creatures in the watchtower."
+            },
+            {
+              "name": "Spyglass",
+              "cost": "+2 EV",
+              "effect": "Any creature in the watchtower can use the spyglass to search for hidden creatures around the tower, gaining an edge on the Intuition test and increasing the distance at which creatures can be spotted to 15 squares."
+            },
+            {
+              "name": "Stone Tower",
+              "cost": "+2 EV",
+              "effect": "The watchtower is reinforced with stone and has 75 Stamina."
+            },
+            {
+              "name": "Iron Tower",
+              "cost": "+4 EV",
+              "effect": "The watchtower is reinforced with stone and iron and has 100 Stamina."
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

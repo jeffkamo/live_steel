@@ -176,7 +176,7 @@ describe('App', () => {
     expect(scope.getByTitle('Slowed (neutral)')).toBeInTheDocument()
   })
 
-  it('renders terrain objects, notes, stamina, and condition icon strip', () => {
+  it('renders terrain objects, notes, and stamina', () => {
     render(<App />)
     const terrain = screen.getByRole('region', { name: 'Dynamic terrain' })
     expect(
@@ -188,14 +188,11 @@ describe('App', () => {
     expect(
       within(terrain).getByText('Burning; end of round 1d4 to adjacent.', { exact: true }),
     ).toBeInTheDocument()
-    expect(within(terrain).getByTitle('Slowed (neutral)')).toBeInTheDocument()
-    expect(within(terrain).getByTitle('Weakened (neutral)')).toBeInTheDocument()
     expect(
       within(terrain).getByText('Ritual circle (inactive). Chalk smeared, runes still warm.', {
         exact: true,
       }),
     ).toBeInTheDocument()
-    expect(within(terrain).getByTitle('Marked (neutral)')).toBeInTheDocument()
   })
 
   it('toggles per-group turn diamond via Turn column and updates aria state', async () => {
@@ -544,16 +541,6 @@ describe('App', () => {
     expect(within(terrainStamina).getByText('6 / 8')).toBeInTheDocument()
   })
 
-  // --- Terrain conditions are non-interactive ---
-
-  it('terrain condition icons are not buttons (non-interactive)', () => {
-    render(<App />)
-    const terrain = screen.getByRole('region', { name: 'Dynamic terrain' })
-    const slowedImg = within(terrain).getByTitle('Slowed (neutral)')
-    expect(slowedImg.closest('button')).toBeNull()
-    expect(slowedImg.closest('[role="img"]')).toBeInTheDocument()
-  })
-
   // --- All creatures rendered with correct data ---
 
   it('renders all expected creature names across all encounter groups', () => {
@@ -761,11 +748,10 @@ describe('App', () => {
 
   // --- Terrain second row data ---
 
-  it('renders second terrain row with its note and condition', () => {
+  it('renders second terrain row with its note', () => {
     render(<App />)
     const terrain = screen.getByRole('region', { name: 'Dynamic terrain' })
     expect(within(terrain).getByText('Anyone ending turn inside tests Stability (15+).')).toBeInTheDocument()
-    expect(within(terrain).getByTitle('Marked (neutral)')).toBeInTheDocument()
   })
 
   // --- Stamina editor dialog hidden by default ---

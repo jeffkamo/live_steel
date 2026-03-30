@@ -273,13 +273,11 @@ export const TERRAIN_ROWS: readonly TerrainRowSeed[] = [
     object: 'Toppled barricade — light cover along the eastern lane.',
     stamina: [6, 8] as const,
     note: 'Burning; end of round 1d4 to adjacent.',
-    conditions: ['Slowed', 'Weakened'],
   },
   {
     object: 'Ritual circle (inactive). Chalk smeared, runes still warm.',
     stamina: [0, 0] as const,
     note: 'Anyone ending turn inside tests Stability (15+).',
-    conditions: ['Marked'],
   },
 ] as const
 
@@ -1495,9 +1493,11 @@ export function cloneExampleTerrainRows(): TerrainRowState[] {
     object: r.object,
     stamina: [r.stamina[0], r.stamina[1]] as [number, number],
     note: r.note,
-    conditions: r.conditions.map(conditionEntryFromLabel),
+    ...(r.terrainName ? { terrainName: r.terrainName } : {}),
   }))
 }
+
+export const TERRAIN_DRAG_MIME = 'application/x-live-steel-terrain-index'
 
 /**
  * Create a Monster from a bestiary entry name, with optional ordinal suffix
