@@ -7,6 +7,7 @@ import type { GroupColorId } from '../types'
 import {
   DRAW_STEEL_DISTANCE_RULER_GLYPH,
   DRAW_STEEL_TIER_GLYPHS,
+  POTENCY_PATTERN,
   featureIconToDrawSteelGlyph,
   keywordDrawSteelGlyph,
 } from '../drawSteelGlyphs'
@@ -40,9 +41,47 @@ function RichText({ text }: { text: string }) {
   return <>{result}</>
 }
 
+function PotencyBadge({ letter, value }: { letter: string; value: string }) {
+  return (
+    <span
+      className="inline-flex items-center gap-px rounded bg-zinc-700/80 px-1 py-px align-baseline text-[0.68rem] font-semibold leading-tight text-zinc-100"
+      data-testid="potency-badge"
+    >
+      <span className="font-draw-steel text-[0.78rem] leading-none">{letter}</span>
+      <span className="mx-px">&lt;</span>
+      <span className="tabular-nums">{value}</span>
+    </span>
+  )
+}
+
+function renderInlinePotency(text: string, keyBase: number): ReactNode[] {
+  const nodes: ReactNode[] = []
+  let lastIndex = 0
+  const re = new RegExp(POTENCY_PATTERN.source, 'g')
+  let match: RegExpExecArray | null
+  while ((match = re.exec(text)) !== null) {
+    if (match.index > lastIndex) {
+      nodes.push(<Fragment key={`${keyBase}-t${lastIndex}`}>{text.slice(lastIndex, match.index)}</Fragment>)
+    }
+    nodes.push(
+      <PotencyBadge key={`${keyBase}-p${match.index}`} letter={match[1]!} value={match[2]!} />,
+    )
+    lastIndex = re.lastIndex
+  }
+  if (lastIndex < text.length) {
+    nodes.push(<Fragment key={`${keyBase}-t${lastIndex}`}>{text.slice(lastIndex)}</Fragment>)
+  }
+  return nodes
+}
+
 function renderInlineBold(text: string): ReactNode {
   const parts = text.split(/(\*\*[^*]+\*\*)/)
-  if (parts.length === 1) return text
+  if (parts.length === 1) {
+    const potencyNodes = renderInlinePotency(text, 0)
+    return potencyNodes.length === 1 && typeof potencyNodes[0] === 'string'
+      ? text
+      : <>{potencyNodes}</>
+  }
   return (
     <>
       {parts.map((part, i) => {
@@ -53,7 +92,11 @@ function renderInlineBold(text: string): ReactNode {
             </span>
           )
         }
-        return <Fragment key={i}>{part}</Fragment>
+        const potencyNodes = renderInlinePotency(part, i)
+        if (potencyNodes.length === 1 && typeof potencyNodes[0] === 'string') {
+          return <Fragment key={i}>{part}</Fragment>
+        }
+        return <Fragment key={i}>{potencyNodes}</Fragment>
       })}
     </>
   )

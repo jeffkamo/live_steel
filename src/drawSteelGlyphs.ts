@@ -54,6 +54,9 @@ const NORMALIZED_FEATURE_ICON_TO_GLYPH: Readonly<Record<string, string>> = {
   '🌀': 'c',
 }
 
+/** Regex matching a potency expression like "M < 1", "A < 0", etc. in tier text. */
+export const POTENCY_PATTERN = /([MARIP])\s*<\s*(\d+)/g
+
 export function featureIconToDrawSteelGlyph(icon: string | undefined): string | undefined {
   if (!icon) return undefined
   const trimmed = icon.trim()
