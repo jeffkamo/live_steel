@@ -84,7 +84,7 @@ export function ReorderGripWithMenu({
   }, [menuItems.length])
 
   return (
-    <div ref={rootRef} className="relative h-full min-h-0 self-stretch">
+    <div ref={rootRef} className="h-full min-h-0 self-stretch">
       <div
         draggable
         onDragStart={wrapDragStart}
@@ -105,58 +105,60 @@ export function ReorderGripWithMenu({
         aria-controls={open ? menuId : undefined}
         className={`${className} h-full min-h-0`}
       >
-        <ReorderGripIcon className={iconClassName} />
-      </div>
-      {open && menuItems.length > 0 && (
-        <div
-          ref={menuRef}
-          id={menuId}
-          role="menu"
-          aria-label="Row actions"
-          className="absolute left-0 top-full z-[60] mt-1 min-w-[10.5rem] rounded-lg border border-zinc-700/80 bg-zinc-900 py-1 shadow-xl"
-          onKeyDown={(e) => {
-            const root = e.currentTarget
-            if (e.key === 'Escape') {
-              e.preventDefault()
-              closeMenu()
-              return
-            }
-            tabWrapKeyDown(e.nativeEvent, root)
-            if (e.key === 'ArrowDown') {
-              e.preventDefault()
-              focusRelativeIn(root, 1)
-            } else if (e.key === 'ArrowUp') {
-              e.preventDefault()
-              focusRelativeIn(root, -1)
-            } else if (e.key === 'Home') {
-              e.preventDefault()
-              listFocusableIn(root)[0]?.focus()
-            } else if (e.key === 'End') {
-              e.preventDefault()
-              const list = listFocusableIn(root)
-              list[list.length - 1]?.focus()
-            }
-          }}
-        >
-          {menuItems.map((item) => (
-            <button
-              key={item.id}
-              type="button"
-              role="menuitem"
-              data-testid={`grip-menu-${item.id}`}
-              onClick={() => {
-                item.onSelect()
-                closeMenu()
+        <span className="relative inline-flex shrink-0">
+          <ReorderGripIcon className={iconClassName} />
+          {open && menuItems.length > 0 && (
+            <div
+              ref={menuRef}
+              id={menuId}
+              role="menu"
+              aria-label="Row actions"
+              className="absolute left-0 top-full z-[60] mt-1 min-w-[10.5rem] rounded-lg border border-zinc-700/80 bg-zinc-900 py-1 shadow-xl"
+              onKeyDown={(e) => {
+                const root = e.currentTarget
+                if (e.key === 'Escape') {
+                  e.preventDefault()
+                  closeMenu()
+                  return
+                }
+                tabWrapKeyDown(e.nativeEvent, root)
+                if (e.key === 'ArrowDown') {
+                  e.preventDefault()
+                  focusRelativeIn(root, 1)
+                } else if (e.key === 'ArrowUp') {
+                  e.preventDefault()
+                  focusRelativeIn(root, -1)
+                } else if (e.key === 'Home') {
+                  e.preventDefault()
+                  listFocusableIn(root)[0]?.focus()
+                } else if (e.key === 'End') {
+                  e.preventDefault()
+                  const list = listFocusableIn(root)
+                  list[list.length - 1]?.focus()
+                }
               }}
-              className={`flex w-full cursor-pointer px-3 py-2 text-left text-xs transition-colors hover:bg-zinc-800 ${
-                item.destructive ? 'text-red-400' : 'text-zinc-200'
-              }`}
             >
-              {item.label}
-            </button>
-          ))}
-        </div>
-      )}
+              {menuItems.map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  role="menuitem"
+                  data-testid={`grip-menu-${item.id}`}
+                  onClick={() => {
+                    item.onSelect()
+                    closeMenu()
+                  }}
+                  className={`flex w-full cursor-pointer px-3 py-2 text-left text-xs transition-colors hover:bg-zinc-800 ${
+                    item.destructive ? 'text-red-400' : 'text-zinc-200'
+                  }`}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
+          )}
+        </span>
+      </div>
     </div>
   )
 }
