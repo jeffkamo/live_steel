@@ -34,7 +34,7 @@ export function TerrainRow({
         isDrawerOpen ? 'ring-1 ring-amber-500/40' : ''
       }`}
     >
-      <div className="flex h-full min-h-[3.75rem] items-center gap-2 p-3 sm:min-h-[4rem] sm:p-3.5">
+      <div className="flex h-full min-h-[3.75rem] items-center gap-1 p-1 sm:min-h-[4rem] sm:p-1.5">
         {!uiLocked && dragHandle && (
           <button
             type="button"
@@ -53,13 +53,13 @@ export function TerrainRow({
           <button
             type="button"
             onClick={onClick}
-            className="min-w-0 flex-1 cursor-pointer text-left text-[0.8rem] leading-relaxed text-zinc-100 transition-colors hover:text-amber-300"
+            className="min-w-0 flex-1 cursor-pointer rounded-md px-2 py-2 text-left text-[0.8rem] leading-relaxed text-zinc-100 transition-colors hover:bg-zinc-800/70 hover:text-amber-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber-500/60"
             aria-label={`View stat block for ${row.object}`}
           >
             {row.object}
           </button>
         ) : (
-          <p className="min-w-0 flex-1 text-[0.8rem] leading-relaxed text-zinc-100">{row.object}</p>
+          <p className="min-w-0 flex-1 px-2 py-2 text-[0.8rem] leading-relaxed text-zinc-100">{row.object}</p>
         )}
       </div>
       <div className="relative z-0 flex h-full min-h-[3.75rem] items-center justify-center overflow-visible p-3 hover:z-20 focus-within:z-20 sm:min-h-[4rem] sm:p-3.5">
