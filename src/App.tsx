@@ -152,6 +152,8 @@ function App() {
   const [showNewEncounterPrompt, setShowNewEncounterPrompt] = useState(false)
   const [newEncounterNameInput, setNewEncounterNameInput] = useState('')
   const newEncounterInputRef = useRef<HTMLInputElement>(null)
+  const [showEncounterSwitcher, setShowEncounterSwitcher] = useState(false)
+  const encounterSwitcherRef = useRef<HTMLDivElement>(null)
 
   const monsterCardDrawerRef = useRef(monsterCardDrawer)
   monsterCardDrawerRef.current = monsterCardDrawer
@@ -1076,11 +1078,65 @@ function App() {
     setSeActWindowElapsedGroup(() => new Set())
   }, [encounterGroups, terrainRows, groupTurnActed, activeEncounterId])
 
+  const switchToEncounter = useCallback((targetId: string) => {
+    if (targetId === activeEncounterId) return
+
+    saveToLocalStorage(encounterGroups, terrainRows, groupTurnActed, activeEncounterId)
+
+    const loaded = loadFromLocalStorage(targetId)
+    const entry = encounterIndex.encounters.find((e) => e.id === targetId)
+    if (!entry) return
+
+    if (loaded.ok) {
+      setEncounterGroups(loaded.state.encounterGroups)
+      setTerrainRows(loaded.state.terrainRows)
+      setGroupTurnActed(loaded.state.groupTurnActed)
+      prevTurnActedRef.current = [...loaded.state.groupTurnActed]
+    } else {
+      const newGroups = cloneEncounterGroups()
+      const newTerrain = cloneTerrainRows()
+      const newTurns = newGroups.map(() => false)
+      setEncounterGroups(newGroups)
+      setTerrainRows(newTerrain)
+      setGroupTurnActed(newTurns)
+      prevTurnActedRef.current = [...newTurns]
+    }
+
+    setActiveEncounterId(targetId)
+    setEncounterName(entry.name)
+    setEncounterIndex((prev) => ({ ...prev, activeId: targetId }))
+    setMonsterCardDrawer(null)
+
+    for (const t of eotTimersRef.current.values()) clearTimeout(t)
+    eotTimersRef.current.clear()
+    setEotConfirmed(() => new Map())
+    setSeActWindowElapsedGroup(() => new Set())
+    setShowEncounterSwitcher(false)
+  }, [encounterGroups, terrainRows, groupTurnActed, activeEncounterId, encounterIndex])
+
   useEffect(() => {
     if (showNewEncounterPrompt) {
       requestAnimationFrame(() => newEncounterInputRef.current?.focus())
     }
   }, [showNewEncounterPrompt])
+
+  useEffect(() => {
+    if (!showEncounterSwitcher) return
+    const handleMouseDown = (e: MouseEvent) => {
+      if (encounterSwitcherRef.current && !encounterSwitcherRef.current.contains(e.target as Node)) {
+        setShowEncounterSwitcher(false)
+      }
+    }
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setShowEncounterSwitcher(false)
+    }
+    document.addEventListener('mousedown', handleMouseDown)
+    document.addEventListener('keydown', handleKeyDown)
+    return () => {
+      document.removeEventListener('mousedown', handleMouseDown)
+      document.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [showEncounterSwitcher])
 
   const patchMinionConditionAddOrSet = useCallback(
     (groupIndex: number, monsterIndex: number, minionIndex: number, label: string, state: ConditionState) => {
@@ -1305,16 +1361,59 @@ function App() {
               <h1 className="text-lg font-normal tracking-[0.2em] text-white md:text-xl">
                 Live Steel
               </h1>
-              <div className="mt-1.5 flex items-center justify-center gap-2">
-                <p className="text-[0.65rem] font-normal uppercase tracking-[0.28em] text-zinc-400">
+              <div className="relative mt-1.5 flex items-center justify-center gap-2">
+                <button
+                  type="button"
+                  aria-label="Switch encounter"
+                  aria-expanded={showEncounterSwitcher}
+                  onClick={() => setShowEncounterSwitcher((v) => !v)}
+                  className="inline-flex cursor-pointer items-center gap-1 rounded-md px-2 py-0.5 text-[0.65rem] font-normal uppercase tracking-[0.28em] text-zinc-400 transition-colors hover:bg-zinc-800/70 hover:text-zinc-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500/60"
+                >
                   {encounterName}
-                </p>
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3 w-3" aria-hidden>
+                    <path fillRule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z" clipRule="evenodd" />
+                  </svg>
+                </button>
+                {showEncounterSwitcher && (
+                  <div
+                    ref={encounterSwitcherRef}
+                    role="listbox"
+                    aria-label="Select encounter"
+                    className="absolute top-full z-20 mt-1 max-h-60 min-w-[12rem] overflow-y-auto rounded-lg border border-zinc-700 bg-zinc-900 py-1 shadow-xl"
+                  >
+                    {encounterIndex.encounters.map((entry) => (
+                      <button
+                        key={entry.id}
+                        type="button"
+                        role="option"
+                        aria-selected={entry.id === activeEncounterId}
+                        onClick={() => switchToEncounter(entry.id)}
+                        className={`flex w-full cursor-pointer items-center gap-2 px-3 py-1.5 text-left font-sans text-xs transition-colors hover:bg-zinc-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-amber-500/60 ${
+                          entry.id === activeEncounterId
+                            ? 'text-amber-400'
+                            : 'text-zinc-300'
+                        }`}
+                      >
+                        {entry.id === activeEncounterId && (
+                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5 shrink-0" aria-hidden>
+                            <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clipRule="evenodd" />
+                          </svg>
+                        )}
+                        {entry.id !== activeEncounterId && (
+                          <span className="inline-block h-3.5 w-3.5 shrink-0" aria-hidden />
+                        )}
+                        {entry.name}
+                      </button>
+                    ))}
+                  </div>
+                )}
                 <button
                   type="button"
                   aria-label="Create new encounter"
                   onClick={() => {
                     setNewEncounterNameInput('')
                     setShowNewEncounterPrompt(true)
+                    setShowEncounterSwitcher(false)
                   }}
                   className="inline-flex cursor-pointer items-center rounded-md px-1.5 py-0.5 font-sans text-[0.6rem] uppercase tracking-[0.15em] text-zinc-500 transition-colors hover:bg-zinc-800/70 hover:text-zinc-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500/60"
                 >

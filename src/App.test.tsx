@@ -2740,3 +2740,194 @@ describe('ADV-003 — create new encounters and name them', () => {
     expect(localStorage.getItem(STORAGE_KEY)).toBeNull()
   })
 })
+
+describe('ADV-004 — switch between encounters', () => {
+  let store: Record<string, string>
+  const mockStorage = () => ({
+    getItem: (key: string) => store[key] ?? null,
+    setItem: (key: string, value: string) => { store[key] = value },
+    removeItem: (key: string) => { delete store[key] },
+    clear: () => { store = {} },
+    get length() { return Object.keys(store).length },
+    key: (i: number) => Object.keys(store)[i] ?? null,
+  }) as Storage
+
+  beforeEach(() => {
+    store = {}
+    vi.stubGlobal('localStorage', mockStorage())
+  })
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
+  it('shows encounter name as a clickable button with "Switch encounter" label', () => {
+    render(<App />)
+    expect(screen.getByRole('button', { name: /switch encounter/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /switch encounter/i })).toHaveTextContent('Encounter 1')
+  })
+
+  it('opens encounter switcher dropdown on click', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    await user.click(screen.getByRole('button', { name: /switch encounter/i }))
+    expect(screen.getByRole('listbox', { name: /select encounter/i })).toBeInTheDocument()
+  })
+
+  it('lists all encounters in the dropdown', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    await user.click(screen.getByRole('button', { name: /create new encounter/i }))
+    await user.type(screen.getByRole('textbox', { name: /encounter name/i }), 'Boss Fight{Enter}')
+    await user.click(screen.getByRole('button', { name: /switch encounter/i }))
+    const options = screen.getAllByRole('option')
+    expect(options).toHaveLength(2)
+    expect(options[0]).toHaveTextContent('Encounter 1')
+    expect(options[1]).toHaveTextContent('Boss Fight')
+  })
+
+  it('marks the active encounter with aria-selected', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    await user.click(screen.getByRole('button', { name: /create new encounter/i }))
+    await user.type(screen.getByRole('textbox', { name: /encounter name/i }), 'Side Quest{Enter}')
+    await user.click(screen.getByRole('button', { name: /switch encounter/i }))
+    const options = screen.getAllByRole('option')
+    expect(options[0]).toHaveAttribute('aria-selected', 'false')
+    expect(options[1]).toHaveAttribute('aria-selected', 'true')
+  })
+
+  it('switches to a different encounter when an option is clicked', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    const staminaGroup = screen.getByRole('group', { name: /^Edit stamina for Goblin Assassin 1$/i })
+    await user.hover(staminaGroup)
+    await user.click(within(staminaGroup).getByRole('button', { name: /^Decrease stamina by 1$/i }))
+    expect(screen.getByText('4 / 15')).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: /create new encounter/i }))
+    await user.type(screen.getByRole('textbox', { name: /encounter name/i }), 'Dungeon{Enter}')
+    expect(screen.getByRole('button', { name: /switch encounter/i })).toHaveTextContent('Dungeon')
+    expect(screen.getByText('5 / 15')).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: /switch encounter/i }))
+    const options = screen.getAllByRole('option')
+    await user.click(options[0]!)
+    expect(screen.getByRole('button', { name: /switch encounter/i })).toHaveTextContent('Encounter 1')
+    expect(screen.getByText('4 / 15')).toBeInTheDocument()
+  })
+
+  it('saves current state before switching away', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    await user.click(screen.getByRole('button', { name: /create new encounter/i }))
+    await user.type(screen.getByRole('textbox', { name: /encounter name/i }), 'Second{Enter}')
+
+    const staminaGroup = screen.getByRole('group', { name: /^Edit stamina for Goblin Assassin 1$/i })
+    await user.hover(staminaGroup)
+    await user.click(within(staminaGroup).getByRole('button', { name: /^Decrease stamina by 1$/i }))
+    expect(screen.getByText('4 / 15')).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: /switch encounter/i }))
+    await user.click(screen.getAllByRole('option')[0]!)
+    expect(screen.getByText('5 / 15')).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: /switch encounter/i }))
+    await user.click(screen.getAllByRole('option')[1]!)
+    expect(screen.getByText('4 / 15')).toBeInTheDocument()
+  })
+
+  it('closes the dropdown after selecting an encounter', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    await user.click(screen.getByRole('button', { name: /create new encounter/i }))
+    await user.type(screen.getByRole('textbox', { name: /encounter name/i }), 'Other{Enter}')
+    await user.click(screen.getByRole('button', { name: /switch encounter/i }))
+    await user.click(screen.getAllByRole('option')[0]!)
+    expect(screen.queryByRole('listbox', { name: /select encounter/i })).not.toBeInTheDocument()
+  })
+
+  it('closes the dropdown on Escape', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    await user.click(screen.getByRole('button', { name: /switch encounter/i }))
+    expect(screen.getByRole('listbox', { name: /select encounter/i })).toBeInTheDocument()
+    await user.keyboard('{Escape}')
+    expect(screen.queryByRole('listbox', { name: /select encounter/i })).not.toBeInTheDocument()
+  })
+
+  it('closes the dropdown on outside click', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    await user.click(screen.getByRole('button', { name: /switch encounter/i }))
+    expect(screen.getByRole('listbox', { name: /select encounter/i })).toBeInTheDocument()
+    await user.click(document.body)
+    expect(screen.queryByRole('listbox', { name: /select encounter/i })).not.toBeInTheDocument()
+  })
+
+  it('updates encounter index activeId on switch', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    await user.click(screen.getByRole('button', { name: /create new encounter/i }))
+    await user.type(screen.getByRole('textbox', { name: /encounter name/i }), 'Two{Enter}')
+
+    const idx1 = JSON.parse(localStorage.getItem(INDEX_KEY)!) as PersistedEncounterIndex
+    const enc1Id = idx1.encounters[0]!.id
+
+    await user.click(screen.getByRole('button', { name: /switch encounter/i }))
+    await user.click(screen.getAllByRole('option')[0]!)
+
+    const idx2 = JSON.parse(localStorage.getItem(INDEX_KEY)!) as PersistedEncounterIndex
+    expect(idx2.activeId).toBe(enc1Id)
+  })
+
+  it('preserves conditions when switching between encounters', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    const condCell = screen.getAllByTestId(/^condition-drop-target/)[0]!
+    const bleedBtn = within(condCell).getByRole('button', { name: /bleeding/i })
+    await user.click(bleedBtn)
+    expect(within(condCell).getByRole('button', { name: /bleeding/i })).toHaveAttribute('aria-pressed', 'true')
+
+    await user.click(screen.getByRole('button', { name: /create new encounter/i }))
+    await user.type(screen.getByRole('textbox', { name: /encounter name/i }), 'Clean{Enter}')
+
+    const cleanCondCell = screen.getAllByTestId(/^condition-drop-target/)[0]!
+    expect(within(cleanCondCell).getByRole('button', { name: /bleeding/i })).toHaveAttribute('aria-pressed', 'false')
+
+    await user.click(screen.getByRole('button', { name: /switch encounter/i }))
+    await user.click(screen.getAllByRole('option')[0]!)
+
+    const restoredCondCell = screen.getAllByTestId(/^condition-drop-target/)[0]!
+    expect(within(restoredCondCell).getByRole('button', { name: /bleeding/i })).toHaveAttribute('aria-pressed', 'true')
+  })
+
+  it('persists switched state after page reload', async () => {
+    const user = userEvent.setup()
+    const { unmount } = render(<App />)
+
+    await user.click(screen.getByRole('button', { name: /create new encounter/i }))
+    await user.type(screen.getByRole('textbox', { name: /encounter name/i }), 'Reload Test{Enter}')
+    expect(screen.getByRole('button', { name: /switch encounter/i })).toHaveTextContent('Reload Test')
+
+    await user.click(screen.getByRole('button', { name: /switch encounter/i }))
+    await user.click(screen.getAllByRole('option')[0]!)
+    expect(screen.getByRole('button', { name: /switch encounter/i })).toHaveTextContent('Encounter 1')
+    unmount()
+
+    render(<App />)
+    expect(screen.getByRole('button', { name: /switch encounter/i })).toHaveTextContent('Encounter 1')
+  })
+
+  it('does nothing when clicking the already-active encounter', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    const staminaGroup = screen.getByRole('group', { name: /^Edit stamina for Goblin Assassin 1$/i })
+    await user.hover(staminaGroup)
+    await user.click(within(staminaGroup).getByRole('button', { name: /^Decrease stamina by 1$/i }))
+    expect(screen.getByText('4 / 15')).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: /switch encounter/i }))
+    await user.click(screen.getAllByRole('option')[0]!)
+    expect(screen.getByText('4 / 15')).toBeInTheDocument()
+  })
+})

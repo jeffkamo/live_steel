@@ -362,6 +362,6 @@
         "Write specs covering encounter listing, save-before-switch, and state loading",
         "Run the specs, fix any failures until all pass"
       ],
-      "passes": false
+      "passes": true
     }
   ]

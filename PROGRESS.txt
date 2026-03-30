@@ -553,3 +553,22 @@ Create new encounters and name them — multi-encounter persistence model, "New"
 - src/App.tsx
 - src/App.test.tsx
 - PRD.json
+
+
+[ADV-004]
+
+Switch between encounters — encounter name becomes clickable dropdown listing all encounters; selecting one saves current state and loads target; ephemeral state (EoT timers, confirmed sets, drawer) reset on switch
+
+**Key decisions:**
+- Encounter name in header replaced with button + chevron; click toggles a listbox dropdown of all encounters from encounterIndex
+- switchToEncounter() saves current encounter to localStorage before loading target; clears EoT timers, confirmed sets, SE act window, and monster card drawer
+- Falls back to default seed data if target encounter's localStorage data is missing/corrupt
+- Active encounter highlighted with amber text + checkmark icon; aria-selected for accessibility
+- Dropdown closes on: option select, Escape key, outside click (mousedown listener)
+- No-op when clicking the already-active encounter
+- 13 new App integration tests: button presence, dropdown open, encounter listing, aria-selected, switching + state restore, save-before-switch round-trip, dropdown close, Escape, outside click, index activeId update, condition preservation, reload persistence, no-op on active click
+
+**Files changed:**
+- src/App.tsx
+- src/App.test.tsx
+- PRD.json
