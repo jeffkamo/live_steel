@@ -349,7 +349,7 @@
         "Write specs covering encounter creation, naming, and initial state",
         "Run the specs, fix any failures until all pass"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "ADV-004",

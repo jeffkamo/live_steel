@@ -531,3 +531,25 @@ Reload localStorage state on page load — implementation already existed from A
 - src/components/MinionGroupRow.tsx
 - eslint.config.js
 - PRD.json
+
+
+[ADV-003]
+
+Create new encounters and name them — multi-encounter persistence model, "New" button in header opens name prompt, creates encounter with default seed data under per-encounter localStorage key
+
+**Key decisions:**
+- Encounter index (`live-steel-encounter-index`) stores `{encounters: [{id, name}], activeId}` separate from per-encounter data (`live-steel-encounter-{id}`)
+- Legacy single-encounter key auto-migrated via `migrateFromLegacyStorage()` on first load — existing users see "Encounter 1" with preserved data
+- `initStateFromStorage()` expanded to return encounter metadata alongside state; App tracks `encounterIndex`, `activeEncounterId`, `encounterName` in state
+- `saveToLocalStorage`/`loadFromLocalStorage` gain optional `encounterId` param — backward-compatible for legacy tests
+- "New" button inline next to encounter name; prompt dialog with text input, Create/Cancel buttons, Enter/Escape keys
+- `createNewEncounter()` saves current encounter state before switching to fresh default data; clears EoT timers + confirmed sets
+- Encounter name replaces the old static "Encounter roster" subtitle
+- 12 new persistence unit tests (index CRUD, migration, deletion, id isolation) + 11 new App integration tests (name display, prompt UI, creation flows, persistence, legacy migration)
+
+**Files changed:**
+- src/persistence.ts
+- src/persistence.test.ts
+- src/App.tsx
+- src/App.test.tsx
+- PRD.json

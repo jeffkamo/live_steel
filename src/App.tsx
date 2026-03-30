@@ -3,13 +3,24 @@ import type { DragEvent } from 'react'
 import type {
   CaptainRef,
   ConditionState,
+  EncounterGroup,
   GroupColorId,
   Monster,
   MonsterCardDrawerState,
   MonsterCardDrawerView,
+  TerrainRowState,
 } from './types'
 import { monsterCardDrawerViewEquals } from './types'
-import { saveToLocalStorage, loadFromLocalStorage } from './persistence'
+import {
+  saveToLocalStorage,
+  loadFromLocalStorage,
+  loadEncounterIndex,
+  saveEncounterIndex,
+  migrateFromLegacyStorage,
+  newEncounterId,
+  type PersistedEncounterIndex,
+  type EncounterIndexEntry,
+} from './persistence'
 import {
   cloneEncounterGroups,
   cloneTerrainRows,
@@ -60,25 +71,73 @@ function prefersReducedMotion(): boolean {
   return mq?.matches === true
 }
 
-function initStateFromStorage() {
-  const loaded = loadFromLocalStorage()
-  if (loaded.ok) {
-    return {
-      encounterGroups: loaded.state.encounterGroups,
-      terrainRows: loaded.state.terrainRows,
-      groupTurnActed: loaded.state.groupTurnActed,
+function initStateFromStorage(): {
+  encounterGroups: EncounterGroup[]
+  terrainRows: TerrainRowState[]
+  groupTurnActed: boolean[]
+  encounterIndex: PersistedEncounterIndex
+  activeEncounterId: string
+  encounterName: string
+} {
+  let index = loadEncounterIndex()
+  if (!index) {
+    const migrated = migrateFromLegacyStorage()
+    if (migrated) {
+      index = migrated.index
+      if (migrated.state.ok) {
+        return {
+          encounterGroups: migrated.state.state.encounterGroups,
+          terrainRows: migrated.state.state.terrainRows,
+          groupTurnActed: migrated.state.state.groupTurnActed,
+          encounterIndex: index,
+          activeEncounterId: index.activeId,
+          encounterName: index.encounters[0]?.name ?? 'Encounter 1',
+        }
+      }
     }
+  }
+
+  if (index && index.encounters.length > 0) {
+    const activeEntry = index.encounters.find((e) => e.id === index!.activeId) ?? index.encounters[0]!
+    const loaded = loadFromLocalStorage(activeEntry.id)
+    if (loaded.ok) {
+      return {
+        encounterGroups: loaded.state.encounterGroups,
+        terrainRows: loaded.state.terrainRows,
+        groupTurnActed: loaded.state.groupTurnActed,
+        encounterIndex: { ...index, activeId: activeEntry.id },
+        activeEncounterId: activeEntry.id,
+        encounterName: activeEntry.name,
+      }
+    }
+  }
+
+  const id = newEncounterId()
+  const name = 'Encounter 1'
+  const newIndex: PersistedEncounterIndex = {
+    version: 1,
+    encounters: [{ id, name }],
+    activeId: id,
   }
   return {
     encounterGroups: cloneEncounterGroups(),
     terrainRows: cloneTerrainRows(),
     groupTurnActed: ENCOUNTER_GROUPS.map(() => false),
+    encounterIndex: newIndex,
+    activeEncounterId: id,
+    encounterName: name,
   }
 }
 
 function App() {
-  const [{ encounterGroups: initGroups, terrainRows: initTerrain, groupTurnActed: initTurns }] =
-    useState(initStateFromStorage)
+  const [{
+    encounterGroups: initGroups,
+    terrainRows: initTerrain,
+    groupTurnActed: initTurns,
+    encounterIndex: initIndex,
+    activeEncounterId: initEncId,
+    encounterName: initEncName,
+  }] = useState(initStateFromStorage)
   const [encounterGroups, setEncounterGroups] = useState(() => initGroups)
   const [terrainRows, setTerrainRows] = useState(() => initTerrain)
   const [groupTurnActed, setGroupTurnActed] = useState(() => initTurns)
@@ -87,13 +146,24 @@ function App() {
   const [drawerAnimatingOut, setDrawerAnimatingOut] = useState(false)
   const [drawerEntered, setDrawerEntered] = useState(false)
 
+  const [encounterIndex, setEncounterIndex] = useState<PersistedEncounterIndex>(() => initIndex)
+  const [activeEncounterId, setActiveEncounterId] = useState(() => initEncId)
+  const [encounterName, setEncounterName] = useState(() => initEncName)
+  const [showNewEncounterPrompt, setShowNewEncounterPrompt] = useState(false)
+  const [newEncounterNameInput, setNewEncounterNameInput] = useState('')
+  const newEncounterInputRef = useRef<HTMLInputElement>(null)
+
   const monsterCardDrawerRef = useRef(monsterCardDrawer)
   monsterCardDrawerRef.current = monsterCardDrawer
   const prevDrawerForEnterRef = useRef<MonsterCardDrawerState | null>(null)
 
   useEffect(() => {
-    saveToLocalStorage(encounterGroups, terrainRows, groupTurnActed)
-  }, [encounterGroups, terrainRows, groupTurnActed])
+    saveToLocalStorage(encounterGroups, terrainRows, groupTurnActed, activeEncounterId)
+  }, [encounterGroups, terrainRows, groupTurnActed, activeEncounterId])
+
+  useEffect(() => {
+    saveEncounterIndex(encounterIndex)
+  }, [encounterIndex])
 
   const eotTimersRef = useRef<Map<number, ReturnType<typeof setTimeout>>>(new Map())
   const [seActWindowElapsedGroup, setSeActWindowElapsedGroup] = useState<Set<number>>(() => new Set())
@@ -975,6 +1045,43 @@ function App() {
     setGroupTurnActed((prev) => [...prev, false])
   }, [])
 
+  const createNewEncounter = useCallback((name: string) => {
+    const trimmed = name.trim()
+    if (!trimmed) return
+
+    saveToLocalStorage(encounterGroups, terrainRows, groupTurnActed, activeEncounterId)
+
+    const id = newEncounterId()
+    const entry: EncounterIndexEntry = { id, name: trimmed }
+    const newGroups = cloneEncounterGroups()
+    const newTerrain = cloneTerrainRows()
+    const newTurns = newGroups.map(() => false)
+
+    setEncounterIndex((prev) => ({
+      ...prev,
+      encounters: [...prev.encounters, entry],
+      activeId: id,
+    }))
+    setActiveEncounterId(id)
+    setEncounterName(trimmed)
+    setEncounterGroups(newGroups)
+    setTerrainRows(newTerrain)
+    setGroupTurnActed(newTurns)
+    prevTurnActedRef.current = [...newTurns]
+    setMonsterCardDrawer(null)
+
+    for (const t of eotTimersRef.current.values()) clearTimeout(t)
+    eotTimersRef.current.clear()
+    setEotConfirmed(() => new Map())
+    setSeActWindowElapsedGroup(() => new Set())
+  }, [encounterGroups, terrainRows, groupTurnActed, activeEncounterId])
+
+  useEffect(() => {
+    if (showNewEncounterPrompt) {
+      requestAnimationFrame(() => newEncounterInputRef.current?.focus())
+    }
+  }, [showNewEncounterPrompt])
+
   const patchMinionConditionAddOrSet = useCallback(
     (groupIndex: number, monsterIndex: number, minionIndex: number, label: string, state: ConditionState) => {
       setEncounterGroups((prev) =>
@@ -1198,9 +1305,66 @@ function App() {
               <h1 className="text-lg font-normal tracking-[0.2em] text-white md:text-xl">
                 Live Steel
               </h1>
-              <p className="mt-1.5 text-[0.65rem] font-normal uppercase tracking-[0.28em] text-zinc-400">
-                Encounter roster
-              </p>
+              <div className="mt-1.5 flex items-center justify-center gap-2">
+                <p className="text-[0.65rem] font-normal uppercase tracking-[0.28em] text-zinc-400">
+                  {encounterName}
+                </p>
+                <button
+                  type="button"
+                  aria-label="Create new encounter"
+                  onClick={() => {
+                    setNewEncounterNameInput('')
+                    setShowNewEncounterPrompt(true)
+                  }}
+                  className="inline-flex cursor-pointer items-center rounded-md px-1.5 py-0.5 font-sans text-[0.6rem] uppercase tracking-[0.15em] text-zinc-500 transition-colors hover:bg-zinc-800/70 hover:text-zinc-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500/60"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="mr-0.5 h-3 w-3">
+                    <path d="M10.75 4.75a.75.75 0 0 0-1.5 0v4.5h-4.5a.75.75 0 0 0 0 1.5h4.5v4.5a.75.75 0 0 0 1.5 0v-4.5h4.5a.75.75 0 0 0 0-1.5h-4.5v-4.5Z" />
+                  </svg>
+                  New
+                </button>
+              </div>
+              {showNewEncounterPrompt && (
+                <div className="mx-auto mt-2 flex max-w-xs items-center gap-2 font-sans" role="dialog" aria-label="Name new encounter">
+                  <input
+                    ref={newEncounterInputRef}
+                    type="text"
+                    value={newEncounterNameInput}
+                    onChange={(e) => setNewEncounterNameInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && newEncounterNameInput.trim()) {
+                        createNewEncounter(newEncounterNameInput)
+                        setShowNewEncounterPrompt(false)
+                      }
+                      if (e.key === 'Escape') {
+                        setShowNewEncounterPrompt(false)
+                      }
+                    }}
+                    placeholder="Encounter name…"
+                    aria-label="Encounter name"
+                    className="min-w-0 flex-1 rounded-md border border-zinc-700 bg-zinc-900 px-2.5 py-1.5 text-xs text-zinc-100 placeholder-zinc-500 outline-none focus:border-amber-500/60 focus:ring-1 focus:ring-amber-500/40"
+                  />
+                  <button
+                    type="button"
+                    disabled={!newEncounterNameInput.trim()}
+                    onClick={() => {
+                      createNewEncounter(newEncounterNameInput)
+                      setShowNewEncounterPrompt(false)
+                    }}
+                    className="cursor-pointer rounded-md bg-amber-600/80 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-amber-500/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500/60 disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    Create
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowNewEncounterPrompt(false)}
+                    aria-label="Cancel new encounter"
+                    className="cursor-pointer rounded-md px-2 py-1.5 text-xs text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-zinc-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500/60"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              )}
               <TitleRule flushBelow />
             </header>
 

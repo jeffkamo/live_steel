@@ -4,11 +4,33 @@ import { featuresForMonster } from './bestiary'
 const STORAGE_KEY = 'live-steel-encounter'
 const STORAGE_VERSION = 1
 
+const INDEX_KEY = 'live-steel-encounter-index'
+const INDEX_VERSION = 1
+
+export type EncounterIndexEntry = {
+  id: string
+  name: string
+}
+
+export type PersistedEncounterIndex = {
+  version: number
+  encounters: EncounterIndexEntry[]
+  activeId: string
+}
+
 export type PersistedEncounterState = {
   version: number
   encounterGroups: EncounterGroup[]
   terrainRows: TerrainRowState[]
   groupTurnActed: boolean[]
+}
+
+function encounterStorageKey(encounterId: string): string {
+  return `${STORAGE_KEY}-${encounterId}`
+}
+
+export function newEncounterId(): string {
+  return globalThis.crypto?.randomUUID?.() ?? `enc-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`
 }
 
 export function serializeEncounterState(
@@ -94,27 +116,101 @@ export function deserializeEncounterState(raw: string | null): DeserializeResult
   }
 }
 
-export function saveToLocalStorage(
-  encounterGroups: EncounterGroup[],
-  terrainRows: TerrainRowState[],
-  groupTurnActed: boolean[],
-): { ok: true } | { ok: false; error: unknown } {
+function isValidIndex(o: unknown): o is PersistedEncounterIndex {
+  if (o == null || typeof o !== 'object') return false
+  const obj = o as Record<string, unknown>
+  if (obj.version !== INDEX_VERSION) return false
+  if (!Array.isArray(obj.encounters)) return false
+  if (typeof obj.activeId !== 'string') return false
+  for (const e of obj.encounters) {
+    if (e == null || typeof e !== 'object') return false
+    const entry = e as Record<string, unknown>
+    if (typeof entry.id !== 'string' || typeof entry.name !== 'string') return false
+  }
+  return true
+}
+
+export function saveEncounterIndex(index: PersistedEncounterIndex): { ok: true } | { ok: false; error: unknown } {
   try {
-    const json = serializeEncounterState(encounterGroups, terrainRows, groupTurnActed)
-    localStorage.setItem(STORAGE_KEY, json)
+    localStorage.setItem(INDEX_KEY, JSON.stringify(index))
     return { ok: true }
   } catch (error) {
     return { ok: false, error }
   }
 }
 
-export function loadFromLocalStorage(): DeserializeResult {
+export function loadEncounterIndex(): PersistedEncounterIndex | null {
+  try {
+    const raw = localStorage.getItem(INDEX_KEY)
+    if (raw == null || raw === '') return null
+    const parsed = JSON.parse(raw)
+    if (!isValidIndex(parsed)) return null
+    return parsed
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Migrate legacy single-encounter storage to multi-encounter format.
+ * If the old key exists but no index does, creates an index entry for it.
+ */
+export function migrateFromLegacyStorage(): {
+  index: PersistedEncounterIndex
+  state: DeserializeResult
+} | null {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
+    if (raw == null || raw === '') return null
+    const state = deserializeEncounterState(raw)
+    if (!state.ok) return null
+    const id = newEncounterId()
+    const index: PersistedEncounterIndex = {
+      version: INDEX_VERSION,
+      encounters: [{ id, name: 'Encounter 1' }],
+      activeId: id,
+    }
+    localStorage.setItem(encounterStorageKey(id), raw)
+    localStorage.setItem(INDEX_KEY, JSON.stringify(index))
+    localStorage.removeItem(STORAGE_KEY)
+    return { index, state }
+  } catch {
+    return null
+  }
+}
+
+export function saveToLocalStorage(
+  encounterGroups: EncounterGroup[],
+  terrainRows: TerrainRowState[],
+  groupTurnActed: boolean[],
+  encounterId?: string,
+): { ok: true } | { ok: false; error: unknown } {
+  try {
+    const json = serializeEncounterState(encounterGroups, terrainRows, groupTurnActed)
+    const key = encounterId != null ? encounterStorageKey(encounterId) : STORAGE_KEY
+    localStorage.setItem(key, json)
+    return { ok: true }
+  } catch (error) {
+    return { ok: false, error }
+  }
+}
+
+export function loadFromLocalStorage(encounterId?: string): DeserializeResult {
+  try {
+    const key = encounterId != null ? encounterStorageKey(encounterId) : STORAGE_KEY
+    const raw = localStorage.getItem(key)
     return deserializeEncounterState(raw)
   } catch {
     return { ok: false, reason: 'corrupt' }
   }
 }
 
-export { STORAGE_KEY, STORAGE_VERSION }
+export function deleteEncounterFromStorage(encounterId: string): void {
+  try {
+    localStorage.removeItem(encounterStorageKey(encounterId))
+  } catch {
+    // swallow
+  }
+}
+
+export { STORAGE_KEY, STORAGE_VERSION, INDEX_KEY, INDEX_VERSION, encounterStorageKey }

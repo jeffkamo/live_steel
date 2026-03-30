@@ -5,8 +5,16 @@ import {
   deserializeEncounterState,
   saveToLocalStorage,
   loadFromLocalStorage,
+  saveEncounterIndex,
+  loadEncounterIndex,
+  migrateFromLegacyStorage,
+  newEncounterId,
+  deleteEncounterFromStorage,
+  encounterStorageKey,
   STORAGE_KEY,
   STORAGE_VERSION,
+  INDEX_KEY,
+  type PersistedEncounterIndex,
 } from './persistence'
 import { cloneEncounterGroups, cloneTerrainRows, ENCOUNTER_GROUPS } from './data'
 
@@ -266,5 +274,159 @@ describe('saveToLocalStorage / loadFromLocalStorage', () => {
     expect(loaded.ok).toBe(false)
     if (loaded.ok) return
     expect(loaded.reason).toBe('corrupt')
+  })
+
+  it('saves and loads with an explicit encounter id', () => {
+    const groups = makeGroups()
+    const terrain = makeTerrain()
+    const turns = makeTurnActed()
+    const id = 'test-enc-1'
+    const result = saveToLocalStorage(groups, terrain, turns, id)
+    expect(result.ok).toBe(true)
+    expect(localStorage.getItem(encounterStorageKey(id))).not.toBeNull()
+
+    const loaded = loadFromLocalStorage(id)
+    expect(loaded.ok).toBe(true)
+    if (!loaded.ok) return
+    expect(loaded.state.encounterGroups.length).toBe(groups.length)
+  })
+
+  it('different encounter ids are isolated', () => {
+    saveToLocalStorage(makeGroups(), makeTerrain(), makeTurnActed(), 'enc-a')
+    expect(loadFromLocalStorage('enc-b').ok).toBe(false)
+  })
+})
+
+describe('encounter index persistence', () => {
+  let store: Record<string, string>
+  const mockStorage = {
+    getItem: (key: string) => store[key] ?? null,
+    setItem: (key: string, value: string) => { store[key] = value },
+    removeItem: (key: string) => { delete store[key] },
+    clear: () => { store = {} },
+    get length() { return Object.keys(store).length },
+    key: (i: number) => Object.keys(store)[i] ?? null,
+  } as Storage
+
+  beforeEach(() => {
+    store = {}
+    vi.stubGlobal('localStorage', mockStorage)
+  })
+
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
+  it('saves and loads encounter index', () => {
+    const idx: PersistedEncounterIndex = {
+      version: 1,
+      encounters: [{ id: 'a', name: 'Goblin Ambush' }],
+      activeId: 'a',
+    }
+    expect(saveEncounterIndex(idx).ok).toBe(true)
+    const loaded = loadEncounterIndex()
+    expect(loaded).not.toBeNull()
+    expect(loaded!.encounters).toEqual(idx.encounters)
+    expect(loaded!.activeId).toBe('a')
+  })
+
+  it('returns null when no index exists', () => {
+    expect(loadEncounterIndex()).toBeNull()
+  })
+
+  it('returns null for corrupt index data', () => {
+    localStorage.setItem(INDEX_KEY, '{bad json')
+    expect(loadEncounterIndex()).toBeNull()
+  })
+
+  it('returns null for index with wrong version', () => {
+    localStorage.setItem(INDEX_KEY, JSON.stringify({ version: 999, encounters: [], activeId: '' }))
+    expect(loadEncounterIndex()).toBeNull()
+  })
+
+  it('newEncounterId returns unique strings', () => {
+    const a = newEncounterId()
+    const b = newEncounterId()
+    expect(typeof a).toBe('string')
+    expect(a.length).toBeGreaterThan(0)
+    expect(a).not.toBe(b)
+  })
+})
+
+describe('migrateFromLegacyStorage', () => {
+  let store: Record<string, string>
+  const mockStorage = {
+    getItem: (key: string) => store[key] ?? null,
+    setItem: (key: string, value: string) => { store[key] = value },
+    removeItem: (key: string) => { delete store[key] },
+    clear: () => { store = {} },
+    get length() { return Object.keys(store).length },
+    key: (i: number) => Object.keys(store)[i] ?? null,
+  } as Storage
+
+  beforeEach(() => {
+    store = {}
+    vi.stubGlobal('localStorage', mockStorage)
+  })
+
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
+  it('migrates legacy single-encounter data to multi-encounter format', () => {
+    const groups = makeGroups()
+    const json = serializeEncounterState(groups, makeTerrain(), makeTurnActed())
+    localStorage.setItem(STORAGE_KEY, json)
+
+    const result = migrateFromLegacyStorage()
+    expect(result).not.toBeNull()
+    expect(result!.index.encounters.length).toBe(1)
+    expect(result!.index.encounters[0]!.name).toBe('Encounter 1')
+    expect(result!.state.ok).toBe(true)
+    expect(localStorage.getItem(STORAGE_KEY)).toBeNull()
+    const newKey = encounterStorageKey(result!.index.activeId)
+    expect(localStorage.getItem(newKey)).not.toBeNull()
+    expect(localStorage.getItem(INDEX_KEY)).not.toBeNull()
+  })
+
+  it('returns null when no legacy data exists', () => {
+    expect(migrateFromLegacyStorage()).toBeNull()
+  })
+
+  it('returns null for corrupt legacy data', () => {
+    localStorage.setItem(STORAGE_KEY, '{bad')
+    expect(migrateFromLegacyStorage()).toBeNull()
+  })
+})
+
+describe('deleteEncounterFromStorage', () => {
+  let store: Record<string, string>
+  const mockStorage = {
+    getItem: (key: string) => store[key] ?? null,
+    setItem: (key: string, value: string) => { store[key] = value },
+    removeItem: (key: string) => { delete store[key] },
+    clear: () => { store = {} },
+    get length() { return Object.keys(store).length },
+    key: (i: number) => Object.keys(store)[i] ?? null,
+  } as Storage
+
+  beforeEach(() => {
+    store = {}
+    vi.stubGlobal('localStorage', mockStorage)
+  })
+
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
+  it('removes encounter data from storage', () => {
+    saveToLocalStorage(makeGroups(), makeTerrain(), makeTurnActed(), 'del-me')
+    expect(loadFromLocalStorage('del-me').ok).toBe(true)
+    deleteEncounterFromStorage('del-me')
+    expect(loadFromLocalStorage('del-me').ok).toBe(false)
+  })
+
+  it('does not throw for non-existent encounter', () => {
+    expect(() => deleteEncounterFromStorage('nonexistent')).not.toThrow()
   })
 })
