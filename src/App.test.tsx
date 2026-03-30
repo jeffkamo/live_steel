@@ -1,8 +1,9 @@
 import { act, fireEvent, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import App from './App'
 import { CONDITION_DRAG_MIME, MONSTER_DRAG_MIME } from './data'
+import { STORAGE_KEY } from './persistence'
 
 function mockMonsterDataTransfer(): DataTransfer {
   const store = new Map<string, string>()
@@ -2412,5 +2413,86 @@ describe('App', () => {
     fireEvent.dragOver(assassinDrop!, { dataTransfer: dt })
     fireEvent.drop(assassinDrop!, { dataTransfer: dt })
     expect(within(assassinConditions).getByRole('button', { name: /^Remove Weakened$/i })).toBeInTheDocument()
+  })
+})
+
+describe('ADV-001 — local storage persistence', () => {
+  let store: Record<string, string>
+  const mockStorage = () => ({
+    getItem: (key: string) => store[key] ?? null,
+    setItem: (key: string, value: string) => { store[key] = value },
+    removeItem: (key: string) => { delete store[key] },
+    clear: () => { store = {} },
+    get length() { return Object.keys(store).length },
+    key: (i: number) => Object.keys(store)[i] ?? null,
+  }) as Storage
+
+  beforeEach(() => {
+    store = {}
+    vi.stubGlobal('localStorage', mockStorage())
+  })
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
+  it('saves encounter state to localStorage on initial render', () => {
+    render(<App />)
+    const stored = localStorage.getItem(STORAGE_KEY)
+    expect(stored).not.toBeNull()
+    const parsed = JSON.parse(stored!) as { version: number; encounterGroups: unknown[] }
+    expect(parsed.version).toBe(1)
+    expect(parsed.encounterGroups.length).toBeGreaterThan(0)
+  })
+
+  it('persists stamina changes to localStorage', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    const staminaGroup = screen.getByRole('group', { name: /^Edit stamina for Goblin Assassin 1$/i })
+    await user.hover(staminaGroup)
+    await user.click(within(staminaGroup).getByRole('button', { name: /^Decrease stamina by 1$/i }))
+    expect(screen.getByText('4 / 15')).toBeInTheDocument()
+    const stored = localStorage.getItem(STORAGE_KEY)
+    expect(stored).not.toBeNull()
+    const parsed = JSON.parse(stored!) as { encounterGroups: Array<{ monsters: Array<{ stamina: [number, number] }> }> }
+    expect(parsed.encounterGroups[0]!.monsters[0]!.stamina).toEqual([4, 15])
+  })
+
+  it('persists turn state changes to localStorage', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    const turn1 = screen.getByRole('button', { name: turnButton(1, 'pending') })
+    await user.click(turn1)
+    const stored = localStorage.getItem(STORAGE_KEY)
+    const parsed = JSON.parse(stored!) as { groupTurnActed: boolean[] }
+    expect(parsed.groupTurnActed[0]).toBe(true)
+  })
+
+  it('loads persisted state on fresh render', async () => {
+    const user = userEvent.setup()
+    const { unmount } = render(<App />)
+    const staminaGroup = screen.getByRole('group', { name: /^Edit stamina for Goblin Assassin 1$/i })
+    await user.hover(staminaGroup)
+    await user.click(within(staminaGroup).getByRole('button', { name: /^Decrease stamina by 1$/i }))
+    expect(screen.getByText('4 / 15')).toBeInTheDocument()
+    unmount()
+
+    render(<App />)
+    expect(screen.getByText('4 / 15')).toBeInTheDocument()
+  })
+
+  it('falls back to default state when localStorage contains corrupt data', () => {
+    localStorage.setItem(STORAGE_KEY, '{invalid json!!!}')
+    render(<App />)
+    expect(screen.getByText('Goblin Assassin 1', { exact: true })).toBeInTheDocument()
+    expect(screen.getByText('5 / 15')).toBeInTheDocument()
+  })
+
+  it('does not crash when localStorage.setItem throws quota error', () => {
+    vi.stubGlobal('localStorage', {
+      ...mockStorage(),
+      setItem: () => { throw new DOMException('QuotaExceededError', 'QuotaExceededError') },
+      getItem: () => null,
+    } as Storage)
+    expect(() => render(<App />)).not.toThrow()
   })
 })

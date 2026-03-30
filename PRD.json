@@ -323,7 +323,7 @@
         "Write specs covering serialization, storage writes, and error handling",
         "Run the specs, fix any failures until all pass"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "ADV-002",

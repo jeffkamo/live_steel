@@ -9,6 +9,7 @@ import type {
   MonsterCardDrawerView,
 } from './types'
 import { monsterCardDrawerViewEquals } from './types'
+import { saveToLocalStorage, loadFromLocalStorage } from './persistence'
 import {
   cloneEncounterGroups,
   cloneTerrainRows,
@@ -60,13 +61,28 @@ function prefersReducedMotion(): boolean {
   return mq?.matches === true
 }
 
-function App() {
-  const [encounterGroups, setEncounterGroups] = useState(cloneEncounterGroups)
-  const [terrainRows, setTerrainRows] = useState(cloneTerrainRows)
+function initStateFromStorage() {
+  const loaded = loadFromLocalStorage()
+  if (loaded.ok) {
+    return {
+      encounterGroups: loaded.state.encounterGroups,
+      terrainRows: loaded.state.terrainRows,
+      groupTurnActed: loaded.state.groupTurnActed,
+    }
+  }
+  return {
+    encounterGroups: cloneEncounterGroups(),
+    terrainRows: cloneTerrainRows(),
+    groupTurnActed: ENCOUNTER_GROUPS.map(() => false),
+  }
+}
 
-  const [groupTurnActed, setGroupTurnActed] = useState(() =>
-    ENCOUNTER_GROUPS.map(() => false),
-  )
+function App() {
+  const [{ encounterGroups: initGroups, terrainRows: initTerrain, groupTurnActed: initTurns }] =
+    useState(initStateFromStorage)
+  const [encounterGroups, setEncounterGroups] = useState(() => initGroups)
+  const [terrainRows, setTerrainRows] = useState(() => initTerrain)
+  const [groupTurnActed, setGroupTurnActed] = useState(() => initTurns)
   const [uiLocked, setUiLocked] = useState(false)
   const [monsterCardDrawer, setMonsterCardDrawer] = useState<MonsterCardDrawerState | null>(null)
   const [drawerAnimatingOut, setDrawerAnimatingOut] = useState(false)
@@ -76,12 +92,16 @@ function App() {
   monsterCardDrawerRef.current = monsterCardDrawer
   const prevDrawerForEnterRef = useRef<MonsterCardDrawerState | null>(null)
 
+  useEffect(() => {
+    saveToLocalStorage(encounterGroups, terrainRows, groupTurnActed)
+  }, [encounterGroups, terrainRows, groupTurnActed])
+
   const eotTimersRef = useRef<Map<number, ReturnType<typeof setTimeout>>>(new Map())
   const [seActWindowElapsedGroup, setSeActWindowElapsedGroup] = useState<Set<number>>(() => new Set())
   const [eotConfirmed, setEotConfirmed] = useState<Map<number, Set<string>>>(() => new Map())
   const eotConfirmedLatest = useRef(eotConfirmed)
   eotConfirmedLatest.current = eotConfirmed
-  const prevTurnActedRef = useRef<boolean[]>(ENCOUNTER_GROUPS.map(() => false))
+  const prevTurnActedRef = useRef<boolean[]>([...initTurns])
 
   const scheduleEotTimerForGroup = useCallback((gi: number) => {
     const existing = eotTimersRef.current.get(gi)

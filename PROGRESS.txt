@@ -493,3 +493,24 @@ Draw Steel stat block styling + official DrawSteelGlyphs-Regular.otf — amber/z
 - src/components/StatBlock.tsx
 - src/components/StatBlock.test.tsx
 - PRD.json
+
+
+[ADV-001]
+
+Persist encounter state to localStorage — auto-saves encounterGroups, terrainRows, groupTurnActed on every state change; loads on init with fallback to defaults
+
+**Key decisions:**
+- persistence.ts module: serialize/deserialize with version field for future migration; features stripped on save (re-derived from bestiary on load) to keep payload lean
+- initStateFromStorage() in App.tsx: single useState init reads localStorage once; avoids double-render or useEffect-based loading
+- saveToLocalStorage catches quota errors gracefully (returns {ok:false}); loadFromLocalStorage catches SecurityError/corrupt JSON
+- Ephemeral state (EoT timers, SE act window, drawer, drag) NOT persisted — session-only
+- prevTurnActedRef init uses loaded turn state instead of hardcoded ENCOUNTER_GROUPS.map(()=>false)
+- Node 25 built-in localStorage shadows jsdom in vitest; used vi.stubGlobal mock in integration tests
+- 21 persistence unit tests + 6 App integration tests
+
+**Files changed:**
+- src/persistence.ts (new)
+- src/persistence.test.ts (new)
+- src/App.tsx
+- src/App.test.tsx
+- PRD.json
