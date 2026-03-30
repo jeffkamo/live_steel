@@ -31,7 +31,6 @@ import {
   staminaAfterConvertSoloToHorde,
   staminaAfterHordeDemotedToSolo,
   transferMinionBetweenHordes,
-  remapEotConfirmedAfterMinionReorder,
   remapEotConfirmedAfterMinionRemoved,
   remapEotConfirmedAfterMinionTransferBetweenHordes,
   remapEotConfirmedAfterSoloMergedIntoHorde,

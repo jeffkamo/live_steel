@@ -514,3 +514,20 @@ Persist encounter state to localStorage — auto-saves encounterGroups, terrainR
 - src/App.tsx
 - src/App.test.tsx
 - PRD.json
+
+
+[ADV-002]
+
+Reload localStorage state on page load — implementation already existed from ADV-001 (initStateFromStorage reads localStorage once on init, falls back to defaults); added 6 ADV-002-specific integration tests + fixed 4 pre-existing lint errors
+
+**Key decisions:**
+- No new runtime code needed; ADV-001's initStateFromStorage() already covers all ADV-002 requirements (check → deserialize → fallback)
+- 6 new App integration tests: turn-acted restore, condition restore, empty localStorage fallback, version mismatch fallback, SecurityError fallback, deleted-group state restore
+- Fixed 4 pre-existing lint errors: removed unused `remapEotConfirmedAfterMinionReorder` import, prefixed unused destructured vars with `_`, added `@typescript-eslint/no-unused-vars` config for `_`-prefixed vars
+
+**Files changed:**
+- src/App.test.tsx
+- src/App.tsx
+- src/components/MinionGroupRow.tsx
+- eslint.config.js
+- PRD.json

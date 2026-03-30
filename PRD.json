@@ -336,7 +336,7 @@
         "Write specs covering state restoration, fallback behavior, and corrupt data handling",
         "Run the specs, fix any failures until all pass"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "ADV-003",

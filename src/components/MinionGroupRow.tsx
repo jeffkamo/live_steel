@@ -512,7 +512,7 @@ export function MinionGroupRow({
 
 function MinionChildRow({
   minion,
-  minionIndex,
+  minionIndex: _minionIndex,
   creatureOrdinal,
   totalCreatures,
   parentMonster,

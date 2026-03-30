@@ -3,7 +3,8 @@ import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import App from './App'
 import { CONDITION_DRAG_MIME, MONSTER_DRAG_MIME } from './data'
-import { STORAGE_KEY } from './persistence'
+import { STORAGE_KEY, serializeEncounterState } from './persistence'
+import { cloneEncounterGroups, cloneTerrainRows, ENCOUNTER_GROUPS } from './data'
 
 function mockMonsterDataTransfer(): DataTransfer {
   const store = new Map<string, string>()
@@ -2494,5 +2495,95 @@ describe('ADV-001 — local storage persistence', () => {
       getItem: () => null,
     } as Storage)
     expect(() => render(<App />)).not.toThrow()
+  })
+})
+
+describe('ADV-002 — reload local storage state on page load', () => {
+  let store: Record<string, string>
+  const mockStorage = () => ({
+    getItem: (key: string) => store[key] ?? null,
+    setItem: (key: string, value: string) => { store[key] = value },
+    removeItem: (key: string) => { delete store[key] },
+    clear: () => { store = {} },
+    get length() { return Object.keys(store).length },
+    key: (i: number) => Object.keys(store)[i] ?? null,
+  }) as Storage
+
+  beforeEach(() => {
+    store = {}
+    vi.stubGlobal('localStorage', mockStorage())
+  })
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
+  it('restores turn-acted state on reload', async () => {
+    const user = userEvent.setup()
+    const { unmount } = render(<App />)
+    await user.click(screen.getByRole('button', { name: turnButton(1, 'pending') }))
+    expect(screen.getByRole('button', { name: turnButton(1, 'acted') })).toBeInTheDocument()
+    unmount()
+
+    render(<App />)
+    expect(screen.getByRole('button', { name: turnButton(1, 'acted') })).toBeInTheDocument()
+  })
+
+  it('restores conditions on reload', async () => {
+    const user = userEvent.setup()
+    const { unmount } = render(<App />)
+    const condGroup = screen.getByRole('group', { name: /^Conditions for Goblin Assassin 1\./i })
+    const scope = within(condGroup)
+    const bleedBtn = scope.getByRole('button', { name: /^Add Bleeding$/i })
+    await user.click(bleedBtn)
+    expect(scope.getByRole('button', { name: /^Remove Bleeding$/i })).toBeInTheDocument()
+    unmount()
+
+    render(<App />)
+    const condGroupAfter = screen.getByRole('group', { name: /^Conditions for Goblin Assassin 1\./i })
+    expect(within(condGroupAfter).getByRole('button', { name: /^Remove Bleeding$/i })).toBeInTheDocument()
+  })
+
+  it('falls back to defaults when localStorage is empty (no saved data)', () => {
+    render(<App />)
+    expect(screen.getByText('Goblin Assassin 1', { exact: true })).toBeInTheDocument()
+    expect(screen.getByText('5 / 15')).toBeInTheDocument()
+  })
+
+  it('falls back to defaults on version mismatch', () => {
+    const groups = cloneEncounterGroups()
+    groups[0]!.monsters[0]!.stamina = [1, 15]
+    const payload = {
+      version: 999,
+      encounterGroups: groups,
+      terrainRows: cloneTerrainRows(),
+      groupTurnActed: ENCOUNTER_GROUPS.map(() => false),
+    }
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(payload))
+    render(<App />)
+    expect(screen.getByText('5 / 15')).toBeInTheDocument()
+  })
+
+  it('falls back to defaults when localStorage.getItem throws SecurityError', () => {
+    vi.stubGlobal('localStorage', {
+      ...mockStorage(),
+      getItem: () => { throw new Error('SecurityError') },
+      setItem: () => { throw new Error('SecurityError') },
+    } as unknown as Storage)
+    expect(() => render(<App />)).not.toThrow()
+    expect(screen.getByText('Goblin Assassin 1', { exact: true })).toBeInTheDocument()
+  })
+
+  it('restores added-then-deleted group state across reload', async () => {
+    const groups = cloneEncounterGroups()
+    groups.splice(0, 1)
+    const terrain = cloneTerrainRows()
+    const turns = groups.map(() => false)
+    const json = serializeEncounterState(groups, terrain, turns)
+    localStorage.setItem(STORAGE_KEY, json)
+
+    render(<App />)
+    expect(screen.queryByText('Goblin Assassin 1', { exact: true })).not.toBeInTheDocument()
+    const parsed = JSON.parse(json) as { encounterGroups: unknown[] }
+    expect(parsed.encounterGroups.length).toBe(groups.length)
   })
 })
