@@ -229,6 +229,8 @@ export function MinionGroupRow({
           ? 'ring-2 ring-inset ring-rose-500/45'
           : ''
 
+  const lockedOrdinalBalancePad = monsterDrag == null ? 'pl-1 sm:pl-1.5' : ''
+
   return (
     <>
       {/* --- parent minion summary row --- */}
@@ -242,7 +244,7 @@ export function MinionGroupRow({
         onDragLeave={monsterDrag?.onDragLeave}
         onDrop={monsterDrag?.onDrop}
       >
-        <div className="flex min-h-0 min-w-0 flex-1 items-stretch gap-3">
+        <div className={`flex min-h-0 min-w-0 flex-1 items-stretch gap-3 ${lockedOrdinalBalancePad}`}>
           {monsterDrag != null && (
             <ReorderGripWithMenu
               reorderAriaLabel={`Reorder ${monster.name} within encounter`}
