@@ -18,6 +18,7 @@ export function EditableStaminaCell({
   ariaLabel,
   renderDisplay,
   renderEditor,
+  dimContent = false,
 }: {
   current: number
   max: number
@@ -29,6 +30,7 @@ export function EditableStaminaCell({
     max: number
     bump: (delta: number) => void
   }) => React.ReactNode
+  dimContent?: boolean
 }) {
   const curFieldId = useId()
   const maxFieldId = useId()
@@ -59,7 +61,7 @@ export function EditableStaminaCell({
   const glyphStatus = staminaGlyphStatus(current, max)
 
   const baseTextClass =
-    'pointer-events-none flex min-h-[2.5rem] w-full items-center justify-center px-1 text-center transition-opacity duration-150 group-hover:opacity-0 group-focus-within:opacity-0'
+    `pointer-events-none flex min-h-[2.5rem] w-full items-center justify-center px-1 text-center transition-opacity duration-150 group-hover:opacity-0 group-focus-within:opacity-0${dimContent ? ' opacity-[0.38]' : ''}`
 
   const editorOverlayClass =
     'pointer-events-none absolute left-1/2 top-1/2 z-50 w-max max-w-[min(22rem,calc(100vw-1.25rem))] -translate-x-1/2 -translate-y-1/2 opacity-0 transition-opacity duration-150 group-hover:pointer-events-auto group-hover:opacity-100 group-focus-within:pointer-events-auto group-focus-within:opacity-100'

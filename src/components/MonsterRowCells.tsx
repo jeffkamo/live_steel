@@ -89,7 +89,7 @@ export function MonsterRowCells({
   ]
   const rowTone =
     'transition-opacity duration-200 ease-out motion-reduce:transition-none ' +
-    (turnComplete ? 'opacity-[0.52]' : 'opacity-100')
+    (turnComplete ? 'opacity-[0.38]' : 'opacity-100')
 
   const monsterDropRing =
     monsterDrag?.dropHighlighted
@@ -103,7 +103,7 @@ export function MonsterRowCells({
   return (
     <>
       <div
-        className={`${creatureNameColCell} min-w-0 ${rowTone} ${monsterDropRing}`}
+        className={`${creatureNameColCell} min-w-0 ${rowTone} has-[[data-grip-menu-open]]:opacity-100 has-[[data-grip-menu-open]]:z-[200] ${monsterDropRing}`}
         style={{ gridColumn: 2, gridRow: row }}
         data-testid="monster-drop-target"
         data-group-index={monsterDrag?.groupIndex}
@@ -163,7 +163,7 @@ export function MonsterRowCells({
         </div>
       </div>
       <div
-        className={`${bodyCell} relative z-0 justify-center overflow-visible hover:z-20 focus-within:z-20 ${rowTone}`}
+        className={`${bodyCell} relative z-0 justify-center overflow-visible hover:z-20 focus-within:z-20`}
         style={{ gridColumn: 3, gridRow: row }}
       >
         <EditableStaminaCell
@@ -171,6 +171,7 @@ export function MonsterRowCells({
           max={sm}
           onChange={onStaminaChange}
           ariaLabel={`Edit stamina for ${monster.name}`}
+          dimContent={turnComplete}
         />
       </div>
       <div className={`${bodyCell} justify-center ${rowTone}`} style={{ gridColumn: 4, gridRow: row }}>

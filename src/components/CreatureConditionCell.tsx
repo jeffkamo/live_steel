@@ -90,9 +90,9 @@ export function CreatureConditionCell({
     }
   }, [open])
 
-  const rowTone =
+  const contentDim =
     'transition-opacity duration-200 ease-out motion-reduce:transition-none ' +
-    (turnComplete ? 'opacity-[0.52]' : 'opacity-100')
+    (turnComplete ? 'opacity-[0.38]' : 'opacity-100')
 
   const dropRing =
     conditionDnD &&
@@ -115,7 +115,7 @@ export function CreatureConditionCell({
       onDragOver={conditionDnD?.onDragOver}
       onDragLeave={conditionDnD?.onDragLeave}
       onDrop={conditionDnD?.onDrop}
-      className={`relative flex h-full min-h-0 w-full cursor-pointer flex-col justify-center rounded-md p-3 outline-none transition-[background-color,box-shadow] duration-200 ease-out motion-reduce:transition-none hover:bg-zinc-800/35 focus-visible:ring-2 focus-visible:ring-amber-500/45 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950 sm:p-3.5 ${rowTone} ${dropRing}`}
+      className={`relative flex h-full min-h-0 w-full cursor-pointer flex-col justify-center rounded-md p-3 outline-none transition-[background-color,box-shadow] duration-200 ease-out motion-reduce:transition-none hover:bg-zinc-800/35 focus-visible:ring-2 focus-visible:ring-amber-500/45 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950 sm:p-3.5 ${dropRing}`}
       role="group"
       tabIndex={0}
       aria-expanded={open}
@@ -129,7 +129,7 @@ export function CreatureConditionCell({
         }
       }}
     >
-      <div className="flex w-full flex-col justify-center">
+      <div className={`flex w-full flex-col justify-center ${contentDim}`}>
         <ConditionCatalogIconStrip
           conditions={conditions}
           interactive

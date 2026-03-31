@@ -255,15 +255,18 @@ describe('CreatureConditionCell', () => {
     expect(inactiveRow).toBeTruthy()
   })
 
-  it('applies reduced opacity when turnComplete is true', () => {
+  it('applies reduced opacity to content when turnComplete is true', () => {
     renderCell([], { turnComplete: true })
     const cell = screen.getByRole('group', { name: /^Conditions for Test Monster/i })
-    expect(cell.className).toContain('opacity-[0.52]')
+    const content = cell.firstElementChild as HTMLElement
+    expect(content.className).toContain('opacity-[0.38]')
+    expect(cell.className).not.toContain('opacity-[0.38]')
   })
 
-  it('applies full opacity when turnComplete is false', () => {
+  it('applies full opacity to content when turnComplete is false', () => {
     renderCell([], { turnComplete: false })
     const cell = screen.getByRole('group', { name: /^Conditions for Test Monster/i })
-    expect(cell.className).toContain('opacity-100')
+    const content = cell.firstElementChild as HTMLElement
+    expect(content.className).toContain('opacity-100')
   })
 })

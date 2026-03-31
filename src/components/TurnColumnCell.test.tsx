@@ -32,15 +32,6 @@ describe('TurnColumnCell', () => {
     expect(screen.getByText('Turn')).toBeInTheDocument()
   })
 
-  it('applies opacity-[0.52] when acted', () => {
-    render(<TurnColumnCell acted={true} onToggle={vi.fn()} label="label" />)
-    expect(screen.getByRole('button').className).toContain('opacity-[0.52]')
-  })
-
-  it('applies opacity-100 when not acted', () => {
-    render(<TurnColumnCell acted={false} onToggle={vi.fn()} label="label" />)
-    expect(screen.getByRole('button').className).toContain('opacity-100')
-  })
 })
 
 describe('GroupTurnColumn', () => {
@@ -64,5 +55,19 @@ describe('GroupTurnColumn', () => {
     expect(screen.getByRole('button')).toHaveAttribute('aria-pressed', 'true')
     await user.click(screen.getByRole('button'))
     expect(onToggle).toHaveBeenCalledOnce()
+  })
+
+  it('applies opacity-[0.38] to the whole column when acted', () => {
+    const { container } = render(
+      <GroupTurnColumn gridRowSpan={1} acted={true} onToggle={vi.fn()} turnAriaLabel="turn" />,
+    )
+    expect((container.firstChild as HTMLElement).className).toContain('opacity-[0.38]')
+  })
+
+  it('applies opacity-100 to the whole column when not acted', () => {
+    const { container } = render(
+      <GroupTurnColumn gridRowSpan={1} acted={false} onToggle={vi.fn()} turnAriaLabel="turn" />,
+    )
+    expect((container.firstChild as HTMLElement).className).toContain('opacity-100')
   })
 })

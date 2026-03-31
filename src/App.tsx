@@ -1506,7 +1506,7 @@ function App() {
         <div className="min-w-0 flex-1">
           <div className="mx-auto max-w-6xl">
             <header className="px-4 pt-5 pb-0 text-center">
-              <h1 className="text-lg font-normal tracking-[0.2em] text-white md:text-xl">
+              <h1 className="text-lg font-normal uppercase tracking-[0.2em] text-white md:text-xl">
                 Live Steel
               </h1>
               <div className="relative mt-1.5 flex items-center justify-center gap-2">
@@ -1691,10 +1691,10 @@ function App() {
                   <button
                     type="button"
                     onClick={resetAllTurns}
-                    aria-label="Reset all encounter group turn diamonds to pending"
+                    aria-label="Start a new turn: reset all encounter group turn diamonds to pending"
                     className="min-h-10 min-w-[5.25rem] cursor-pointer rounded-md px-4 py-2 font-sans text-xs tracking-wide text-zinc-400 transition-colors hover:bg-zinc-900 hover:text-zinc-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500/60"
                   >
-                    Reset
+                    New turn
                   </button>
                 </div>
                 <div className="flex justify-end py-1.5 pr-1 sm:pr-2" style={{ gridColumn: '2 / -1' }}>
@@ -1850,8 +1850,8 @@ function App() {
 
             <section aria-label="Dynamic terrain" className="mt-8 flex flex-col gap-2 md:mt-10">
               <header className="px-4 pt-2 pb-0 text-center md:pt-3">
-                <h2 className="text-lg font-normal tracking-[0.2em] text-white md:text-xl">
-                  DYNAMIC TERRAIN
+                <h2 className="text-lg font-normal uppercase tracking-[0.2em] text-white md:text-xl">
+                  Dynamic Terrain
                 </h2>
                 <TitleRule />
               </header>

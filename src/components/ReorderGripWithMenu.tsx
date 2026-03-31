@@ -84,7 +84,7 @@ export function ReorderGripWithMenu({
   }, [menuItems.length])
 
   return (
-    <div ref={rootRef} className="h-full min-h-0 self-stretch">
+    <div ref={rootRef} data-grip-menu-open={open || undefined} className={`h-full min-h-0 self-stretch ${open ? 'relative z-[200]' : ''}`}>
       <div
         draggable
         onDragStart={wrapDragStart}

@@ -16,9 +16,7 @@ export function TurnColumnCell({
       onClick={onToggle}
       aria-pressed={acted}
       aria-label={label}
-      className={`flex min-h-0 w-full min-w-0 flex-1 cursor-pointer flex-col items-center justify-center gap-2 px-2 py-3 text-center transition-[opacity,background-color] duration-200 ease-out motion-reduce:transition-none hover:bg-zinc-800/35 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-amber-500/70 sm:px-3 sm:py-4 ${
-        acted ? 'opacity-[0.52]' : 'opacity-100'
-      }`}
+      className="flex min-h-0 w-full min-w-0 flex-1 cursor-pointer flex-col items-center justify-center gap-2 px-2 py-3 text-center transition-[background-color] duration-200 ease-out motion-reduce:transition-none hover:bg-zinc-800/35 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-amber-500/70 sm:px-3 sm:py-4"
     >
       <span className="text-[0.65rem] uppercase tracking-wide text-zinc-300">Turn</span>
       <span
@@ -64,7 +62,9 @@ export function GroupTurnColumn({
   return (
     <div
       style={{ gridColumn: 1, gridRow: `1 / span ${gridRowSpan}` }}
-      className="flex h-full min-h-0 w-full min-w-0 flex-row items-stretch overflow-visible border-r border-zinc-800/60 bg-zinc-900/80"
+      className={`flex h-full min-h-0 w-full min-w-0 flex-row items-stretch overflow-visible border-r border-zinc-800/60 bg-zinc-900/80 transition-opacity duration-200 ease-out motion-reduce:transition-none has-[[data-grip-menu-open]]:opacity-100 has-[[data-grip-menu-open]]:z-[200] ${
+        acted ? 'opacity-[0.38]' : 'opacity-100'
+      }`}
     >
       {encounterGroupDragHandle != null && (
         <div className="flex h-full min-h-0 shrink-0 items-stretch border-r border-zinc-800/60 p-1 sm:p-1.5">

@@ -142,7 +142,7 @@ describe('MonsterRowCells', () => {
     renderRow(undefined, { turnComplete: true })
     const nameEl = screen.getByText('Test Goblin')
     const cell = nameEl.closest('[class*="opacity-"]')
-    expect(cell?.className).toContain('opacity-[0.52]')
+    expect(cell?.className).toContain('opacity-[0.38]')
   })
 
   it('renders null marip as dashes', () => {

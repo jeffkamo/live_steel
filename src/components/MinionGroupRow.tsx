@@ -205,7 +205,7 @@ export function MinionGroupRow({
   const combat = rosterCombatStats(monster)
   const rowTone =
     'transition-opacity duration-200 ease-out motion-reduce:transition-none ' +
-    (turnComplete ? 'opacity-[0.52]' : 'opacity-100')
+    (turnComplete ? 'opacity-[0.38]' : 'opacity-100')
 
   const parentGripMenuItems =
     onDelete != null
@@ -225,7 +225,7 @@ export function MinionGroupRow({
     <>
       {/* --- parent minion summary row --- */}
       <div
-        className={`${creatureNameColCell} min-w-0 ${rowTone} ${parentMonsterDropRing}`}
+        className={`${creatureNameColCell} min-w-0 ${rowTone} has-[[data-grip-menu-open]]:opacity-100 has-[[data-grip-menu-open]]:z-[200] ${parentMonsterDropRing}`}
         style={{ gridColumn: 2, gridRow: row }}
         data-testid="monster-drop-target"
         data-group-index={monsterDrag?.groupIndex}
@@ -405,7 +405,7 @@ export function MinionGroupRow({
         </div>
       </div>
       <div
-        className={`${bodyCell} relative z-0 justify-center overflow-visible hover:z-20 focus-within:z-20 ${rowTone}`}
+        className={`${bodyCell} relative z-0 justify-center overflow-visible hover:z-20 focus-within:z-20`}
         style={{ gridColumn: 3, gridRow: row }}
       >
         <EditableStaminaCell
@@ -413,6 +413,7 @@ export function MinionGroupRow({
           max={sm}
           onChange={onStaminaChange}
           ariaLabel={`Edit stamina for ${monster.name}`}
+          dimContent={turnComplete}
           renderDisplay={(cur, mx) => (
             <MinionStaminaDisplay
               current={cur}
@@ -568,7 +569,7 @@ function MinionChildRow({
   const deadDim = minion.dead ? 'opacity-40' : ''
   const rowTone =
     'transition-opacity duration-200 ease-out motion-reduce:transition-none ' +
-    (turnComplete ? 'opacity-[0.52]' : 'opacity-100')
+    (turnComplete ? 'opacity-[0.38]' : 'opacity-100')
 
   const minionDropRing =
     minionDrag?.dropHighlighted
@@ -582,7 +583,7 @@ function MinionChildRow({
   return (
     <>
       <div
-        className={`${nameColCell} min-w-0 border-t border-zinc-800/60 ${rowTone} ${minionDropRing}`}
+        className={`${nameColCell} min-w-0 border-t border-zinc-800/60 ${rowTone} has-[[data-grip-menu-open]]:opacity-100 has-[[data-grip-menu-open]]:z-[200] ${minionDropRing}`}
         style={{ gridColumn: 2, gridRow: gridRow }}
         data-testid="minion-drop-target"
         data-group-index={minionDrag?.groupIndex}

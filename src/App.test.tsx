@@ -224,7 +224,7 @@ describe('App', () => {
     expect(g1).toHaveAttribute('aria-pressed', 'true')
 
     await user.click(
-      screen.getByRole('button', { name: /Reset all encounter group turn diamonds to pending/i }),
+      screen.getByRole('button', { name: /Start a new turn: reset all encounter group turn diamonds to pending/i }),
     )
 
     expect(screen.getByRole('button', { name: turnButton(1, 'pending') })).toHaveAttribute(
@@ -439,7 +439,7 @@ describe('App', () => {
     await user.click(within(goblinConditions).getByRole('button', { name: /^Remove Weakened$/i }))
 
     await user.click(screen.getByRole('button', { name: turnButton(1, 'pending') }))
-    await user.click(screen.getByRole('button', { name: /Reset all encounter group turn diamonds to pending/i }))
+    await user.click(screen.getByRole('button', { name: /Start a new turn: reset all encounter group turn diamonds to pending/i }))
 
     expect(screen.getByRole('button', { name: turnButton(1, 'pending') })).toHaveAttribute('aria-pressed', 'false')
     expect(screen.getByText('6 / 15')).toBeInTheDocument()
@@ -856,7 +856,7 @@ describe('App', () => {
 
   it('reset button is present on initial render', () => {
     render(<App />)
-    expect(screen.getByRole('button', { name: /Reset all encounter group turn diamonds to pending/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Start a new turn: reset all encounter group turn diamonds to pending/i })).toBeInTheDocument()
   })
 
   it('lock mode hides group and monster grab handles and add-monster controls', async () => {
@@ -1565,7 +1565,7 @@ describe('App', () => {
     await user.click(g5)
     expect(screen.getByRole('button', { name: turnButton(5, 'acted') })).toHaveAttribute('aria-pressed', 'true')
 
-    await user.click(screen.getByRole('button', { name: /Reset all encounter group turn diamonds to pending/i }))
+    await user.click(screen.getByRole('button', { name: /Start a new turn: reset all encounter group turn diamonds to pending/i }))
 
     expect(screen.getByRole('button', { name: turnButton(5, 'pending') })).toHaveAttribute('aria-pressed', 'false')
   })
