@@ -307,7 +307,7 @@ export const MARIP_HEADERS = [
 
 /** 6 columns: group | creatures (shrinks first) | stamina | MARIP | FS/SPD/Stab | conditions (width = icon row) */
 export const ROSTER_GRID_TEMPLATE =
-  '5.5rem minmax(0,1fr) minmax(5.25rem,7rem) minmax(5.75rem,7.25rem) 7.25rem max-content'
+  '5.5rem minmax(0,1fr) minmax(7rem,8.5rem) minmax(5.75rem,7.25rem) 7.25rem max-content'
 
 /** MIME type for HTML5 drag payload: source encounter group index (stringified). */
 export const ENCOUNTER_GROUP_DRAG_MIME = 'application/x-live-steel-encounter-group-index'
@@ -1424,7 +1424,7 @@ export function reorderEncounterGroupsWithCaptainRemap(
   }))
 }
 
-export const terrainGridClass = 'grid grid-cols-[minmax(0,1.35fr)_minmax(4.5rem,6.5rem)_minmax(0,1.2fr)]'
+export const terrainGridClass = 'grid grid-cols-[minmax(0,1.35fr)_minmax(7rem,8.5rem)_minmax(0,1.2fr)]'
 
 export function conditionEntryFromLabel(label: string): ConditionEntry {
   return { label, state: 'neutral' }
