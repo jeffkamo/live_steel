@@ -350,7 +350,7 @@ function PowerRollTiers({ effect }: { effect: PowerRollEffect }) {
  * - Hybrid effects that have both effect text and tier data (e.g. terrain
  *   traits where the effect paragraph is followed by a Presence test table)
  */
-function EffectBlock({ eff }: { eff: PowerRollEffect }) {
+function EffectBlock({ eff, highlight }: { eff: PowerRollEffect; highlight?: boolean }) {
   const hasTiers = eff.tier1 || eff.tier2 || eff.tier3
   const hasRoll = !!eff.roll
 
@@ -360,10 +360,16 @@ function EffectBlock({ eff }: { eff: PowerRollEffect }) {
 
   if (eff.effect) {
     return (
-      <div className="text-[0.72rem] leading-snug text-zinc-300">
+      <div
+        className={`text-[0.72rem] leading-snug text-zinc-300 ${
+          highlight
+            ? 'rounded-md border border-amber-500/35 bg-amber-500/10 px-2 py-1.5 shadow-[inset_0_1px_0_rgb(251_191_36/0.10)]'
+            : ''
+        }`}
+      >
         {eff.name ? (
           <>
-            <span className="font-semibold text-zinc-200">
+            <span className={`font-semibold ${highlight ? 'text-amber-200' : 'text-zinc-200'}`}>
               {eff.name}
               {eff.cost ? ` (${eff.cost})` : ''}
               :
@@ -499,9 +505,18 @@ function AbilityBlock({ feature }: { feature: MonsterFeature }) {
   )
 }
 
-function TraitBlock({ feature }: { feature: MonsterFeature }) {
+function TraitBlock({
+  feature,
+  highlightEffectNames,
+}: {
+  feature: MonsterFeature
+  highlightEffectNames?: ReadonlySet<string>
+}) {
   const effects = feature.effects ?? []
   const hasStructuredEffects = effects.some((e) => e.name || e.roll || e.tier1)
+  const highlightSet = highlightEffectNames
+  const nameLower = feature.name.trim().toLowerCase()
+  const canHighlight = highlightSet != null && (nameLower === 'upgrade' || nameLower === 'upgrades')
 
   return (
     <div className="grid grid-cols-[2rem_minmax(0,1fr)] gap-x-2 sm:grid-cols-[2.25rem_minmax(0,1fr)]">
@@ -521,7 +536,11 @@ function TraitBlock({ feature }: { feature: MonsterFeature }) {
         {hasStructuredEffects && (
           <div className="mt-1.5 space-y-2">
             {effects.map((eff, i) => (
-              <EffectBlock key={i} eff={eff} />
+              <EffectBlock
+                key={i}
+                eff={eff}
+                highlight={canHighlight && eff.name != null && highlightSet!.has(eff.name)}
+              />
             ))}
           </div>
         )}
@@ -531,7 +550,13 @@ function TraitBlock({ feature }: { feature: MonsterFeature }) {
 }
 
 /** Renders abilities + traits with separators between them. No wrapper card. */
-export function FeatureList({ features }: { features: MonsterFeature[] }) {
+export function FeatureList({
+  features,
+  highlightTerrainUpgrades,
+}: {
+  features: MonsterFeature[]
+  highlightTerrainUpgrades?: ReadonlySet<string>
+}) {
   const abilities = features.filter((f) => f.feature_type === 'ability')
   const traits = features.filter((f) => f.feature_type === 'trait')
 
@@ -547,7 +572,7 @@ export function FeatureList({ features }: { features: MonsterFeature[] }) {
       {traits.map((f, i) => (
         <div key={`trait-${i}`}>
           {((abilities.length > 0 && i === 0) || i > 0) && <StatBlockSeparator />}
-          <TraitBlock feature={f} />
+          <TraitBlock feature={f} highlightEffectNames={highlightTerrainUpgrades} />
         </div>
       ))}
     </>

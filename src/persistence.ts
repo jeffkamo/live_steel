@@ -1,4 +1,4 @@
-import type { EncounterGroup, TerrainRowState } from './types'
+import type { EncounterGroup, Monster, TerrainRowState } from './types'
 import { featuresForMonster } from './bestiary'
 
 const STORAGE_KEY = 'live-steel-encounter'
@@ -41,11 +41,8 @@ export function serializeEncounterState(
   const stripped: EncounterGroup[] = encounterGroups.map((g) => ({
     ...g,
     monsters: g.monsters.map((m) => {
-      const out: Record<string, unknown> = {}
-      for (const [k, v] of Object.entries(m)) {
-        if (k !== 'features') out[k] = v
-      }
-      return out
+      const { features: _features, ...rest } = m
+      return rest as Monster
     }),
   }))
   const payload: PersistedEncounterState = {

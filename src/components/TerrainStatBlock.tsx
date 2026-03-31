@@ -47,9 +47,16 @@ function TerrainCoreStats({ sb }: { sb: TerrainStatblock }) {
   )
 }
 
-export function TerrainStatBlock({ terrainName }: { terrainName: string }) {
+export function TerrainStatBlock({
+  terrainName,
+  activeUpgrades = [],
+}: {
+  terrainName: string
+  activeUpgrades?: readonly string[]
+}) {
   const sb = lookupTerrain(terrainName)
   const features = terrainFeatures(terrainName)
+  const highlight = new Set(activeUpgrades)
 
   if (!sb && features.length === 0) {
     return (
@@ -65,10 +72,10 @@ export function TerrainStatBlock({ terrainName }: { terrainName: string }) {
         {sb && <TerrainCoreStats sb={sb} />}
         {sb && features.length > 0 && (
           <div className="mt-3 border-t border-zinc-700/40 pt-3">
-            <FeatureList features={features} />
+            <FeatureList features={features} highlightTerrainUpgrades={highlight} />
           </div>
         )}
-        {!sb && features.length > 0 && <FeatureList features={features} />}
+        {!sb && features.length > 0 && <FeatureList features={features} highlightTerrainUpgrades={highlight} />}
       </div>
     </div>
   )

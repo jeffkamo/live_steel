@@ -4,7 +4,10 @@ import { afterEach } from 'vitest'
 
 if (typeof globalThis.ResizeObserver === 'undefined') {
   globalThis.ResizeObserver = class ResizeObserver {
-    constructor(private readonly callback: ResizeObserverCallback) {}
+    private readonly callback: ResizeObserverCallback
+    constructor(callback: ResizeObserverCallback) {
+      this.callback = callback
+    }
     observe(target: Element): void {
       requestAnimationFrame(() => {
         this.callback(

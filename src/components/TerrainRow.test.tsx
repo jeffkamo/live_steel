@@ -80,6 +80,21 @@ describe('TerrainRow', () => {
     expect(screen.getByRole('menuitem', { name: 'Delete' })).toBeInTheDocument()
   })
 
+  it('renders Duplicate menu item in grip menu when provided', async () => {
+    const user = userEvent.setup()
+    render(
+      <TerrainRow
+        row={makeRow()}
+        rowIndex={0}
+        onStaminaChange={vi.fn()}
+        onDuplicate={vi.fn()}
+        dragHandle={{ onDragStart: vi.fn(), onDragEnd: vi.fn(), ariaLabel: 'Reorder terrain 1' }}
+      />,
+    )
+    await user.click(screen.getByRole('button', { name: /^Reorder terrain/i }))
+    expect(screen.getByRole('menuitem', { name: 'Duplicate' })).toBeInTheDocument()
+  })
+
   it('does not render grip menu when uiLocked', () => {
     render(<TerrainRow row={makeRow()} rowIndex={0} onStaminaChange={vi.fn()} uiLocked onDelete={vi.fn()} />)
     expect(screen.queryByRole('button', { name: /^Reorder terrain/i })).not.toBeInTheDocument()
@@ -96,6 +111,19 @@ describe('TerrainRow', () => {
       />,
     )
     expect(screen.getByRole('button', { name: /^View stat block for/i })).toBeInTheDocument()
+  })
+
+  it('shows Add upgrade for terrain with upgrade options', () => {
+    render(
+      <TerrainRow
+        row={makeRow({ terrainName: 'Angry Beehive' })}
+        rowIndex={0}
+        onStaminaChange={vi.fn()}
+        onAddUpgrade={vi.fn()}
+        onRemoveUpgrade={vi.fn()}
+      />,
+    )
+    expect(screen.getByRole('button', { name: 'Add upgrade' })).toBeInTheDocument()
   })
 
   it('renders object name as plain text when no terrainName', () => {

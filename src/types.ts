@@ -120,6 +120,8 @@ export type TerrainRowState = {
   note: string
   /** Bestiary terrain name for stat-block lookup; absent on legacy/custom rows. */
   terrainName?: string
+  /** Selected upgrades (by upgrade name) for bestiary-backed terrain rows. */
+  upgrades?: string[]
 }
 
 export type TerrainRowSeed = TerrainRowState

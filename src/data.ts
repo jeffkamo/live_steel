@@ -637,7 +637,7 @@ export function remapEotConfirmedAfterSoloMergedIntoHorde(
   }
 
   const extractFrom = (
-    src: Set<string>,
+    src: ReadonlySet<string>,
   ): { next: Set<string>; movedTails: string[] } => {
     const movedTails: string[] = []
     const dst = new Set<string>()
@@ -674,7 +674,7 @@ export function remapEotConfirmedAfterSoloMergedIntoHorde(
     return { next: dst, movedTails }
   }
 
-  const mergeDest = (src: Set<string>, tails: readonly string[]): Set<string> => {
+  const mergeDest = (src: ReadonlySet<string>, tails: readonly string[]): Set<string> => {
     const dst = new Set<string>()
     for (const key of src) {
       const parts = key.split(':')
@@ -779,7 +779,7 @@ export function remapEotConfirmedAfterMinionTransferBetweenHordes(
   }
 
   const extractFromSource = (
-    src: Set<string>,
+    src: ReadonlySet<string>,
   ): { next: Set<string>; movedTails: string[] } => {
     const movedTails: string[] = []
     const dst = new Set<string>()
@@ -810,7 +810,7 @@ export function remapEotConfirmedAfterMinionTransferBetweenHordes(
   }
 
   const mergeIntoDest = (
-    src: Set<string>,
+    src: ReadonlySet<string>,
     movedTails: readonly string[],
   ): Set<string> => {
     const dst = new Set<string>()

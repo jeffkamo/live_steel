@@ -1368,6 +1368,26 @@ function App() {
     })
   }, [])
 
+  const duplicateTerrainRow = useCallback((rowIndex: number) => {
+    setTerrainRows((prev) => {
+      const src = prev[rowIndex]
+      if (!src) return prev
+      const copy: TerrainRowState = {
+        ...src,
+        stamina: [src.stamina[0], src.stamina[1]],
+        upgrades: src.upgrades ? [...src.upgrades] : src.upgrades,
+      }
+      const next = [...prev]
+      next.splice(rowIndex + 1, 0, copy)
+      return next
+    })
+    setTerrainDrawerIndex((prev) => {
+      if (prev == null) return prev
+      if (prev > rowIndex) return prev + 1
+      return prev
+    })
+  }, [])
+
   const reorderTerrainRows = useCallback((from: number, to: number) => {
     if (from === to) return
     setTerrainRows((prev) => moveIndexInArray(prev, from, to))
@@ -1394,6 +1414,28 @@ function App() {
       setMonsterCardDrawer(null)
       return rowIndex
     })
+  }, [])
+
+  const addTerrainUpgrade = useCallback((rowIndex: number, upgradeName: string) => {
+    setTerrainRows((prev) =>
+      prev.map((r, i) => {
+        if (i !== rowIndex) return r
+        const cur = r.upgrades ?? []
+        if (cur.includes(upgradeName)) return r
+        return { ...r, upgrades: [...cur, upgradeName] }
+      }),
+    )
+  }, [])
+
+  const removeTerrainUpgrade = useCallback((rowIndex: number, upgradeName: string) => {
+    setTerrainRows((prev) =>
+      prev.map((r, i) => {
+        if (i !== rowIndex) return r
+        const cur = r.upgrades ?? []
+        if (!cur.includes(upgradeName)) return r
+        return { ...r, upgrades: cur.filter((u) => u !== upgradeName) }
+      }),
+    )
   }, [])
 
   const patchGroupColor = useCallback((groupIndex: number, newColor: GroupColorId) => {
@@ -1981,6 +2023,9 @@ function App() {
                     isDrawerOpen={terrainDrawerIndex === i}
                     uiLocked={uiLocked}
                     onDelete={uiLocked ? undefined : () => deleteTerrainRow(i)}
+                    onDuplicate={uiLocked ? undefined : () => duplicateTerrainRow(i)}
+                    onAddUpgrade={uiLocked ? undefined : (name) => addTerrainUpgrade(i, name)}
+                    onRemoveUpgrade={uiLocked ? undefined : (name) => removeTerrainUpgrade(i, name)}
                     dragHandle={
                       uiLocked
                         ? undefined
@@ -2039,7 +2084,10 @@ function App() {
                     </button>
                   </div>
                   <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-contain px-3 pb-4 pt-2">
-                    <TerrainStatBlock terrainName={terrainDrawerRow.terrainName!} />
+                    <TerrainStatBlock
+                      terrainName={terrainDrawerRow.terrainName!}
+                      activeUpgrades={terrainDrawerRow.upgrades ?? []}
+                    />
                   </div>
                 </div>
               ) : statCardDrawerOpen && drawerMonster ? (
