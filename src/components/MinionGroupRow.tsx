@@ -225,7 +225,7 @@ export function MinionGroupRow({
     <>
       {/* --- parent minion summary row --- */}
       <div
-        className={`${creatureNameColCell} min-w-0 ${rowTone} has-[[data-grip-menu-open]]:opacity-100 has-[[data-grip-menu-open]]:z-[200] ${parentMonsterDropRing}`}
+        className={`${creatureNameColCell} min-w-0 ${rowTone} has-[[data-grip-menu-open]]:opacity-100 has-[[data-grip-menu-open]]:z-[200] has-[[data-captain-menu-open]]:opacity-100 has-[[data-captain-menu-open]]:z-[200] ${parentMonsterDropRing}`}
         style={{ gridColumn: 2, gridRow: row }}
         data-testid="monster-drop-target"
         data-group-index={monsterDrag?.groupIndex}
@@ -278,7 +278,7 @@ export function MinionGroupRow({
                 <p className="mt-1 truncate text-[0.7rem] leading-snug text-zinc-400">{monster.subtitle}</p>
               </>
             )}
-            <div className="relative mt-1.5" ref={captainDropdownRef}>
+            <div className="relative mt-1.5" ref={captainDropdownRef} data-captain-menu-open={captainDropdownOpen || undefined}>
               {captainMonster && captainGroupColor ? (
                 <div
                   className="inline-flex max-w-full items-stretch overflow-hidden rounded-full border border-zinc-700/80 bg-zinc-800/80 text-xs leading-tight"
