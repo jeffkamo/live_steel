@@ -39,6 +39,19 @@ async function chooseDeleteFromEncounterRowGrip(
   await user.click(screen.getByTestId('grip-menu-delete'))
 }
 
+async function addTrollWhelpToGroup(
+  user: ReturnType<typeof userEvent.setup>,
+  groupGrid: HTMLElement,
+) {
+  const addBtn = within(groupGrid).getByRole('button', { name: /Add monster to group/i })
+  await user.click(addBtn)
+  const input = screen.getByRole('textbox', { name: /Search bestiary/i })
+  await user.type(input, 'Troll Whelp')
+  const listbox = screen.getByRole('listbox', { name: /Available monsters/i })
+  const option = within(listbox).getAllByRole('option').find((el) => el.textContent === 'Troll Whelp')
+  await user.click(within(option!).getByRole('button'))
+}
+
 /** Accessible names use `Encounter group ${n}: …`; avoid `/group 1/` matching `group 10`. */
 const turnButton = (n: number, state: 'pending' | 'acted') =>
   new RegExp(`^Encounter group ${n}: turn ${state}$`, 'i')
@@ -1353,9 +1366,21 @@ describe('App', () => {
   it('solo creature reorder grip offers Convert to Squad and adds a minion row', async () => {
     const user = userEvent.setup()
     render(<App />)
-    await user.click(screen.getByRole('button', { name: 'Reorder Goblin Warrior within encounter' }))
+    const group1grid = screen.getByText('Goblin Assassin 1', { exact: true })
+      .closest('div.grid.items-stretch.rounded-lg') as HTMLElement
+    await addTrollWhelpToGroup(user, group1grid)
+    await user.click(screen.getByRole('button', { name: 'Reorder Troll Whelp within encounter' }))
     await user.click(screen.getByTestId('grip-menu-convert-squad'))
-    expect(screen.getByText('Goblin Warrior 1', { exact: true })).toBeInTheDocument()
+    expect(screen.getByText('Troll Whelp 1', { exact: true })).toBeInTheDocument()
+  })
+
+  it('Convert to Squad is disabled for non-Minion monster types', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    await user.click(screen.getByRole('button', { name: 'Reorder Goblin Warrior within encounter' }))
+    const btn = screen.getByTestId('grip-menu-convert-squad')
+    expect(btn).toBeDisabled()
+    expect(btn).toHaveTextContent('Convert to Squad (minions only)')
   })
 
   it('deletes an encounter group from the turn column grip menu', async () => {
@@ -2363,14 +2388,17 @@ describe('App', () => {
   it('moves a minion into a horde in another encounter group', async () => {
     const user = userEvent.setup()
     render(<App />)
-    await user.click(screen.getByRole('button', { name: 'Reorder Goblin Warrior within encounter' }))
+    const group1grid = screen.getByText('Goblin Assassin 1', { exact: true })
+      .closest('div.grid.items-stretch.rounded-lg') as HTMLElement
+    await addTrollWhelpToGroup(user, group1grid)
+    await user.click(screen.getByRole('button', { name: 'Reorder Troll Whelp within encounter' }))
     await user.click(screen.getByTestId('grip-menu-convert-squad'))
     const groups = screen.getAllByTestId('encounter-group-drop-target')
     const g0 = groups[0]!
     const g2 = groups[2]!
     const spineGrip = within(g2).getByLabelText('Reorder Goblin Spinecleaver 1 within horde')
     const dropEl = g0.querySelector(
-      '[data-testid="minion-drop-target"][data-monster-index="1"][data-minion-index="0"]',
+      '[data-testid="minion-drop-target"][data-monster-index="2"][data-minion-index="0"]',
     )
     expect(dropEl).toBeTruthy()
     const dt = mockMonsterDataTransfer()

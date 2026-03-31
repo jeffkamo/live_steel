@@ -38,9 +38,13 @@ export function GroupSection({
   onMinionConditionRemove,
   onMinionConditionAddOrSet,
   onDeleteMonster,
+  onDuplicateMonster,
   onDeleteMinion,
+  onDuplicateMinion,
   onConvertMonsterToSquad,
   onDeleteEncounterGroup,
+  onDuplicateEncounterGroup,
+  duplicateEncounterGroupDisabled = false,
   onAddMonster,
   onConfirmEot,
   isEotConfirmed,
@@ -94,9 +98,13 @@ export function GroupSection({
   onMinionConditionRemove?: (monsterIndex: number, minionIndex: number, conditionIndex: number) => void
   onMinionConditionAddOrSet?: (monsterIndex: number, minionIndex: number, label: string, state: ConditionState) => void
   onDeleteMonster?: (monsterIndex: number) => void
+  onDuplicateMonster?: (monsterIndex: number) => void
   onDeleteMinion?: (monsterIndex: number, minionIndex: number) => void
+  onDuplicateMinion?: (monsterIndex: number, minionIndex: number) => void
   onConvertMonsterToSquad?: (monsterIndex: number) => void
   onDeleteEncounterGroup?: () => void
+  onDuplicateEncounterGroup?: () => void
+  duplicateEncounterGroupDisabled?: boolean
   onAddMonster?: (monster: Monster) => void
   onConfirmEot?: (monsterIndex: number, label: string, minionIndex?: number) => void
   isEotConfirmed?: (monsterIndex: number, label: string, minionIndex?: number) => boolean
@@ -241,6 +249,8 @@ export function GroupSection({
         turnAriaLabel={turnAriaLabel}
         encounterGroupDragHandle={encounterGroupDragHandle}
         onDeleteEncounterGroup={onDeleteEncounterGroup}
+        onDuplicateEncounterGroup={onDuplicateEncounterGroup}
+        duplicateEncounterGroupDisabled={duplicateEncounterGroupDisabled}
       />
       {monsterDrag != null && group.monsters.length === 0 && (
         <div
@@ -331,9 +341,17 @@ export function GroupSection({
               onDelete={
                 onDeleteMonster != null ? () => onDeleteMonster(i) : undefined
               }
+              onDuplicate={
+                onDuplicateMonster != null ? () => onDuplicateMonster(i) : undefined
+              }
               onDeleteMinion={
                 onDeleteMinion != null
                   ? (minionIndex) => onDeleteMinion(i, minionIndex)
+                  : undefined
+              }
+              onDuplicateMinion={
+                onDuplicateMinion != null
+                  ? (minionIndex) => onDuplicateMinion(i, minionIndex)
                   : undefined
               }
               onConfirmEot={onConfirmEot ? (label, minionIndex) => onConfirmEot(i, label, minionIndex) : undefined}
@@ -371,6 +389,9 @@ export function GroupSection({
             onMonsterCardNameClick={onMonsterCardNameClick}
             onDelete={
               onDeleteMonster != null ? () => onDeleteMonster(i) : undefined
+            }
+            onDuplicate={
+              onDuplicateMonster != null ? () => onDuplicateMonster(i) : undefined
             }
             onConvertToSquad={
               onConvertMonsterToSquad != null ? () => onConvertMonsterToSquad(i) : undefined

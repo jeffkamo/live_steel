@@ -1462,6 +1462,25 @@ export function cloneEncounterGroups(): EncounterGroup[] {
   return []
 }
 
+export function cloneMonster(m: Monster): Monster {
+  return {
+    name: m.name,
+    subtitle: m.subtitle,
+    initials: m.initials,
+    stamina: [m.stamina[0], m.stamina[1]],
+    marip: m.marip === null ? null : ([...m.marip] as unknown as Marip),
+    fs: m.fs,
+    dist: m.dist,
+    stab: m.stab,
+    conditions: m.conditions.map((c) => ({ ...c })),
+    ...(m.minions
+      ? { minions: m.minions.map((mn) => ({ ...mn, conditions: mn.conditions.map((c) => ({ ...c })) })) }
+      : {}),
+    ...(m.features ? { features: [...m.features] } : {}),
+    captainId: m.captainId ? { ...m.captainId } : m.captainId,
+  }
+}
+
 export function cloneTerrainRows(): TerrainRowState[] {
   return []
 }
@@ -1680,4 +1699,8 @@ export function otherGroupIndexForColor(
 export function nextAvailableColor(usedColors: readonly GroupColorId[]): GroupColorId {
   const unused = GROUP_COLOR_ORDER.find((c) => !usedColors.includes(c))
   return unused ?? GROUP_COLOR_ORDER[usedColors.length % GROUP_COLOR_ORDER.length]!
+}
+
+export function nextUnusedColor(usedColors: readonly GroupColorId[]): GroupColorId | null {
+  return GROUP_COLOR_ORDER.find((c) => !usedColors.includes(c)) ?? null
 }

@@ -59,7 +59,9 @@ export function MinionGroupRow({
   statCardDrawerView = null,
   onStatCardToggle,
   onDelete,
+  onDuplicate,
   onDeleteMinion,
+  onDuplicateMinion,
   onConfirmEot,
   isEotConfirmed,
   monsterDrag,
@@ -95,7 +97,9 @@ export function MinionGroupRow({
   statCardDrawerView?: MonsterCardDrawerView | null
   onStatCardToggle?: (view: MonsterCardDrawerView) => void
   onDelete?: () => void
+  onDuplicate?: () => void
   onDeleteMinion?: (minionIndex: number) => void
+  onDuplicateMinion?: (minionIndex: number) => void
   onConfirmEot?: (label: string, minionIndex?: number) => void
   isEotConfirmed?: (label: string, minionIndex?: number) => boolean
   monsterDrag?: {
@@ -207,10 +211,14 @@ export function MinionGroupRow({
     'transition-opacity duration-200 ease-out motion-reduce:transition-none ' +
     (turnComplete ? 'opacity-[0.38]' : 'opacity-100')
 
-  const parentGripMenuItems =
-    onDelete != null
-      ? ([{ id: 'delete', label: 'Delete', onSelect: onDelete, destructive: true }] as const)
-      : []
+  const parentGripMenuItems = [
+    ...(onDuplicate != null
+      ? [{ id: 'duplicate', label: 'Duplicate', onSelect: onDuplicate }]
+      : []),
+    ...(onDelete != null
+      ? [{ id: 'delete', label: 'Delete', onSelect: onDelete, destructive: true }]
+      : []),
+  ]
 
   const parentMonsterDropRing =
     monsterDrag?.dropHighlighted
@@ -504,6 +512,7 @@ export function MinionGroupRow({
             }
             minionDrag={minionRowDrag?.(mi)}
             onDeleteMinion={onDeleteMinion != null ? () => onDeleteMinion(mi) : undefined}
+            onDuplicateMinion={onDuplicateMinion != null ? () => onDuplicateMinion(mi) : undefined}
           />
         )
       })}
@@ -531,6 +540,7 @@ function MinionChildRow({
   monsterCardDrawerOpen = false,
   onMinionStatCardClick,
   onDeleteMinion,
+  onDuplicateMinion,
   minionDrag,
   lifeToggleCue = null,
 }: {
@@ -554,12 +564,17 @@ function MinionChildRow({
   monsterCardDrawerOpen?: boolean
   onMinionStatCardClick?: () => void
   onDeleteMinion?: () => void
+  onDuplicateMinion?: () => void
   minionDrag?: MinionRowDragBinding
 }) {
-  const minionGripMenuItems =
-    onDeleteMinion != null
-      ? ([{ id: 'delete', label: 'Delete', onSelect: onDeleteMinion, destructive: true }] as const)
-      : []
+  const minionGripMenuItems = [
+    ...(onDuplicateMinion != null
+      ? [{ id: 'duplicate', label: 'Duplicate', onSelect: onDuplicateMinion }]
+      : []),
+    ...(onDeleteMinion != null
+      ? [{ id: 'delete', label: 'Delete', onSelect: onDeleteMinion, destructive: true }]
+      : []),
+  ]
   const badge = GROUP_COLOR_BADGE[groupColor]
   const childCombat = rosterCombatStats(parentMonster)
   const bodyCell =
@@ -593,7 +608,7 @@ function MinionChildRow({
         onDragLeave={minionDrag?.onDragLeave}
         onDrop={minionDrag?.onDrop}
       >
-        <div className={`flex min-h-0 min-w-0 flex-1 items-stretch gap-2 pl-6 sm:gap-3 ${deadDim}`}>
+        <div className="flex min-h-0 min-w-0 flex-1 items-stretch gap-2 pl-6 sm:gap-3">
           {minionDrag != null && (
             <ReorderGripWithMenu
               reorderAriaLabel={`Reorder ${minion.name} within horde`}
@@ -604,7 +619,7 @@ function MinionChildRow({
               iconClassName="size-3.5 text-zinc-500 transition-colors group-hover:text-zinc-200"
             />
           )}
-          <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-3">
+          <div className={`flex min-w-0 flex-1 items-center gap-2 sm:gap-3 ${deadDim}`}>
             <span
               className={`flex size-7 shrink-0 items-center justify-center rounded-full border-2 text-[0.65rem] font-semibold tabular-nums leading-none sm:size-8 sm:text-xs ${badge.border} ${badge.bg} ${badge.text}`}
               aria-label={`${minion.name}: creature ${creatureOrdinal} of ${totalCreatures} in encounter group ${groupNumber}`}

@@ -28,6 +28,7 @@ export function MonsterRowCells({
   monsterCardDrawerOpen = false,
   onMonsterCardNameClick,
   onDelete,
+  onDuplicate,
   onConvertToSquad,
   onConfirmEot,
   isEotConfirmed,
@@ -53,6 +54,7 @@ export function MonsterRowCells({
   monsterCardDrawerOpen?: boolean
   onMonsterCardNameClick?: () => void
   onDelete?: () => void
+  onDuplicate?: () => void
   onConvertToSquad?: () => void
   onConfirmEot?: (label: string) => void
   isEotConfirmed?: (label: string) => boolean
@@ -71,6 +73,9 @@ export function MonsterRowCells({
   conditionDnD?: CreatureConditionDnDBinding
 }) {
   const [sc, sm] = monster.stamina
+  const dead = sm > 0 && sc <= 0
+  const deadDim = dead ? 'opacity-40' : ''
+  const deadStrike = dead ? 'line-through' : ''
   const badge = GROUP_COLOR_BADGE[groupColor]
   const colorLabel = GROUP_COLOR_LABEL[groupColor]
   const hasFeatures = (monster.features?.length ?? 0) > 0
@@ -79,9 +84,18 @@ export function MonsterRowCells({
   const creatureNameColCell =
     'flex h-full min-h-[3.75rem] items-stretch px-2 py-2 sm:min-h-[4rem] sm:px-2.5 sm:py-2.5'
   const combat = rosterCombatStats(monster)
+  const isMinion = /\bminion\b/i.test(monster.subtitle)
   const gripMenuItems = [
+    ...(onDuplicate != null
+      ? [{ id: 'duplicate', label: 'Duplicate', onSelect: onDuplicate } as const]
+      : []),
     ...(onConvertToSquad != null
-      ? [{ id: 'convert-squad', label: 'Convert to Squad', onSelect: onConvertToSquad } as const]
+      ? [{
+          id: 'convert-squad',
+          label: isMinion ? 'Convert to Squad' : 'Convert to Squad (minions only)',
+          onSelect: onConvertToSquad,
+          disabled: !isMinion,
+        } as const]
       : []),
     ...(onDelete != null
       ? [{ id: 'delete', label: 'Delete', onSelect: onDelete, destructive: true } as const]
@@ -123,7 +137,7 @@ export function MonsterRowCells({
               iconClassName="size-3.5 text-zinc-500 transition-colors group-hover:text-zinc-200 sm:size-4"
             />
           )}
-          <div className="flex min-w-0 flex-1 items-center gap-3">
+          <div className={`flex min-w-0 flex-1 items-center gap-3 ${deadDim}`}>
           <button
             type="button"
             data-group-color-trigger={groupKey}
@@ -145,7 +159,7 @@ export function MonsterRowCells({
                 onClick={onMonsterCardNameClick}
                 className="block w-full min-w-0 cursor-pointer rounded-md px-3 py-2 text-left outline-none transition-[background-color,box-shadow,color] duration-150 ease-out motion-reduce:transition-none hover:bg-zinc-800/55 hover:shadow-sm hover:shadow-black/20 hover:[&>span]:text-amber-50/95 hover:[&>p]:text-zinc-300 focus-visible:ring-2 focus-visible:ring-amber-500/45 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950"
               >
-                <span className="block truncate font-medium leading-tight text-zinc-50 transition-colors duration-150">
+                <span className={`block truncate font-medium leading-tight text-zinc-50 transition-colors duration-150 ${deadStrike}`}>
                   {monster.name}
                 </span>
                 <p className="mt-1 truncate text-[0.7rem] leading-snug text-zinc-400 transition-colors duration-150">
@@ -154,7 +168,7 @@ export function MonsterRowCells({
               </button>
             ) : (
               <>
-                <p className="truncate font-medium leading-tight text-zinc-50">{monster.name}</p>
+                <p className={`truncate font-medium leading-tight text-zinc-50 ${deadStrike}`}>{monster.name}</p>
                 <p className="mt-1 truncate text-[0.7rem] leading-snug text-zinc-400">{monster.subtitle}</p>
               </>
             )}

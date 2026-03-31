@@ -8,6 +8,7 @@ export type ReorderGripMenuItem = {
   label: string
   onSelect: () => void
   destructive?: boolean
+  disabled?: boolean
 }
 
 export function ReorderGripWithMenu({
@@ -144,12 +145,19 @@ export function ReorderGripWithMenu({
                   type="button"
                   role="menuitem"
                   data-testid={`grip-menu-${item.id}`}
+                  disabled={item.disabled}
+                  aria-disabled={item.disabled}
                   onClick={() => {
+                    if (item.disabled) return
                     item.onSelect()
                     closeMenu()
                   }}
-                  className={`flex w-full cursor-pointer px-3 py-2 text-left text-xs transition-colors hover:bg-zinc-800 ${
-                    item.destructive ? 'text-red-400' : 'text-zinc-200'
+                  className={`flex w-full px-3 py-2 text-left text-xs transition-colors ${
+                    item.disabled
+                      ? 'cursor-default text-zinc-500'
+                      : item.destructive
+                        ? 'cursor-pointer text-red-400 hover:bg-zinc-800'
+                        : 'cursor-pointer text-zinc-200 hover:bg-zinc-800'
                   }`}
                 >
                   {item.label}

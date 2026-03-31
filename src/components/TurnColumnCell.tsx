@@ -36,6 +36,8 @@ export function GroupTurnColumn({
   turnAriaLabel,
   encounterGroupDragHandle,
   onDeleteEncounterGroup,
+  onDuplicateEncounterGroup,
+  duplicateEncounterGroupDisabled = false,
 }: {
   gridRowSpan: number
   acted: boolean
@@ -47,18 +49,22 @@ export function GroupTurnColumn({
     ariaLabel: string
   }
   onDeleteEncounterGroup?: () => void
+  onDuplicateEncounterGroup?: () => void
+  duplicateEncounterGroupDisabled?: boolean
 }) {
-  const encounterGripMenuItems =
-    onDeleteEncounterGroup != null
-      ? ([
-          {
-            id: 'delete-group',
-            label: 'Delete',
-            onSelect: onDeleteEncounterGroup,
-            destructive: true,
-          },
-        ] as const)
-      : []
+  const encounterGripMenuItems = [
+    ...(onDuplicateEncounterGroup != null
+      ? [{
+          id: 'duplicate-group',
+          label: 'Duplicate',
+          onSelect: onDuplicateEncounterGroup,
+          disabled: duplicateEncounterGroupDisabled,
+        }]
+      : []),
+    ...(onDeleteEncounterGroup != null
+      ? [{ id: 'delete-group', label: 'Delete', onSelect: onDeleteEncounterGroup, destructive: true }]
+      : []),
+  ]
   return (
     <div
       style={{ gridColumn: 1, gridRow: `1 / span ${gridRowSpan}` }}

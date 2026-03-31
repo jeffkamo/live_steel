@@ -24,6 +24,7 @@ import {
 } from './persistence'
 import {
   cloneEncounterGroups,
+  cloneMonster,
   cloneTerrainRows,
   CONDITION_DRAG_MIME,
   ENCOUNTER_GROUP_DRAG_MIME,
@@ -48,7 +49,7 @@ import {
   remapEotConfirmedAfterSoloMergedIntoHorde,
   remapEotConfirmedAfterConvertToSquad,
   newEncounterGroupId,
-  nextAvailableColor,
+  nextUnusedColor,
   parseConditionDragPayload,
   remapEncounterGroupIndex,
   remapEotConfirmedAfterMonsterMove,
@@ -145,6 +146,7 @@ function App() {
   const [terrainRows, setTerrainRows] = useState(() => initTerrain)
   const [groupTurnActed, setGroupTurnActed] = useState(() => initTurns)
   const [uiLocked, setUiLocked] = useState(false)
+  const canAddGroup = nextUnusedColor(encounterGroups.map((g) => g.color)) != null
   const [monsterCardDrawer, setMonsterCardDrawer] = useState<MonsterCardDrawerState | null>(null)
   const [terrainDrawerIndex, setTerrainDrawerIndex] = useState<number | null>(null)
   const [drawerAnimatingOut, setDrawerAnimatingOut] = useState(false)
@@ -451,6 +453,45 @@ function App() {
         prev.map((g, gi) => {
           if (gi !== groupIndex) return g
           return { ...g, monsters: [...g.monsters, monster] }
+        }),
+      )
+    },
+    [],
+  )
+
+  const duplicateMonster = useCallback(
+    (groupIndex: number, monsterIndex: number) => {
+      setEncounterGroups((prev) =>
+        prev.map((g, gi) => {
+          if (gi !== groupIndex) return g
+          const src = g.monsters[monsterIndex]
+          if (!src) return g
+          const copy = cloneMonster(src)
+          copy.captainId = undefined
+          const monsters = [...g.monsters]
+          monsters.splice(monsterIndex + 1, 0, copy)
+          return { ...g, monsters }
+        }),
+      )
+    },
+    [],
+  )
+
+  const duplicateMinionFromHorde = useCallback(
+    (groupIndex: number, monsterIndex: number, minionIndex: number) => {
+      setEncounterGroups((prev) =>
+        prev.map((g, gi) => {
+          if (gi !== groupIndex) return g
+          const m = g.monsters[monsterIndex]
+          const minions = m?.minions
+          if (!m || !minions || minionIndex < 0 || minionIndex >= minions.length) return g
+          const src = minions[minionIndex]!
+          const copy = { ...src, conditions: src.conditions.map((c) => ({ ...c })) }
+          const nextMinions = [...minions]
+          nextMinions.splice(minionIndex + 1, 0, copy)
+          const monsters = [...g.monsters]
+          monsters[monsterIndex] = { ...m, minions: nextMinions }
+          return { ...g, monsters }
         }),
       )
     },
@@ -1045,12 +1086,47 @@ function App() {
   )
 
   const addNewGroup = useCallback(() => {
+    let added = false
     setEncounterGroups((prev) => {
-      const color = nextAvailableColor(prev.map((g) => g.color))
+      const color = nextUnusedColor(prev.map((g) => g.color))
+      if (color == null) return prev
+      added = true
       return [...prev, { id: newEncounterGroupId(), monsters: [], color }]
     })
-    setGroupTurnActed((prev) => [...prev, false])
+    setGroupTurnActed((prev) => (added ? [...prev, false] : prev))
   }, [])
+
+  const duplicateEncounterGroup = useCallback(
+    (groupIndex: number) => {
+      let duplicated = false
+      setEncounterGroups((prev) => {
+        const src = prev[groupIndex]
+        if (!src) return prev
+        const newColor = nextUnusedColor(prev.map((g) => g.color))
+        if (newColor == null) return prev
+        duplicated = true
+        const copy: EncounterGroup = {
+          id: newEncounterGroupId(),
+          color: newColor,
+          monsters: src.monsters.map((m) => {
+            const c = cloneMonster(m)
+            c.captainId = undefined
+            return c
+          }),
+        }
+        const next = [...prev]
+        next.splice(groupIndex + 1, 0, copy)
+        return next
+      })
+      setGroupTurnActed((prev) => {
+        if (!duplicated) return prev
+        const next = [...prev]
+        next.splice(groupIndex + 1, 0, false)
+        return next
+      })
+    },
+    [],
+  )
 
   const createNewEncounter = useCallback((name: string) => {
     const trimmed = name.trim()
@@ -1775,8 +1851,14 @@ function App() {
                     onDeleteMonster={
                       uiLocked ? undefined : (mi) => deleteMonster(gi, mi)
                     }
+                    onDuplicateMonster={
+                      uiLocked ? undefined : (mi) => duplicateMonster(gi, mi)
+                    }
                     onDeleteMinion={
                       uiLocked ? undefined : (mi, mni) => deleteMinionFromHorde(gi, mi, mni)
+                    }
+                    onDuplicateMinion={
+                      uiLocked ? undefined : (mi, mni) => duplicateMinionFromHorde(gi, mi, mni)
                     }
                     onConvertMonsterToSquad={
                       uiLocked ? undefined : (mi) => convertMonsterToSquad(gi, mi)
@@ -1784,6 +1866,10 @@ function App() {
                     onDeleteEncounterGroup={
                       uiLocked ? undefined : () => deleteEncounterGroup(gi)
                     }
+                    onDuplicateEncounterGroup={
+                      uiLocked ? undefined : () => duplicateEncounterGroup(gi)
+                    }
+                    duplicateEncounterGroupDisabled={!canAddGroup}
                     onAddMonster={
                       uiLocked ? undefined : (monster) => addMonsterToGroup(gi, monster)
                     }
@@ -1838,7 +1924,13 @@ function App() {
                   type="button"
                   onClick={addNewGroup}
                   aria-label="Add new encounter group"
-                  className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-zinc-700 px-4 py-3 font-sans text-sm tracking-wide text-zinc-400 transition-colors hover:border-zinc-500 hover:bg-zinc-900/60 hover:text-zinc-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500/60"
+                  disabled={!canAddGroup}
+                  aria-disabled={!canAddGroup}
+                  className={`flex w-full items-center justify-center gap-2 rounded-lg border border-dashed px-4 py-3 font-sans text-sm tracking-wide transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500/60 ${
+                    canAddGroup
+                      ? 'cursor-pointer border-zinc-700 text-zinc-400 hover:border-zinc-500 hover:bg-zinc-900/60 hover:text-zinc-200'
+                      : 'cursor-not-allowed border-zinc-800 text-zinc-600 opacity-60'
+                  }`}
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
                     <path d="M10.75 4.75a.75.75 0 0 0-1.5 0v4.5h-4.5a.75.75 0 0 0 0 1.5h4.5v4.5a.75.75 0 0 0 1.5 0v-4.5h4.5a.75.75 0 0 0 0-1.5h-4.5v-4.5Z" />
