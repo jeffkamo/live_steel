@@ -1424,7 +1424,9 @@ export function reorderEncounterGroupsWithCaptainRemap(
   }))
 }
 
-export const terrainGridClass = 'grid grid-cols-[minmax(0,1.35fr)_minmax(7rem,8.5rem)_minmax(0,1.2fr)]'
+// Match the roster grid so terrain stamina aligns with monster stamina.
+export const terrainGridClass =
+  'grid grid-cols-[5.5rem_minmax(0,1fr)_minmax(7rem,8.5rem)_minmax(5.75rem,7.25rem)_7.25rem_23.0625rem]'
 
 export function conditionEntryFromLabel(label: string): ConditionEntry {
   return { label, state: 'neutral' }
