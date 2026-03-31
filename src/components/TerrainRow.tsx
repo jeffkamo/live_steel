@@ -2,6 +2,7 @@ import type { DragEvent } from 'react'
 import type { TerrainRowState } from '../types'
 import { terrainGridClass } from '../data'
 import { EditableStaminaCell } from './EditableStaminaCell'
+import { ReorderGripIcon } from './ReorderGripIcon'
 
 export function TerrainRow({
   row,
@@ -44,9 +45,7 @@ export function TerrainRow({
             aria-label={dragHandle.ariaLabel}
             className="shrink-0 cursor-grab touch-none rounded p-0.5 text-zinc-600 transition-colors hover:text-zinc-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber-500/60 active:cursor-grabbing"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="size-3.5" aria-hidden>
-              <path d="M5 3.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0Zm0 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0Zm0 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0ZM13 3.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0Zm0 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0Zm0 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0Z" />
-            </svg>
+            <ReorderGripIcon className="size-3.5 sm:size-4" />
           </button>
         )}
         {hasStatBlock ? (
