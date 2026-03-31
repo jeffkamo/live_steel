@@ -64,15 +64,25 @@ describe('TerrainRow', () => {
     expect(onChange).toHaveBeenCalledWith([5, 8])
   })
 
-  it('renders delete button when not locked', () => {
+  it('renders Delete menu item in grip menu when not locked', async () => {
+    const user = userEvent.setup()
     const onDelete = vi.fn()
-    render(<TerrainRow row={makeRow()} rowIndex={0} onStaminaChange={vi.fn()} onDelete={onDelete} />)
-    expect(screen.getByRole('button', { name: /^Delete terrain/i })).toBeInTheDocument()
+    render(
+      <TerrainRow
+        row={makeRow()}
+        rowIndex={0}
+        onStaminaChange={vi.fn()}
+        onDelete={onDelete}
+        dragHandle={{ onDragStart: vi.fn(), onDragEnd: vi.fn(), ariaLabel: 'Reorder terrain 1' }}
+      />,
+    )
+    await user.click(screen.getByRole('button', { name: /^Reorder terrain/i }))
+    expect(screen.getByRole('menuitem', { name: 'Delete' })).toBeInTheDocument()
   })
 
-  it('does not render delete button when uiLocked', () => {
+  it('does not render grip menu when uiLocked', () => {
     render(<TerrainRow row={makeRow()} rowIndex={0} onStaminaChange={vi.fn()} uiLocked onDelete={vi.fn()} />)
-    expect(screen.queryByRole('button', { name: /^Delete terrain/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /^Reorder terrain/i })).not.toBeInTheDocument()
   })
 
   it('renders object name as clickable when terrainName is set', () => {

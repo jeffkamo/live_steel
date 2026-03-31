@@ -1679,15 +1679,16 @@ describe('App', () => {
     expect(screen.getByText('4 / 15')).toBeInTheDocument()
   })
 
-  it('recalibrates pool max/current when a minion is marked dead so the threshold cue stays in sync', async () => {
+  it('killing a minion does not change pool stamina', async () => {
     const user = userEvent.setup()
     render(<App />)
 
     const toggle4 = screen.getByRole('button', { name: /Goblin Spinecleaver 4: alive/i })
     await user.click(toggle4)
 
-    const pool = screen.getByRole('group', { name: /Minion stamina pool: 15 of 20/i })
-    expect(within(pool).queryByTestId('threshold-mismatch-cue')).not.toBeInTheDocument()
+    const pool = screen.getByRole('group', { name: /Minion stamina pool: 20 of 20/i })
+    const cue = within(pool).getByTestId('threshold-mismatch-cue')
+    expect(cue.textContent).toMatch(/Revive 1/)
   })
 
   // --- EoT/SE condition glow animation on turn acted (TURN-001) ---

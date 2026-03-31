@@ -655,10 +655,8 @@ function MinionChildRow({
               : `${minion.name}: alive. Click to mark dead.`
           }
           onClick={() => onDeadChange(!minion.dead)}
-          className={`inline-flex size-9 shrink-0 items-center justify-center rounded-full border outline-none transition-[background-color,border-color,color,transform,box-shadow] duration-200 ease-out motion-reduce:transition-none hover:brightness-110 active:scale-[0.96] focus-visible:ring-2 focus-visible:ring-amber-500/45 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950 sm:size-10 ${
-            minion.dead
-              ? 'border-red-800/70 bg-red-950/55 text-red-400'
-              : 'border-emerald-800/55 bg-emerald-950/45 text-emerald-400'
+          className={`inline-flex shrink-0 cursor-pointer items-center justify-center rounded-md p-1 outline-none transition-[color,transform,box-shadow] duration-200 ease-out motion-reduce:transition-none hover:brightness-125 active:scale-[0.93] focus-visible:ring-2 focus-visible:ring-amber-500/45 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950 ${
+            minion.dead ? 'text-zinc-400' : 'text-rose-300'
           } ${
             lifeToggleCue === 'kill'
               ? 'z-[1] ring-2 ring-red-500/80 ring-offset-2 ring-offset-zinc-950 motion-safe:animate-glow-cue-kill motion-reduce:shadow-[0_0_10px_rgba(239,68,68,0.45)]'
@@ -668,7 +666,7 @@ function MinionChildRow({
           }`}
         >
           {minion.dead ? (
-            <StaminaSkullIcon className="size-5 scale-90" />
+            <StaminaSkullIcon className="size-5" />
           ) : (
             <StaminaHeartFullIcon className="size-5" />
           )}

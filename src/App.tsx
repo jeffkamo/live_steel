@@ -1897,7 +1897,7 @@ function App() {
                               e.dataTransfer.setData(TERRAIN_DRAG_MIME, String(i))
                               e.dataTransfer.effectAllowed = 'move'
                             },
-                            onDragEnd: () => setDropTargetTerrainIndex(null),
+                            onDragEnd: (_e: DragEvent) => setDropTargetTerrainIndex(null),
                             ariaLabel: `Reorder terrain ${i + 1}`,
                           }
                     }

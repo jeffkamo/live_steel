@@ -1635,15 +1635,12 @@ export function nextHordePoolStamina(
   return normalizeStamina(cur, fullMax)
 }
 
-/** After toggling a minion dead/alive: cap current to what living minions can hold, keep full-roster pool ceiling. */
+/** After toggling a minion dead/alive: preserve the current stamina and pool ceiling unchanged. */
 export function hordePoolStaminaAfterMinionDeadToggle(
   parent: Monster,
-  nextMinions: readonly MinionEntry[],
+  _nextMinions: readonly MinionEntry[],
 ): [number, number] {
-  const fullMax = hordePoolMaxFromMinions(parent.name, nextMinions)
-  const aliveMax = hordePoolMaxAliveFromMinions(parent.name, nextMinions)
-  const cur = Math.min(parent.stamina[0], aliveMax)
-  return normalizeStamina(cur, fullMax)
+  return [parent.stamina[0], parent.stamina[1]]
 }
 
 /** Solo creature stamina after its horde is removed (bestiary max, current capped). */

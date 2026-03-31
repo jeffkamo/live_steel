@@ -67,13 +67,13 @@ export function GroupTurnColumn({
       className="flex h-full min-h-0 w-full min-w-0 flex-row items-stretch overflow-visible border-r border-zinc-800/60 bg-zinc-900/80"
     >
       {encounterGroupDragHandle != null && (
-        <div className="flex h-full min-h-0 shrink-0 self-stretch border-r border-zinc-800/60 px-0.5 sm:px-0">
+        <div className="flex h-full min-h-0 shrink-0 items-stretch border-r border-zinc-800/60 p-1 sm:p-1.5">
           <ReorderGripWithMenu
             reorderAriaLabel={encounterGroupDragHandle.ariaLabel}
             onDragStart={encounterGroupDragHandle.onDragStart}
             onDragEnd={encounterGroupDragHandle.onDragEnd}
             menuItems={encounterGripMenuItems}
-            className="group flex w-7 cursor-grab touch-none select-none items-center justify-center transition-[background-color,border-color,box-shadow,color] duration-150 ease-out hover:border-zinc-600/55 hover:bg-zinc-800/55 active:cursor-grabbing motion-reduce:transition-none sm:w-8"
+            className="group flex w-7 cursor-grab touch-none select-none items-center justify-center rounded-md border border-transparent transition-[background-color,border-color,box-shadow,color] duration-150 ease-out hover:border-zinc-700/45 hover:bg-zinc-800/55 hover:shadow-sm active:cursor-grabbing motion-reduce:transition-none sm:w-8"
             iconClassName="size-3.5 text-zinc-500 transition-colors group-hover:text-zinc-200 sm:size-4"
           />
         </div>
