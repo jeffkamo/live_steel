@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { TerrainRowState } from '../types'
 import { terrainNames, terrainRowFromBestiary } from '../terrainBestiary'
+import { blankCustomTerrainRow } from '../data'
 import { tabWrapKeyDown } from '../dropdownA11y'
 
 export function AddTerrainButton({
@@ -40,6 +41,10 @@ export function AddTerrainButton({
     },
     [onAdd],
   )
+
+  const handleAddCustom = useCallback(() => {
+    onAdd(blankCustomTerrainRow())
+  }, [onAdd])
 
   useEffect(() => {
     if (!open) {
@@ -189,6 +194,16 @@ export function AddTerrainButton({
               aria-label="Available terrain"
               className="min-h-0 flex-1 overflow-y-auto py-1"
             >
+              <li role="option" aria-selected={false}>
+                <button
+                  type="button"
+                  data-terrain-option
+                  onClick={handleAddCustom}
+                  className="w-full cursor-pointer border-b border-zinc-800/80 px-3 py-2 text-left font-sans text-xs font-medium text-amber-200/95 transition-colors hover:bg-zinc-800 hover:text-amber-50 focus-visible:bg-zinc-800 focus-visible:text-amber-50 focus-visible:outline-none"
+                >
+                  Custom terrain
+                </button>
+              </li>
               {filtered.length === 0 && (
                 <li className="px-3 py-2 font-sans text-xs text-zinc-600">
                   No matches

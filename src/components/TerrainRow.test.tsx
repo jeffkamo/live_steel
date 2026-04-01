@@ -24,6 +24,14 @@ describe('TerrainRow', () => {
     expect(screen.getByText('Burning; end of round.')).toBeInTheDocument()
   })
 
+  it('renders terrain notes under description and preserves whitespace', () => {
+    const notes = 'Line 1\nLine 2\n\nLine 4'
+    render(<TerrainRow row={makeRow({ notes })} rowIndex={0} onStaminaChange={vi.fn()} />)
+    expect(
+      screen.getByText((_, node) => (node?.textContent ?? '') === notes),
+    ).toBeInTheDocument()
+  })
+
   it('renders stamina as current / max', () => {
     render(<TerrainRow row={makeRow()} rowIndex={0} onStaminaChange={vi.fn()} />)
     expect(screen.getByText('6 / 8')).toBeInTheDocument()
@@ -113,6 +121,18 @@ describe('TerrainRow', () => {
     expect(screen.getByRole('button', { name: /^View stat block for/i })).toBeInTheDocument()
   })
 
+  it('renders object name as clickable when custom terrain stats are set', () => {
+    render(
+      <TerrainRow
+        row={makeRow({ custom: { level: 1, ev: '2', size: '2' } })}
+        rowIndex={0}
+        onStaminaChange={vi.fn()}
+        onClick={vi.fn()}
+      />,
+    )
+    expect(screen.getByRole('button', { name: /^View stat block for/i })).toBeInTheDocument()
+  })
+
   it('shows Add upgrade for terrain with upgrade options', () => {
     render(
       <TerrainRow
@@ -126,7 +146,7 @@ describe('TerrainRow', () => {
     expect(screen.getByRole('button', { name: 'Add upgrade' })).toBeInTheDocument()
   })
 
-  it('renders object name as plain text when no terrainName', () => {
+  it('renders object name as plain text when no terrainName or custom stats', () => {
     render(<TerrainRow row={makeRow()} rowIndex={0} onStaminaChange={vi.fn()} />)
     expect(screen.queryByRole('button', { name: /^View stat block for/i })).not.toBeInTheDocument()
   })

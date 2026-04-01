@@ -2,6 +2,7 @@ import type {
   CaptainRef,
   ConditionEntry,
   CustomMonsterStats,
+  CustomTerrainStats,
   EncounterGroup,
   EncounterGroupSeed,
   GroupColorId,
@@ -1535,6 +1536,32 @@ export function applyCustomMonsterPatch(m: Monster, patch: CustomMonsterPatch): 
   }
 }
 
+export type CustomTerrainPatch = {
+  object?: string
+  stamina?: [number, number]
+  note?: string
+  notes?: string
+  custom?: Partial<CustomTerrainStats>
+}
+
+export function applyCustomTerrainPatch(row: TerrainRowState, patch: CustomTerrainPatch): TerrainRowState {
+  if (!row.custom) return row
+  const nextCustom: CustomTerrainStats = { ...row.custom, ...patch.custom }
+  let stamina = patch.stamina ?? row.stamina
+  if (patch.stamina != null) {
+    const max = stamina[1]
+    stamina = [Math.min(stamina[0], max), max] as [number, number]
+  }
+  return {
+    ...row,
+    object: patch.object ?? row.object,
+    stamina,
+    note: patch.note ?? row.note,
+    notes: patch.notes ?? row.notes,
+    custom: nextCustom,
+  }
+}
+
 export function cloneTerrainRows(): TerrainRowState[] {
   return []
 }
@@ -1634,6 +1661,22 @@ export function blankCustomMonster(): Monster {
     stab: 0,
     conditions: [],
     features: [],
+    custom,
+  }
+}
+
+/** New user-defined terrain: zeros for numerics, empty text fields. */
+export function blankCustomTerrainRow(): TerrainRowState {
+  const custom: CustomTerrainStats = {
+    level: 0,
+    ev: '',
+    size: '',
+  }
+  return {
+    object: 'Custom terrain',
+    stamina: [0, 0],
+    note: '',
+    notes: '',
     custom,
   }
 }

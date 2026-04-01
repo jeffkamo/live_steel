@@ -138,14 +138,27 @@ export type EncounterGroupSeed = {
 export type TerrainRowState = {
   object: string
   stamina: [number, number]
+  /** Description shown in the terrain row and stat drawer. */
   note: string
+  /** Freeform notes shown under the description; preserves whitespace when rendered. */
+  notes?: string
   /** Bestiary terrain name for stat-block lookup; absent on legacy/custom rows. */
   terrainName?: string
+  /** When set, the stat drawer edits these stats instead of the bestiary block. */
+  custom?: CustomTerrainStats
   /** Selected upgrades (by upgrade name) for bestiary-backed terrain rows. */
   upgrades?: string[]
 }
 
 export type TerrainRowSeed = TerrainRowState
+
+/** Extra fields for user-authored terrain (no bestiary stat block). */
+export type CustomTerrainStats = {
+  level: number
+  /** Encounter value (EV), e.g. "3" or "—". Optional on legacy saves. */
+  ev?: string
+  size: string
+}
 
 export type GroupColorMenuState = {
   open: boolean

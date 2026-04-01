@@ -62,6 +62,8 @@ import {
   monsterHasStatCard,
   type ConditionCreatureRef,
   type CustomMonsterPatch,
+  applyCustomTerrainPatch,
+  type CustomTerrainPatch,
 } from './data'
 import { TitleRule } from './components/TitleRule'
 import { GroupSection } from './components/GroupSection'
@@ -70,6 +72,7 @@ import { CustomMonsterStatForm } from './components/CustomMonsterStatForm'
 import { TerrainRow } from './components/TerrainRow'
 import { AddTerrainButton } from './components/AddTerrainButton'
 import { TerrainStatBlock } from './components/TerrainStatBlock'
+import { CustomTerrainStatForm } from './components/CustomTerrainStatForm'
 import { bestiaryStatblockFromCustomMonster } from './bestiary'
 
 const DRAWER_PANEL_W_CLASS = 'w-[min(20rem,calc(100vw-2rem))]'
@@ -170,6 +173,8 @@ function App() {
 
   const monsterCardDrawerRef = useRef(monsterCardDrawer)
   monsterCardDrawerRef.current = monsterCardDrawer
+  const terrainDrawerIndexRef = useRef(terrainDrawerIndex)
+  terrainDrawerIndexRef.current = terrainDrawerIndex
   const prevDrawerForEnterRef = useRef<MonsterCardDrawerState | null>(null)
 
   useEffect(() => {
@@ -1511,6 +1516,15 @@ function App() {
     })
   }, [])
 
+  const patchCustomTerrainInDrawer = useCallback((patch: CustomTerrainPatch) => {
+    setTerrainRows((prev) => {
+      const idx = terrainDrawerIndexRef.current
+      if (idx == null) return prev
+      if (idx < 0 || idx >= prev.length) return prev
+      return prev.map((r, i) => (i === idx ? applyCustomTerrainPatch(r, patch) : r))
+    })
+  }, [])
+
   const toggleMonsterCard = useCallback(
     (groupIndex: number, monsterIndex: number, view: MonsterCardDrawerView) => {
       const m = encounterGroups[groupIndex]?.monsters[monsterIndex]
@@ -1655,7 +1669,7 @@ function App() {
   const terrainDrawerRow =
     terrainDrawerIndex != null ? terrainRows[terrainDrawerIndex] : undefined
   const terrainDrawerOpen =
-    terrainDrawerRow != null && terrainDrawerRow.terrainName != null
+    terrainDrawerRow != null && (terrainDrawerRow.terrainName != null || terrainDrawerRow.custom != null)
 
   return (
     <div className="min-h-svh bg-zinc-950 p-4 font-serif text-zinc-100 antialiased md:p-8">
@@ -2123,10 +2137,62 @@ function App() {
                     </button>
                   </div>
                   <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-contain px-3 pb-4 pt-2">
-                    <TerrainStatBlock
-                      terrainName={terrainDrawerRow.terrainName!}
-                      activeUpgrades={terrainDrawerRow.upgrades ?? []}
-                    />
+                    {terrainDrawerRow.custom != null ? (
+                      !uiLocked ? (
+                        <CustomTerrainStatForm row={terrainDrawerRow} onPatch={patchCustomTerrainInDrawer} />
+                      ) : (
+                        <div className="py-2">
+                          <div className="rounded-md border border-amber-950/55 border-l-2 border-l-amber-700/45 bg-[linear-gradient(165deg,rgb(39_39_42/0.95)_0%,rgb(9_9_11/0.98)_55%)] px-3 pt-2.5 pb-3 shadow-[inset_0_1px_0_rgb(251_191_36/0.07)]">
+                            <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+                              <span className="text-[0.65rem] font-semibold uppercase tracking-widest text-zinc-300">
+                                Custom terrain
+                              </span>
+                              <span className="text-[0.65rem] text-zinc-400">
+                                Level {terrainDrawerRow.custom.level} · EV {terrainDrawerRow.custom.ev ?? ''}
+                              </span>
+                            </div>
+                            {(terrainDrawerRow.note ?? '').trim() !== '' && (
+                              <p className="mt-2 text-[0.72rem] leading-snug text-zinc-400 italic">
+                                {terrainDrawerRow.note}
+                              </p>
+                            )}
+                            <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 text-center">
+                              <div>
+                                <div className="text-base font-medium tabular-nums leading-tight text-zinc-100">
+                                  {terrainDrawerRow.stamina[1]}
+                                </div>
+                                <div className="mt-1 text-[0.65rem] font-semibold uppercase tracking-wide text-zinc-500">
+                                  Stamina
+                                </div>
+                              </div>
+                              <div>
+                                <div className="text-base font-medium tabular-nums leading-tight text-zinc-100">
+                                  {terrainDrawerRow.custom.size}
+                                </div>
+                                <div className="mt-1 text-[0.65rem] font-semibold uppercase tracking-wide text-zinc-500">
+                                  Size
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                          {(terrainDrawerRow.notes ?? '').trim() !== '' && (
+                            <div className="mt-3 rounded-md border border-zinc-700/60 bg-zinc-950/40 px-3 py-2">
+                              <div className="mb-1 text-[0.65rem] font-semibold uppercase tracking-wide text-zinc-500">
+                                Notes
+                              </div>
+                              <p className="whitespace-pre-wrap text-xs leading-relaxed text-zinc-300">
+                                {terrainDrawerRow.notes}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      )
+                    ) : (
+                      <TerrainStatBlock
+                        terrainName={terrainDrawerRow.terrainName!}
+                        activeUpgrades={terrainDrawerRow.upgrades ?? []}
+                      />
+                    )}
                   </div>
                 </div>
               ) : statCardDrawerOpen && drawerMonster ? (

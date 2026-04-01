@@ -219,10 +219,11 @@ export function TerrainRow({
   }
 }) {
   const [tc, tm] = row.stamina
-  const hasStatBlock = row.terrainName != null
+  const hasStatBlock = row.terrainName != null || row.custom != null
   const dead = tm > 0 && tc <= 0
   const deadDim = dead ? 'opacity-40' : ''
   const deadStrike = dead ? 'line-through' : ''
+  const extraNotes = (row.notes ?? '').trim()
   const gripMenuItems = [
     ...(onDuplicate != null ? [{ id: 'duplicate', label: 'Duplicate', onSelect: onDuplicate } as const] : []),
     ...(onDelete != null ? [{ id: 'delete', label: 'Delete', onSelect: onDelete, destructive: true } as const] : []),
@@ -279,6 +280,11 @@ export function TerrainRow({
       <div className={`${bodyCell} min-w-0`} style={{ gridColumn: '4 / -1' }}>
         <div className="min-w-0 flex-1">
           <p className="min-w-0 text-sm leading-relaxed text-zinc-300 sm:text-base">{row.note}</p>
+          {extraNotes !== '' && (
+            <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-zinc-400 sm:text-base">
+              {row.notes}
+            </p>
+          )}
           {row.terrainName != null && (
             <TerrainRowUpgrades
               terrainName={row.terrainName}
