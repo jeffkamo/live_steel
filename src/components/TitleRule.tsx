@@ -1,7 +1,7 @@
 export function TitleRule({ flushBelow = false }: { flushBelow?: boolean } = {}) {
   return (
     <div
-      className={`flex w-full items-center gap-0 px-1 ${flushBelow ? 'pt-2 pb-0' : 'py-2'}`}
+      className={`flex w-full items-center gap-0 px-1 ${flushBelow ? 'py-1' : 'py-2'}`}
       aria-hidden
     >
       <div className="h-px flex-1 bg-zinc-400/65" />

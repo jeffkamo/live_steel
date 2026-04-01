@@ -16,11 +16,11 @@ describe('TitleRule', () => {
     expect(wrapper.className).not.toContain('pb-0')
   })
 
-  it('applies pt-2 and pb-0 when flushBelow is true', () => {
+  it('applies compact vertical padding when flushBelow is true', () => {
     const { container } = render(<TitleRule flushBelow />)
     const wrapper = container.firstChild as HTMLElement
-    expect(wrapper.className).toContain('pt-2')
-    expect(wrapper.className).toContain('pb-0')
+    expect(wrapper.className).toContain('py-1')
+    expect(wrapper.className).not.toContain('py-2')
   })
 
   it('renders the diamond separator and two rule lines', () => {

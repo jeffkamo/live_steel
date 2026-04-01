@@ -1855,10 +1855,10 @@ function App() {
 
             <section aria-label="Creature tracker" className="mt-0 flex flex-col gap-2 px-0">
               <div
-                className="grid w-full min-w-0 items-center"
+                className="grid w-full min-w-0 items-center py-2"
                 style={{ gridTemplateColumns: ROSTER_GRID_TEMPLATE }}
               >
-                <div className="flex justify-center py-1.5" style={{ gridColumn: 1 }}>
+                <div className="flex justify-center" style={{ gridColumn: 1 }}>
                   <button
                     type="button"
                     onClick={resetAllTurns}
@@ -1868,7 +1868,7 @@ function App() {
                     New turn
                   </button>
                 </div>
-                <div className="flex justify-end py-1.5 pr-1 sm:pr-2" style={{ gridColumn: '2 / -1' }}>
+                <div className="flex justify-end pr-1 sm:pr-2" style={{ gridColumn: '2 / -1' }}>
                   <button
                     type="button"
                     aria-pressed={uiLocked}
@@ -1884,155 +1884,157 @@ function App() {
                   </button>
                 </div>
               </div>
-              {encounterGroups.map((group, gi) => (
-                <div
-                  key={group.id}
-                  data-testid="encounter-group-drop-target"
-                  data-group-index={gi}
-                  className={`rounded-lg transition-[box-shadow] duration-150 ${
-                    dropTargetGroupIndex === gi ? 'ring-2 ring-amber-500/45 ring-offset-2 ring-offset-zinc-950' : ''
-                  }`}
-                  onDragOver={(e) => {
-                    if (![...e.dataTransfer.types].includes(ENCOUNTER_GROUP_DRAG_MIME)) return
-                    e.preventDefault()
-                    e.dataTransfer.dropEffect = 'move'
-                    setDropTargetGroupIndex(gi)
-                  }}
-                  onDragLeave={(e) => {
-                    if (!e.currentTarget.contains(e.relatedTarget as Node | null)) {
-                      setDropTargetGroupIndex((v) => (v === gi ? null : v))
-                    }
-                  }}
-                  onDrop={(e) => {
-                    e.preventDefault()
-                    setDropTargetGroupIndex(null)
-                    const raw = e.dataTransfer.getData(ENCOUNTER_GROUP_DRAG_MIME)
-                    const from = Number.parseInt(raw, 10)
-                    if (Number.isNaN(from) || from === gi) return
-                    reorderEncounterGroups(from, gi)
-                  }}
-                >
-                  <GroupSection
-                    group={group}
-                    groupKey={`g${gi}`}
-                    groupNumber={gi + 1}
-                    thisGroupIndex={gi}
-                    encounterGroupColors={encounterGroups.map((g) => g.color)}
-                    turnActed={groupTurnActed[gi] ?? false}
-                    seActPhaseGlow={
-                      (groupTurnActed[gi] ?? false) && !seActWindowElapsedGroup.has(gi)
-                    }
-                    onToggleTurn={() => toggleGroupTurn(gi)}
-                    turnAriaLabel={`Encounter group ${gi + 1}: turn ${groupTurnActed[gi] ? 'acted' : 'pending'}`}
-                    onGroupColorChange={(c) => patchGroupColor(gi, c)}
-                    onMonsterStaminaChange={(mi, st) => patchMonsterStamina(gi, mi, st)}
-                    onMonsterConditionRemove={(mi, ci) => patchMonsterConditionRemove(gi, mi, ci)}
-                    onMonsterConditionAddOrSet={(mi, label, state) =>
-                      patchMonsterConditionAddOrSet(gi, mi, label, state)
-                    }
-                    allGroups={encounterGroups}
-                    onMinionCaptainChange={(mi, captainId) =>
-                      patchMinionCaptain(gi, mi, captainId)
-                    }
-                    onMinionDeadChange={(mi, mni, dead) =>
-                      patchMinionDead(gi, mi, mni, dead)
-                    }
-                    onMinionConditionRemove={(mi, mni, ci) =>
-                      patchMinionConditionRemove(gi, mi, mni, ci)
-                    }
-                    onMinionConditionAddOrSet={(mi, mni, label, state) =>
-                      patchMinionConditionAddOrSet(gi, mi, mni, label, state)
-                    }
-                    onDeleteMonster={
-                      uiLocked ? undefined : (mi) => deleteMonster(gi, mi)
-                    }
-                    onDuplicateMonster={
-                      uiLocked ? undefined : (mi) => duplicateMonster(gi, mi)
-                    }
-                    onDeleteMinion={
-                      uiLocked ? undefined : (mi, mni) => deleteMinionFromHorde(gi, mi, mni)
-                    }
-                    onDuplicateMinion={
-                      uiLocked ? undefined : (mi, mni) => duplicateMinionFromHorde(gi, mi, mni)
-                    }
-                    onConvertMonsterToSquad={
-                      uiLocked ? undefined : (mi) => convertMonsterToSquad(gi, mi)
-                    }
-                    onDeleteEncounterGroup={
-                      uiLocked ? undefined : () => deleteEncounterGroup(gi)
-                    }
-                    onDuplicateEncounterGroup={
-                      uiLocked ? undefined : () => duplicateEncounterGroup(gi)
-                    }
-                    duplicateEncounterGroupDisabled={!canAddGroup}
-                    onAddMonster={
-                      uiLocked ? undefined : (monster) => addMonsterToGroup(gi, monster)
-                    }
-                    onConfirmEot={(mi, label, minionIndex) =>
-                      confirmEotCondition(gi, mi, label, minionIndex)
-                    }
-                    isEotConfirmed={(mi, label, minionIndex) =>
-                      isEotConfirmed(gi, mi, label, minionIndex)
-                    }
-                    encounterGroupDragHandle={
-                      uiLocked
-                        ? undefined
-                        : {
-                            onDragStart: (e) => {
-                              e.dataTransfer.setData(ENCOUNTER_GROUP_DRAG_MIME, String(gi))
-                              e.dataTransfer.effectAllowed = 'move'
-                            },
-                            onDragEnd: () => setDropTargetGroupIndex(null),
-                            ariaLabel: `Reorder encounter group ${gi + 1}`,
-                          }
-                    }
-                    monsterDrag={
-                      uiLocked
-                        ? undefined
-                        : {
-                            thisGroupIndex: gi,
-                            dropTarget: monsterDropTarget,
-                            dropRejectFlash: monsterDropRejectFlash,
-                            onMonsterDragStart: (mi, e, fromMinion) =>
-                              onMonsterDragStart(gi, mi, e, fromMinion),
-                            onMonsterDragEnd: onMonsterDragEnd,
-                            onMonsterDragOver: (mi, mni, e) => onMonsterDragOver(gi, mi, mni, e),
-                            onMonsterDragLeave: (mi, mni, e) => onMonsterDragLeave(gi, mi, mni, e),
-                            onMonsterDrop: (mi, mni, e) => onMonsterDrop(gi, mi, mni, e),
-                          }
-                    }
-                    conditionDrag={{
-                      dropTarget: conditionDropTarget,
-                      onDragStart: (mi, mni, label, e) => onConditionDragStart(gi, mi, mni, label, e),
-                      onDragEnd: onConditionDragEnd,
-                      onDragOver: (mi, mni, e) => onConditionDragOver(gi, mi, mni, e),
-                      onDragLeave: (mi, mni, e) => onConditionDragLeave(gi, mi, mni, e),
-                      onDrop: (mi, mni, e) => onConditionDrop(gi, mi, mni, e),
+              <div className="flex flex-col gap-2">
+                {encounterGroups.map((group, gi) => (
+                  <div
+                    key={group.id}
+                    data-testid="encounter-group-drop-target"
+                    data-group-index={gi}
+                    className={`rounded-lg transition-[box-shadow] duration-150 ${
+                      dropTargetGroupIndex === gi ? 'ring-2 ring-amber-500/45 ring-offset-2 ring-offset-zinc-950' : ''
+                    }`}
+                    onDragOver={(e) => {
+                      if (![...e.dataTransfer.types].includes(ENCOUNTER_GROUP_DRAG_MIME)) return
+                      e.preventDefault()
+                      e.dataTransfer.dropEffect = 'move'
+                      setDropTargetGroupIndex(gi)
                     }}
-                    monsterCardDrawer={monsterCardDrawer}
-                    onToggleMonsterCard={(mi, view) => toggleMonsterCard(gi, mi, view)}
-                  />
-                </div>
-              ))}
-              {!uiLocked && (
-                <button
-                  type="button"
-                  onClick={addNewGroup}
-                  aria-label="Add new encounter group"
-                  disabled={!canAddGroup}
-                  aria-disabled={!canAddGroup}
-                  className={`flex w-full items-center justify-center gap-2 rounded-lg border border-dashed px-4 py-3 font-sans text-sm tracking-wide transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500/60 ${
-                    canAddGroup
-                      ? 'cursor-pointer border-zinc-700 text-zinc-400 hover:border-zinc-500 hover:bg-zinc-900/60 hover:text-zinc-200'
-                      : 'cursor-not-allowed border-zinc-800 text-zinc-600 opacity-60'
-                  }`}
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
-                    <path d="M10.75 4.75a.75.75 0 0 0-1.5 0v4.5h-4.5a.75.75 0 0 0 0 1.5h4.5v4.5a.75.75 0 0 0 1.5 0v-4.5h4.5a.75.75 0 0 0 0-1.5h-4.5v-4.5Z" />
-                  </svg>
-                  Add group
-                </button>
-              )}
+                    onDragLeave={(e) => {
+                      if (!e.currentTarget.contains(e.relatedTarget as Node | null)) {
+                        setDropTargetGroupIndex((v) => (v === gi ? null : v))
+                      }
+                    }}
+                    onDrop={(e) => {
+                      e.preventDefault()
+                      setDropTargetGroupIndex(null)
+                      const raw = e.dataTransfer.getData(ENCOUNTER_GROUP_DRAG_MIME)
+                      const from = Number.parseInt(raw, 10)
+                      if (Number.isNaN(from) || from === gi) return
+                      reorderEncounterGroups(from, gi)
+                    }}
+                  >
+                    <GroupSection
+                      group={group}
+                      groupKey={`g${gi}`}
+                      groupNumber={gi + 1}
+                      thisGroupIndex={gi}
+                      encounterGroupColors={encounterGroups.map((g) => g.color)}
+                      turnActed={groupTurnActed[gi] ?? false}
+                      seActPhaseGlow={
+                        (groupTurnActed[gi] ?? false) && !seActWindowElapsedGroup.has(gi)
+                      }
+                      onToggleTurn={() => toggleGroupTurn(gi)}
+                      turnAriaLabel={`Encounter group ${gi + 1}: turn ${groupTurnActed[gi] ? 'acted' : 'pending'}`}
+                      onGroupColorChange={(c) => patchGroupColor(gi, c)}
+                      onMonsterStaminaChange={(mi, st) => patchMonsterStamina(gi, mi, st)}
+                      onMonsterConditionRemove={(mi, ci) => patchMonsterConditionRemove(gi, mi, ci)}
+                      onMonsterConditionAddOrSet={(mi, label, state) =>
+                        patchMonsterConditionAddOrSet(gi, mi, label, state)
+                      }
+                      allGroups={encounterGroups}
+                      onMinionCaptainChange={(mi, captainId) =>
+                        patchMinionCaptain(gi, mi, captainId)
+                      }
+                      onMinionDeadChange={(mi, mni, dead) =>
+                        patchMinionDead(gi, mi, mni, dead)
+                      }
+                      onMinionConditionRemove={(mi, mni, ci) =>
+                        patchMinionConditionRemove(gi, mi, mni, ci)
+                      }
+                      onMinionConditionAddOrSet={(mi, mni, label, state) =>
+                        patchMinionConditionAddOrSet(gi, mi, mni, label, state)
+                      }
+                      onDeleteMonster={
+                        uiLocked ? undefined : (mi) => deleteMonster(gi, mi)
+                      }
+                      onDuplicateMonster={
+                        uiLocked ? undefined : (mi) => duplicateMonster(gi, mi)
+                      }
+                      onDeleteMinion={
+                        uiLocked ? undefined : (mi, mni) => deleteMinionFromHorde(gi, mi, mni)
+                      }
+                      onDuplicateMinion={
+                        uiLocked ? undefined : (mi, mni) => duplicateMinionFromHorde(gi, mi, mni)
+                      }
+                      onConvertMonsterToSquad={
+                        uiLocked ? undefined : (mi) => convertMonsterToSquad(gi, mi)
+                      }
+                      onDeleteEncounterGroup={
+                        uiLocked ? undefined : () => deleteEncounterGroup(gi)
+                      }
+                      onDuplicateEncounterGroup={
+                        uiLocked ? undefined : () => duplicateEncounterGroup(gi)
+                      }
+                      duplicateEncounterGroupDisabled={!canAddGroup}
+                      onAddMonster={
+                        uiLocked ? undefined : (monster) => addMonsterToGroup(gi, monster)
+                      }
+                      onConfirmEot={(mi, label, minionIndex) =>
+                        confirmEotCondition(gi, mi, label, minionIndex)
+                      }
+                      isEotConfirmed={(mi, label, minionIndex) =>
+                        isEotConfirmed(gi, mi, label, minionIndex)
+                      }
+                      encounterGroupDragHandle={
+                        uiLocked
+                          ? undefined
+                          : {
+                              onDragStart: (e) => {
+                                e.dataTransfer.setData(ENCOUNTER_GROUP_DRAG_MIME, String(gi))
+                                e.dataTransfer.effectAllowed = 'move'
+                              },
+                              onDragEnd: () => setDropTargetGroupIndex(null),
+                              ariaLabel: `Reorder encounter group ${gi + 1}`,
+                            }
+                      }
+                      monsterDrag={
+                        uiLocked
+                          ? undefined
+                          : {
+                              thisGroupIndex: gi,
+                              dropTarget: monsterDropTarget,
+                              dropRejectFlash: monsterDropRejectFlash,
+                              onMonsterDragStart: (mi, e, fromMinion) =>
+                                onMonsterDragStart(gi, mi, e, fromMinion),
+                              onMonsterDragEnd: onMonsterDragEnd,
+                              onMonsterDragOver: (mi, mni, e) => onMonsterDragOver(gi, mi, mni, e),
+                              onMonsterDragLeave: (mi, mni, e) => onMonsterDragLeave(gi, mi, mni, e),
+                              onMonsterDrop: (mi, mni, e) => onMonsterDrop(gi, mi, mni, e),
+                            }
+                      }
+                      conditionDrag={{
+                        dropTarget: conditionDropTarget,
+                        onDragStart: (mi, mni, label, e) => onConditionDragStart(gi, mi, mni, label, e),
+                        onDragEnd: onConditionDragEnd,
+                        onDragOver: (mi, mni, e) => onConditionDragOver(gi, mi, mni, e),
+                        onDragLeave: (mi, mni, e) => onConditionDragLeave(gi, mi, mni, e),
+                        onDrop: (mi, mni, e) => onConditionDrop(gi, mi, mni, e),
+                      }}
+                      monsterCardDrawer={monsterCardDrawer}
+                      onToggleMonsterCard={(mi, view) => toggleMonsterCard(gi, mi, view)}
+                    />
+                  </div>
+                ))}
+                {!uiLocked && (
+                  <button
+                    type="button"
+                    onClick={addNewGroup}
+                    aria-label="Add new encounter group"
+                    disabled={!canAddGroup}
+                    aria-disabled={!canAddGroup}
+                    className={`flex w-full items-center justify-center gap-2 rounded-lg border border-dashed px-4 py-3 font-sans text-sm tracking-wide transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500/60 ${
+                      canAddGroup
+                        ? 'cursor-pointer border-zinc-700 text-zinc-400 hover:border-zinc-500 hover:bg-zinc-900/60 hover:text-zinc-200'
+                        : 'cursor-not-allowed border-zinc-800 text-zinc-600 opacity-60'
+                    }`}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+                      <path d="M10.75 4.75a.75.75 0 0 0-1.5 0v4.5h-4.5a.75.75 0 0 0 0 1.5h4.5v4.5a.75.75 0 0 0 1.5 0v-4.5h4.5a.75.75 0 0 0 0-1.5h-4.5v-4.5Z" />
+                    </svg>
+                    Add group
+                  </button>
+                )}
+              </div>
             </section>
 
             <section aria-label="Dynamic terrain" className="mt-8 flex flex-col gap-2 md:mt-10">
