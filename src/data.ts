@@ -1706,3 +1706,11 @@ export function nextAvailableColor(usedColors: readonly GroupColorId[]): GroupCo
 export function nextUnusedColor(usedColors: readonly GroupColorId[]): GroupColorId | null {
   return GROUP_COLOR_ORDER.find((c) => !usedColors.includes(c)) ?? null
 }
+
+/** Picks a random unused color, or null if all colors are in use. */
+export function randomUnusedColor(usedColors: readonly GroupColorId[]): GroupColorId | null {
+  const unused = GROUP_COLOR_ORDER.filter((c) => !usedColors.includes(c))
+  if (unused.length === 0) return null
+  const i = Math.floor(Math.random() * unused.length)
+  return unused[i]!
+}

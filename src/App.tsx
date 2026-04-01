@@ -50,6 +50,7 @@ import {
   remapEotConfirmedAfterConvertToSquad,
   newEncounterGroupId,
   nextUnusedColor,
+  randomUnusedColor,
   parseConditionDragPayload,
   remapEncounterGroupIndex,
   remapEotConfirmedAfterMonsterMove,
@@ -1088,7 +1089,7 @@ function App() {
   const addNewGroup = useCallback(() => {
     let added = false
     setEncounterGroups((prev) => {
-      const color = nextUnusedColor(prev.map((g) => g.color))
+      const color = randomUnusedColor(prev.map((g) => g.color))
       if (color == null) return prev
       added = true
       return [...prev, { id: newEncounterGroupId(), monsters: [], color }]
@@ -1102,7 +1103,7 @@ function App() {
       setEncounterGroups((prev) => {
         const src = prev[groupIndex]
         if (!src) return prev
-        const newColor = nextUnusedColor(prev.map((g) => g.color))
+        const newColor = randomUnusedColor(prev.map((g) => g.color))
         if (newColor == null) return prev
         duplicated = true
         const copy: EncounterGroup = {

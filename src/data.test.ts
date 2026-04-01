@@ -13,6 +13,7 @@ import {
   applyStaminaDelta,
   otherGroupIndexForColor,
   nextAvailableColor,
+  randomUnusedColor,
   monsterFromBestiary,
   moveIndexInArray,
   mapMinionIndexAfterReorder,
@@ -754,6 +755,17 @@ describe('nextAvailableColor', () => {
 
   it('returns the first unused color in order', () => {
     expect(nextAvailableColor(['red', 'blue'])).toBe('orange')
+  })
+})
+
+describe('randomUnusedColor', () => {
+  it('returns null when all colors are used', () => {
+    expect(randomUnusedColor([...GROUP_COLOR_ORDER])).toBeNull()
+  })
+
+  it('returns the only remaining color when one is unused', () => {
+    const used = GROUP_COLOR_ORDER.slice(0, -1)
+    expect(randomUnusedColor(used)).toBe(GROUP_COLOR_ORDER[GROUP_COLOR_ORDER.length - 1])
   })
 })
 
