@@ -8,7 +8,7 @@ import type {
   Monster,
   MonsterCardDrawerView,
 } from '../types'
-import { minionInterval, rosterCombatStats, suggestedDeadCount } from '../bestiary'
+import { minionIntervalFromMonster, rosterCombatStats, suggestedDeadCount } from '../bestiary'
 import { GROUP_COLOR_BADGE, GROUP_COLOR_LABEL, buildCreatureOrdinalMap } from '../data'
 import { EditableStaminaCell } from './EditableStaminaCell'
 import { MinionStaminaDisplay } from './MinionStaminaDisplay'
@@ -122,9 +122,10 @@ export function MinionGroupRow({
   const badge = GROUP_COLOR_BADGE[groupColor]
   const colorLabel = GROUP_COLOR_LABEL[groupColor]
   const minions = monster.minions ?? []
-  const hasFeatures = (monster.features?.length ?? 0) > 0
+  const hasStatBlock =
+    (monster.features?.length ?? 0) > 0 || monster.custom != null
   const [poolStamina] = monster.stamina
-  const staminaInterval = minionInterval(monster.name, minions[0]?.name)
+  const staminaInterval = minionIntervalFromMonster(monster)
   const actualDeadCount = minions.filter((m) => m.dead).length
   const suggestedDead =
     staminaInterval != null && minions.length > 0
@@ -266,7 +267,7 @@ export function MinionGroupRow({
             onClick={(e) => onGroupColorOrdinalClick(monsterIndex, e.currentTarget)}
           ></button>
           <div className="min-w-0 flex-1">
-            {hasFeatures && onStatCardToggle ? (
+            {hasStatBlock && onStatCardToggle ? (
               <button
                 type="button"
                 aria-expanded={statCardDrawerView?.kind === 'minionParent'}
@@ -428,8 +429,7 @@ export function MinionGroupRow({
             <MinionStaminaDisplay
               current={cur}
               max={mx}
-              parentName={monster.name}
-              firstMinionName={minions[0]?.name}
+              parentMonster={monster}
               minionCount={minions.length}
               actualDeadCount={minions.filter((m) => m.dead).length}
             />
@@ -438,8 +438,7 @@ export function MinionGroupRow({
             <MinionStaminaEditor
               current={cur}
               bump={bump}
-              parentName={monster.name}
-              firstMinionName={minions[0]?.name}
+              parentMonster={monster}
               minionCount={minions.length}
             />
           )}
@@ -508,7 +507,7 @@ export function MinionGroupRow({
               statCardDrawerView?.kind === 'minion' && statCardDrawerView.slot === mi
             }
             onMinionStatCardClick={
-                hasFeatures && onStatCardToggle
+                hasStatBlock && onStatCardToggle
                   ? () => onStatCardToggle({ kind: 'minion', slot: mi })
                   : undefined
             }

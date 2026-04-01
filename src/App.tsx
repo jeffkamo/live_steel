@@ -58,14 +58,19 @@ import {
   GROUP_COLOR_BADGE,
   ROSTER_GRID_TEMPLATE,
   transferConditionBetweenCreatures,
+  applyCustomMonsterPatch,
+  monsterHasStatCard,
   type ConditionCreatureRef,
+  type CustomMonsterPatch,
 } from './data'
 import { TitleRule } from './components/TitleRule'
 import { GroupSection } from './components/GroupSection'
 import { StatBlock } from './components/StatBlock'
+import { CustomMonsterStatForm } from './components/CustomMonsterStatForm'
 import { TerrainRow } from './components/TerrainRow'
 import { AddTerrainButton } from './components/AddTerrainButton'
 import { TerrainStatBlock } from './components/TerrainStatBlock'
+import { bestiaryStatblockFromCustomMonster } from './bestiary'
 
 const DRAWER_PANEL_W_CLASS = 'w-[min(20rem,calc(100vw-2rem))]'
 const MONSTER_DRAWER_CLOSE_MS = 300
@@ -308,6 +313,13 @@ function App() {
                 return {
                   ...m,
                   stamina: nextHordePoolStamina({ ...m, stamina: [stamina[0], stamina[1]] }, m.minions),
+                }
+              }
+              if (m.custom) {
+                return {
+                  ...m,
+                  stamina: [stamina[0], stamina[1]],
+                  custom: { ...m.custom, perMinionStamina: stamina[1] },
                 }
               }
               return { ...m, stamina: [stamina[0], stamina[1]] }
@@ -583,11 +595,20 @@ function App() {
                 dead: false,
               },
             ]
+            const monWithInterval =
+              mon.custom &&
+              (mon.custom.perMinionStamina ?? 0) <= 0 &&
+              mon.stamina[1] > 0
+                ? {
+                    ...mon,
+                    custom: { ...mon.custom, perMinionStamina: mon.stamina[1] },
+                  }
+                : mon
             return {
-              ...mon,
+              ...monWithInterval,
               conditions: [],
               minions,
-              stamina: staminaAfterConvertSoloToHorde(mon, minions),
+              stamina: staminaAfterConvertSoloToHorde(monWithInterval, minions),
             }
           }),
         }
@@ -1473,10 +1494,27 @@ function App() {
     setGroupTurnActed((prev) => prev.map(() => false))
   }, [])
 
+  const patchCustomMonsterInDrawer = useCallback((patch: CustomMonsterPatch) => {
+    setEncounterGroups((prev) => {
+      const d = monsterCardDrawerRef.current
+      if (!d) return prev
+      const { groupIndex, monsterIndex } = d
+      return prev.map((g, gi) => {
+        if (gi !== groupIndex) return g
+        return {
+          ...g,
+          monsters: g.monsters.map((m, mi) =>
+            mi === monsterIndex ? applyCustomMonsterPatch(m, patch) : m,
+          ),
+        }
+      })
+    })
+  }, [])
+
   const toggleMonsterCard = useCallback(
     (groupIndex: number, monsterIndex: number, view: MonsterCardDrawerView) => {
       const m = encounterGroups[groupIndex]?.monsters[monsterIndex]
-      if (!m || (m.features?.length ?? 0) === 0) return
+      if (!m || !monsterHasStatCard(m)) return
       if (view.kind === 'minion') {
         if (!m.minions || view.slot < 0 || view.slot >= m.minions.length) return
       }
@@ -1514,7 +1552,7 @@ function App() {
   useEffect(() => {
     if (!monsterCardDrawer) return
     const m = encounterGroups[monsterCardDrawer.groupIndex]?.monsters[monsterCardDrawer.monsterIndex]
-    if (!m || (m.features?.length ?? 0) === 0) {
+    if (!m || !monsterHasStatCard(m)) {
       setMonsterCardDrawer(null)
       return
     }
@@ -1578,7 +1616,7 @@ function App() {
       ? encounterGroups[monsterCardDrawer.groupIndex]?.monsters[monsterCardDrawer.monsterIndex]
       : undefined
   const drawerFeatures = drawerMonster?.features
-  const statCardDrawerOpen = drawerMonster != null && (drawerFeatures?.length ?? 0) > 0
+  const statCardDrawerOpen = drawerMonster != null && monsterHasStatCard(drawerMonster)
   const drawerGroupColor =
     monsterCardDrawer != null
       ? encounterGroups[monsterCardDrawer.groupIndex]?.color
@@ -2116,11 +2154,44 @@ function App() {
                     </button>
                   </div>
                   <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-contain px-3 pb-4 pt-2">
-                    <StatBlock
-                      features={drawerFeatures ?? []}
-                      monsterName={drawerMonster.name}
-                      encounterGroupColor={drawerGroupColor}
-                    />
+                    {(() => {
+                      const customStatblock =
+                        drawerMonster.custom != null
+                          ? bestiaryStatblockFromCustomMonster(drawerMonster)
+                          : null
+                      const showCustomForm = customStatblock != null && !uiLocked
+                      if (showCustomForm) {
+                        return (
+                          <CustomMonsterStatForm
+                            monster={drawerMonster}
+                            groupColor={drawerGroupColor}
+                            onPatch={patchCustomMonsterInDrawer}
+                          />
+                        )
+                      }
+                      return (
+                        <>
+                          <StatBlock
+                            features={customStatblock != null ? [] : drawerFeatures ?? []}
+                            monsterName={drawerMonster.name}
+                            encounterGroupColor={drawerGroupColor}
+                            statblockOverride={customStatblock ?? undefined}
+                          />
+                          {customStatblock != null &&
+                            uiLocked &&
+                            (drawerMonster.custom?.notes ?? '').trim() !== '' && (
+                              <div className="mt-3 rounded-md border border-zinc-700/60 bg-zinc-950/40 px-3 py-2">
+                                <div className="mb-1 text-[0.65rem] font-semibold uppercase tracking-wide text-zinc-500">
+                                  Notes
+                                </div>
+                                <p className="whitespace-pre-wrap text-xs leading-relaxed text-zinc-300">
+                                  {drawerMonster.custom?.notes}
+                                </p>
+                              </div>
+                            )}
+                        </>
+                      )
+                    })()}
                   </div>
                 </div>
               ) : null}

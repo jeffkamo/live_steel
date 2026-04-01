@@ -1,14 +1,27 @@
 import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
+import type { Monster } from '../types'
 import { MinionStaminaEditor } from './MinionStaminaEditor'
+
+const goblinMinionParent: Monster = {
+  name: 'Minions',
+  subtitle: '',
+  initials: 'M',
+  stamina: [20, 20],
+  marip: null,
+  fs: 0,
+  dist: 0,
+  stab: 0,
+  conditions: [],
+  minions: [{ name: 'Goblin Spinecleaver 1', initials: 'G', conditions: [], dead: false }],
+}
 
 describe('MinionStaminaEditor', () => {
   const baseProps = {
     current: 20,
     bump: vi.fn(),
-    parentName: 'Minions',
-    firstMinionName: 'Goblin Spinecleaver 1',
+    parentMonster: goblinMinionParent,
     minionCount: 4,
   }
 
@@ -108,14 +121,24 @@ describe('MinionStaminaEditor', () => {
   })
 
   it('returns null when no bestiary entry is found', () => {
+    const unknownParent: Monster = {
+      name: 'Unknown Group',
+      subtitle: '',
+      initials: 'U',
+      stamina: [10, 10],
+      marip: null,
+      fs: 0,
+      dist: 0,
+      stab: 0,
+      conditions: [],
+      minions: [
+        { name: 'a', initials: '1', conditions: [], dead: false },
+        { name: 'b', initials: '2', conditions: [], dead: false },
+        { name: 'c', initials: '3', conditions: [], dead: false },
+      ],
+    }
     const { container } = render(
-      <MinionStaminaEditor
-        current={10}
-        bump={vi.fn()}
-        parentName="Unknown Group"
-        firstMinionName="Unknown Minion"
-        minionCount={3}
-      />,
+      <MinionStaminaEditor current={10} bump={vi.fn()} parentMonster={unknownParent} minionCount={3} />,
     )
     expect(container.innerHTML).toBe('')
   })

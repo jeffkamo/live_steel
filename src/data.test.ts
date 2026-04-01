@@ -15,6 +15,11 @@ import {
   nextAvailableColor,
   randomUnusedColor,
   monsterFromBestiary,
+  blankCustomMonster,
+  formatCustomSubtitle,
+  monsterHasStatCard,
+  applyCustomMonsterPatch,
+  hordePoolMaxFromMinions,
   moveIndexInArray,
   mapMinionIndexAfterReorder,
   monsterDragDropIsValid,
@@ -802,6 +807,100 @@ describe('monsterFromBestiary', () => {
   it('derives initials from the monster name', () => {
     const m = monsterFromBestiary('Goblin Assassin')
     expect(m.initials).toBe('GA')
+  })
+})
+
+describe('custom monsters', () => {
+  it('blankCustomMonster has zeroed stats and custom metadata', () => {
+    const m = blankCustomMonster()
+    expect(m.name).toBe('Custom monster')
+    expect(m.custom).toEqual({
+      level: 0,
+      ev: '',
+      perMinionStamina: 0,
+      monsterType: '',
+      size: '',
+      immunity: '',
+      weakness: '',
+      movement: '',
+      notes: '',
+    })
+    expect(m.stamina).toEqual([0, 0])
+    expect(m.marip).toEqual([0, 0, 0, 0, 0])
+    expect(m.fs + m.dist + m.stab).toBe(0)
+    expect(m.features).toEqual([])
+  })
+
+  it('formatCustomSubtitle joins level and type', () => {
+    expect(formatCustomSubtitle(0, '')).toBe('')
+    expect(formatCustomSubtitle(3, 'Horde · Artillery')).toBe('Level 3 · Horde · Artillery')
+    expect(formatCustomSubtitle(0, 'Solo')).toBe('Solo')
+  })
+
+  it('monsterHasStatCard is true for custom or featured creatures', () => {
+    expect(monsterHasStatCard({ ...blankCustomMonster(), features: [] })).toBe(true)
+    expect(
+      monsterHasStatCard({
+        name: 'X',
+        subtitle: '',
+        initials: 'X',
+        stamina: [1, 1],
+        marip: null,
+        fs: 0,
+        dist: 0,
+        stab: 0,
+        conditions: [],
+        features: [{ type: 'feature', feature_type: 'trait', name: 'T' }],
+      }),
+    ).toBe(true)
+    expect(
+      monsterHasStatCard({
+        name: 'X',
+        subtitle: '',
+        initials: 'X',
+        stamina: [1, 1],
+        marip: null,
+        fs: 0,
+        dist: 0,
+        stab: 0,
+        conditions: [],
+      }),
+    ).toBe(false)
+  })
+
+  it('applyCustomMonsterPatch updates merged custom fields and subtitle', () => {
+    let m = blankCustomMonster()
+    m = applyCustomMonsterPatch(m, {
+      name: 'River Troll',
+      custom: { level: 2, monsterType: 'Solo' },
+      stamina: [12, 40],
+      marip: [1, 2, 0, 0, -1],
+    })
+    expect(m.name).toBe('River Troll')
+    expect(m.initials).toBe('RT')
+    expect(m.subtitle).toBe('Level 2 · Solo')
+    expect(m.stamina).toEqual([12, 40])
+    expect(m.marip).toEqual([1, 2, 0, 0, -1])
+  })
+
+  it('applyCustomMonsterPatch clamps current stamina to new max', () => {
+    let m = blankCustomMonster()
+    m = { ...m, stamina: [50, 50] }
+    m = applyCustomMonsterPatch(m, { stamina: [50, 10] })
+    expect(m.stamina).toEqual([10, 10])
+  })
+
+  it('hordePoolMaxFromMinions uses custom perMinionStamina for each slot', () => {
+    const base = blankCustomMonster()
+    const m: Monster = {
+      ...base,
+      custom: { ...base.custom!, perMinionStamina: 8 },
+      minions: [
+        { name: 'Custom monster 1', initials: 'C', conditions: [], dead: false },
+        { name: 'Custom monster 2', initials: 'C', conditions: [], dead: false },
+      ],
+    }
+    expect(hordePoolMaxFromMinions(m, m.minions!)).toBe(16)
   })
 })
 

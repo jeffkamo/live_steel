@@ -1,6 +1,7 @@
 import type {
   CaptainRef,
   ConditionEntry,
+  CustomMonsterStats,
   EncounterGroup,
   EncounterGroupSeed,
   GroupColorId,
@@ -433,8 +434,8 @@ export function transferMinionBetweenHordes(
   if (toMinion < 0 || toMinion > toList.length) return null
 
   const moved = fromList[fromMinion]!
-  const movedMax = minionAliveMaxContribution(moved, fromParent.name, fromList)
-  const oldFromMax = hordePoolMaxAliveFromMinions(fromParent.name, fromList)
+  const movedMax = minionAliveMaxContribution(moved, fromParent, fromList)
+  const oldFromMax = hordePoolMaxAliveFromMinions(fromParent, fromList)
   const share =
     oldFromMax > 0 ? Math.min(fromParent.stamina[0], Math.round((fromParent.stamina[0] * movedMax) / oldFromMax)) : 0
 
@@ -451,7 +452,7 @@ export function transferMinionBetweenHordes(
           minions: nextFromMinions,
           stamina: normalizeStamina(
             fromParent.stamina[0] - share,
-            hordePoolMaxFromMinions(fromParent.name, nextFromMinions),
+            hordePoolMaxFromMinions(fromParent, nextFromMinions),
           ),
         }
 
@@ -1480,6 +1481,57 @@ export function cloneMonster(m: Monster): Monster {
       : {}),
     ...(m.features ? { features: [...m.features] } : {}),
     captainId: m.captainId ? { ...m.captainId } : m.captainId,
+    ...(m.custom ? { custom: { ...m.custom } } : {}),
+  }
+}
+
+/** Subtitle line from custom level + type (e.g. "Level 2 · Horde · Artillery"). */
+export function formatCustomSubtitle(level: number, monsterType: string): string {
+  const parts: string[] = []
+  if (level > 0) parts.push(`Level ${level}`)
+  const t = monsterType.trim()
+  if (t.length > 0) parts.push(t)
+  return parts.join(' · ')
+}
+
+export function monsterHasStatCard(m: Monster): boolean {
+  return (m.features?.length ?? 0) > 0 || m.custom != null
+}
+
+export type CustomMonsterPatch = {
+  name?: string
+  stamina?: [number, number]
+  marip?: Marip | null
+  fs?: number
+  dist?: number
+  stab?: number
+  custom?: Partial<CustomMonsterStats>
+}
+
+export function applyCustomMonsterPatch(m: Monster, patch: CustomMonsterPatch): Monster {
+  if (!m.custom) return m
+  let custom: CustomMonsterStats = { ...m.custom, ...patch.custom }
+  const name = patch.name ?? m.name
+  let stamina = patch.stamina ?? m.stamina
+  if (patch.stamina != null) {
+    const max = stamina[1]
+    stamina = [Math.min(stamina[0], max), max] as [number, number]
+  }
+  const marip = patch.marip !== undefined ? patch.marip : m.marip
+  if (!m.minions?.length && patch.stamina != null) {
+    custom = { ...custom, perMinionStamina: stamina[1] }
+  }
+  return {
+    ...m,
+    name,
+    initials: deriveInitials(name),
+    stamina: [stamina[0], stamina[1]],
+    marip,
+    fs: patch.fs ?? m.fs,
+    dist: patch.dist ?? m.dist,
+    stab: patch.stab ?? m.stab,
+    custom,
+    subtitle: formatCustomSubtitle(custom.level, custom.monsterType),
   }
 }
 
@@ -1558,6 +1610,34 @@ export function monsterFromBestiary(bestiaryName: string, ordinalSuffix?: number
   }
 }
 
+/** New user-defined creature: zeros for numerics, empty text fields, no bestiary features. */
+export function blankCustomMonster(): Monster {
+  const custom: CustomMonsterStats = {
+    level: 0,
+    ev: '',
+    perMinionStamina: 0,
+    monsterType: '',
+    size: '',
+    immunity: '',
+    weakness: '',
+    movement: '',
+    notes: '',
+  }
+  return {
+    name: 'Custom monster',
+    subtitle: '',
+    initials: deriveInitials('Custom monster'),
+    stamina: [0, 0],
+    marip: [0, 0, 0, 0, 0],
+    fs: 0,
+    dist: 0,
+    stab: 0,
+    conditions: [],
+    features: [],
+    custom,
+  }
+}
+
 export function findConditionOnMonster(
   conditions: readonly ConditionEntry[],
   label: string,
@@ -1598,24 +1678,26 @@ export function normalizeStamina(cur: number, max: number): [number, number] {
 /** Per-minion max stamina for one roster entry (alive or dead slot). */
 function minionSlotMaxContribution(
   mn: MinionEntry,
-  parentName: string,
+  parent: Monster,
   contextMinions: readonly MinionEntry[],
 ): number {
   const per = maxStaminaForBestiaryName(mn.name)
   if (per > 0) return per
-  const iv = minionInterval(parentName, contextMinions[0]?.name)
-  return iv ?? 0
+  const iv = minionInterval(parent.name, contextMinions[0]?.name)
+  if (iv != null) return iv
+  if (parent.custom != null) {
+    const slot = parent.custom.perMinionStamina ?? 0
+    if (slot > 0) return slot
+  }
+  return 0
 }
 
 /** Sum of per-minion max stamina for alive minions only (for proportional pool splits). */
-export function hordePoolMaxAliveFromMinions(parentName: string, minions: readonly MinionEntry[]): number {
-  const fallbackInterval = minionInterval(parentName, minions[0]?.name)
+export function hordePoolMaxAliveFromMinions(parent: Monster, minions: readonly MinionEntry[]): number {
   let sum = 0
   for (const mn of minions) {
     if (mn.dead) continue
-    const per = maxStaminaForBestiaryName(mn.name)
-    if (per > 0) sum += per
-    else if (fallbackInterval != null) sum += fallbackInterval
+    sum += minionSlotMaxContribution(mn, parent, minions)
   }
   return sum
 }
@@ -1625,21 +1707,21 @@ export function hordePoolMaxAliveFromMinions(parentName: string, minions: readon
  * Stored as stamina[1] so the pool can be healed up to full roster capacity; current is capped by
  * {@link hordePoolMaxAliveFromMinions} when the roster changes.
  */
-export function hordePoolMaxFromMinions(parentName: string, minions: readonly MinionEntry[]): number {
+export function hordePoolMaxFromMinions(parent: Monster, minions: readonly MinionEntry[]): number {
   let sum = 0
   for (const mn of minions) {
-    sum += minionSlotMaxContribution(mn, parentName, minions)
+    sum += minionSlotMaxContribution(mn, parent, minions)
   }
   return sum
 }
 
 function minionAliveMaxContribution(
   mn: MinionEntry,
-  parentName: string,
+  parent: Monster,
   contextMinions: readonly MinionEntry[],
 ): number {
   if (mn.dead) return 0
-  return minionSlotMaxContribution(mn, parentName, contextMinions)
+  return minionSlotMaxContribution(mn, parent, contextMinions)
 }
 
 /** Pool stamina after minion roster change; optional extra current (e.g. incoming solo's current). */
@@ -1648,7 +1730,7 @@ export function nextHordePoolStamina(
   nextMinions: readonly MinionEntry[],
   opts?: { addCurrent?: number },
 ): [number, number] {
-  const fullMax = hordePoolMaxFromMinions(parent.name, nextMinions)
+  const fullMax = hordePoolMaxFromMinions(parent, nextMinions)
   let cur = parent.stamina[0]
   if (opts?.addCurrent != null) {
     cur += opts.addCurrent

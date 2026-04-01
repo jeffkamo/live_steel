@@ -11,6 +11,8 @@ import {
   minionThresholds,
   minionSegmentDisplay,
   rosterCombatStats,
+  bestiaryStatblockFromCustomMonster,
+  minionIntervalFromMonster,
   suggestedDeadCount,
   bestiarySubtitle,
   deriveInitials,
@@ -406,6 +408,110 @@ describe('minionSegmentDisplay', () => {
   })
 })
 
+describe('bestiaryStatblockFromCustomMonster', () => {
+  it('returns null when the monster is not custom', () => {
+    const m = { name: 'Goblin' } as Monster
+    expect(bestiaryStatblockFromCustomMonster(m)).toBeNull()
+  })
+
+  it('maps custom fields and MARIP into a BestiaryStatblock shape', () => {
+    const m = {
+      name: 'River Troll',
+      subtitle: 'Level 2 · Solo',
+      initials: 'RT',
+      stamina: [12, 40],
+      marip: [1, 2, -1, 0, 3] as const,
+      fs: 4,
+      dist: 5,
+      stab: 6,
+      conditions: [],
+      features: [],
+      custom: {
+        level: 2,
+        monsterType: 'Solo',
+        size: 'L',
+        immunity: 'fire, cold',
+        weakness: 'radiant',
+        movement: 'Swim',
+        notes: '',
+      },
+    } satisfies Monster
+    const sb = bestiaryStatblockFromCustomMonster(m)
+    expect(sb).toEqual({
+      name: 'River Troll',
+      level: 2,
+      roles: [],
+      ancestry: ['Level 2 · Solo'],
+      ev: '—',
+      stamina: '40',
+      speed: 5,
+      movement: 'Swim',
+      size: 'L',
+      stability: 6,
+      free_strike: 4,
+      might: 1,
+      agility: 2,
+      reason: -1,
+      intuition: 0,
+      presence: 3,
+      immunities: ['fire', 'cold'],
+      weaknesses: ['radiant'],
+    })
+  })
+})
+
+describe('minionIntervalFromMonster', () => {
+  it('uses perMinionStamina for custom creatures', () => {
+    const m = {
+      name: 'Custom',
+      subtitle: '',
+      initials: 'C',
+      stamina: [40, 40],
+      marip: null,
+      fs: 0,
+      dist: 0,
+      stab: 0,
+      conditions: [],
+      minions: [{ name: 'Custom 1', initials: '1', conditions: [], dead: false }],
+      custom: {
+        level: 1,
+        monsterType: '',
+        size: '',
+        immunity: '',
+        weakness: '',
+        movement: '',
+        notes: '',
+        perMinionStamina: 10,
+      },
+    } satisfies Monster
+    expect(minionIntervalFromMonster(m)).toBe(10)
+  })
+
+  it('falls back to solo max stamina for custom without perMinionStamina yet', () => {
+    const m = {
+      name: 'Custom',
+      subtitle: '',
+      initials: 'C',
+      stamina: [7, 7],
+      marip: null,
+      fs: 0,
+      dist: 0,
+      stab: 0,
+      conditions: [],
+      custom: {
+        level: 0,
+        monsterType: '',
+        size: '',
+        immunity: '',
+        weakness: '',
+        movement: '',
+        notes: '',
+      },
+    } satisfies Monster
+    expect(minionIntervalFromMonster(m)).toBe(7)
+  })
+})
+
 describe('rosterCombatStats', () => {
   it('uses bestiary FS/speed/stability for a named creature', () => {
     const sb = lookupStatblock('Goblin Assassin')
@@ -435,6 +541,25 @@ describe('rosterCombatStats', () => {
       stab: 1,
     } as unknown as Monster
     expect(rosterCombatStats(m)).toEqual({ fs: 2, spd: 4, stab: 1 })
+  })
+
+  it('uses encounter FS/speed/stability when monster.custom is set even if the name exists in the bestiary', () => {
+    const m = {
+      name: 'Goblin Assassin',
+      custom: {
+        level: 1,
+        monsterType: '',
+        size: '',
+        immunity: '',
+        weakness: '',
+        movement: '',
+        notes: '',
+      },
+      fs: 9,
+      dist: 8,
+      stab: 7,
+    } as unknown as Monster
+    expect(rosterCombatStats(m)).toEqual({ fs: 9, spd: 8, stab: 7 })
   })
 })
 

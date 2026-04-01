@@ -58,6 +58,9 @@ function rehydrateFeatures(groups: EncounterGroup[]): EncounterGroup[] {
   return groups.map((g) => ({
     ...g,
     monsters: g.monsters.map((m) => {
+      if (m.custom != null) {
+        return { ...m, features: [] }
+      }
       const fromName = featuresForMonster(m.name)
       if (fromName && fromName.length > 0) return { ...m, features: fromName }
       if (m.minions && m.minions.length > 0) {

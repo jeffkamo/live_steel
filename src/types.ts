@@ -37,6 +37,25 @@ export type CaptainRef = {
   monsterIndex: number
 }
 
+/** Extra fields for user-authored creatures (no bestiary stat block). */
+export type CustomMonsterStats = {
+  level: number
+  /** Encounter value (EV), e.g. "3" or "—". Optional on legacy saves. */
+  ev?: string
+  /**
+   * Stamina per minion slot (matches bestiary per-creature stamina). Synced from solo max;
+   * used for squad pool math when names do not resolve in the bestiary.
+   */
+  perMinionStamina?: number
+  /** Role / type line, e.g. "Horde · Artillery". */
+  monsterType: string
+  size: string
+  immunity: string
+  weakness: string
+  movement: string
+  notes: string
+}
+
 export type Monster = {
   name: string
   subtitle: string
@@ -50,6 +69,8 @@ export type Monster = {
   minions?: MinionEntry[]
   features?: MonsterFeature[]
   captainId?: CaptainRef | null
+  /** When set, the stat card drawer edits these stats instead of the bestiary block. */
+  custom?: CustomMonsterStats
 }
 
 export type MinionEntry = {

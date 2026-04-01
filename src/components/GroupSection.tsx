@@ -284,7 +284,8 @@ export function GroupSection({
       {monsterRows.map(({ monsterIndex: i, startRow }) => {
         const monster = group.monsters[i]!
         const isMinion = monster.minions && monster.minions.length > 0
-        const hasFeatures = (monster.features?.length ?? 0) > 0
+        const hasStatBlock =
+          (monster.features?.length ?? 0) > 0 || monster.custom != null
         const statCardDrawerView =
           monsterCardDrawer != null &&
           monsterCardDrawer.groupIndex === thisGroupIndex &&
@@ -293,7 +294,7 @@ export function GroupSection({
             : null
         const monsterCardDrawerOpen = statCardDrawerView?.kind === 'standard'
         const onMonsterCardNameClick =
-          hasFeatures && onToggleMonsterCard
+          hasStatBlock && onToggleMonsterCard
             ? () => onToggleMonsterCard(i, { kind: 'standard' })
             : undefined
 
@@ -334,7 +335,7 @@ export function GroupSection({
               }
               statCardDrawerView={statCardDrawerView}
               onStatCardToggle={
-                hasFeatures && onToggleMonsterCard
+                hasStatBlock && onToggleMonsterCard
                   ? (view) => onToggleMonsterCard(i, view)
                   : undefined
               }

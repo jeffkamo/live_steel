@@ -1,5 +1,6 @@
+import type { Monster } from '../types'
 import {
-  minionInterval,
+  minionIntervalFromMonster,
   minionSegmentVisual,
   minionThresholds,
   suggestedDeadCount,
@@ -14,19 +15,17 @@ import {
 export function MinionStaminaDisplay({
   current,
   max,
-  parentName,
-  firstMinionName,
+  parentMonster,
   minionCount,
   actualDeadCount = 0,
 }: {
   current: number
   max: number
-  parentName: string
-  firstMinionName?: string
+  parentMonster: Monster
   minionCount: number
   actualDeadCount?: number
 }) {
-  const interval = minionInterval(parentName, firstMinionName)
+  const interval = minionIntervalFromMonster(parentMonster)
 
   if (!interval || minionCount === 0) {
     const glyphStatus = staminaGlyphStatus(current, max)

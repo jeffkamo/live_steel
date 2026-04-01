@@ -1,6 +1,20 @@
 import { render, screen, within } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
+import type { Monster } from '../types'
 import { MinionStaminaDisplay } from './MinionStaminaDisplay'
+
+const goblinMinionParent: Monster = {
+  name: 'Minions',
+  subtitle: '',
+  initials: 'M',
+  stamina: [20, 20],
+  marip: null,
+  fs: 0,
+  dist: 0,
+  stab: 0,
+  conditions: [],
+  minions: [{ name: 'Goblin Spinecleaver 1', initials: 'G', conditions: [], dead: false }],
+}
 
 describe('MinionStaminaDisplay', () => {
   it('renders interval thresholds for 4 minions', () => {
@@ -8,8 +22,7 @@ describe('MinionStaminaDisplay', () => {
       <MinionStaminaDisplay
         current={20}
         max={20}
-        parentName="Minions"
-        firstMinionName="Goblin Spinecleaver 1"
+        parentMonster={goblinMinionParent}
         minionCount={4}
       />,
     )
@@ -25,8 +38,7 @@ describe('MinionStaminaDisplay', () => {
       <MinionStaminaDisplay
         current={10}
         max={20}
-        parentName="Minions"
-        firstMinionName="Goblin Spinecleaver 1"
+        parentMonster={goblinMinionParent}
         minionCount={4}
       />,
     )
@@ -45,8 +57,7 @@ describe('MinionStaminaDisplay', () => {
       <MinionStaminaDisplay
         current={12}
         max={20}
-        parentName="Minions"
-        firstMinionName="Goblin Spinecleaver 1"
+        parentMonster={goblinMinionParent}
         minionCount={4}
       />,
     )
@@ -65,8 +76,7 @@ describe('MinionStaminaDisplay', () => {
       <MinionStaminaDisplay
         current={20}
         max={20}
-        parentName="Minions"
-        firstMinionName="Goblin Spinecleaver 1"
+        parentMonster={goblinMinionParent}
         minionCount={4}
       />,
     )
@@ -80,8 +90,7 @@ describe('MinionStaminaDisplay', () => {
       <MinionStaminaDisplay
         current={0}
         max={20}
-        parentName="Minions"
-        firstMinionName="Goblin Spinecleaver 1"
+        parentMonster={goblinMinionParent}
         minionCount={4}
       />,
     )
@@ -95,8 +104,7 @@ describe('MinionStaminaDisplay', () => {
       <MinionStaminaDisplay
         current={7}
         max={20}
-        parentName="Minions"
-        firstMinionName="Goblin Spinecleaver 1"
+        parentMonster={goblinMinionParent}
         minionCount={4}
       />,
     )
@@ -115,8 +123,7 @@ describe('MinionStaminaDisplay', () => {
       <MinionStaminaDisplay
         current={17}
         max={20}
-        parentName="Minions"
-        firstMinionName="Goblin Spinecleaver 1"
+        parentMonster={goblinMinionParent}
         minionCount={4}
       />,
     )
@@ -131,8 +138,7 @@ describe('MinionStaminaDisplay', () => {
       <MinionStaminaDisplay
         current={9}
         max={20}
-        parentName="Minions"
-        firstMinionName="Goblin Spinecleaver 1"
+        parentMonster={goblinMinionParent}
         minionCount={4}
       />,
     )
@@ -147,8 +153,7 @@ describe('MinionStaminaDisplay', () => {
       <MinionStaminaDisplay
         current={5}
         max={20}
-        parentName="Minions"
-        firstMinionName="Goblin Spinecleaver 1"
+        parentMonster={goblinMinionParent}
         minionCount={4}
       />,
     )
@@ -159,12 +164,27 @@ describe('MinionStaminaDisplay', () => {
   })
 
   it('falls back to standard display when no bestiary entry is found', () => {
+    const unknownParent: Monster = {
+      name: 'Unknown Group',
+      subtitle: '',
+      initials: 'U',
+      stamina: [8, 12],
+      marip: null,
+      fs: 0,
+      dist: 0,
+      stab: 0,
+      conditions: [],
+      minions: [
+        { name: 'a', initials: '1', conditions: [], dead: false },
+        { name: 'b', initials: '2', conditions: [], dead: false },
+        { name: 'c', initials: '3', conditions: [], dead: false },
+      ],
+    }
     render(
       <MinionStaminaDisplay
         current={8}
         max={12}
-        parentName="Unknown Group"
-        firstMinionName="Unknown Minion"
+        parentMonster={unknownParent}
         minionCount={3}
       />,
     )
@@ -173,11 +193,22 @@ describe('MinionStaminaDisplay', () => {
   })
 
   it('falls back to standard display when minionCount is 0', () => {
+    const solo: Monster = {
+      name: 'Goblin Assassin',
+      subtitle: '',
+      initials: 'G',
+      stamina: [5, 5],
+      marip: null,
+      fs: 0,
+      dist: 0,
+      stab: 0,
+      conditions: [],
+    }
     render(
       <MinionStaminaDisplay
         current={5}
         max={5}
-        parentName="Goblin Spinecleaver"
+        parentMonster={solo}
         minionCount={0}
       />,
     )
@@ -190,8 +221,7 @@ describe('MinionStaminaDisplay', () => {
       <MinionStaminaDisplay
         current={20}
         max={20}
-        parentName="Minions"
-        firstMinionName="Goblin Spinecleaver 1"
+        parentMonster={goblinMinionParent}
         minionCount={4}
       />,
     )
@@ -205,8 +235,7 @@ describe('MinionStaminaDisplay', () => {
       <MinionStaminaDisplay
         current={10}
         max={20}
-        parentName="Minions"
-        firstMinionName="Goblin Spinecleaver 1"
+        parentMonster={goblinMinionParent}
         minionCount={4}
         actualDeadCount={0}
       />,
@@ -222,8 +251,7 @@ describe('MinionStaminaDisplay', () => {
       <MinionStaminaDisplay
         current={10}
         max={20}
-        parentName="Minions"
-        firstMinionName="Goblin Spinecleaver 1"
+        parentMonster={goblinMinionParent}
         minionCount={4}
         actualDeadCount={1}
       />,
@@ -238,8 +266,7 @@ describe('MinionStaminaDisplay', () => {
       <MinionStaminaDisplay
         current={20}
         max={20}
-        parentName="Minions"
-        firstMinionName="Goblin Spinecleaver 1"
+        parentMonster={goblinMinionParent}
         minionCount={4}
         actualDeadCount={2}
       />,
@@ -255,8 +282,7 @@ describe('MinionStaminaDisplay', () => {
       <MinionStaminaDisplay
         current={10}
         max={20}
-        parentName="Minions"
-        firstMinionName="Goblin Spinecleaver 1"
+        parentMonster={goblinMinionParent}
         minionCount={4}
         actualDeadCount={2}
       />,
@@ -269,8 +295,7 @@ describe('MinionStaminaDisplay', () => {
       <MinionStaminaDisplay
         current={20}
         max={20}
-        parentName="Minions"
-        firstMinionName="Goblin Spinecleaver 1"
+        parentMonster={goblinMinionParent}
         minionCount={4}
       />,
     )
@@ -282,8 +307,7 @@ describe('MinionStaminaDisplay', () => {
       <MinionStaminaDisplay
         current={5}
         max={20}
-        parentName="Minions"
-        firstMinionName="Goblin Spinecleaver 1"
+        parentMonster={goblinMinionParent}
         minionCount={4}
         actualDeadCount={0}
       />,
@@ -297,8 +321,7 @@ describe('MinionStaminaDisplay', () => {
       <MinionStaminaDisplay
         current={5}
         max={20}
-        parentName="Minions"
-        firstMinionName="Goblin Spinecleaver 1"
+        parentMonster={goblinMinionParent}
         minionCount={4}
         actualDeadCount={0}
       />,

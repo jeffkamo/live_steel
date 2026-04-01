@@ -1,4 +1,5 @@
-import { minionInterval, minionSegmentVisual, minionThresholds } from '../bestiary'
+import type { Monster } from '../types'
+import { minionIntervalFromMonster, minionSegmentVisual, minionThresholds } from '../bestiary'
 import { STAMINA_SEGMENT_SHELL } from './StaminaGlyph'
 
 const bumpMinusClass =
@@ -10,17 +11,15 @@ const bumpPlusClass =
 export function MinionStaminaEditor({
   current,
   bump,
-  parentName,
-  firstMinionName,
+  parentMonster,
   minionCount,
 }: {
   current: number
   bump: (delta: number) => void
-  parentName: string
-  firstMinionName?: string
+  parentMonster: Monster
   minionCount: number
 }) {
-  const interval = minionInterval(parentName, firstMinionName)
+  const interval = minionIntervalFromMonster(parentMonster)
 
   if (!interval || minionCount === 0) {
     return null

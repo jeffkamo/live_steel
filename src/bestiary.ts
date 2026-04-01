@@ -151,6 +151,20 @@ export function minionInterval(
 }
 
 /**
+ * Per-minion stamina interval for pool math and UI: bestiary lookup, or custom
+ * {@link CustomMonsterStats.perMinionStamina} / solo max stamina.
+ */
+export function minionIntervalFromMonster(parent: Monster): number | undefined {
+  if (parent.custom != null) {
+    const slot = parent.custom.perMinionStamina ?? 0
+    if (slot > 0) return slot
+    if (!parent.minions?.length && parent.stamina[1] > 0) return parent.stamina[1]
+    return undefined
+  }
+  return minionInterval(parent.name, parent.minions?.[0]?.name)
+}
+
+/**
  * Build the interval thresholds array for a minion group.
  * E.g. interval=5, count=4 → [5, 10, 15, 20]
  */
@@ -183,7 +197,47 @@ export function minionSegmentVisual(
 }
 
 /** FS, speed, and stability for roster rows — prefer bestiary, then encounter fields. */
+/**
+ * Build a read-only statblock shape from a custom encounter monster for {@link StatBlock} rendering.
+ */
+export function bestiaryStatblockFromCustomMonster(m: Monster): BestiaryStatblock | null {
+  if (!m.custom) return null
+  const c = m.custom
+  const marip = m.marip ?? [0, 0, 0, 0, 0]
+  const splitList = (s: string): string[] =>
+    s
+      .split(',')
+      .map((x) => x.trim())
+      .filter((x) => x.length > 0)
+  const imm = splitList(c.immunity)
+  const weak = splitList(c.weakness)
+  const headerLine = m.subtitle.trim()
+  return {
+    name: m.name,
+    level: c.level > 0 ? c.level : undefined,
+    roles: [],
+    ancestry: headerLine ? [headerLine] : [],
+    ev: (c.ev ?? '').trim() ? (c.ev ?? '').trim() : '—',
+    stamina: String(m.stamina[1]),
+    speed: m.dist,
+    movement: c.movement.trim() || undefined,
+    size: c.size.trim() || '—',
+    stability: m.stab,
+    free_strike: m.fs,
+    might: marip[0]!,
+    agility: marip[1]!,
+    reason: marip[2]!,
+    intuition: marip[3]!,
+    presence: marip[4]!,
+    ...(imm.length > 0 ? { immunities: imm } : {}),
+    ...(weak.length > 0 ? { weaknesses: weak } : {}),
+  }
+}
+
 export function rosterCombatStats(m: Monster): { fs: number; spd: number; stab: number } {
+  if (m.custom != null) {
+    return { fs: m.fs, spd: m.dist, stab: m.stab }
+  }
   const sb =
     lookupStatblock(m.name) ?? (m.minions?.[0] ? lookupStatblock(m.minions[0].name) : undefined)
   if (sb) {

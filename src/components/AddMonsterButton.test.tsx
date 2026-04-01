@@ -32,9 +32,29 @@ describe('AddMonsterButton', () => {
     await user.type(input, 'Goblin')
     const listbox = screen.getByRole('listbox', { name: /Available monsters/i })
     const options = within(listbox).getAllByRole('option')
-    for (const opt of options) {
+    const bestiaryOnly = options.filter((opt) => !/^custom monster$/i.test(opt.textContent?.trim() ?? ''))
+    expect(bestiaryOnly.length).toBeGreaterThan(0)
+    for (const opt of bestiaryOnly) {
       expect(opt.textContent?.toLowerCase()).toContain('goblin')
     }
+  })
+
+  it('adds a blank custom monster when choosing Custom monster and keeps the picker open', async () => {
+    const user = userEvent.setup()
+    const onAdd = vi.fn()
+    render(<AddMonsterButton onAdd={onAdd} />)
+    await user.click(screen.getByRole('button', { name: /Add monster to group/i }))
+    await user.click(screen.getByRole('button', { name: /^Custom monster$/i }))
+    expect(onAdd).toHaveBeenCalledTimes(1)
+    const m = onAdd.mock.calls[0]![0]!
+    expect(m.name).toBe('Custom monster')
+    expect(m.custom).toBeDefined()
+    expect(m.stamina).toEqual([0, 0])
+    expect(m.marip).toEqual([0, 0, 0, 0, 0])
+    expect(m.fs).toBe(0)
+    expect(m.dist).toBe(0)
+    expect(m.stab).toBe(0)
+    expect(screen.getByRole('textbox', { name: /Search bestiary/i })).toBeInTheDocument()
   })
 
   it('shows "No matches" when search yields no results', async () => {

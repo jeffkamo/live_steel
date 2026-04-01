@@ -13,6 +13,7 @@ import type {
   MonsterFeature,
 } from '../types'
 import { monsterCardDrawerViewEquals } from '../types'
+import type { BestiaryStatblock } from '../bestiary'
 
 const sampleAbility: MonsterFeature = {
   type: 'feature',
@@ -208,6 +209,32 @@ describe('StatBlock core stats from bestiary', () => {
   it('does not render core stats header for unknown monster', () => {
     render(<StatBlock features={[sampleAbility]} monsterName="Test Monster" />)
     expect(screen.queryByTestId('core-stats-header')).not.toBeInTheDocument()
+  })
+
+  it('renders core stats from statblockOverride when bestiary has no entry', () => {
+    const override: BestiaryStatblock = {
+      name: 'Custom',
+      roles: [],
+      ancestry: ['Level 1 · Solo'],
+      ev: '—',
+      stamina: '10',
+      speed: 6,
+      size: 'M',
+      stability: 2,
+      free_strike: 3,
+      might: 1,
+      agility: 0,
+      reason: -1,
+      intuition: 0,
+      presence: 2,
+    }
+    render(<StatBlock features={[]} monsterName="Unknown Custom" statblockOverride={override} />)
+    expect(screen.queryByText('No features available.')).not.toBeInTheDocument()
+    expect(screen.getByTestId('core-stats-header')).toBeInTheDocument()
+    expect(screen.getByText('Level 1 · Solo')).toBeInTheDocument()
+    expect(screen.getByText('EV —')).toBeInTheDocument()
+    const nums = screen.getAllByTestId('draw-steel-marip-num')
+    expect(nums.map((n) => n.textContent).join(' ')).toBe('+1 0 -1 0 +2')
   })
 
   it('strips trailing ordinal to find bestiary entry', () => {

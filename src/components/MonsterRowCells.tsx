@@ -78,7 +78,8 @@ export function MonsterRowCells({
   const deadStrike = dead ? 'line-through' : ''
   const badge = GROUP_COLOR_BADGE[groupColor]
   const colorLabel = GROUP_COLOR_LABEL[groupColor]
-  const hasFeatures = (monster.features?.length ?? 0) > 0
+  const hasStatBlock =
+    (monster.features?.length ?? 0) > 0 || monster.custom != null
   const bodyCell =
     'flex h-full min-h-[3.75rem] items-center p-3 sm:min-h-[4rem] sm:p-3.5'
   const creatureNameColCell =
@@ -152,7 +153,7 @@ export function MonsterRowCells({
             {ordinal}
           </button>
           <div className="min-w-0 flex-1">
-            {hasFeatures && onMonsterCardNameClick ? (
+            {hasStatBlock && onMonsterCardNameClick ? (
               <button
                 type="button"
                 aria-expanded={monsterCardDrawerOpen}

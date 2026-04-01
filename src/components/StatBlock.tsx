@@ -583,13 +583,16 @@ export function StatBlock({
   features,
   monsterName,
   encounterGroupColor,
+  statblockOverride,
 }: {
   features: MonsterFeature[]
   monsterName: string
   /** When set (e.g. monster drawer), card border matches encounter group color. */
   encounterGroupColor?: GroupColorId
+  /** When set, core stats use this object instead of bestiary lookup (e.g. locked custom creatures). */
+  statblockOverride?: BestiaryStatblock
 }) {
-  const statblock = lookupStatblock(monsterName)
+  const statblock = statblockOverride ?? lookupStatblock(monsterName)
   const statCardBorderClass =
     encounterGroupColor != null
       ? GROUP_COLOR_STAT_BLOCK_CARD[encounterGroupColor]
