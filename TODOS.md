@@ -33,6 +33,10 @@ Ideas and enhancements tracked for future work (not committed to a roadmap).
 - [x] Add the ability to delete a monster from a group
 - [x] When adding monsters, the list of monsters come from the JSON data
 
+## UI polish
+
+- [x] Improve vertical spacing rhythm between site header, roster controls (New turn / Lock), and encounter table.
+
 ## Drag and drop
 
 - [x] **Reorder encounter groups** — Change the order of groups on the roster (e.g. initiative or table preference).
@@ -57,7 +61,7 @@ Ideas and enhancements tracked for future work (not committed to a roadmap).
 # Advanced
 
 - [ ] Add history menu that shows you each action performed. Things like applying damage or healing stamina should be batched (that way you don' tend up with 50 or 100 +10 or -10 actions)
-- [ ] Persist encounter data in local storage
-- [ ] Reload local storage state on page load
-- [ ] Add the ability to create new, empty encounters and name them
-- [ ] Add the ability to switch between encounters
+- [x] Persist encounter data in local storage
+- [x] Reload local storage state on page load
+- [x] Add the ability to create new, empty encounters and name them
+- [x] Add the ability to switch between encounters
