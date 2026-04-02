@@ -199,7 +199,7 @@ export function AddTerrainButton({
                   type="button"
                   data-terrain-option
                   onClick={handleAddCustom}
-                  className="w-full cursor-pointer border-b border-zinc-200 dark:border-zinc-800/80 px-3 py-2 text-left font-sans text-xs font-medium text-amber-200/95 transition-colors hover:bg-zinc-300 dark:hover:bg-zinc-800 hover:text-amber-50 focus-visible:bg-zinc-800 focus-visible:text-amber-50 focus-visible:outline-none"
+                  className="w-full cursor-pointer border-b border-zinc-200 dark:border-zinc-800/80 px-3 py-2 text-left font-sans text-xs font-medium text-amber-950 dark:text-amber-200 transition-colors hover:bg-zinc-300 dark:hover:bg-zinc-800 hover:text-amber-950 dark:hover:text-amber-50 focus-visible:bg-zinc-800 focus-visible:text-amber-50 focus-visible:outline-none"
                 >
                   Custom terrain
                 </button>
