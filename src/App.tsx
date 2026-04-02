@@ -2127,7 +2127,7 @@ function App() {
             >
               {terrainDrawerOpen && terrainDrawerRow ? (
                 <div className="box-border flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden font-sans">
-                  <div className="relative z-10 flex shrink-0 items-start justify-between gap-2 border-b border-zinc-200/90 bg-zinc-50 dark:border-zinc-800/60 dark:bg-zinc-950 px-3 py-2.5">
+                  <div className="relative z-10 flex shrink-0 items-start justify-between gap-2 border-b border-zinc-200/90 dark:border-zinc-800/60 px-3 py-2.5">
                     <h2 className="flex min-w-0 flex-1 items-center gap-1.5 text-sm font-medium tracking-wide">
                       <span className="min-w-0 truncate text-zinc-800 dark:text-zinc-200">{terrainDrawerRow.object}</span>
                     </h2>
@@ -2203,7 +2203,7 @@ function App() {
                 </div>
               ) : statCardDrawerOpen && drawerMonster ? (
                 <div className="box-border flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden font-sans">
-                  <div className="relative z-10 flex shrink-0 items-start justify-between gap-2 border-b border-zinc-200/90 bg-zinc-50 dark:border-zinc-800/60 dark:bg-zinc-950 px-3 py-2.5">
+                  <div className="relative z-10 flex shrink-0 items-start justify-between gap-2 border-b border-zinc-200/90 dark:border-zinc-800/60 px-3 py-2.5">
                     <h2 className="flex min-w-0 flex-1 items-center gap-1.5 text-sm font-medium tracking-wide">
                       {drawerOrdinalBadge != null ? (
                         <span
