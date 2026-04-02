@@ -1690,7 +1690,7 @@ function App() {
                   aria-label="Switch encounter"
                   aria-expanded={showEncounterSwitcher}
                   onClick={() => setShowEncounterSwitcher((v) => !v)}
-                  className="inline-flex cursor-pointer items-center gap-1 rounded-md px-2 py-0.5 text-[0.65rem] font-normal uppercase tracking-[0.28em] text-zinc-700 transition-colors hover:bg-zinc-200/95 dark:hover:bg-zinc-800/70 hover:text-zinc-950 dark:hover:text-zinc-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500/60"
+                  className="inline-flex cursor-pointer items-center gap-1 rounded-md px-2 py-0.5 text-[0.65rem] font-normal uppercase tracking-[0.28em] text-zinc-700 dark:text-zinc-400 transition-colors hover:bg-zinc-200/95 dark:hover:bg-zinc-800/70 hover:text-zinc-950 dark:hover:text-zinc-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500/60"
                 >
                   {encounterName}
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3 w-3" aria-hidden>
@@ -1805,7 +1805,7 @@ function App() {
                     setShowNewEncounterPrompt(true)
                     setShowEncounterSwitcher(false)
                   }}
-                  className="inline-flex cursor-pointer items-center rounded-md px-1.5 py-0.5 font-sans text-[0.6rem] uppercase tracking-[0.15em] text-zinc-700 transition-colors hover:bg-zinc-200/95 dark:hover:bg-zinc-800/70 hover:text-zinc-950 dark:hover:text-zinc-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500/60"
+                  className="inline-flex cursor-pointer items-center rounded-md px-1.5 py-0.5 font-sans text-[0.6rem] uppercase tracking-[0.15em] text-zinc-700 dark:text-zinc-400 transition-colors hover:bg-zinc-200/95 dark:hover:bg-zinc-800/70 hover:text-zinc-950 dark:hover:text-zinc-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500/60"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="mr-0.5 h-3 w-3">
                     <path d="M10.75 4.75a.75.75 0 0 0-1.5 0v4.5h-4.5a.75.75 0 0 0 0 1.5h4.5v4.5a.75.75 0 0 0 1.5 0v-4.5h4.5a.75.75 0 0 0 0-1.5h-4.5v-4.5Z" />
@@ -1867,7 +1867,7 @@ function App() {
                     type="button"
                     onClick={resetAllTurns}
                     aria-label="Start a new turn: reset all encounter group turn diamonds to pending"
-                    className="min-h-10 min-w-[5.25rem] cursor-pointer rounded-md px-4 py-2 font-sans text-xs tracking-wide text-zinc-700 transition-colors hover:bg-zinc-200/95 dark:hover:bg-zinc-900 hover:text-zinc-950 dark:hover:text-zinc-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500/60"
+                    className="min-h-10 min-w-[5.25rem] cursor-pointer rounded-md px-4 py-2 font-sans text-xs tracking-wide text-zinc-700 dark:text-zinc-400 transition-colors hover:bg-zinc-200/95 dark:hover:bg-zinc-900 hover:text-zinc-950 dark:hover:text-zinc-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500/60"
                   >
                     New turn
                   </button>
