@@ -24,7 +24,7 @@ describe('EditableStaminaCell', () => {
   it('styles stamina readout chip when healthy (no fill)', () => {
     render(<EditableStaminaCell current={10} max={15} onChange={vi.fn()} ariaLabel="Edit stamina" />)
     const el = screen.getByText('10 / 15')
-    expect(el.className).toMatch(/text-zinc-50/)
+    expect(el.className).toMatch(/text-zinc-800/)
     expect(el.className).not.toMatch(/bg-amber/)
     expect(el.className).not.toMatch(/bg-red/)
   })
@@ -32,15 +32,15 @@ describe('EditableStaminaCell', () => {
   it('styles stamina readout with amber chip when winded', () => {
     render(<EditableStaminaCell current={5} max={15} onChange={vi.fn()} ariaLabel="Edit stamina" />)
     const el = screen.getByText('5 / 15')
-    expect(el.className).toMatch(/bg-amber-950\/50/)
-    expect(el.className).toMatch(/text-amber-300/)
+    expect(el.className).toMatch(/bg-amber-100\/90/)
+    expect(el.className).toMatch(/text-amber-800/)
   })
 
   it('styles stamina readout with red chip at zero stamina', () => {
     render(<EditableStaminaCell current={0} max={15} onChange={vi.fn()} ariaLabel="Edit stamina" />)
     const el = screen.getByText('0 / 15')
-    expect(el.className).toMatch(/bg-red-950\/60/)
-    expect(el.className).toMatch(/text-red-400/)
+    expect(el.className).toMatch(/bg-red-100\/90/)
+    expect(el.className).toMatch(/text-red-700/)
     expect(el.className).toMatch(/line-through/)
   })
 

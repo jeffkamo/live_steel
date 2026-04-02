@@ -236,7 +236,7 @@ export function GroupSection({
 
   return (
     <div
-      className="grid items-stretch overflow-visible rounded-lg bg-zinc-900/80"
+      className="grid items-stretch overflow-visible rounded-lg border border-zinc-200/95 bg-white shadow-sm dark:border-transparent dark:bg-zinc-900/80 dark:shadow-none"
       style={{
         gridTemplateColumns: ROSTER_GRID_TEMPLATE,
         gridTemplateRows: `repeat(${gridRowCount}, minmax(0, auto))`,
@@ -256,10 +256,10 @@ export function GroupSection({
         <div
           data-testid="empty-group-monster-drop-target"
           data-group-index={monsterDrag.thisGroupIndex}
-          className={`flex min-h-[3.75rem] items-center justify-center rounded border border-dashed border-zinc-700/80 px-3 text-sm text-zinc-500 sm:min-h-[4rem] ${
+          className={`flex min-h-[3.75rem] items-center justify-center rounded border border-dashed border-zinc-400/90 dark:border-zinc-700/80 px-3 text-sm text-zinc-600 dark:text-zinc-500 sm:min-h-[4rem] ${
             monsterDrag.dropTarget?.groupIndex === monsterDrag.thisGroupIndex &&
             monsterDrag.dropTarget?.monsterIndex === 0
-              ? 'bg-sky-950/25 ring-2 ring-inset ring-sky-500/40'
+              ? 'bg-sky-100/90 ring-2 ring-inset ring-sky-500/45 dark:bg-sky-950/25 dark:ring-sky-500/40'
               : ''
           }`}
           style={{ gridColumn: '2 / -1', gridRow: 1 }}

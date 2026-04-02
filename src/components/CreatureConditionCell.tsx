@@ -115,7 +115,7 @@ export function CreatureConditionCell({
       onDragOver={conditionDnD?.onDragOver}
       onDragLeave={conditionDnD?.onDragLeave}
       onDrop={conditionDnD?.onDrop}
-      className={`relative flex h-full min-h-0 w-full cursor-pointer flex-col justify-center rounded-md p-3 outline-none transition-[background-color,box-shadow] duration-200 ease-out motion-reduce:transition-none hover:bg-zinc-800/35 focus-visible:ring-2 focus-visible:ring-amber-500/45 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950 sm:p-3.5 ${dropRing}`}
+      className={`relative flex h-full min-h-0 w-full cursor-pointer flex-col justify-center rounded-md p-3 outline-none transition-[background-color,box-shadow] duration-200 ease-out motion-reduce:transition-none hover:bg-zinc-300 dark:hover:bg-zinc-800/35 focus-visible:ring-2 focus-visible:ring-amber-500/45 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-50 dark:focus-visible:ring-offset-zinc-950 sm:p-3.5 ${dropRing}`}
       role="group"
       tabIndex={0}
       aria-expanded={open}
@@ -157,7 +157,7 @@ export function CreatureConditionCell({
         <div
           ref={pickerRef}
           data-condition-picker
-          className="absolute left-0 top-full z-50 mt-1 w-[min(20rem,calc(100vw-2rem))] max-h-[min(22rem,55vh)] overflow-y-auto rounded-lg border border-zinc-500/75 bg-zinc-900 py-1.5 pl-2 pr-1.5 shadow-xl shadow-black/50 ring-1 ring-black/25"
+          className="absolute left-0 top-full z-50 mt-1 w-[min(20rem,calc(100vw-2rem))] max-h-[min(22rem,55vh)] overflow-y-auto rounded-lg border border-zinc-500/75 bg-zinc-100 dark:bg-zinc-900 py-1.5 pl-2 pr-1.5 shadow-xl shadow-black/50 ring-1 ring-black/25"
           role="dialog"
           aria-label={`Add condition to ${monsterName}`}
           onClick={(e) => e.stopPropagation()}
@@ -213,7 +213,7 @@ export function CreatureConditionCell({
                     <button
                       type="button"
                       aria-label={nameAriaLabel}
-                      className={`${conditionPickerRowBtn} flex min-w-0 flex-1 items-center gap-2 truncate text-zinc-100 hover:bg-zinc-800/80 ${dimmed ? 'text-zinc-400' : ''}`}
+                      className={`${conditionPickerRowBtn} flex min-w-0 flex-1 items-center gap-2 truncate text-zinc-900 dark:text-zinc-100 hover:bg-zinc-300/85 dark:hover:bg-zinc-800/80 ${dimmed ? 'text-zinc-400' : ''}`}
                       onClick={() => {
                         if (active?.state === 'neutral') {
                           if (idx >= 0) onRemove(idx)
@@ -231,8 +231,8 @@ export function CreatureConditionCell({
                       aria-label={eotAriaLabel}
                       className={`${conditionPickerDurationPill} ${
                         active?.state === 'eot'
-                          ? 'border-amber-500/80 bg-amber-500/15 text-amber-200'
-                          : 'border-zinc-600/90 text-zinc-400 hover:border-zinc-500 hover:bg-zinc-800/60 hover:text-zinc-200'
+                          ? 'border-amber-600/85 bg-amber-100/95 text-amber-950 dark:border-amber-500/80 dark:bg-amber-500/15 dark:text-amber-200'
+                          : 'border-zinc-300 dark:border-zinc-600/90 text-zinc-600 hover:border-zinc-500 hover:bg-zinc-200/95 dark:text-zinc-400 dark:hover:bg-zinc-800/60 hover:text-zinc-900 dark:hover:text-zinc-200'
                       }`}
                       onClick={() => {
                         if (active?.state === 'eot') {
@@ -250,8 +250,8 @@ export function CreatureConditionCell({
                       aria-label={seAriaLabel}
                       className={`${conditionPickerDurationPill} ${
                         active?.state === 'se'
-                          ? 'border-purple-500/80 bg-purple-500/15 text-purple-200'
-                          : 'border-zinc-600/90 text-zinc-400 hover:border-zinc-500 hover:bg-zinc-800/60 hover:text-zinc-200'
+                          ? 'border-purple-600/85 bg-purple-100/95 text-purple-950 dark:border-purple-500/80 dark:bg-purple-500/15 dark:text-purple-200'
+                          : 'border-zinc-300 dark:border-zinc-600/90 text-zinc-600 hover:border-zinc-500 hover:bg-zinc-200/95 dark:text-zinc-400 dark:hover:bg-zinc-800/60 hover:text-zinc-900 dark:hover:text-zinc-200'
                       }`}
                       onClick={() => {
                         if (active?.state === 'se') {

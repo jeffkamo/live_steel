@@ -32,7 +32,7 @@ describe('ConditionIcon', () => {
 describe('conditionIconShellClass', () => {
   it('returns dimmed class when not active', () => {
     const cls = conditionIconShellClass(false, null)
-    expect(cls).toContain('opacity-[0.58]')
+    expect(cls).toContain('opacity-[0.72]')
   })
 
   it('returns neutral active class', () => {
@@ -43,14 +43,14 @@ describe('conditionIconShellClass', () => {
 
   it('returns duration active class for eot', () => {
     const cls = conditionIconShellClass(true, 'eot')
-    expect(cls).toContain('border-amber-500/75')
+    expect(cls).toContain('border-amber-600/65')
     expect(cls).toContain('ring-1')
   })
 
   it('returns duration active class for se', () => {
     const cls = conditionIconShellClass(true, 'se')
-    expect(cls).toContain('border-purple-500/80')
-    expect(cls).toContain('text-purple-200')
+    expect(cls).toContain('border-purple-600/70')
+    expect(cls).toContain('text-purple-900')
   })
 
   it('adds animate-glow-eot when turnActed is true and state is eot', () => {

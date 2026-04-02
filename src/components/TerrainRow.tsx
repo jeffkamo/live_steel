@@ -109,7 +109,7 @@ function TerrainRowUpgrades({
               type="button"
               aria-label="Add upgrade"
               onClick={openPanel}
-              className="flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-md border border-dashed border-zinc-700 px-3 py-1.5 font-sans text-[0.7rem] text-zinc-500 transition-colors hover:border-zinc-500 hover:text-zinc-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500/60"
+              className="flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-md border border-dashed border-zinc-400 dark:border-zinc-700 px-3 py-1.5 font-sans text-[0.7rem] text-zinc-700 transition-colors hover:border-zinc-500 hover:bg-zinc-50/90 dark:hover:bg-transparent hover:text-zinc-950 dark:hover:text-zinc-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500/60"
             >
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="size-3.5" aria-hidden>
                 <path d="M8.75 3.75a.75.75 0 0 0-1.5 0v3.5h-3.5a.75.75 0 0 0 0 1.5h3.5v3.5a.75.75 0 0 0 1.5 0v-3.5h3.5a.75.75 0 0 0 0-1.5h-3.5v-3.5Z" />
@@ -119,9 +119,9 @@ function TerrainRowUpgrades({
           ) : (
             <>
               <div className="min-h-9 w-full shrink-0" aria-hidden />
-              <div className="absolute left-0 right-0 top-0 z-50 flex max-h-[min(40vh,11rem)] flex-col overflow-hidden rounded-md border border-zinc-700 bg-zinc-900 shadow-2xl ring-1 ring-black/30">
-                <div className="flex shrink-0 items-center justify-between gap-2 border-b border-zinc-800 px-3 py-2">
-                  <span className="font-sans text-[0.7rem] font-medium text-zinc-300">Choose upgrade</span>
+              <div className="absolute left-0 right-0 top-0 z-50 flex max-h-[min(40vh,11rem)] flex-col overflow-hidden rounded-md border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 shadow-2xl ring-1 ring-black/15 dark:ring-black/30">
+                <div className="flex shrink-0 items-center justify-between gap-2 border-b border-zinc-200 dark:border-zinc-800 px-3 py-2">
+                  <span className="font-sans text-[0.7rem] font-medium text-zinc-700 dark:text-zinc-300">Choose upgrade</span>
                   <button
                     type="button"
                     aria-label="Close upgrade picker"
@@ -143,7 +143,7 @@ function TerrainRowUpgrades({
                           onAddUpgrade?.(o.name)
                           close()
                         }}
-                        className="w-full cursor-pointer px-3 py-1.5 text-left font-sans text-xs text-zinc-300 transition-colors hover:bg-zinc-800 hover:text-zinc-100 focus-visible:bg-zinc-800 focus-visible:text-zinc-100 focus-visible:outline-none"
+                        className="w-full cursor-pointer px-3 py-1.5 text-left font-sans text-xs text-zinc-800 dark:text-zinc-300 transition-colors hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-950 dark:hover:text-zinc-100 focus-visible:bg-zinc-100 focus-visible:text-zinc-950 dark:focus-visible:bg-zinc-800 dark:focus-visible:text-zinc-100 focus-visible:outline-none"
                       >
                         {o.name}
                       </button>
@@ -158,14 +158,14 @@ function TerrainRowUpgrades({
 
       {selectedUpgrades.length > 0 && (
         <div className={`${showAdd ? 'mt-2' : ''} space-y-1`}>
-          <div className="font-sans text-[0.65rem] font-semibold uppercase tracking-wide text-zinc-500">
+          <div className="font-sans text-[0.65rem] font-semibold uppercase tracking-wide text-zinc-600 dark:text-zinc-500">
             Active upgrades
           </div>
           <ul className="flex flex-wrap gap-1.5">
             {selectedUpgrades.map((name) => (
               <li
                 key={name}
-                className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-amber-500/35 bg-amber-500/10 px-2.5 py-1 font-sans text-[0.7rem] text-amber-200 shadow-[inset_0_1px_0_rgb(251_191_36/0.10)]"
+                className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-amber-600/45 bg-amber-50/95 px-2.5 py-1 font-sans text-[0.7rem] text-amber-950 shadow-[inset_0_1px_0_rgb(251_191_36/0.12)] dark:border-amber-500/35 dark:bg-amber-500/10 dark:text-amber-200 dark:shadow-[inset_0_1px_0_rgb(251_191_36/0.10)]"
               >
                 <span className="min-w-0 truncate">{name}</span>
                 {!uiLocked && onRemoveUpgrade != null && (
@@ -173,7 +173,7 @@ function TerrainRowUpgrades({
                     type="button"
                     aria-label={`Remove upgrade: ${name}`}
                     onClick={() => onRemoveUpgrade(name)}
-                    className="shrink-0 cursor-pointer rounded-full p-0.5 text-amber-200/70 transition-colors hover:bg-amber-500/15 hover:text-amber-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-amber-500/60"
+                    className="shrink-0 cursor-pointer rounded-full p-0.5 text-amber-800/90 transition-colors hover:bg-amber-200/80 hover:text-amber-950 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-amber-600/60 dark:text-amber-200/80 dark:hover:bg-amber-500/15 dark:hover:text-amber-100 dark:focus-visible:outline-amber-500/60"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="size-3" aria-hidden>
                       <path d="M3.72 3.72a.75.75 0 0 1 1.06 0L8 6.94l3.22-3.22a.75.75 0 1 1 1.06 1.06L9.06 8l3.22 3.22a.75.75 0 1 1-1.06 1.06L8 9.06l-3.22 3.22a.75.75 0 0 1-1.06-1.06L6.94 8 3.72 4.78a.75.75 0 0 1 0-1.06Z" />
@@ -234,7 +234,7 @@ export function TerrainRow({
     'flex h-full min-h-[3.75rem] items-center p-3 sm:min-h-[4rem] sm:p-3.5'
   return (
     <div
-      className={`${terrainGridClass} overflow-visible rounded-lg bg-zinc-900/80 ${
+      className={`${terrainGridClass} overflow-visible rounded-lg border border-zinc-200/95 bg-white shadow-sm dark:border-transparent dark:bg-zinc-900/80 dark:shadow-none ${
         isDrawerOpen ? 'ring-1 ring-amber-500/40' : ''
       }`}
     >
@@ -246,21 +246,21 @@ export function TerrainRow({
             onDragStart={dragHandle.onDragStart}
             onDragEnd={dragHandle.onDragEnd}
             menuItems={gripMenuItems}
-            className="group flex w-9 shrink-0 cursor-grab touch-none select-none items-center justify-center rounded-md border border-transparent transition-[background-color,border-color,box-shadow,color] duration-150 ease-out hover:border-zinc-700/45 hover:bg-zinc-800/55 hover:shadow-sm active:cursor-grabbing motion-reduce:transition-none sm:w-10"
-            iconClassName="size-3.5 text-zinc-500 transition-colors group-hover:text-zinc-200 sm:size-4"
+            className="group flex w-9 shrink-0 cursor-grab touch-none select-none items-center justify-center rounded-md border border-transparent transition-[background-color,border-color,box-shadow,color] duration-150 ease-out hover:border-zinc-700/45 hover:bg-zinc-300 dark:hover:bg-zinc-800/55 hover:shadow-sm active:cursor-grabbing motion-reduce:transition-none sm:w-10"
+            iconClassName="size-3.5 text-zinc-600 transition-colors group-hover:text-zinc-900 dark:group-hover:text-zinc-200 sm:size-4"
           />
         )}
         {hasStatBlock ? (
           <button
             type="button"
             onClick={onClick}
-            className={`min-w-0 flex-1 cursor-pointer rounded-md px-2 py-2 text-left text-sm leading-relaxed text-zinc-100 transition-colors hover:bg-zinc-800/70 hover:text-amber-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber-500/60 sm:text-base ${deadDim} ${deadStrike}`}
+            className={`min-w-0 flex-1 cursor-pointer rounded-md px-2 py-2 text-left text-sm leading-relaxed text-zinc-900 dark:text-zinc-100 transition-colors hover:bg-zinc-200/90 dark:hover:bg-zinc-800/70 hover:text-amber-800 dark:hover:text-amber-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber-500/60 sm:text-base ${deadDim} ${deadStrike}`}
             aria-label={`View stat block for ${row.object}`}
           >
             {row.object}
           </button>
         ) : (
-          <p className={`min-w-0 flex-1 px-2 py-2 text-sm leading-relaxed text-zinc-100 sm:text-base ${deadDim} ${deadStrike}`}>
+          <p className={`min-w-0 flex-1 px-2 py-2 text-sm leading-relaxed text-zinc-900 dark:text-zinc-100 sm:text-base ${deadDim} ${deadStrike}`}>
             {row.object}
           </p>
         )}
@@ -279,7 +279,7 @@ export function TerrainRow({
       </div>
       <div className={`${bodyCell} min-w-0`} style={{ gridColumn: '4 / -1' }}>
         <div className="min-w-0 flex-1">
-          <p className="min-w-0 text-sm leading-relaxed text-zinc-300 sm:text-base">{row.note}</p>
+          <p className="min-w-0 text-sm leading-relaxed text-zinc-700 dark:text-zinc-300 sm:text-base">{row.note}</p>
           {extraNotes !== '' && (
             <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-zinc-400 sm:text-base">
               {row.notes}

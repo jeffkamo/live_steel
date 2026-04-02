@@ -6,7 +6,7 @@ export function TitleRule({ flushBelow = false }: { flushBelow?: boolean } = {})
     >
       <div className="h-px flex-1 bg-zinc-400/65" />
       <div
-        className="mx-2 size-2 shrink-0 rotate-45 border border-zinc-400/75 bg-zinc-950"
+        className="mx-2 size-2 shrink-0 rotate-45 border border-zinc-400/75 bg-zinc-50 dark:bg-zinc-950"
         style={{ marginTop: '-1px' }}
       />
       <div className="h-px flex-1 bg-zinc-400/65" />

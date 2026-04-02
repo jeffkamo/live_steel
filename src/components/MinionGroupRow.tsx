@@ -252,8 +252,8 @@ export function MinionGroupRow({
               onDragStart={monsterDrag.onDragStart}
               onDragEnd={monsterDrag.onDragEnd}
               menuItems={parentGripMenuItems}
-              className="group flex w-9 shrink-0 cursor-grab touch-none select-none items-center justify-center rounded-md border border-transparent transition-[background-color,border-color,box-shadow,color] duration-150 ease-out hover:border-zinc-700/45 hover:bg-zinc-800/55 hover:shadow-sm active:cursor-grabbing motion-reduce:transition-none sm:w-10"
-              iconClassName="size-3.5 text-zinc-500 transition-colors group-hover:text-zinc-200 sm:size-4"
+              className="group flex w-9 shrink-0 cursor-grab touch-none select-none items-center justify-center rounded-md border border-transparent transition-[background-color,border-color,box-shadow,color] duration-150 ease-out hover:border-zinc-700/45 hover:bg-zinc-300 dark:hover:bg-zinc-800/55 hover:shadow-sm active:cursor-grabbing motion-reduce:transition-none sm:w-10"
+              iconClassName="size-3.5 text-zinc-600 transition-colors group-hover:text-zinc-900 dark:group-hover:text-zinc-200 sm:size-4"
             />
           )}
           <div className="flex min-w-0 flex-1 items-center gap-3">
@@ -263,7 +263,7 @@ export function MinionGroupRow({
             aria-label={`Encounter group ${groupNumber}: Squad ${monster.name}, group color ${colorLabel}. Activate to change group color.`}
             aria-expanded={colorMenuOpen && colorMenuMonsterIndex === monsterIndex}
             aria-haspopup="dialog"
-            className={`flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-full border-2 text-sm font-semibold tabular-nums leading-none outline-none transition-[filter,transform] duration-150 ease-out motion-reduce:transition-none hover:brightness-110 focus-visible:ring-2 focus-visible:ring-amber-500/45 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950 active:scale-[0.97] sm:size-10 sm:text-base ${badge.border} ${badge.bg} ${badge.text}`}
+            className={`flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-full border-2 text-sm font-semibold tabular-nums leading-none outline-none transition-[filter,transform] duration-150 ease-out motion-reduce:transition-none hover:brightness-110 focus-visible:ring-2 focus-visible:ring-amber-500/45 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-50 dark:focus-visible:ring-offset-zinc-950 active:scale-[0.97] sm:size-10 sm:text-base ${badge.border} ${badge.bg} ${badge.text}`}
             onClick={(e) => onGroupColorOrdinalClick(monsterIndex, e.currentTarget)}
           ></button>
           <div className="min-w-0 flex-1">
@@ -274,25 +274,25 @@ export function MinionGroupRow({
                 aria-controls="monster-stat-card-drawer"
                 aria-label={`Stat card for ${monster.name}`}
                 onClick={() => onStatCardToggle({ kind: 'minionParent' })}
-                className="block w-full min-w-0 cursor-pointer rounded-md px-3 py-2 text-left outline-none transition-[background-color,box-shadow,color] duration-150 ease-out motion-reduce:transition-none hover:bg-zinc-800/55 hover:shadow-sm hover:shadow-black/20 hover:[&>span]:text-amber-50/95 hover:[&>p]:text-zinc-300 focus-visible:ring-2 focus-visible:ring-amber-500/45 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950"
+                className="block w-full min-w-0 cursor-pointer rounded-md px-3 py-2 text-left outline-none transition-[background-color,box-shadow,color] duration-150 ease-out motion-reduce:transition-none hover:bg-zinc-200/95 dark:hover:bg-zinc-800/55 hover:shadow-sm hover:shadow-black/20 hover:[&>span]:text-amber-900 dark:hover:[&>span]:text-amber-50/95 hover:[&>p]:text-zinc-600 dark:hover:[&>p]:text-zinc-300 focus-visible:ring-2 focus-visible:ring-amber-500/45 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-50 dark:focus-visible:ring-offset-zinc-950"
               >
-                <span className="block truncate font-medium leading-tight text-zinc-50 transition-colors duration-150">
+                <span className="block truncate font-medium leading-tight text-zinc-900 dark:text-zinc-50 transition-colors duration-150">
                   {monster.name}
                 </span>
-                <p className="mt-1 truncate text-[0.7rem] leading-snug text-zinc-400 transition-colors duration-150">
+                <p className="mt-1 truncate text-[0.7rem] leading-snug text-zinc-600 dark:text-zinc-400 transition-colors duration-150">
                   {monster.subtitle}
                 </p>
               </button>
             ) : (
               <>
-                <p className="truncate font-medium leading-tight text-zinc-50">{monster.name}</p>
-                <p className="mt-1 truncate text-[0.7rem] leading-snug text-zinc-400">{monster.subtitle}</p>
+                <p className="truncate font-medium leading-tight text-zinc-900 dark:text-zinc-50">{monster.name}</p>
+                <p className="mt-1 truncate text-[0.7rem] leading-snug text-zinc-600 dark:text-zinc-400">{monster.subtitle}</p>
               </>
             )}
             <div className="relative mt-1.5" ref={captainDropdownRef} data-captain-menu-open={captainDropdownOpen || undefined}>
               {captainMonster && captainGroupColor ? (
                 <div
-                  className="inline-flex max-w-full items-stretch overflow-hidden rounded-full border border-zinc-700/80 bg-zinc-800/80 text-xs leading-tight"
+                  className="inline-flex max-w-full items-stretch overflow-hidden rounded-full border border-zinc-300/85 dark:border-zinc-700/80 bg-zinc-200/85 dark:bg-zinc-800/80 text-xs leading-tight"
                   data-testid="captain-pill"
                 >
                   <button
@@ -301,7 +301,7 @@ export function MinionGroupRow({
                     aria-expanded={captainDropdownOpen}
                     aria-haspopup="listbox"
                     onClick={() => setCaptainDropdownOpen((v) => !v)}
-                    className="inline-flex min-w-0 flex-1 cursor-pointer items-center gap-1.5 px-2.5 py-0.5 text-left outline-none transition-colors hover:bg-zinc-700/40 focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-amber-500/45 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950"
+                    className="inline-flex min-w-0 flex-1 cursor-pointer items-center gap-1.5 px-2.5 py-0.5 text-left outline-none transition-colors hover:bg-zinc-300/80 dark:hover:bg-zinc-700/40 focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-amber-500/45 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-50 dark:focus-visible:ring-offset-zinc-950"
                   >
                     <span className="shrink-0 text-[0.6rem] font-medium uppercase tracking-wider text-zinc-500">Captain</span>
                     <span
@@ -309,14 +309,14 @@ export function MinionGroupRow({
                     >
                       {captainCreatureOrdinal ?? captainRef!.monsterIndex + 1}
                     </span>
-                    <span className="min-w-0 truncate text-zinc-200">{captainMonster.name}</span>
+                    <span className="min-w-0 truncate text-zinc-800 dark:text-zinc-200">{captainMonster.name}</span>
                   </button>
                   <button
                     type="button"
                     aria-label={`Remove captain from ${monster.name}`}
                     data-testid="remove-captain"
                     onClick={() => onCaptainChange?.(null)}
-                    className="flex shrink-0 cursor-pointer items-center border-l border-zinc-700/80 px-2 py-0.5 text-zinc-500 transition-colors hover:bg-zinc-700/40 hover:text-red-400 focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-amber-500/45 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950"
+                    className="flex shrink-0 cursor-pointer items-center border-l border-zinc-300/85 dark:border-zinc-700/80 px-2 py-0.5 text-zinc-600 transition-colors hover:bg-zinc-300/80 dark:hover:bg-zinc-700/40 hover:text-red-600 dark:hover:text-red-400 focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-amber-500/45 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-50 dark:focus-visible:ring-offset-zinc-950"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="size-3" aria-hidden>
                       <path d="M5.28 4.22a.75.75 0 0 0-1.06 1.06L6.94 8l-2.72 2.72a.75.75 0 1 0 1.06 1.06L8 9.06l2.72 2.72a.75.75 0 1 0 1.06-1.06L9.06 8l2.72-2.72a.75.75 0 0 0-1.06-1.06L8 6.94 5.28 4.22Z" />
@@ -328,7 +328,7 @@ export function MinionGroupRow({
                   type="button"
                   aria-label={`Assign captain for ${monster.name}`}
                   onClick={() => setCaptainDropdownOpen((v) => !v)}
-                  className="inline-flex cursor-pointer items-center gap-1 rounded-full border border-dashed border-zinc-600/80 bg-zinc-800/40 px-2.5 py-0.5 text-xs leading-tight text-zinc-500 transition-colors hover:border-zinc-500 hover:text-zinc-300"
+                  className="inline-flex cursor-pointer items-center gap-1 rounded-full border border-dashed border-zinc-400 dark:border-zinc-600/80 bg-zinc-100 dark:bg-zinc-800/40 px-2.5 py-0.5 text-xs leading-tight text-zinc-700 transition-colors hover:border-zinc-500 hover:bg-zinc-200/90 dark:hover:bg-zinc-800/55 hover:text-zinc-900 dark:hover:text-zinc-300"
                   data-testid="captain-pill"
                 >
                   <span className="text-[0.6rem] font-medium uppercase tracking-wider">Captain</span>
@@ -340,7 +340,7 @@ export function MinionGroupRow({
               {captainDropdownOpen && (
                 <div
                   ref={captainMenuRef}
-                  className="absolute left-0 top-full z-50 mt-1 max-h-52 min-w-[14rem] overflow-y-auto rounded-lg border border-zinc-700/80 bg-zinc-900 shadow-xl"
+                  className="absolute left-0 top-full z-50 mt-1 max-h-52 min-w-[14rem] overflow-y-auto rounded-lg border border-zinc-300/85 dark:border-zinc-700/80 bg-zinc-100 dark:bg-zinc-900 shadow-xl"
                   role="listbox"
                   aria-label={`Select captain for ${monster.name}`}
                   onKeyDown={(e) => {
@@ -376,7 +376,7 @@ export function MinionGroupRow({
                         onCaptainChange?.(null)
                         closeCaptainDropdown()
                       }}
-                      className="flex w-full cursor-pointer items-center gap-2 border-b border-zinc-800 px-3 py-2 text-left text-xs text-red-400 transition-colors hover:bg-zinc-800"
+                      className="flex w-full cursor-pointer items-center gap-2 border-b border-zinc-200 dark:border-zinc-800 px-3 py-2 text-left text-xs text-red-400 transition-colors hover:bg-zinc-300 dark:hover:bg-zinc-800"
                     >
                       Remove captain
                     </button>
@@ -397,7 +397,7 @@ export function MinionGroupRow({
                           onCaptainChange?.({ groupIndex: c.groupIndex, monsterIndex: c.monsterIndex })
                           closeCaptainDropdown()
                         }}
-                        className={`flex w-full cursor-pointer items-center gap-2 px-3 py-2 text-left text-xs transition-colors hover:bg-zinc-800 ${isCurrentCaptain ? 'bg-zinc-800/60 text-zinc-100' : 'text-zinc-300'}`}
+                        className={`flex w-full cursor-pointer items-center gap-2 px-3 py-2 text-left text-xs transition-colors hover:bg-zinc-300 dark:hover:bg-zinc-800 ${isCurrentCaptain ? 'bg-zinc-200 dark:bg-zinc-800/60 text-zinc-900 dark:text-zinc-100' : 'text-zinc-700 dark:text-zinc-300'}`}
                       >
                         <span
                           className={`inline-flex size-5 shrink-0 items-center justify-center rounded-full border text-[0.6rem] font-semibold tabular-nums leading-none ${cBadge.border} ${cBadge.bg} ${cBadge.text}`}
@@ -599,7 +599,7 @@ function MinionChildRow({
   return (
     <>
       <div
-        className={`${nameColCell} min-w-0 border-t border-zinc-800/60 ${rowTone} has-[[data-grip-menu-open]]:opacity-100 has-[[data-grip-menu-open]]:z-[200] ${minionDropRing}`}
+        className={`${nameColCell} min-w-0 border-t border-zinc-200/90 dark:border-zinc-800/60 ${rowTone} has-[[data-grip-menu-open]]:opacity-100 has-[[data-grip-menu-open]]:z-[200] ${minionDropRing}`}
         style={{ gridColumn: 2, gridRow: gridRow }}
         data-testid="minion-drop-target"
         data-group-index={minionDrag?.groupIndex}
@@ -616,8 +616,8 @@ function MinionChildRow({
               onDragStart={minionDrag.onDragStart}
               onDragEnd={minionDrag.onDragEnd}
               menuItems={minionGripMenuItems}
-              className="group flex w-8 shrink-0 cursor-grab touch-none select-none items-center justify-center rounded-md border border-transparent transition-[background-color,border-color,box-shadow,color] duration-150 ease-out hover:border-zinc-700/45 hover:bg-zinc-800/55 hover:shadow-sm active:cursor-grabbing motion-reduce:transition-none sm:w-9"
-              iconClassName="size-3.5 text-zinc-500 transition-colors group-hover:text-zinc-200"
+              className="group flex w-8 shrink-0 cursor-grab touch-none select-none items-center justify-center rounded-md border border-transparent transition-[background-color,border-color,box-shadow,color] duration-150 ease-out hover:border-zinc-700/45 hover:bg-zinc-300 dark:hover:bg-zinc-800/55 hover:shadow-sm active:cursor-grabbing motion-reduce:transition-none sm:w-9"
+              iconClassName="size-3.5 text-zinc-600 transition-colors group-hover:text-zinc-900 dark:group-hover:text-zinc-200"
             />
           )}
           <div className={`flex min-w-0 flex-1 items-center gap-2 sm:gap-3 ${deadDim}`}>
@@ -635,17 +635,17 @@ function MinionChildRow({
                   aria-controls="monster-stat-card-drawer"
                   aria-label={`Stat card for ${minion.name}`}
                   onClick={onMinionStatCardClick}
-                  className="block w-full min-w-0 cursor-pointer rounded-md px-3 py-2 text-left outline-none transition-[background-color,box-shadow,color] duration-150 ease-out motion-reduce:transition-none hover:bg-zinc-800/55 hover:shadow-sm hover:shadow-black/20 hover:[&>span]:text-amber-50/95 focus-visible:ring-2 focus-visible:ring-amber-500/45 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950"
+                  className="block w-full min-w-0 cursor-pointer rounded-md px-3 py-2 text-left outline-none transition-[background-color,box-shadow,color] duration-150 ease-out motion-reduce:transition-none hover:bg-zinc-200/95 dark:hover:bg-zinc-800/55 hover:shadow-sm hover:shadow-black/20 hover:[&>span]:text-amber-900 dark:hover:[&>span]:text-amber-50/95 focus-visible:ring-2 focus-visible:ring-amber-500/45 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-50 dark:focus-visible:ring-offset-zinc-950"
                 >
                   <span
-                    className={`block truncate text-sm font-medium leading-tight text-zinc-200 transition-colors duration-150 ${minion.dead ? 'line-through' : ''}`}
+                    className={`block truncate text-sm font-medium leading-tight text-zinc-900 dark:text-zinc-200 transition-colors duration-150 ${minion.dead ? 'line-through' : ''}`}
                   >
                     {minion.name}
                   </span>
                 </button>
               ) : (
                 <p
-                  className={`truncate px-3 py-2 text-sm font-medium leading-tight text-zinc-200 transition-colors duration-150 ease-out motion-reduce:transition-none hover:text-amber-50/95 ${minion.dead ? 'line-through' : ''}`}
+                  className={`truncate px-3 py-2 text-sm font-medium leading-tight text-zinc-900 dark:text-zinc-200 transition-colors duration-150 ease-out motion-reduce:transition-none hover:text-amber-800 dark:hover:text-amber-50/95 ${minion.dead ? 'line-through' : ''}`}
                 >
                   {minion.name}
                 </p>
@@ -655,7 +655,7 @@ function MinionChildRow({
         </div>
       </div>
       <div
-        className={`${bodyCell} justify-center border-t border-zinc-800/60 ${rowTone}`}
+        className={`${bodyCell} justify-center border-t border-zinc-200/90 dark:border-zinc-800/60 ${rowTone}`}
         style={{ gridColumn: 3, gridRow: gridRow }}
       >
         <button
@@ -676,9 +676,9 @@ function MinionChildRow({
             minion.dead ? 'text-zinc-400' : 'text-rose-300'
           } ${
             lifeToggleCue === 'kill'
-              ? 'z-[1] ring-2 ring-red-500/80 ring-offset-2 ring-offset-zinc-950 motion-safe:animate-glow-cue-kill motion-reduce:shadow-[0_0_10px_rgba(239,68,68,0.45)]'
+              ? 'z-[1] ring-2 ring-red-500/80 ring-offset-2 ring-offset-zinc-50 dark:ring-offset-zinc-950 motion-safe:animate-glow-cue-kill motion-reduce:shadow-[0_0_10px_rgba(239,68,68,0.45)]'
               : lifeToggleCue === 'revive'
-                ? 'z-[1] ring-2 ring-emerald-500/80 ring-offset-2 ring-offset-zinc-950 motion-safe:animate-glow-cue-revive motion-reduce:shadow-[0_0_10px_rgba(34,197,94,0.45)]'
+                ? 'z-[1] ring-2 ring-emerald-500/80 ring-offset-2 ring-offset-zinc-50 dark:ring-offset-zinc-950 motion-safe:animate-glow-cue-revive motion-reduce:shadow-[0_0_10px_rgba(34,197,94,0.45)]'
                 : ''
           }`}
         >
@@ -690,19 +690,19 @@ function MinionChildRow({
         </button>
       </div>
       <div
-        className={`${bodyCell} justify-center border-t border-zinc-800/60 ${rowTone} ${deadDim}`}
+        className={`${bodyCell} justify-center border-t border-zinc-200/90 dark:border-zinc-800/60 ${rowTone} ${deadDim}`}
         style={{ gridColumn: 4, gridRow: gridRow }}
       >
         <MaripCluster values={parentMonster.marip} />
       </div>
       <div
-        className={`${bodyCell} justify-center border-t border-zinc-800/60 ${rowTone} ${deadDim}`}
+        className={`${bodyCell} justify-center border-t border-zinc-200/90 dark:border-zinc-800/60 ${rowTone} ${deadDim}`}
         style={{ gridColumn: 5, gridRow: gridRow }}
       >
         <StatCluster fs={childCombat.fs} spd={childCombat.spd} stab={childCombat.stab} />
       </div>
       <div
-        className={`relative z-0 flex h-full min-h-[3rem] w-full items-stretch overflow-visible border-t border-zinc-800/60 hover:z-20 focus-within:z-20 has-[[data-condition-picker]]:z-[100] sm:min-h-[3.25rem] ${deadDim}`}
+        className={`relative z-0 flex h-full min-h-[3rem] w-full items-stretch overflow-visible border-t border-zinc-200/90 dark:border-zinc-800/60 hover:z-20 focus-within:z-20 has-[[data-condition-picker]]:z-[100] sm:min-h-[3.25rem] ${deadDim}`}
         style={{ gridColumn: 6, gridRow: gridRow }}
       >
         <CreatureConditionCell

@@ -44,7 +44,7 @@ function RichText({ text }: { text: string }) {
 function PotencyBadge({ letter, value }: { letter: string; value: string }) {
   return (
     <span
-      className="inline-flex items-center gap-px rounded bg-zinc-700/80 px-1 py-px align-baseline text-[0.68rem] font-semibold leading-tight text-zinc-100"
+      className="inline-flex items-center gap-px rounded bg-zinc-300/90 px-1 py-px align-baseline text-[0.68rem] font-semibold leading-tight text-zinc-900 dark:bg-zinc-700/80 dark:text-zinc-100"
       data-testid="potency-badge"
     >
       <span className="font-draw-steel text-[0.78rem] leading-none">{letter}</span>
@@ -87,7 +87,7 @@ function renderInlineBold(text: string): ReactNode {
       {parts.map((part, i) => {
         if (part.startsWith('**') && part.endsWith('**')) {
           return (
-            <span key={i} className="font-semibold text-zinc-200">
+            <span key={i} className="font-semibold text-zinc-800 dark:text-zinc-200">
               {part.slice(2, -2)}
             </span>
           )
@@ -104,11 +104,11 @@ function renderInlineBold(text: string): ReactNode {
 
 /** Shared stat-block panel finish (gradient + inner highlight) */
 const statBlockVeneerClass =
-  'bg-[linear-gradient(165deg,rgb(39_39_42/0.95)_0%,rgb(9_9_11/0.98)_55%)] shadow-[inset_0_1px_0_rgb(251_191_36/0.07)]'
+  'bg-[linear-gradient(165deg,rgb(250_250_250/0.98)_0%,rgb(244_244_245/0.98)_55%)] shadow-[inset_0_1px_0_rgb(251_191_36/0.12)] dark:bg-[linear-gradient(165deg,rgb(39_39_42/0.95)_0%,rgb(9_9_11/0.98)_55%)] dark:shadow-[inset_0_1px_0_rgb(251_191_36/0.07)]'
 
-const statBlockCardBaseClass = `rounded-md bg-zinc-950/35 px-3 pt-2.5 pb-6 ${statBlockVeneerClass}`
+const statBlockCardBaseClass = `rounded-md bg-zinc-100/80 dark:bg-zinc-950/35 px-3 pt-2.5 pb-6 ${statBlockVeneerClass}`
 const statBlockCardBorderDefault =
-  'border border-amber-950/55 border-l-2 border-l-amber-700/45'
+  'border border-amber-200/90 border-l-2 border-l-amber-600/70 dark:border-amber-950/55 dark:border-l-amber-700/45'
 
 const STAT_BLOCK_SEP_BAND_H_PX = 16
 const SEP_MID_Y = 7
@@ -207,9 +207,9 @@ function rangeGlyphForDistance(distance: string): string | undefined {
 }
 
 function CoreStatsSection({ sb }: { sb: BestiaryStatblock }) {
-  const statValueClass = 'text-base font-medium tabular-nums leading-tight text-zinc-100'
+  const statValueClass = 'text-base font-medium tabular-nums leading-tight text-zinc-900 dark:text-zinc-100'
   const statLabelClass =
-    'mt-1 text-[0.65rem] font-semibold uppercase tracking-wide text-zinc-500'
+    'mt-1 text-[0.65rem] font-semibold uppercase tracking-wide text-zinc-600 dark:text-zinc-500'
 
   const { immunity, weakness } = immunityWeaknessLine(sb)
 
@@ -224,10 +224,10 @@ function CoreStatsSection({ sb }: { sb: BestiaryStatblock }) {
   return (
     <div data-testid="core-stats-header">
       <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-        <span className="text-[0.65rem] font-semibold uppercase tracking-widest text-zinc-300">
+        <span className="text-[0.65rem] font-semibold uppercase tracking-widest text-zinc-700 dark:text-zinc-300">
           {sb.ancestry.join(' · ')}
         </span>
-        <span className="text-[0.65rem] text-zinc-400">EV {sb.ev}</span>
+        <span className="text-[0.65rem] text-zinc-600 dark:text-zinc-400">EV {sb.ev}</span>
       </div>
 
       <StatBlockSeparator />
@@ -255,18 +255,18 @@ function CoreStatsSection({ sb }: { sb: BestiaryStatblock }) {
         </div>
       </div>
 
-      <div className="mt-3 flex flex-wrap justify-between gap-x-6 gap-y-1 text-[0.72rem] leading-snug text-zinc-300">
+      <div className="mt-3 flex flex-wrap justify-between gap-x-6 gap-y-1 text-[0.72rem] leading-snug text-zinc-700 dark:text-zinc-300">
         <span>
-          <span className="font-medium text-zinc-400">Immunity: </span>
+          <span className="font-medium text-zinc-600 dark:text-zinc-400">Immunity: </span>
           {immunity}
         </span>
         <span>
-          <span className="font-medium text-zinc-400">Weakness: </span>
+          <span className="font-medium text-zinc-600 dark:text-zinc-400">Weakness: </span>
           {weakness}
         </span>
       </div>
-      <div className="mt-1 text-[0.72rem] text-zinc-300">
-        <span className="font-medium text-zinc-400">Movement: </span>
+      <div className="mt-1 text-[0.72rem] text-zinc-700 dark:text-zinc-300">
+        <span className="font-medium text-zinc-600 dark:text-zinc-400">Movement: </span>
         {sb.movement ?? '—'}
       </div>
 
@@ -283,13 +283,13 @@ function CoreStatsSection({ sb }: { sb: BestiaryStatblock }) {
               aria-label={`${title} ${signed}`}
             >
               <span
-                className="inline-flex h-6 min-w-6 shrink-0 items-center justify-center rounded border border-zinc-600/50 bg-zinc-950/80 font-draw-steel text-sm text-zinc-300"
+                className="inline-flex h-6 min-w-6 shrink-0 items-center justify-center rounded border border-zinc-300 dark:border-zinc-600/50 bg-zinc-50 dark:bg-zinc-950/80 font-draw-steel text-sm text-zinc-700 dark:text-zinc-300"
                 data-testid="draw-steel-marip-letter"
                 aria-hidden
               >
                 {letter}
               </span>
-              <span className="tabular-nums text-sm text-zinc-200" data-testid="draw-steel-marip-num">
+              <span className="tabular-nums text-sm text-zinc-800 dark:text-zinc-200" data-testid="draw-steel-marip-num">
                 {signed}
               </span>
             </div>
@@ -299,8 +299,8 @@ function CoreStatsSection({ sb }: { sb: BestiaryStatblock }) {
 
       {sb.with_captain && (
         <div className="mt-2 text-[0.68rem]">
-          <span className="font-medium text-zinc-400">With Captain: </span>
-          <span className="text-zinc-300">{sb.with_captain}</span>
+          <span className="font-medium text-zinc-600 dark:text-zinc-400">With Captain: </span>
+          <span className="text-zinc-700 dark:text-zinc-300">{sb.with_captain}</span>
         </div>
       )}
     </div>
@@ -319,7 +319,7 @@ function PowerRollTiers({ effect }: { effect: PowerRollEffect }) {
   return (
     <div className="mt-2">
       {effect.roll && (
-        <div className="mb-1 text-[0.65rem] font-semibold tracking-wide text-zinc-400">{effect.roll}</div>
+        <div className="mb-1 text-[0.65rem] font-semibold tracking-wide text-zinc-600 dark:text-zinc-400">{effect.roll}</div>
       )}
       <div className="grid grid-cols-[max-content_minmax(0,1fr)] items-center gap-x-2 gap-y-1 text-[0.72rem] leading-snug">
         {tiers.map(({ band, tierIdx, text }) =>
@@ -327,14 +327,14 @@ function PowerRollTiers({ effect }: { effect: PowerRollEffect }) {
             <Fragment key={tierIdx}>
               <div className="flex min-w-0 justify-start">
                 <span
-                  className="inline-block font-draw-steel text-xl leading-none text-zinc-400 sm:text-2xl"
+                  className="inline-block font-draw-steel text-xl leading-none text-zinc-600 dark:text-zinc-400 sm:text-2xl"
                   aria-label={`Tier ${tierIdx + 1} (${band})`}
                   data-testid="draw-steel-tier-glyph"
                 >
                   {DRAW_STEEL_TIER_GLYPHS[tierIdx]}
                 </span>
               </div>
-              <span className="min-w-0 text-zinc-300"><RichText text={text} /></span>
+              <span className="min-w-0 text-zinc-700 dark:text-zinc-300"><RichText text={text} /></span>
             </Fragment>
           ) : null,
         )}
@@ -361,15 +361,15 @@ function EffectBlock({ eff, highlight }: { eff: PowerRollEffect; highlight?: boo
   if (eff.effect) {
     return (
       <div
-        className={`text-[0.72rem] leading-snug text-zinc-300 ${
+        className={`text-[0.72rem] leading-snug text-zinc-700 dark:text-zinc-300 ${
           highlight
-            ? 'rounded-md border border-amber-500/35 bg-amber-500/10 px-2 py-1.5 shadow-[inset_0_1px_0_rgb(251_191_36/0.10)]'
+            ? 'rounded-md border border-amber-600/40 bg-amber-50/95 px-2 py-1.5 shadow-[inset_0_1px_0_rgb(251_191_36/0.12)] dark:border-amber-500/35 dark:bg-amber-500/10 dark:shadow-[inset_0_1px_0_rgb(251_191_36/0.10)]'
             : ''
         }`}
       >
         {eff.name ? (
           <>
-            <span className={`font-semibold ${highlight ? 'text-amber-200' : 'text-zinc-200'}`}>
+            <span className={`font-semibold ${highlight ? 'text-amber-950 dark:text-amber-200' : 'text-zinc-800 dark:text-zinc-200'}`}>
               {eff.name}
               {eff.cost ? ` (${eff.cost})` : ''}
               :
@@ -395,7 +395,7 @@ function StatBlockFeatureIcon({ icon }: { icon?: string }) {
   if (g) {
     return (
       <span
-        className="font-draw-steel text-lg leading-none text-zinc-300"
+        className="font-draw-steel text-lg leading-none text-zinc-700 dark:text-zinc-300"
         data-testid="stat-block-feature-glyph"
       >
         {g}
@@ -411,7 +411,7 @@ function StatBlockFeatureIcon({ icon }: { icon?: string }) {
 
 function KeywordLine({ keywords }: { keywords: string[] }) {
   return (
-    <span className="inline-flex flex-wrap items-baseline gap-x-1 text-zinc-200">
+    <span className="inline-flex flex-wrap items-baseline gap-x-1 text-zinc-800 dark:text-zinc-200">
       {keywords.map((kw, i) => (
         <span key={`${kw}-${i}`} className="inline-flex items-baseline">
           {i > 0 ? <span className="text-zinc-600">, </span> : null}
@@ -435,34 +435,34 @@ function AbilityBlock({ feature }: { feature: MonsterFeature }) {
       <div className="min-w-0 space-y-1">
         <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
           <div className="min-w-0">
-            <span className="font-semibold text-zinc-100">{feature.name}</span>
+            <span className="font-semibold text-zinc-900 dark:text-zinc-100">{feature.name}</span>
             {rollBonus ? (
-              <span className="ml-1.5 text-sm tabular-nums text-zinc-400">{rollBonus}</span>
+              <span className="ml-1.5 text-sm tabular-nums text-zinc-600 dark:text-zinc-400">{rollBonus}</span>
             ) : null}
           </div>
           <div className="shrink-0 text-right text-[0.65rem] font-medium text-zinc-500">
             {feature.ability_type ? <div>{feature.ability_type}</div> : null}
-            {feature.cost ? <div className="mt-0.5 text-zinc-400">{feature.cost}</div> : null}
+            {feature.cost ? <div className="mt-0.5 text-zinc-600 dark:text-zinc-400">{feature.cost}</div> : null}
           </div>
         </div>
 
         {(feature.keywords?.length || feature.usage) && (
           <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5 text-[0.68rem]">
-            <div className="min-w-0 text-zinc-300">
+            <div className="min-w-0 text-zinc-700 dark:text-zinc-300">
               {feature.keywords && feature.keywords.length > 0 ? (
                 <KeywordLine keywords={feature.keywords} />
               ) : null}
             </div>
-            {feature.usage ? <span className="shrink-0 text-right text-zinc-400">{feature.usage}</span> : null}
+            {feature.usage ? <span className="shrink-0 text-right text-zinc-600 dark:text-zinc-400">{feature.usage}</span> : null}
           </div>
         )}
 
         {(feature.distance || feature.target) && (
           <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5 text-[0.68rem]">
-            <span className="inline-flex min-w-0 items-baseline gap-1.5 text-zinc-300">
+            <span className="inline-flex min-w-0 items-baseline gap-1.5 text-zinc-700 dark:text-zinc-300">
               {feature.distance && rangeG ? (
                 <span
-                  className="inline-flex h-5 w-5 shrink-0 items-center justify-center font-draw-steel text-[0.9rem] leading-none text-zinc-400"
+                  className="inline-flex h-5 w-5 shrink-0 items-center justify-center font-draw-steel text-[0.9rem] leading-none text-zinc-600 dark:text-zinc-400"
                   aria-hidden
                 >
                   {rangeG}
@@ -471,10 +471,10 @@ function AbilityBlock({ feature }: { feature: MonsterFeature }) {
               {feature.distance ? <span>{feature.distance}</span> : null}
             </span>
             {feature.target ? (
-              <span className="inline-flex max-w-[min(100%,18rem)] items-baseline justify-end gap-1.5 text-right text-zinc-300">
+              <span className="inline-flex max-w-[min(100%,18rem)] items-baseline justify-end gap-1.5 text-right text-zinc-700 dark:text-zinc-300">
                 {targetG ? (
                   <span
-                    className="inline-flex h-5 w-5 shrink-0 items-center justify-center font-draw-steel text-[0.9rem] leading-none text-zinc-400"
+                    className="inline-flex h-5 w-5 shrink-0 items-center justify-center font-draw-steel text-[0.9rem] leading-none text-zinc-600 dark:text-zinc-400"
                     aria-hidden
                   >
                     {targetG}
@@ -487,8 +487,8 @@ function AbilityBlock({ feature }: { feature: MonsterFeature }) {
         )}
 
         {feature.trigger && (
-          <p className="text-[0.72rem] leading-snug text-zinc-300">
-            <span className="font-semibold text-zinc-200">Trigger:</span>{' '}
+          <p className="text-[0.72rem] leading-snug text-zinc-700 dark:text-zinc-300">
+            <span className="font-semibold text-zinc-800 dark:text-zinc-200">Trigger:</span>{' '}
             <RichText text={feature.trigger} />
           </p>
         )}
@@ -523,8 +523,8 @@ function TraitBlock({
       <div className="flex justify-center pt-0.5 text-lg leading-none" aria-hidden>
         <StatBlockFeatureIcon icon={feature.icon} />
       </div>
-      <div className="min-w-0 text-[0.72rem] leading-snug text-zinc-300">
-        <span className="font-semibold text-zinc-100">{feature.name}</span>
+      <div className="min-w-0 text-[0.72rem] leading-snug text-zinc-700 dark:text-zinc-300">
+        <span className="font-semibold text-zinc-900 dark:text-zinc-100">{feature.name}</span>
         {effects.length > 0 && !hasStructuredEffects && (
           <>{' '}{effects.filter((e) => e.effect).map((e, i) => (
             <Fragment key={i}>

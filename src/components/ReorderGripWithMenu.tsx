@@ -114,7 +114,7 @@ export function ReorderGripWithMenu({
               id={menuId}
               role="menu"
               aria-label="Row actions"
-              className="absolute left-0 top-full z-[60] mt-1 min-w-[10.5rem] rounded-lg border border-zinc-700/80 bg-zinc-900 py-1 shadow-xl"
+              className="absolute left-0 top-full z-[60] mt-1 min-w-[10.5rem] rounded-lg border border-zinc-300/85 dark:border-zinc-700/80 bg-zinc-100 dark:bg-zinc-900 py-1 shadow-xl"
               onKeyDown={(e) => {
                 const root = e.currentTarget
                 if (e.key === 'Escape') {
@@ -156,8 +156,8 @@ export function ReorderGripWithMenu({
                     item.disabled
                       ? 'cursor-default text-zinc-500'
                       : item.destructive
-                        ? 'cursor-pointer text-red-400 hover:bg-zinc-800'
-                        : 'cursor-pointer text-zinc-200 hover:bg-zinc-800'
+                        ? 'cursor-pointer text-red-400 hover:bg-zinc-300 dark:hover:bg-zinc-800'
+                        : 'cursor-pointer text-zinc-800 dark:text-zinc-200 hover:bg-zinc-300 dark:hover:bg-zinc-800'
                   }`}
                 >
                   {item.label}

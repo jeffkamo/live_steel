@@ -78,10 +78,10 @@ export function MinionStaminaDisplay({
               data-testid={`threshold-${threshold}`}
               className={`${STAMINA_SEGMENT_SHELL} ${
                 state === 'dead'
-                  ? 'bg-red-950/60 text-red-400/70 line-through decoration-red-500/50'
+                  ? 'bg-red-100/90 text-red-700/90 line-through decoration-red-500/50 dark:bg-red-950/60 dark:text-red-400/70'
                   : state === 'atRisk'
-                    ? 'bg-amber-950/50 text-amber-300'
-                    : 'text-zinc-50'
+                    ? 'bg-amber-100/90 text-amber-800 dark:bg-amber-950/50 dark:text-amber-300'
+                    : 'text-zinc-900 dark:text-zinc-50'
               }`}
               title={
                 state === 'dead'

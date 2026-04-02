@@ -157,15 +157,15 @@ export function conditionIconShellClass(
   const base =
     'flex size-[1.625rem] shrink-0 items-center justify-center rounded-full border transition-[opacity,colors,box-shadow,outline-color] motion-reduce:transition-none'
   if (!isActive) {
-    return `${base} border-zinc-600/45 text-zinc-300 opacity-[0.58]`
+    return `${base} border-zinc-400/90 dark:border-zinc-600/45 text-zinc-700 dark:text-zinc-300 opacity-[0.72] dark:opacity-[0.58]`
   }
   if (state === 'neutral') {
-    return `${base} border-zinc-600/80 bg-zinc-800/90 text-zinc-100 opacity-100`
+    return `${base} border-zinc-400/90 dark:border-zinc-600/80 bg-zinc-200 dark:bg-zinc-800/90 text-zinc-900 dark:text-zinc-100 opacity-100`
   }
   if (state === 'se') {
     const glow = seGlow ? ' animate-glow-se motion-reduce:animate-none' : ''
-    return `${base} border-purple-500/80 bg-purple-500/15 text-purple-200 opacity-100${glow}`
+    return `${base} border-purple-600/70 dark:border-purple-500/80 bg-purple-100/90 dark:bg-purple-500/15 text-purple-900 dark:text-purple-200 opacity-100${glow}`
   }
   const glow = eotTurnGlow ? ' animate-glow-eot motion-reduce:animate-none' : ''
-  return `${base} border-amber-500/75 bg-amber-500/15 text-amber-100 opacity-100 ring-1 ring-amber-500/45${glow}`
+  return `${base} border-amber-600/65 dark:border-amber-500/75 bg-amber-100/90 dark:bg-amber-500/15 text-amber-900 dark:text-amber-100 opacity-100 ring-1 ring-amber-500/40 dark:ring-amber-500/45${glow}`
 }

@@ -57,53 +57,53 @@ export const GROUP_COLOR_BADGE: Record<
 > = {
   red: {
     border: 'border-red-500/90',
-    bg: 'bg-red-950/55',
-    text: 'text-red-100',
+    bg: 'bg-red-100/90 dark:bg-red-950/55',
+    text: 'text-red-900 dark:text-red-100',
   },
   orange: {
     border: 'border-orange-500/90',
-    bg: 'bg-orange-950/55',
-    text: 'text-orange-100',
+    bg: 'bg-orange-100/90 dark:bg-orange-950/55',
+    text: 'text-orange-900 dark:text-orange-100',
   },
   yellow: {
     border: 'border-yellow-400/90',
-    bg: 'bg-yellow-950/45',
-    text: 'text-yellow-100',
+    bg: 'bg-yellow-100/85 dark:bg-yellow-950/45',
+    text: 'text-yellow-900 dark:text-yellow-100',
   },
   green: {
     border: 'border-emerald-500/90',
-    bg: 'bg-emerald-950/55',
-    text: 'text-emerald-100',
+    bg: 'bg-emerald-100/90 dark:bg-emerald-950/55',
+    text: 'text-emerald-900 dark:text-emerald-100',
   },
   blue: {
     border: 'border-sky-500/90',
-    bg: 'bg-sky-950/55',
-    text: 'text-sky-100',
+    bg: 'bg-sky-100/90 dark:bg-sky-950/55',
+    text: 'text-sky-900 dark:text-sky-100',
   },
   purple: {
     border: 'border-violet-500/90',
-    bg: 'bg-violet-950/55',
-    text: 'text-violet-100',
+    bg: 'bg-violet-100/90 dark:bg-violet-950/55',
+    text: 'text-violet-900 dark:text-violet-100',
   },
   pink: {
     border: 'border-pink-500/90',
-    bg: 'bg-pink-950/55',
-    text: 'text-pink-100',
+    bg: 'bg-pink-100/90 dark:bg-pink-950/55',
+    text: 'text-pink-900 dark:text-pink-100',
   },
   white: {
-    border: 'border-zinc-100/90',
-    bg: 'bg-zinc-100/15',
-    text: 'text-zinc-50',
+    border: 'border-zinc-400/90 dark:border-zinc-100/90',
+    bg: 'bg-white/90 dark:bg-zinc-100/15',
+    text: 'text-zinc-800 dark:text-zinc-50',
   },
   grey: {
     border: 'border-zinc-400/90',
-    bg: 'bg-zinc-800/65',
-    text: 'text-zinc-200',
+    bg: 'bg-zinc-200/90 dark:bg-zinc-800/65',
+    text: 'text-zinc-800 dark:text-zinc-200',
   },
   black: {
     border: 'border-zinc-600/95',
-    bg: 'bg-black/80',
-    text: 'text-zinc-300',
+    bg: 'bg-zinc-800/90 dark:bg-black/80',
+    text: 'text-zinc-100 dark:text-zinc-300',
   },
 }
 
@@ -112,16 +112,16 @@ export const GROUP_COLOR_BADGE: Record<
  * keyed to encounter group color (matches ordinal badge hue).
  */
 export const GROUP_COLOR_STAT_BLOCK_CARD: Record<GroupColorId, string> = {
-  red: 'border border-red-950/55 border-l-2 border-l-red-500/75',
-  orange: 'border border-orange-950/55 border-l-2 border-l-orange-500/75',
-  yellow: 'border border-yellow-950/50 border-l-2 border-l-yellow-400/80',
-  green: 'border border-emerald-950/55 border-l-2 border-l-emerald-500/75',
-  blue: 'border border-sky-950/55 border-l-2 border-l-sky-500/75',
-  purple: 'border border-violet-950/55 border-l-2 border-l-violet-500/75',
-  pink: 'border border-pink-950/55 border-l-2 border-l-pink-500/75',
-  white: 'border border-zinc-200/25 border-l-2 border-l-zinc-100/85',
-  grey: 'border border-zinc-700/70 border-l-2 border-l-zinc-400/80',
-  black: 'border border-zinc-950/80 border-l-2 border-l-zinc-500/80',
+  red: 'border border-red-200/90 border-l-2 border-l-red-500/75 dark:border-red-950/55',
+  orange: 'border border-orange-200/90 border-l-2 border-l-orange-500/75 dark:border-orange-950/55',
+  yellow: 'border border-yellow-200/90 border-l-2 border-l-yellow-400/80 dark:border-yellow-950/50',
+  green: 'border border-emerald-200/90 border-l-2 border-l-emerald-500/75 dark:border-emerald-950/55',
+  blue: 'border border-sky-200/90 border-l-2 border-l-sky-500/75 dark:border-sky-950/55',
+  purple: 'border border-violet-200/90 border-l-2 border-l-violet-500/75 dark:border-violet-950/55',
+  pink: 'border border-pink-200/90 border-l-2 border-l-pink-500/75 dark:border-pink-950/55',
+  white: 'border border-zinc-300/80 border-l-2 border-l-zinc-500/70 dark:border-zinc-200/25 dark:border-l-zinc-100/85',
+  grey: 'border border-zinc-300/80 border-l-2 border-l-zinc-500/75 dark:border-zinc-700/70 dark:border-l-zinc-400/80',
+  black: 'border border-zinc-400/85 border-l-2 border-l-zinc-600/85 dark:border-zinc-950/80 dark:border-l-zinc-500/80',
 }
 
 export const GROUP_COLOR_PREVIEW_HEX: Record<GroupColorId, string> = {

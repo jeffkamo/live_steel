@@ -136,8 +136,8 @@ export function MonsterRowCells({
               onDragStart={monsterDrag.onDragStart}
               onDragEnd={monsterDrag.onDragEnd}
               menuItems={gripMenuItems}
-              className="group flex w-9 shrink-0 cursor-grab touch-none select-none items-center justify-center rounded-md border border-transparent transition-[background-color,border-color,box-shadow,color] duration-150 ease-out hover:border-zinc-700/45 hover:bg-zinc-800/55 hover:shadow-sm active:cursor-grabbing motion-reduce:transition-none sm:w-10"
-              iconClassName="size-3.5 text-zinc-500 transition-colors group-hover:text-zinc-200 sm:size-4"
+              className="group flex w-9 shrink-0 cursor-grab touch-none select-none items-center justify-center rounded-md border border-transparent transition-[background-color,border-color,box-shadow,color] duration-150 ease-out hover:border-zinc-700/45 hover:bg-zinc-300 dark:hover:bg-zinc-800/55 hover:shadow-sm active:cursor-grabbing motion-reduce:transition-none sm:w-10"
+              iconClassName="size-3.5 text-zinc-600 transition-colors group-hover:text-zinc-900 dark:group-hover:text-zinc-200 sm:size-4"
             />
           )}
           <div className={`flex min-w-0 flex-1 items-center gap-3 ${deadDim}`}>
@@ -147,7 +147,7 @@ export function MonsterRowCells({
             aria-label={`Encounter group ${groupNumber}: creature ${ordinal} of ${totalCreatures}. Group color ${colorLabel}. Activate to change group color.`}
             aria-expanded={colorMenuOpen && colorMenuMonsterIndex === monsterIndex}
             aria-haspopup="dialog"
-            className={`flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-full border-2 text-sm font-semibold tabular-nums leading-none outline-none transition-[filter,transform] duration-150 ease-out motion-reduce:transition-none hover:brightness-110 focus-visible:ring-2 focus-visible:ring-amber-500/45 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950 active:scale-[0.97] sm:size-10 sm:text-base ${badge.border} ${badge.bg} ${badge.text}`}
+            className={`flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-full border-2 text-sm font-semibold tabular-nums leading-none outline-none transition-[filter,transform] duration-150 ease-out motion-reduce:transition-none hover:brightness-110 focus-visible:ring-2 focus-visible:ring-amber-500/45 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-50 dark:focus-visible:ring-offset-zinc-950 active:scale-[0.97] sm:size-10 sm:text-base ${badge.border} ${badge.bg} ${badge.text}`}
             onClick={(e) => onGroupColorOrdinalClick(monsterIndex, e.currentTarget)}
           >
             {ordinal}
@@ -160,19 +160,19 @@ export function MonsterRowCells({
                 aria-controls="monster-stat-card-drawer"
                 aria-label={`Stat card for ${monster.name}`}
                 onClick={onMonsterCardNameClick}
-                className="block w-full min-w-0 cursor-pointer rounded-md px-3 py-2 text-left outline-none transition-[background-color,box-shadow,color] duration-150 ease-out motion-reduce:transition-none hover:bg-zinc-800/55 hover:shadow-sm hover:shadow-black/20 hover:[&>span]:text-amber-50/95 hover:[&>p]:text-zinc-300 focus-visible:ring-2 focus-visible:ring-amber-500/45 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950"
+                className="block w-full min-w-0 cursor-pointer rounded-md px-3 py-2 text-left outline-none transition-[background-color,box-shadow,color] duration-150 ease-out motion-reduce:transition-none hover:bg-zinc-200/95 dark:hover:bg-zinc-800/55 hover:shadow-sm hover:shadow-black/20 hover:[&>span]:text-amber-900 dark:hover:[&>span]:text-amber-50/95 hover:[&>p]:text-zinc-600 dark:hover:[&>p]:text-zinc-300 focus-visible:ring-2 focus-visible:ring-amber-500/45 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-50 dark:focus-visible:ring-offset-zinc-950"
               >
-                <span className={`block truncate font-medium leading-tight text-zinc-50 transition-colors duration-150 ${deadStrike}`}>
+                <span className={`block truncate font-medium leading-tight text-zinc-900 dark:text-zinc-50 transition-colors duration-150 ${deadStrike}`}>
                   {monster.name}
                 </span>
-                <p className="mt-1 truncate text-[0.7rem] leading-snug text-zinc-400 transition-colors duration-150">
+                <p className="mt-1 truncate text-[0.7rem] leading-snug text-zinc-600 dark:text-zinc-400 transition-colors duration-150">
                   {monster.subtitle}
                 </p>
               </button>
             ) : (
               <>
-                <p className={`truncate font-medium leading-tight text-zinc-50 ${deadStrike}`}>{monster.name}</p>
-                <p className="mt-1 truncate text-[0.7rem] leading-snug text-zinc-400">{monster.subtitle}</p>
+                <p className={`truncate font-medium leading-tight text-zinc-900 dark:text-zinc-50 ${deadStrike}`}>{monster.name}</p>
+                <p className="mt-1 truncate text-[0.7rem] leading-snug text-zinc-600 dark:text-zinc-400">{monster.subtitle}</p>
               </>
             )}
           </div>

@@ -5,7 +5,7 @@ import { ConditionIcon, conditionIconHoverOutline, conditionIconShellClass } fro
 
 const conditionStripOutlinePad = 'py-1.5 -my-1.5 px-1.5 -mx-1.5'
 const conditionStripScrollbar =
-  'pb-px [-ms-overflow-style:none] [scrollbar-width:thin] [&::-webkit-scrollbar]:h-1 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-zinc-600/80'
+  'pb-px [-ms-overflow-style:none] [scrollbar-width:thin] [&::-webkit-scrollbar]:h-1 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-zinc-400/80 dark:[&::-webkit-scrollbar-thumb]:bg-zinc-600/80'
 
 export function ConditionCatalogIconStrip({
   conditions,

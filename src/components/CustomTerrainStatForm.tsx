@@ -2,16 +2,16 @@ import type { TerrainRowState } from '../types'
 import { GROUP_COLOR_STAT_BLOCK_CARD, type CustomTerrainPatch } from '../data'
 
 const statBlockVeneerClass =
-  'bg-[linear-gradient(165deg,rgb(39_39_42/0.95)_0%,rgb(9_9_11/0.98)_55%)] shadow-[inset_0_1px_0_rgb(251_191_36/0.07)]'
+  'bg-[linear-gradient(165deg,rgb(250_250_250/0.98)_0%,rgb(244_244_245/0.98)_55%)] shadow-[inset_0_1px_0_rgb(251_191_36/0.12)] dark:bg-[linear-gradient(165deg,rgb(39_39_42/0.95)_0%,rgb(9_9_11/0.98)_55%)] dark:shadow-[inset_0_1px_0_rgb(251_191_36/0.07)]'
 
-const statBlockCardBaseClass = `rounded-md bg-zinc-950/35 px-3 pt-2.5 pb-6 ${statBlockVeneerClass}`
+const statBlockCardBaseClass = `rounded-md bg-zinc-100/80 dark:bg-zinc-950/35 px-3 pt-2.5 pb-6 ${statBlockVeneerClass}`
 const statBlockCardBorderDefault =
-  'border border-amber-950/55 border-l-2 border-l-amber-700/45'
+  'border border-amber-200/90 border-l-2 border-l-amber-600/70 dark:border-amber-950/55 dark:border-l-amber-700/45'
 
 const labelClass =
-  'mb-1 block text-[0.65rem] font-semibold uppercase tracking-wide text-zinc-500'
+  'mb-1 block text-[0.65rem] font-semibold uppercase tracking-wide text-zinc-700 dark:text-zinc-500'
 const inputClass =
-  'w-full rounded border border-zinc-700/80 bg-zinc-950/80 px-2 py-1.5 font-sans text-xs text-zinc-100 outline-none transition-[border-color,box-shadow] placeholder:text-zinc-600 focus:border-amber-700/50 focus:ring-1 focus:ring-amber-500/35'
+  'w-full rounded border border-zinc-300/85 dark:border-zinc-700/80 bg-zinc-50 dark:bg-zinc-950/80 px-2 py-1.5 font-sans text-xs text-zinc-900 dark:text-zinc-100 outline-none transition-[border-color,box-shadow] placeholder:text-zinc-600 focus:border-amber-700/50 focus:ring-1 focus:ring-amber-500/35'
 
 function parseNonNegInt(raw: string): number {
   const n = Number.parseInt(raw.trim(), 10)
@@ -35,7 +35,7 @@ export function CustomTerrainStatForm({
   return (
     <div role="region" aria-label={`Custom stats for ${row.object}`} className="py-2">
       <div className={`${statBlockCardBaseClass} ${statCardBorderClass}`}>
-        <p className="mb-3 text-[0.65rem] font-semibold uppercase tracking-widest text-zinc-400">
+        <p className="mb-3 text-[0.65rem] font-semibold uppercase tracking-widest text-zinc-600 dark:text-zinc-400">
           Custom terrain
         </p>
 

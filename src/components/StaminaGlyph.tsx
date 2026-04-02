@@ -32,11 +32,11 @@ export function staminaReadoutChipClass(status: StaminaGlyphStatus): string {
     case 'none':
       return 'text-sm text-zinc-400'
     case 'dead':
-      return `${STAMINA_SEGMENT_SHELL} bg-red-950/60 text-red-400/70 line-through decoration-red-500/50`
+      return `${STAMINA_SEGMENT_SHELL} bg-red-100/90 text-red-700/90 line-through decoration-red-500/50 dark:bg-red-950/60 dark:text-red-400/70`
     case 'winded':
-      return `${STAMINA_SEGMENT_SHELL} bg-amber-950/50 text-amber-300`
+      return `${STAMINA_SEGMENT_SHELL} bg-amber-100/90 text-amber-800 dark:bg-amber-950/50 dark:text-amber-300`
     case 'healthy':
-      return `${STAMINA_SEGMENT_SHELL} text-zinc-50`
+      return `${STAMINA_SEGMENT_SHELL} text-zinc-800 dark:text-zinc-50`
   }
 }
 

@@ -3,10 +3,10 @@ import { applyStaminaDelta, normalizeStamina } from '../data'
 import { StaminaGlyph, staminaGlyphStatus, staminaReadoutChipClass } from './StaminaGlyph'
 
 const staminaBumpMinusClass =
-  'flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-full border border-zinc-500/75 bg-zinc-800/40 font-sans text-[0.58rem] font-semibold tabular-nums text-zinc-300 transition-colors hover:border-zinc-400 hover:bg-zinc-800/80 hover:text-zinc-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500/60 active:bg-zinc-900 sm:h-9 sm:w-9 sm:text-[0.62rem]'
+  'flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-full border border-zinc-500/75 bg-zinc-200 dark:bg-zinc-800/40 font-sans text-[0.58rem] font-semibold tabular-nums text-zinc-700 dark:text-zinc-300 transition-colors hover:border-zinc-400 hover:bg-zinc-300/85 dark:hover:bg-zinc-800/80 hover:text-zinc-900 dark:hover:text-zinc-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500/60 active:bg-zinc-300 dark:active:bg-zinc-900 sm:h-9 sm:w-9 sm:text-[0.62rem]'
 
 const staminaBumpPlusClass =
-  'flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-full border border-zinc-200/85 bg-zinc-800/30 font-sans text-[0.58rem] font-semibold tabular-nums text-zinc-50 transition-colors hover:border-white hover:bg-zinc-700/50 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500/60 active:bg-zinc-900 sm:h-9 sm:w-9 sm:text-[0.62rem]'
+  'flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-full border border-zinc-300/90 bg-zinc-200 dark:bg-zinc-800/30 font-sans text-[0.58rem] font-semibold tabular-nums text-zinc-800 transition-colors hover:border-zinc-400 hover:bg-zinc-300/90 dark:hover:border-white dark:hover:bg-zinc-700/50 hover:text-zinc-900 dark:text-zinc-50 dark:hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500/60 active:bg-zinc-300 dark:active:bg-zinc-900 sm:h-9 sm:w-9 sm:text-[0.62rem]'
 
 const staminaInlineInputClass =
   'w-10 min-w-[2.5rem] max-w-[4rem] rounded border-0 bg-transparent py-0.5 text-center font-sans text-xs font-medium tabular-nums text-zinc-950 outline-none ring-0 focus:ring-0 [appearance:textfield] sm:text-sm [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none'
@@ -68,7 +68,7 @@ export function EditableStaminaCell({
 
   return (
     <div
-      className="group relative isolate flex w-full min-h-[2.5rem] justify-center rounded-md outline-none focus-within:ring-2 focus-within:ring-amber-500/45 focus-within:ring-offset-2 focus-within:ring-offset-zinc-950"
+      className="group relative isolate flex w-full min-h-[2.5rem] justify-center rounded-md outline-none focus-within:ring-2 focus-within:ring-amber-500/45 focus-within:ring-offset-2 focus-within:ring-offset-zinc-50 dark:focus-within:ring-offset-zinc-950"
       aria-label={ariaLabel}
       role="group"
     >
@@ -97,7 +97,7 @@ export function EditableStaminaCell({
         {renderEditor ? (
           renderEditor({ current, max, bump })
         ) : (
-          <div className="flex flex-nowrap items-center gap-2 rounded-lg border border-zinc-500/80 bg-zinc-900 py-1.5 pl-2 pr-2 shadow-xl shadow-black/50 ring-1 ring-black/20">
+          <div className="flex flex-nowrap items-center gap-2 rounded-lg border border-zinc-500/80 bg-zinc-100 dark:bg-zinc-900 py-1.5 pl-2 pr-2 shadow-xl shadow-black/50 ring-1 ring-black/20">
             <div className="flex shrink-0 items-center gap-1">
               <button
                 type="button"

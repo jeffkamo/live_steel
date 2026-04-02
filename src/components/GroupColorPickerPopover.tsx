@@ -12,7 +12,7 @@ import { focusRelativeIn, listFocusableIn, tabWrapKeyDown } from '../dropdownA11
 function GroupColorPreview({ colorId }: { colorId: GroupColorId }) {
   return (
     <span
-      className="size-3.5 shrink-0 rounded-sm border border-zinc-600/90 shadow-inner shadow-black/30"
+      className="size-3.5 shrink-0 rounded-sm border border-zinc-300 dark:border-zinc-600/90 shadow-inner shadow-black/30"
       style={{ backgroundColor: GROUP_COLOR_PREVIEW_HEX[colorId] }}
       aria-hidden
     />
@@ -38,7 +38,7 @@ export function GroupColorSwapIcon({ className }: { className?: string }) {
 }
 
 const groupColorPickerRowBtn =
-  'flex w-full min-w-0 items-center gap-2 rounded-md px-2 py-1.5 text-left font-sans text-[0.72rem] font-medium text-zinc-100 transition-colors hover:bg-zinc-800/80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-amber-600/70'
+  'flex w-full min-w-0 items-center gap-2 rounded-md px-2 py-1.5 text-left font-sans text-[0.72rem] font-medium text-zinc-900 dark:text-zinc-100 transition-colors hover:bg-zinc-300/85 dark:hover:bg-zinc-800/80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-amber-600/70'
 
 export function GroupColorPickerPopover({
   open,
@@ -189,7 +189,7 @@ export function GroupColorPickerPopover({
         transform: 'translateX(-50%)',
         zIndex: 200,
       }}
-      className="w-[min(15.5rem,calc(100vw-2rem))] max-h-[min(20rem,50vh)] overflow-y-auto rounded-lg border border-zinc-500/75 bg-zinc-900 py-1.5 pl-2 pr-1.5 shadow-xl shadow-black/50 ring-1 ring-black/25"
+      className="w-[min(15.5rem,calc(100vw-2rem))] max-h-[min(20rem,50vh)] overflow-y-auto rounded-lg border border-zinc-500/75 bg-zinc-100 dark:bg-zinc-900 py-1.5 pl-2 pr-1.5 shadow-xl shadow-black/50 ring-1 ring-black/25"
       role="dialog"
       aria-label={`Choose color for encounter group ${groupNumber}`}
       onClick={(e) => e.stopPropagation()}
@@ -223,7 +223,7 @@ export function GroupColorPickerPopover({
               <button
                 type="button"
                 title={rowTitle}
-                className={`${groupColorPickerRowBtn} relative ${selected ? 'bg-zinc-800/90' : ''} ${
+                className={`${groupColorPickerRowBtn} relative ${selected ? 'bg-zinc-200 dark:bg-zinc-800/90' : ''} ${
                   showSwapIcon ? 'bg-amber-950/35 ring-1 ring-amber-500/45' : ''
                 }`}
                 onClick={() => {
@@ -235,7 +235,7 @@ export function GroupColorPickerPopover({
                 <span className="min-w-0 flex-1">{GROUP_COLOR_LABEL[id]}</span>
                 {inUseElsewhere && ownerGroupNumber !== null ? (
                   <span
-                    className="shrink-0 rounded border border-zinc-600/70 px-1 py-px font-sans text-[0.55rem] font-semibold tabular-nums uppercase tracking-wide text-zinc-500"
+                    className="shrink-0 rounded border border-zinc-300 dark:border-zinc-600/70 px-1 py-px font-sans text-[0.55rem] font-semibold tabular-nums uppercase tracking-wide text-zinc-500"
                     aria-label={`Color in use by group ${ownerGroupNumber}`}
                   >
                     G{ownerGroupNumber}

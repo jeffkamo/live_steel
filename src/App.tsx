@@ -73,6 +73,8 @@ import { TerrainRow } from './components/TerrainRow'
 import { AddTerrainButton } from './components/AddTerrainButton'
 import { TerrainStatBlock } from './components/TerrainStatBlock'
 import { CustomTerrainStatForm } from './components/CustomTerrainStatForm'
+import { SettingsMenu } from './components/SettingsMenu'
+import { useColorScheme } from './hooks/useColorScheme'
 import { bestiaryStatblockFromCustomMonster } from './bestiary'
 
 const DRAWER_PANEL_W_CLASS = 'w-[min(20rem,calc(100vw-2rem))]'
@@ -143,6 +145,7 @@ function initStateFromStorage(): {
 }
 
 function App() {
+  const { colorScheme, setColorScheme } = useColorScheme()
   const [{
     encounterGroups: initGroups,
     terrainRows: initTerrain,
@@ -1672,12 +1675,13 @@ function App() {
     terrainDrawerRow != null && (terrainDrawerRow.terrainName != null || terrainDrawerRow.custom != null)
 
   return (
-    <div className="min-h-svh bg-zinc-950 p-4 font-serif text-zinc-100 antialiased md:p-8">
+    <div className="min-h-svh bg-zinc-50 dark:bg-zinc-950 p-4 font-serif text-zinc-900 dark:text-zinc-100 antialiased md:p-8">
+      <SettingsMenu colorScheme={colorScheme} onColorSchemeChange={setColorScheme} />
       <div className="mx-auto flex w-full max-w-[min(92rem,100%)] items-stretch gap-0">
         <div className="min-w-0 flex-1">
           <div className="mx-auto max-w-6xl">
             <header className="px-4 pt-5 pb-0 text-center">
-              <h1 className="text-lg font-normal uppercase tracking-[0.2em] text-white md:text-xl">
+              <h1 className="text-lg font-normal uppercase tracking-[0.2em] text-zinc-900 dark:text-white md:text-xl">
                 Live Steel
               </h1>
               <div className="relative mt-1.5 flex items-center justify-center gap-2">
@@ -1686,7 +1690,7 @@ function App() {
                   aria-label="Switch encounter"
                   aria-expanded={showEncounterSwitcher}
                   onClick={() => setShowEncounterSwitcher((v) => !v)}
-                  className="inline-flex cursor-pointer items-center gap-1 rounded-md px-2 py-0.5 text-[0.65rem] font-normal uppercase tracking-[0.28em] text-zinc-400 transition-colors hover:bg-zinc-800/70 hover:text-zinc-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500/60"
+                  className="inline-flex cursor-pointer items-center gap-1 rounded-md px-2 py-0.5 text-[0.65rem] font-normal uppercase tracking-[0.28em] text-zinc-700 transition-colors hover:bg-zinc-200/95 dark:hover:bg-zinc-800/70 hover:text-zinc-950 dark:hover:text-zinc-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500/60"
                 >
                   {encounterName}
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3 w-3" aria-hidden>
@@ -1698,7 +1702,7 @@ function App() {
                     ref={encounterSwitcherRef}
                     role="listbox"
                     aria-label="Select encounter"
-                    className="absolute top-full z-20 mt-1 max-h-72 min-w-[14rem] overflow-y-auto rounded-lg border border-zinc-700 bg-zinc-900 py-1 shadow-xl"
+                    className="absolute top-full z-20 mt-1 max-h-72 min-w-[14rem] overflow-y-auto rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 py-1 shadow-xl"
                   >
                     {encounterIndex.encounters.map((entry) => (
                       <div key={entry.id} className="group/entry relative flex items-center">
@@ -1715,7 +1719,7 @@ function App() {
                               }}
                               onBlur={commitRename}
                               aria-label="Rename encounter"
-                              className="min-w-0 flex-1 rounded border border-zinc-600 bg-zinc-800 px-1.5 py-1 font-sans text-xs text-zinc-100 outline-none focus:border-amber-500/60 focus:ring-1 focus:ring-amber-500/40"
+                              className="min-w-0 flex-1 rounded border border-zinc-300 dark:border-zinc-600 bg-zinc-200 dark:bg-zinc-800 px-1.5 py-1 font-sans text-xs text-zinc-900 dark:text-zinc-100 outline-none focus:border-amber-500/60 focus:ring-1 focus:ring-amber-500/40"
                             />
                           </div>
                         ) : (
@@ -1725,10 +1729,10 @@ function App() {
                               role="option"
                               aria-selected={entry.id === activeEncounterId}
                               onClick={() => switchToEncounter(entry.id)}
-                              className={`flex min-w-0 flex-1 cursor-pointer items-center gap-2 py-1.5 pl-3 pr-1 text-left font-sans text-xs transition-colors hover:bg-zinc-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-amber-500/60 ${
+                              className={`flex min-w-0 flex-1 cursor-pointer items-center gap-2 py-1.5 pl-3 pr-1 text-left font-sans text-xs transition-colors hover:bg-zinc-300 dark:hover:bg-zinc-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-amber-500/60 ${
                                 entry.id === activeEncounterId
                                   ? 'text-amber-400'
-                                  : 'text-zinc-300'
+                                  : 'text-zinc-700 dark:text-zinc-300'
                               }`}
                             >
                               {entry.id === activeEncounterId ? (
@@ -1748,7 +1752,7 @@ function App() {
                                   e.stopPropagation()
                                   startRenamingEncounter(entry)
                                 }}
-                                className="cursor-pointer rounded p-1 text-zinc-500 transition-colors hover:bg-zinc-700/80 hover:text-zinc-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-amber-500/60"
+                                className="cursor-pointer rounded p-1 text-zinc-600 transition-colors hover:bg-zinc-200/95 dark:hover:bg-zinc-700/80 hover:text-zinc-900 dark:hover:text-zinc-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-amber-500/60"
                               >
                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3 w-3" aria-hidden>
                                   <path d="m5.433 13.917 1.262-3.155A4 4 0 0 1 7.58 9.42l6.92-6.918a2.121 2.121 0 0 1 3 3l-6.92 6.918c-.383.383-.84.685-1.343.886l-3.154 1.262a.5.5 0 0 1-.65-.65Z" />
@@ -1778,7 +1782,7 @@ function App() {
                                       e.stopPropagation()
                                       setConfirmDeleteId(entry.id)
                                     }}
-                                    className="cursor-pointer rounded p-1 text-zinc-500 transition-colors hover:bg-zinc-700/80 hover:text-red-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-amber-500/60"
+                                    className="cursor-pointer rounded p-1 text-zinc-600 transition-colors hover:bg-zinc-200/95 dark:hover:bg-zinc-700/80 hover:text-red-600 dark:hover:text-red-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-amber-500/60"
                                   >
                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3 w-3" aria-hidden>
                                       <path fillRule="evenodd" d="M8.75 1A2.75 2.75 0 0 0 6 3.75v.443c-.795.077-1.584.176-2.365.298a.75.75 0 1 0 .23 1.482l.149-.022.841 10.518A2.75 2.75 0 0 0 7.596 19h4.807a2.75 2.75 0 0 0 2.742-2.53l.841-10.519.149.023a.75.75 0 0 0 .23-1.482A41.03 41.03 0 0 0 14 4.193V3.75A2.75 2.75 0 0 0 11.25 1h-2.5ZM10 4c.84 0 1.673.025 2.5.075V3.75c0-.69-.56-1.25-1.25-1.25h-2.5c-.69 0-1.25.56-1.25 1.25v.325C8.327 4.025 9.16 4 10 4ZM8.58 7.72a.75.75 0 0 0-1.5.06l.3 7.5a.75.75 0 1 0 1.5-.06l-.3-7.5Zm4.34.06a.75.75 0 1 0-1.5-.06l-.3 7.5a.75.75 0 1 0 1.5.06l.3-7.5Z" clipRule="evenodd" />
@@ -1801,7 +1805,7 @@ function App() {
                     setShowNewEncounterPrompt(true)
                     setShowEncounterSwitcher(false)
                   }}
-                  className="inline-flex cursor-pointer items-center rounded-md px-1.5 py-0.5 font-sans text-[0.6rem] uppercase tracking-[0.15em] text-zinc-500 transition-colors hover:bg-zinc-800/70 hover:text-zinc-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500/60"
+                  className="inline-flex cursor-pointer items-center rounded-md px-1.5 py-0.5 font-sans text-[0.6rem] uppercase tracking-[0.15em] text-zinc-700 transition-colors hover:bg-zinc-200/95 dark:hover:bg-zinc-800/70 hover:text-zinc-950 dark:hover:text-zinc-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500/60"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="mr-0.5 h-3 w-3">
                     <path d="M10.75 4.75a.75.75 0 0 0-1.5 0v4.5h-4.5a.75.75 0 0 0 0 1.5h4.5v4.5a.75.75 0 0 0 1.5 0v-4.5h4.5a.75.75 0 0 0 0-1.5h-4.5v-4.5Z" />
@@ -1827,7 +1831,7 @@ function App() {
                     }}
                     placeholder="Encounter name…"
                     aria-label="Encounter name"
-                    className="min-w-0 flex-1 rounded-md border border-zinc-700 bg-zinc-900 px-2.5 py-1.5 text-xs text-zinc-100 placeholder-zinc-500 outline-none focus:border-amber-500/60 focus:ring-1 focus:ring-amber-500/40"
+                    className="min-w-0 flex-1 rounded-md border border-zinc-300 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-900 px-2.5 py-1.5 text-xs text-zinc-900 dark:text-zinc-100 placeholder-zinc-500 outline-none focus:border-amber-500/60 focus:ring-1 focus:ring-amber-500/40"
                   />
                   <button
                     type="button"
@@ -1836,7 +1840,7 @@ function App() {
                       createNewEncounter(newEncounterNameInput)
                       setShowNewEncounterPrompt(false)
                     }}
-                    className="cursor-pointer rounded-md bg-amber-600/80 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-amber-500/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500/60 disabled:cursor-not-allowed disabled:opacity-40"
+                    className="cursor-pointer rounded-md bg-amber-600/80 px-3 py-1.5 text-xs font-medium text-zinc-900 dark:text-white transition-colors hover:bg-amber-500/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500/60 disabled:cursor-not-allowed disabled:opacity-40"
                   >
                     Create
                   </button>
@@ -1844,7 +1848,7 @@ function App() {
                     type="button"
                     onClick={() => setShowNewEncounterPrompt(false)}
                     aria-label="Cancel new encounter"
-                    className="cursor-pointer rounded-md px-2 py-1.5 text-xs text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-zinc-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500/60"
+                    className="cursor-pointer rounded-md px-2 py-1.5 text-xs text-zinc-400 transition-colors hover:bg-zinc-300 dark:hover:bg-zinc-800 hover:text-zinc-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500/60"
                   >
                     Cancel
                   </button>
@@ -1863,7 +1867,7 @@ function App() {
                     type="button"
                     onClick={resetAllTurns}
                     aria-label="Start a new turn: reset all encounter group turn diamonds to pending"
-                    className="min-h-10 min-w-[5.25rem] cursor-pointer rounded-md px-4 py-2 font-sans text-xs tracking-wide text-zinc-400 transition-colors hover:bg-zinc-900 hover:text-zinc-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500/60"
+                    className="min-h-10 min-w-[5.25rem] cursor-pointer rounded-md px-4 py-2 font-sans text-xs tracking-wide text-zinc-700 transition-colors hover:bg-zinc-200/95 dark:hover:bg-zinc-900 hover:text-zinc-950 dark:hover:text-zinc-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500/60"
                   >
                     New turn
                   </button>
@@ -1878,7 +1882,7 @@ function App() {
                         ? 'Unlock encounter editing controls'
                         : 'Lock encounter editing controls'
                     }
-                    className="min-h-10 min-w-[5.25rem] cursor-pointer rounded-md px-4 py-2 font-sans text-xs tracking-wide transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500/60 bg-zinc-800/85 text-zinc-100 hover:bg-zinc-700/90 hover:text-white aria-pressed:bg-transparent aria-pressed:text-zinc-400 aria-pressed:hover:bg-zinc-900 aria-pressed:hover:text-zinc-200"
+                    className="min-h-10 min-w-[5.25rem] cursor-pointer rounded-md px-4 py-2 font-sans text-xs tracking-wide transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500/60 bg-zinc-200/95 dark:bg-zinc-800/85 text-zinc-900 dark:text-zinc-100 hover:bg-zinc-300/95 dark:hover:bg-zinc-700/90 hover:text-zinc-950 dark:hover:text-white aria-pressed:bg-transparent aria-pressed:text-zinc-500 dark:aria-pressed:text-zinc-400 aria-pressed:hover:bg-zinc-100 dark:aria-pressed:hover:bg-zinc-900 aria-pressed:hover:text-zinc-800 dark:aria-pressed:hover:text-zinc-200"
                   >
                     {uiLocked ? 'Unlock' : 'Lock'}
                   </button>
@@ -1891,7 +1895,7 @@ function App() {
                     data-testid="encounter-group-drop-target"
                     data-group-index={gi}
                     className={`rounded-lg transition-[box-shadow] duration-150 ${
-                      dropTargetGroupIndex === gi ? 'ring-2 ring-amber-500/45 ring-offset-2 ring-offset-zinc-950' : ''
+                      dropTargetGroupIndex === gi ? 'ring-2 ring-amber-500/45 ring-offset-2 ring-offset-zinc-50 dark:ring-offset-zinc-950' : ''
                     }`}
                     onDragOver={(e) => {
                       if (![...e.dataTransfer.types].includes(ENCOUNTER_GROUP_DRAG_MIME)) return
@@ -2024,8 +2028,8 @@ function App() {
                     aria-disabled={!canAddGroup}
                     className={`flex w-full items-center justify-center gap-2 rounded-lg border border-dashed px-4 py-3 font-sans text-sm tracking-wide transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500/60 ${
                       canAddGroup
-                        ? 'cursor-pointer border-zinc-700 text-zinc-400 hover:border-zinc-500 hover:bg-zinc-900/60 hover:text-zinc-200'
-                        : 'cursor-not-allowed border-zinc-800 text-zinc-600 opacity-60'
+                        ? 'cursor-pointer border-zinc-400 dark:border-zinc-700 text-zinc-700 hover:border-zinc-500 hover:bg-zinc-100/95 dark:hover:bg-zinc-900/60 hover:text-zinc-950 dark:hover:text-zinc-200'
+                        : 'cursor-not-allowed border-zinc-200 dark:border-zinc-800 text-zinc-600 opacity-60'
                     }`}
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
@@ -2039,7 +2043,7 @@ function App() {
 
             <section aria-label="Dynamic terrain" className="mt-8 flex flex-col gap-2 md:mt-10">
               <header className="px-4 pt-2 pb-0 text-center md:pt-3">
-                <h2 className="text-lg font-normal uppercase tracking-[0.2em] text-white md:text-xl">
+                <h2 className="text-lg font-normal uppercase tracking-[0.2em] text-zinc-900 dark:text-white md:text-xl">
                   Dynamic Terrain
                 </h2>
                 <TitleRule />
@@ -2048,7 +2052,7 @@ function App() {
                 <div
                   key={i}
                   className={`rounded-lg transition-[box-shadow] duration-150 ${
-                    dropTargetTerrainIndex === i ? 'ring-2 ring-amber-500/45 ring-offset-2 ring-offset-zinc-950' : ''
+                    dropTargetTerrainIndex === i ? 'ring-2 ring-amber-500/45 ring-offset-2 ring-offset-zinc-50 dark:ring-offset-zinc-950' : ''
                   }`}
                   onDragOver={(e) => {
                     if (![...e.dataTransfer.types].includes(TERRAIN_DRAG_MIME)) return
@@ -2104,8 +2108,8 @@ function App() {
         </div>
 
         <div
-          className={`sticky top-4 z-10 shrink-0 self-start overflow-hidden md:top-8 ${
-            anyDrawerOpen ? DRAWER_PANEL_W_CLASS : 'w-0'
+          className={`sticky top-4 shrink-0 self-start overflow-hidden md:top-8 ${
+            anyDrawerOpen ? `z-[110] ${DRAWER_PANEL_W_CLASS}` : 'z-10 w-0'
           }`}
         >
           {anyDrawerOpen && (
@@ -2117,21 +2121,21 @@ function App() {
                   : drawerAsideAriaLabel
               }
               aria-hidden={!statCardDrawerOpen && !terrainDrawerOpen}
-              className={`box-border flex h-[calc(100svh-2rem)] ${DRAWER_PANEL_W_CLASS} flex-col overflow-hidden bg-zinc-950 transition-transform duration-300 ease-out motion-reduce:transition-none md:h-[calc(100svh-4rem)] ${
+              className={`box-border flex h-[calc(100svh-2rem)] ${DRAWER_PANEL_W_CLASS} flex-col overflow-hidden bg-zinc-50 dark:bg-zinc-950 transition-transform duration-300 ease-out motion-reduce:transition-none md:h-[calc(100svh-4rem)] ${
                 drawerEntered && !drawerAnimatingOut ? 'translate-x-0' : 'translate-x-full'
               }`}
             >
               {terrainDrawerOpen && terrainDrawerRow ? (
                 <div className="box-border flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden font-sans">
-                  <div className="flex shrink-0 items-start justify-between gap-2 border-b border-zinc-800/60 px-3 py-2.5">
+                  <div className="relative z-10 flex shrink-0 items-start justify-between gap-2 border-b border-zinc-200/90 bg-zinc-50 dark:border-zinc-800/60 dark:bg-zinc-950 px-3 py-2.5">
                     <h2 className="flex min-w-0 flex-1 items-center gap-1.5 text-sm font-medium tracking-wide">
-                      <span className="min-w-0 truncate text-zinc-200">{terrainDrawerRow.object}</span>
+                      <span className="min-w-0 truncate text-zinc-800 dark:text-zinc-200">{terrainDrawerRow.object}</span>
                     </h2>
                     <button
                       type="button"
                       aria-label="Close stat card drawer"
                       onClick={requestDrawerClose}
-                      className="shrink-0 cursor-pointer rounded p-1 text-zinc-500 transition-colors hover:bg-zinc-800/80 hover:text-zinc-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500/60"
+                      className="shrink-0 cursor-pointer rounded p-1 text-zinc-500 transition-colors hover:bg-zinc-300/85 dark:hover:bg-zinc-800/80 hover:text-zinc-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500/60"
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="size-5" aria-hidden>
                         <path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z" />
@@ -2144,45 +2148,45 @@ function App() {
                         <CustomTerrainStatForm row={terrainDrawerRow} onPatch={patchCustomTerrainInDrawer} />
                       ) : (
                         <div className="py-2">
-                          <div className="rounded-md border border-amber-950/55 border-l-2 border-l-amber-700/45 bg-[linear-gradient(165deg,rgb(39_39_42/0.95)_0%,rgb(9_9_11/0.98)_55%)] px-3 pt-2.5 pb-3 shadow-[inset_0_1px_0_rgb(251_191_36/0.07)]">
+                          <div className="rounded-md border border-amber-200/90 border-l-2 border-l-amber-600/70 bg-[linear-gradient(165deg,rgb(250_250_250/0.98)_0%,rgb(244_244_245/0.98)_55%)] px-3 pt-2.5 pb-3 shadow-[inset_0_1px_0_rgb(251_191_36/0.12)] dark:border-amber-950/55 dark:border-l-amber-700/45 dark:bg-[linear-gradient(165deg,rgb(39_39_42/0.95)_0%,rgb(9_9_11/0.98)_55%)] dark:shadow-[inset_0_1px_0_rgb(251_191_36/0.07)]">
                             <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-                              <span className="text-[0.65rem] font-semibold uppercase tracking-widest text-zinc-300">
+                              <span className="text-[0.65rem] font-semibold uppercase tracking-widest text-zinc-700 dark:text-zinc-300">
                                 Custom terrain
                               </span>
-                              <span className="text-[0.65rem] text-zinc-400">
+                              <span className="text-[0.65rem] text-zinc-600 dark:text-zinc-400">
                                 Level {terrainDrawerRow.custom.level} · EV {terrainDrawerRow.custom.ev ?? ''}
                               </span>
                             </div>
                             {(terrainDrawerRow.note ?? '').trim() !== '' && (
-                              <p className="mt-2 text-[0.72rem] leading-snug text-zinc-400 italic">
+                              <p className="mt-2 text-[0.72rem] leading-snug text-zinc-700 dark:text-zinc-400 italic">
                                 {terrainDrawerRow.note}
                               </p>
                             )}
                             <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 text-center">
                               <div>
-                                <div className="text-base font-medium tabular-nums leading-tight text-zinc-100">
+                                <div className="text-base font-medium tabular-nums leading-tight text-zinc-900 dark:text-zinc-100">
                                   {terrainDrawerRow.stamina[1]}
                                 </div>
-                                <div className="mt-1 text-[0.65rem] font-semibold uppercase tracking-wide text-zinc-500">
+                                <div className="mt-1 text-[0.65rem] font-semibold uppercase tracking-wide text-zinc-600 dark:text-zinc-500">
                                   Stamina
                                 </div>
                               </div>
                               <div>
-                                <div className="text-base font-medium tabular-nums leading-tight text-zinc-100">
+                                <div className="text-base font-medium tabular-nums leading-tight text-zinc-900 dark:text-zinc-100">
                                   {terrainDrawerRow.custom.size}
                                 </div>
-                                <div className="mt-1 text-[0.65rem] font-semibold uppercase tracking-wide text-zinc-500">
+                                <div className="mt-1 text-[0.65rem] font-semibold uppercase tracking-wide text-zinc-600 dark:text-zinc-500">
                                   Size
                                 </div>
                               </div>
                             </div>
                           </div>
                           {(terrainDrawerRow.notes ?? '').trim() !== '' && (
-                            <div className="mt-3 rounded-md border border-zinc-700/60 bg-zinc-950/40 px-3 py-2">
-                              <div className="mb-1 text-[0.65rem] font-semibold uppercase tracking-wide text-zinc-500">
+                            <div className="mt-3 rounded-md border border-zinc-300/90 dark:border-zinc-700/60 bg-zinc-50/95 dark:bg-zinc-950/40 px-3 py-2">
+                              <div className="mb-1 text-[0.65rem] font-semibold uppercase tracking-wide text-zinc-700 dark:text-zinc-500">
                                 Notes
                               </div>
-                              <p className="whitespace-pre-wrap text-xs leading-relaxed text-zinc-300">
+                              <p className="whitespace-pre-wrap text-xs leading-relaxed text-zinc-800 dark:text-zinc-300">
                                 {terrainDrawerRow.notes}
                               </p>
                             </div>
@@ -2199,7 +2203,7 @@ function App() {
                 </div>
               ) : statCardDrawerOpen && drawerMonster ? (
                 <div className="box-border flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden font-sans">
-                  <div className="flex shrink-0 items-start justify-between gap-2 border-b border-zinc-800/60 px-3 py-2.5">
+                  <div className="relative z-10 flex shrink-0 items-start justify-between gap-2 border-b border-zinc-200/90 bg-zinc-50 dark:border-zinc-800/60 dark:bg-zinc-950 px-3 py-2.5">
                     <h2 className="flex min-w-0 flex-1 items-center gap-1.5 text-sm font-medium tracking-wide">
                       {drawerOrdinalBadge != null ? (
                         <span
@@ -2208,13 +2212,13 @@ function App() {
                           {drawerOrdinalInCircle != null ? drawerOrdinalInCircle : '\u00a0'}
                         </span>
                       ) : null}
-                      <span className="min-w-0 truncate text-zinc-200">{drawerTitleName}</span>
+                      <span className="min-w-0 truncate text-zinc-800 dark:text-zinc-200">{drawerTitleName}</span>
                     </h2>
                     <button
                       type="button"
                       aria-label="Close stat card drawer"
                       onClick={requestDrawerClose}
-                      className="shrink-0 cursor-pointer rounded p-1 text-zinc-500 transition-colors hover:bg-zinc-800/80 hover:text-zinc-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500/60"
+                      className="shrink-0 cursor-pointer rounded p-1 text-zinc-500 transition-colors hover:bg-zinc-300/85 dark:hover:bg-zinc-800/80 hover:text-zinc-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500/60"
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="size-5" aria-hidden>
                         <path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z" />
@@ -2248,11 +2252,11 @@ function App() {
                           {customStatblock != null &&
                             uiLocked &&
                             (drawerMonster.custom?.notes ?? '').trim() !== '' && (
-                              <div className="mt-3 rounded-md border border-zinc-700/60 bg-zinc-950/40 px-3 py-2">
-                                <div className="mb-1 text-[0.65rem] font-semibold uppercase tracking-wide text-zinc-500">
+                              <div className="mt-3 rounded-md border border-zinc-300/90 dark:border-zinc-700/60 bg-zinc-50/95 dark:bg-zinc-950/40 px-3 py-2">
+                                <div className="mb-1 text-[0.65rem] font-semibold uppercase tracking-wide text-zinc-700 dark:text-zinc-500">
                                   Notes
                                 </div>
-                                <p className="whitespace-pre-wrap text-xs leading-relaxed text-zinc-300">
+                                <p className="whitespace-pre-wrap text-xs leading-relaxed text-zinc-800 dark:text-zinc-300">
                                   {drawerMonster.custom?.notes}
                                 </p>
                               </div>

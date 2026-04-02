@@ -1,5 +1,7 @@
 @import 'tailwindcss';
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @font-face {
   font-family: DrawSteelGlyphs;
   src: url('/fonts/DrawSteelGlyphs-Regular.otf') format('opentype');
@@ -17,7 +19,7 @@
 @layer base {
   html,
   body {
-    @apply bg-zinc-950;
+    @apply bg-zinc-50 text-zinc-900 antialiased dark:bg-zinc-950 dark:text-zinc-100;
   }
 }
 
