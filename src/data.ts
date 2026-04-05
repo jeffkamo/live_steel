@@ -23,7 +23,6 @@ import {
   minionInterval,
   type BestiaryStatblock,
 } from './bestiary'
-
 export const GROUP_COLOR_ORDER: readonly GroupColorId[] = [
   'red',
   'orange',

@@ -66,6 +66,8 @@ export function MinionGroupRow({
   isEotConfirmed,
   monsterDrag,
   minionRowDrag,
+  parentRowReorderMenu,
+  minionReorderMenu,
   conditionDnDParent,
   conditionDnDForMinion,
 }: {
@@ -115,6 +117,16 @@ export function MinionGroupRow({
     onDrop: (e: DragEvent) => void
   }
   minionRowDrag?: (minionIndex: number) => MinionRowDragBinding | undefined
+  parentRowReorderMenu?: {
+    onMoveUp: () => void
+    onMoveDown: () => void
+    moveUpDisabled: boolean
+    moveDownDisabled: boolean
+  }
+  minionReorderMenu?: {
+    onMoveUp: (minionIndex: number) => void
+    onMoveDown: (minionIndex: number) => void
+  }
   conditionDnDParent?: CreatureConditionDnDBinding
   conditionDnDForMinion?: (minionIndex: number) => CreatureConditionDnDBinding | undefined
 }) {
@@ -213,6 +225,22 @@ export function MinionGroupRow({
     (turnComplete ? 'opacity-[0.38]' : 'opacity-100')
 
   const parentGripMenuItems = [
+    ...(parentRowReorderMenu != null
+      ? [
+          {
+            id: 'move-up',
+            label: 'Move up',
+            disabled: parentRowReorderMenu.moveUpDisabled,
+            onSelect: parentRowReorderMenu.onMoveUp,
+          },
+          {
+            id: 'move-down',
+            label: 'Move down',
+            disabled: parentRowReorderMenu.moveDownDisabled,
+            onSelect: parentRowReorderMenu.onMoveDown,
+          },
+        ]
+      : []),
     ...(onDuplicate != null
       ? [{ id: 'duplicate', label: 'Duplicate', onSelect: onDuplicate }]
       : []),
@@ -514,6 +542,16 @@ export function MinionGroupRow({
             minionDrag={minionRowDrag?.(mi)}
             onDeleteMinion={onDeleteMinion != null ? () => onDeleteMinion(mi) : undefined}
             onDuplicateMinion={onDuplicateMinion != null ? () => onDuplicateMinion(mi) : undefined}
+            minionRowReorderMenu={
+              minionReorderMenu != null
+                ? {
+                    onMoveUp: () => minionReorderMenu.onMoveUp(mi),
+                    onMoveDown: () => minionReorderMenu.onMoveDown(mi),
+                    moveUpDisabled: mi === 0,
+                    moveDownDisabled: mi >= minions.length - 1,
+                  }
+                : undefined
+            }
           />
         )
       })}
@@ -542,6 +580,7 @@ function MinionChildRow({
   onMinionStatCardClick,
   onDeleteMinion,
   onDuplicateMinion,
+  minionRowReorderMenu,
   minionDrag,
   lifeToggleCue = null,
 }: {
@@ -566,9 +605,31 @@ function MinionChildRow({
   onMinionStatCardClick?: () => void
   onDeleteMinion?: () => void
   onDuplicateMinion?: () => void
+  minionRowReorderMenu?: {
+    onMoveUp: () => void
+    onMoveDown: () => void
+    moveUpDisabled: boolean
+    moveDownDisabled: boolean
+  }
   minionDrag?: MinionRowDragBinding
 }) {
   const minionGripMenuItems = [
+    ...(minionRowReorderMenu != null
+      ? [
+          {
+            id: 'move-up',
+            label: 'Move up',
+            disabled: minionRowReorderMenu.moveUpDisabled,
+            onSelect: minionRowReorderMenu.onMoveUp,
+          },
+          {
+            id: 'move-down',
+            label: 'Move down',
+            disabled: minionRowReorderMenu.moveDownDisabled,
+            onSelect: minionRowReorderMenu.onMoveDown,
+          },
+        ]
+      : []),
     ...(onDuplicateMinion != null
       ? [{ id: 'duplicate', label: 'Duplicate', onSelect: onDuplicateMinion }]
       : []),

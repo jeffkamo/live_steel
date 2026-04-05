@@ -92,6 +92,17 @@ export type GroupColorId =
   | 'grey'
   | 'black'
 
+/** Built-in encounter malice options (always available in the malice dashboard). */
+export type MaliceCoreId = 'brutal-effectiveness' | 'malicious-strike'
+
+/**
+ * One row in the encounter malice dashboard: either a core rule or a creature malice feature
+ * pulled from the bestiary for a monster on the roster (see encounter-level `maliceRows`).
+ */
+export type MaliceRowRef =
+  | { kind: 'core'; coreId: MaliceCoreId }
+  | { kind: 'monster'; id: string; groupIndex: number; monsterIndex: number; sourceKey: string }
+
 export type EncounterGroup = {
   /** Stable key for React lists and future cross-index state (timers, etc.). */
   id: string

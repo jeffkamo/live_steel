@@ -33,6 +33,7 @@ export function MonsterRowCells({
   onConfirmEot,
   isEotConfirmed,
   monsterDrag,
+  rowReorderMenu,
   conditionDnD,
 }: {
   monster: Monster
@@ -70,6 +71,12 @@ export function MonsterRowCells({
     onDragLeave: (e: DragEvent) => void
     onDrop: (e: DragEvent) => void
   }
+  rowReorderMenu?: {
+    onMoveUp: () => void
+    onMoveDown: () => void
+    moveUpDisabled: boolean
+    moveDownDisabled: boolean
+  }
   conditionDnD?: CreatureConditionDnDBinding
 }) {
   const [sc, sm] = monster.stamina
@@ -87,6 +94,22 @@ export function MonsterRowCells({
   const combat = rosterCombatStats(monster)
   const isMinion = /\bminion\b/i.test(monster.subtitle)
   const gripMenuItems = [
+    ...(rowReorderMenu != null
+      ? [
+          {
+            id: 'move-up',
+            label: 'Move up',
+            disabled: rowReorderMenu.moveUpDisabled,
+            onSelect: rowReorderMenu.onMoveUp,
+          },
+          {
+            id: 'move-down',
+            label: 'Move down',
+            disabled: rowReorderMenu.moveDownDisabled,
+            onSelect: rowReorderMenu.onMoveDown,
+          },
+        ]
+      : []),
     ...(onDuplicate != null
       ? [{ id: 'duplicate', label: 'Duplicate', onSelect: onDuplicate } as const]
       : []),

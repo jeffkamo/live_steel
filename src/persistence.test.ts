@@ -17,6 +17,7 @@ import {
   type PersistedEncounterIndex,
 } from './persistence'
 import { cloneExampleEncounterGroups, cloneExampleTerrainRows, ENCOUNTER_GROUPS } from './data'
+import { ensureMaliceRows } from './malice'
 
 function makeGroups(): EncounterGroup[] {
   return cloneExampleEncounterGroups()
@@ -41,6 +42,7 @@ describe('serializeEncounterState', () => {
     expect(Array.isArray(parsed.encounterGroups)).toBe(true)
     expect(Array.isArray(parsed.terrainRows)).toBe(true)
     expect(Array.isArray(parsed.groupTurnActed)).toBe(true)
+    expect(Array.isArray(parsed.maliceRows)).toBe(true)
   })
 
   it('strips features from monsters to keep payload lean', () => {
@@ -138,6 +140,7 @@ describe('deserializeEncounterState', () => {
     expect(result.state.encounterGroups.length).toBe(groups.length)
     expect(result.state.encounterGroups[0]!.id).toBe(groups[0]!.id)
     expect(result.state.encounterGroups[0]!.color).toBe(groups[0]!.color)
+    expect(result.state.maliceRows).toEqual(ensureMaliceRows(undefined))
   })
 
   it('rehydrates features from bestiary on deserialize', () => {

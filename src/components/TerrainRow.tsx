@@ -201,6 +201,7 @@ export function TerrainRow({
   onAddUpgrade,
   onRemoveUpgrade,
   dragHandle,
+  terrainReorderMenu,
 }: {
   row: TerrainRowState
   rowIndex: number
@@ -217,6 +218,12 @@ export function TerrainRow({
     onDragEnd: (e: DragEvent) => void
     ariaLabel: string
   }
+  terrainReorderMenu?: {
+    onMoveUp: () => void
+    onMoveDown: () => void
+    moveUpDisabled: boolean
+    moveDownDisabled: boolean
+  }
 }) {
   const [tc, tm] = row.stamina
   const hasStatBlock = row.terrainName != null || row.custom != null
@@ -225,6 +232,22 @@ export function TerrainRow({
   const deadStrike = dead ? 'line-through' : ''
   const extraNotes = (row.notes ?? '').trim()
   const gripMenuItems = [
+    ...(terrainReorderMenu != null
+      ? [
+          {
+            id: 'move-up',
+            label: 'Move up',
+            disabled: terrainReorderMenu.moveUpDisabled,
+            onSelect: terrainReorderMenu.onMoveUp,
+          },
+          {
+            id: 'move-down',
+            label: 'Move down',
+            disabled: terrainReorderMenu.moveDownDisabled,
+            onSelect: terrainReorderMenu.onMoveDown,
+          },
+        ] as const
+      : []),
     ...(onDuplicate != null ? [{ id: 'duplicate', label: 'Duplicate', onSelect: onDuplicate } as const] : []),
     ...(onDelete != null ? [{ id: 'delete', label: 'Delete', onSelect: onDelete, destructive: true } as const] : []),
   ]

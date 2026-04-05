@@ -49,6 +49,9 @@ export function GroupSection({
   onConfirmEot,
   isEotConfirmed,
   encounterGroupDragHandle,
+  encounterGroupReorderMenu,
+  monsterReorderMenu,
+  minionReorderMenu,
   monsterDrag,
   conditionDrag,
   monsterCardDrawer = null,
@@ -67,6 +70,20 @@ export function GroupSection({
     onDragStart: (e: DragEvent) => void
     onDragEnd: (e: DragEvent) => void
     ariaLabel: string
+  }
+  encounterGroupReorderMenu?: {
+    onMoveUp: () => void
+    onMoveDown: () => void
+    moveUpDisabled: boolean
+    moveDownDisabled: boolean
+  }
+  monsterReorderMenu?: {
+    onMoveUp: (monsterIndex: number) => void
+    onMoveDown: (monsterIndex: number) => void
+  }
+  minionReorderMenu?: {
+    onMoveUp: (monsterIndex: number, minionIndex: number) => void
+    onMoveDown: (monsterIndex: number, minionIndex: number) => void
   }
   monsterDrag?: {
     thisGroupIndex: number
@@ -248,6 +265,7 @@ export function GroupSection({
         onToggle={onToggleTurn}
         turnAriaLabel={turnAriaLabel}
         encounterGroupDragHandle={encounterGroupDragHandle}
+        encounterGroupReorderMenu={encounterGroupReorderMenu}
         onDeleteEncounterGroup={onDeleteEncounterGroup}
         onDuplicateEncounterGroup={onDuplicateEncounterGroup}
         duplicateEncounterGroupDisabled={duplicateEncounterGroupDisabled}
@@ -361,6 +379,24 @@ export function GroupSection({
               conditionDnDParent={bindConditionDnD(i, null)}
               conditionDnDForMinion={(mni) => bindConditionDnD(i, mni)}
               minionRowDrag={(mni) => minionRowDrag(i, mni)}
+              parentRowReorderMenu={
+                monsterReorderMenu != null
+                  ? {
+                      onMoveUp: () => monsterReorderMenu.onMoveUp(i),
+                      onMoveDown: () => monsterReorderMenu.onMoveDown(i),
+                      moveUpDisabled: i === 0,
+                      moveDownDisabled: i === group.monsters.length - 1,
+                    }
+                  : undefined
+              }
+              minionReorderMenu={
+                minionReorderMenu != null
+                  ? {
+                      onMoveUp: (mni) => minionReorderMenu.onMoveUp(i, mni),
+                      onMoveDown: (mni) => minionReorderMenu.onMoveDown(i, mni),
+                    }
+                  : undefined
+              }
             />
           )
         }
@@ -401,6 +437,16 @@ export function GroupSection({
             isEotConfirmed={isEotConfirmed ? (label) => isEotConfirmed(i, label) : undefined}
             monsterDrag={monsterRowDrag(i)}
             conditionDnD={bindConditionDnD(i, null)}
+            rowReorderMenu={
+              monsterReorderMenu != null
+                ? {
+                    onMoveUp: () => monsterReorderMenu.onMoveUp(i),
+                    onMoveDown: () => monsterReorderMenu.onMoveDown(i),
+                    moveUpDisabled: i === 0,
+                    moveDownDisabled: i === group.monsters.length - 1,
+                  }
+                : undefined
+            }
           />
         )
       })}

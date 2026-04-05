@@ -35,6 +35,7 @@ export function GroupTurnColumn({
   onToggle,
   turnAriaLabel,
   encounterGroupDragHandle,
+  encounterGroupReorderMenu,
   onDeleteEncounterGroup,
   onDuplicateEncounterGroup,
   duplicateEncounterGroupDisabled = false,
@@ -48,11 +49,33 @@ export function GroupTurnColumn({
     onDragEnd: (e: DragEvent) => void
     ariaLabel: string
   }
+  encounterGroupReorderMenu?: {
+    onMoveUp: () => void
+    onMoveDown: () => void
+    moveUpDisabled: boolean
+    moveDownDisabled: boolean
+  }
   onDeleteEncounterGroup?: () => void
   onDuplicateEncounterGroup?: () => void
   duplicateEncounterGroupDisabled?: boolean
 }) {
   const encounterGripMenuItems = [
+    ...(encounterGroupReorderMenu != null
+      ? [
+          {
+            id: 'move-up',
+            label: 'Move up',
+            disabled: encounterGroupReorderMenu.moveUpDisabled,
+            onSelect: encounterGroupReorderMenu.onMoveUp,
+          },
+          {
+            id: 'move-down',
+            label: 'Move down',
+            disabled: encounterGroupReorderMenu.moveDownDisabled,
+            onSelect: encounterGroupReorderMenu.onMoveDown,
+          },
+        ] as const
+      : []),
     ...(onDuplicateEncounterGroup != null
       ? [{
           id: 'duplicate-group',

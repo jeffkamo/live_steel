@@ -5,6 +5,7 @@ import type {
   ConditionState,
   EncounterGroup,
   GroupColorId,
+  MaliceRowRef,
   Monster,
   MonsterCardDrawerState,
   MonsterCardDrawerView,
@@ -26,6 +27,7 @@ import {
   cloneEncounterGroups,
   cloneMonster,
   cloneTerrainRows,
+  computeMonsterInsertIndex,
   CONDITION_DRAG_MIME,
   ENCOUNTER_GROUP_DRAG_MIME,
   MONSTER_DRAG_MIME,
@@ -66,6 +68,7 @@ import {
   type CustomTerrainPatch,
 } from './data'
 import { TitleRule } from './components/TitleRule'
+import { MaliceDashboard } from './components/MaliceDashboard'
 import { GroupSection } from './components/GroupSection'
 import { StatBlock } from './components/StatBlock'
 import { CustomMonsterStatForm } from './components/CustomMonsterStatForm'
@@ -76,6 +79,15 @@ import { CustomTerrainStatForm } from './components/CustomTerrainStatForm'
 import { SettingsMenu } from './components/SettingsMenu'
 import { useColorScheme } from './hooks/useColorScheme'
 import { bestiaryStatblockFromCustomMonster } from './bestiary'
+import {
+  ensureMaliceRows,
+  remapMaliceRowsAfterEncounterGroupInserted,
+  remapMaliceRowsAfterEncounterGroupRemoved,
+  remapMaliceRowsAfterEncounterGroupsReordered,
+  remapMaliceRowsAfterMonsterDeleted,
+  remapMaliceRowsAfterMonsterDuplicated,
+  remapMaliceRowsAfterMonsterMove,
+} from './malice'
 
 const DRAWER_PANEL_W_CLASS = 'w-[min(20rem,calc(100vw-2rem))]'
 const MONSTER_DRAWER_CLOSE_MS = 300
@@ -90,6 +102,7 @@ function initStateFromStorage(): {
   encounterGroups: EncounterGroup[]
   terrainRows: TerrainRowState[]
   groupTurnActed: boolean[]
+  maliceRows: MaliceRowRef[]
   encounterIndex: PersistedEncounterIndex
   activeEncounterId: string
   encounterName: string
@@ -104,6 +117,7 @@ function initStateFromStorage(): {
           encounterGroups: migrated.state.state.encounterGroups,
           terrainRows: migrated.state.state.terrainRows,
           groupTurnActed: migrated.state.state.groupTurnActed,
+          maliceRows: migrated.state.state.maliceRows,
           encounterIndex: index,
           activeEncounterId: index.activeId,
           encounterName: index.encounters[0]?.name ?? 'Encounter 1',
@@ -120,6 +134,7 @@ function initStateFromStorage(): {
         encounterGroups: loaded.state.encounterGroups,
         terrainRows: loaded.state.terrainRows,
         groupTurnActed: loaded.state.groupTurnActed,
+        maliceRows: loaded.state.maliceRows,
         encounterIndex: { ...index, activeId: activeEntry.id },
         activeEncounterId: activeEntry.id,
         encounterName: activeEntry.name,
@@ -138,6 +153,7 @@ function initStateFromStorage(): {
     encounterGroups: cloneEncounterGroups(),
     terrainRows: cloneTerrainRows(),
     groupTurnActed: [],
+    maliceRows: ensureMaliceRows(undefined),
     encounterIndex: newIndex,
     activeEncounterId: id,
     encounterName: name,
@@ -150,6 +166,7 @@ function App() {
     encounterGroups: initGroups,
     terrainRows: initTerrain,
     groupTurnActed: initTurns,
+    maliceRows: initMaliceRows,
     encounterIndex: initIndex,
     activeEncounterId: initEncId,
     encounterName: initEncName,
@@ -157,6 +174,7 @@ function App() {
   const [encounterGroups, setEncounterGroups] = useState(() => initGroups)
   const [terrainRows, setTerrainRows] = useState(() => initTerrain)
   const [groupTurnActed, setGroupTurnActed] = useState(() => initTurns)
+  const [maliceRows, setMaliceRows] = useState(() => initMaliceRows)
   const [uiLocked, setUiLocked] = useState(false)
   const canAddGroup = nextUnusedColor(encounterGroups.map((g) => g.color)) != null
   const [monsterCardDrawer, setMonsterCardDrawer] = useState<MonsterCardDrawerState | null>(null)
@@ -181,8 +199,8 @@ function App() {
   const prevDrawerForEnterRef = useRef<MonsterCardDrawerState | null>(null)
 
   useEffect(() => {
-    saveToLocalStorage(encounterGroups, terrainRows, groupTurnActed, activeEncounterId)
-  }, [encounterGroups, terrainRows, groupTurnActed, activeEncounterId])
+    saveToLocalStorage(encounterGroups, terrainRows, groupTurnActed, activeEncounterId, maliceRows)
+  }, [encounterGroups, terrainRows, groupTurnActed, activeEncounterId, maliceRows])
 
   useEffect(() => {
     saveEncounterIndex(encounterIndex)
@@ -494,6 +512,7 @@ function App() {
           return { ...g, monsters }
         }),
       )
+      setMaliceRows((mr) => remapMaliceRowsAfterMonsterDuplicated(mr, groupIndex, monsterIndex))
     },
     [],
   )
@@ -684,6 +703,7 @@ function App() {
       }
       return prev
     })
+    setMaliceRows((mr) => remapMaliceRowsAfterEncounterGroupRemoved(mr, groupIndex))
   }, [])
 
   const deleteMonster = useCallback(
@@ -701,7 +721,7 @@ function App() {
           }
         }).filter((g) => g.monsters.length > 0)
 
-        return afterRemove.map((g) => ({
+        const next = afterRemove.map((g) => ({
           ...g,
           monsters: g.monsters.map((m) => {
             if (!m.captainId) return m
@@ -723,6 +743,14 @@ function App() {
             return m
           }),
         }))
+        queueMicrotask(() => {
+          setMaliceRows((mr) =>
+            groupRemoved
+              ? remapMaliceRowsAfterEncounterGroupRemoved(mr, groupIndex)
+              : remapMaliceRowsAfterMonsterDeleted(mr, groupIndex, monsterIndex),
+          )
+        })
+        return next
       })
 
       setGroupTurnActed((prev) =>
@@ -853,10 +881,14 @@ function App() {
       setEncounterGroups((prev) => {
         const next = moveMonsterInEncounterWithCaptainRemap(prev, fromG, fromM, toG, toM)
         if (!next) return prev
+        const insertIndex = computeMonsterInsertIndex(fromG, fromM, toG, toM)
         queueMicrotask(() => {
           setEotConfirmed((e) =>
             remapEotConfirmedAfterMonsterMove(e, next.length, fromG, fromM, toG, toM),
           )
+          if (insertIndex != null) {
+            setMaliceRows((mr) => remapMaliceRowsAfterMonsterMove(mr, fromG, fromM, toG, insertIndex))
+          }
         })
         return next
       })
@@ -878,6 +910,87 @@ function App() {
     monsterDragSourceRef.current = null
     setMonsterDropTarget(null)
   }, [])
+
+  const commitMinionTransfer = useCallback(
+    (
+      fromGroup: number,
+      fromMonster: number,
+      fromMinion: number,
+      toGroup: number,
+      toMonster: number,
+      toMinion: number,
+    ): boolean => {
+      let failed = false
+      const sameParentReorder = fromGroup === toGroup && fromMonster === toMonster
+      setEncounterGroups((prev) => {
+        const next = transferMinionBetweenHordes(
+          prev,
+          fromGroup,
+          fromMonster,
+          fromMinion,
+          toGroup,
+          toMonster,
+          toMinion,
+        )
+        if (!next) {
+          failed = true
+          return prev
+        }
+        const groupCount = next.length
+        queueMicrotask(() => {
+          setEotConfirmed((eMap) =>
+            remapEotConfirmedAfterMinionTransferBetweenHordes(
+              eMap,
+              groupCount,
+              fromGroup,
+              fromMonster,
+              fromMinion,
+              toGroup,
+              toMonster,
+              toMinion,
+            ),
+          )
+          setMonsterCardDrawer((drawer) => {
+            if (drawer == null || drawer.view.kind !== 'minion') return drawer
+            const { groupIndex: dg, monsterIndex: dm, view } = drawer
+            const slot = view.slot
+            if (dg === fromGroup && dm === fromMonster && slot === fromMinion) {
+              return {
+                ...drawer,
+                groupIndex: toGroup,
+                monsterIndex: toMonster,
+                view: { kind: 'minion', slot: toMinion },
+              }
+            }
+            if (sameParentReorder) {
+              const newSlot = mapMinionIndexAfterReorder(fromMinion, toMinion, slot)
+              if (newSlot === slot) return drawer
+              return { ...drawer, view: { kind: 'minion', slot: newSlot } }
+            }
+            let nextDrawer = drawer
+            if (dg === fromGroup && dm === fromMonster) {
+              const ns = mapMinionDrawerSlotAfterMinionRemoved(fromMinion, slot)
+              if (ns === null) return drawer
+              if (ns !== slot) {
+                nextDrawer = { ...nextDrawer, view: { kind: 'minion', slot: ns } }
+              }
+            }
+            if (dg === toGroup && dm === toMonster) {
+              const slotNow = nextDrawer.view.kind === 'minion' ? nextDrawer.view.slot : slot
+              const ns = mapMinionDrawerSlotAfterMinionInserted(toMinion, slotNow)
+              if (ns !== slotNow) {
+                nextDrawer = { ...nextDrawer, view: { kind: 'minion', slot: ns } }
+              }
+            }
+            return nextDrawer
+          })
+        })
+        return next
+      })
+      return !failed
+    },
+    [],
+  )
 
   const onMonsterDragOver = useCallback(
     (toG: number, toM: number, toMinion: number | null, e: DragEvent) => {
@@ -940,75 +1053,15 @@ function App() {
       if (payload.fromMinion != null) {
         if (toMinion == null) return
         const fromMinion = payload.fromMinion
-        const sameParentReorder =
-          payload.fromGroup === toG && payload.fromMonster === toM
-        let reorderFailed = false
-        setEncounterGroups((prev) => {
-          const next = transferMinionBetweenHordes(
-            prev,
-            payload.fromGroup,
-            payload.fromMonster,
-            fromMinion,
-            toG,
-            toM,
-            toMinion,
-          )
-          if (!next) {
-            reorderFailed = true
-            return prev
-          }
-          const groupCount = next.length
-          queueMicrotask(() => {
-            setEotConfirmed((eMap) =>
-              remapEotConfirmedAfterMinionTransferBetweenHordes(
-                eMap,
-                groupCount,
-                payload.fromGroup,
-                payload.fromMonster,
-                fromMinion,
-                toG,
-                toM,
-                toMinion,
-              ),
-            )
-            setMonsterCardDrawer((drawer) => {
-              if (drawer == null || drawer.view.kind !== 'minion') return drawer
-              const { groupIndex: dg, monsterIndex: dm, view } = drawer
-              const slot = view.slot
-              if (dg === payload.fromGroup && dm === payload.fromMonster && slot === fromMinion) {
-                return {
-                  ...drawer,
-                  groupIndex: toG,
-                  monsterIndex: toM,
-                  view: { kind: 'minion', slot: toMinion },
-                }
-              }
-              if (sameParentReorder) {
-                const newSlot = mapMinionIndexAfterReorder(fromMinion, toMinion, slot)
-                if (newSlot === slot) return drawer
-                return { ...drawer, view: { kind: 'minion', slot: newSlot } }
-              }
-              let nextDrawer = drawer
-              if (dg === payload.fromGroup && dm === payload.fromMonster) {
-                const ns = mapMinionDrawerSlotAfterMinionRemoved(fromMinion, slot)
-                if (ns === null) return drawer
-                if (ns !== slot) {
-                  nextDrawer = { ...nextDrawer, view: { kind: 'minion', slot: ns } }
-                }
-              }
-              if (dg === toG && dm === toM) {
-                const slotNow = nextDrawer.view.kind === 'minion' ? nextDrawer.view.slot : slot
-                const ns = mapMinionDrawerSlotAfterMinionInserted(toMinion, slotNow)
-                if (ns !== slotNow) {
-                  nextDrawer = { ...nextDrawer, view: { kind: 'minion', slot: ns } }
-                }
-              }
-              return nextDrawer
-            })
-          })
-          return next
-        })
-        if (reorderFailed) triggerMonsterDropRejectFlash(toG, toM, toMinion)
+        const ok = commitMinionTransfer(
+          payload.fromGroup,
+          payload.fromMonster,
+          fromMinion,
+          toG,
+          toM,
+          toMinion,
+        )
+        if (!ok) triggerMonsterDropRejectFlash(toG, toM, toMinion)
         return
       }
       if (toMinion != null) {
@@ -1038,6 +1091,9 @@ function App() {
                 toM,
                 toMinion,
               ),
+            )
+            setMaliceRows((mr) =>
+              remapMaliceRowsAfterMonsterDeleted(mr, payload.fromGroup, payload.fromMonster),
             )
             setMonsterCardDrawer((drawer) => {
               if (
@@ -1077,7 +1133,7 @@ function App() {
       }
       moveMonsterInEncounter(payload.fromGroup, payload.fromMonster, toG, toM)
     },
-    [encounterGroups, moveMonsterInEncounter, triggerMonsterDropRejectFlash],
+    [commitMinionTransfer, encounterGroups, moveMonsterInEncounter, triggerMonsterDropRejectFlash],
   )
 
   const reorderEncounterGroups = useCallback(
@@ -1092,6 +1148,9 @@ function App() {
       prevTurnActedRef.current = moveIndexInArray(prevTurnActedRef.current, from, to)
 
       setEncounterGroups((prev) => reorderEncounterGroupsWithCaptainRemap(prev, from, to))
+      setMaliceRows((mr) =>
+        remapMaliceRowsAfterEncounterGroupsReordered(mr, (gi) => remapEncounterGroupIndex(from, to, gi)),
+      )
       setGroupTurnActed((prev) => moveIndexInArray(prev, from, to))
       setEotConfirmed((prev) => {
         const next = new Map<number, Set<string>>()
@@ -1146,6 +1205,9 @@ function App() {
         }
         const next = [...prev]
         next.splice(groupIndex + 1, 0, copy)
+        queueMicrotask(() => {
+          setMaliceRows((mr) => remapMaliceRowsAfterEncounterGroupInserted(mr, groupIndex + 1))
+        })
         return next
       })
       setGroupTurnActed((prev) => {
@@ -1162,7 +1224,7 @@ function App() {
     const trimmed = name.trim()
     if (!trimmed) return
 
-    saveToLocalStorage(encounterGroups, terrainRows, groupTurnActed, activeEncounterId)
+    saveToLocalStorage(encounterGroups, terrainRows, groupTurnActed, activeEncounterId, maliceRows)
 
     const id = newEncounterId()
     const entry: EncounterIndexEntry = { id, name: trimmed }
@@ -1180,6 +1242,7 @@ function App() {
     setEncounterGroups(newGroups)
     setTerrainRows(newTerrain)
     setGroupTurnActed(newTurns)
+    setMaliceRows(ensureMaliceRows(undefined))
     prevTurnActedRef.current = [...newTurns]
     setMonsterCardDrawer(null)
     setTerrainDrawerIndex(null)
@@ -1188,12 +1251,12 @@ function App() {
     eotTimersRef.current.clear()
     setEotConfirmed(() => new Map())
     setSeActWindowElapsedGroup(() => new Set())
-  }, [encounterGroups, terrainRows, groupTurnActed, activeEncounterId])
+  }, [encounterGroups, terrainRows, groupTurnActed, activeEncounterId, maliceRows])
 
   const switchToEncounter = useCallback((targetId: string) => {
     if (targetId === activeEncounterId) return
 
-    saveToLocalStorage(encounterGroups, terrainRows, groupTurnActed, activeEncounterId)
+    saveToLocalStorage(encounterGroups, terrainRows, groupTurnActed, activeEncounterId, maliceRows)
 
     const loaded = loadFromLocalStorage(targetId)
     const entry = encounterIndex.encounters.find((e) => e.id === targetId)
@@ -1203,6 +1266,7 @@ function App() {
       setEncounterGroups(loaded.state.encounterGroups)
       setTerrainRows(loaded.state.terrainRows)
       setGroupTurnActed(loaded.state.groupTurnActed)
+      setMaliceRows(loaded.state.maliceRows)
       prevTurnActedRef.current = [...loaded.state.groupTurnActed]
     } else {
       const newGroups = cloneEncounterGroups()
@@ -1211,6 +1275,7 @@ function App() {
       setEncounterGroups(newGroups)
       setTerrainRows(newTerrain)
       setGroupTurnActed(newTurns)
+      setMaliceRows(ensureMaliceRows(undefined))
       prevTurnActedRef.current = [...newTurns]
     }
 
@@ -1225,7 +1290,7 @@ function App() {
     setEotConfirmed(() => new Map())
     setSeActWindowElapsedGroup(() => new Set())
     setShowEncounterSwitcher(false)
-  }, [encounterGroups, terrainRows, groupTurnActed, activeEncounterId, encounterIndex])
+  }, [encounterGroups, terrainRows, groupTurnActed, activeEncounterId, encounterIndex, maliceRows])
 
   const renameEncounter = useCallback((targetId: string, newName: string) => {
     const trimmed = newName.trim()
@@ -1259,6 +1324,7 @@ function App() {
         setEncounterGroups(loaded.state.encounterGroups)
         setTerrainRows(loaded.state.terrainRows)
         setGroupTurnActed(loaded.state.groupTurnActed)
+        setMaliceRows(loaded.state.maliceRows)
         prevTurnActedRef.current = [...loaded.state.groupTurnActed]
       } else {
         const newGroups = cloneEncounterGroups()
@@ -1267,6 +1333,7 @@ function App() {
         setEncounterGroups(newGroups)
         setTerrainRows(newTerrain)
         setGroupTurnActed(newTurns)
+        setMaliceRows(ensureMaliceRows(undefined))
         prevTurnActedRef.current = [...newTurns]
       }
 
@@ -1888,6 +1955,12 @@ function App() {
                   </button>
                 </div>
               </div>
+              <MaliceDashboard
+                encounterGroups={encounterGroups}
+                maliceRows={maliceRows}
+                uiLocked={uiLocked}
+                onMaliceRowsChange={(next) => setMaliceRows(ensureMaliceRows(next))}
+              />
               <div className="flex flex-col gap-2">
                 {encounterGroups.map((group, gi) => (
                   <div
@@ -1978,6 +2051,39 @@ function App() {
                       }
                       isEotConfirmed={(mi, label, minionIndex) =>
                         isEotConfirmed(gi, mi, label, minionIndex)
+                      }
+                      encounterGroupReorderMenu={
+                        uiLocked
+                          ? undefined
+                          : {
+                              onMoveUp: () => reorderEncounterGroups(gi, gi - 1),
+                              onMoveDown: () => reorderEncounterGroups(gi, gi + 1),
+                              moveUpDisabled: gi === 0,
+                              moveDownDisabled: gi === encounterGroups.length - 1,
+                            }
+                      }
+                      monsterReorderMenu={
+                        uiLocked
+                          ? undefined
+                          : {
+                              onMoveUp: (mi) => moveMonsterInEncounter(gi, mi, gi, mi - 1),
+                              onMoveDown: (mi) => moveMonsterInEncounter(gi, mi, gi, mi + 1),
+                            }
+                      }
+                      minionReorderMenu={
+                        uiLocked
+                          ? undefined
+                          : {
+                              onMoveUp: (mi, mni) => {
+                                if (mni <= 0) return
+                                commitMinionTransfer(gi, mi, mni, gi, mi, mni - 1)
+                              },
+                              onMoveDown: (mi, mni) => {
+                                const horde = encounterGroups[gi]?.monsters[mi]?.minions
+                                if (!horde || mni >= horde.length - 1) return
+                                commitMinionTransfer(gi, mi, mni, gi, mi, mni + 1)
+                              },
+                            }
                       }
                       encounterGroupDragHandle={
                         uiLocked
@@ -2095,6 +2201,16 @@ function App() {
                             },
                             onDragEnd: (_e: DragEvent) => setDropTargetTerrainIndex(null),
                             ariaLabel: `Reorder terrain ${i + 1}`,
+                          }
+                    }
+                    terrainReorderMenu={
+                      uiLocked
+                        ? undefined
+                        : {
+                            onMoveUp: () => reorderTerrainRows(i, i - 1),
+                            onMoveDown: () => reorderTerrainRows(i, i + 1),
+                            moveUpDisabled: i === 0,
+                            moveDownDisabled: i === terrainRows.length - 1,
                           }
                     }
                   />

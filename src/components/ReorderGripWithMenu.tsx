@@ -18,6 +18,7 @@ export function ReorderGripWithMenu({
   menuItems,
   className,
   iconClassName,
+  draggable = true,
 }: {
   reorderAriaLabel: string
   onDragStart: (e: DragEvent) => void
@@ -25,6 +26,8 @@ export function ReorderGripWithMenu({
   menuItems: readonly ReorderGripMenuItem[]
   className: string
   iconClassName: string
+  /** When false, the grip opens the menu on click but does not initiate HTML5 drag (e.g. fixed rows). */
+  draggable?: boolean
 }) {
   const menuId = useId()
   const [open, setOpen] = useState(false)
@@ -37,10 +40,11 @@ export function ReorderGripWithMenu({
 
   const wrapDragStart = useCallback(
     (e: DragEvent) => {
+      if (!draggable) return
       dragDidStartRef.current = true
       onDragStart(e)
     },
-    [onDragStart],
+    [draggable, onDragStart],
   )
 
   const wrapDragEnd = useCallback(
@@ -85,9 +89,13 @@ export function ReorderGripWithMenu({
   }, [menuItems.length])
 
   return (
-    <div ref={rootRef} data-grip-menu-open={open || undefined} className={`h-full min-h-0 self-stretch ${open ? 'relative z-[200]' : ''}`}>
+    <div
+      ref={rootRef}
+      data-grip-menu-open={open || undefined}
+      className={`flex h-full min-h-0 min-w-0 flex-col self-stretch ${open ? 'relative z-[200]' : ''}`}
+    >
       <div
-        draggable
+        draggable={draggable}
         onDragStart={wrapDragStart}
         onDragEnd={wrapDragEnd}
         onClick={onGripClick}
@@ -104,9 +112,9 @@ export function ReorderGripWithMenu({
         aria-haspopup={menuItems.length > 0 ? 'menu' : undefined}
         aria-expanded={menuItems.length > 0 ? open : undefined}
         aria-controls={open ? menuId : undefined}
-        className={`${className} h-full min-h-0`}
+        className={`${className} box-border flex min-h-0 min-w-0 flex-1`}
       >
-        <span className="relative inline-flex shrink-0">
+        <span className="relative flex h-full min-h-0 min-w-0 items-center justify-center">
           <ReorderGripIcon className={iconClassName} />
           {open && menuItems.length > 0 && (
             <div

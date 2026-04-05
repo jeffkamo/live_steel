@@ -1,5 +1,6 @@
-import type { EncounterGroup, Monster, TerrainRowState } from './types'
+import type { EncounterGroup, MaliceRowRef, Monster, TerrainRowState } from './types'
 import { featuresForMonster } from './bestiary'
+import { ensureMaliceRows } from './malice'
 
 const STORAGE_KEY = 'live-steel-encounter'
 const STORAGE_VERSION = 1
@@ -23,6 +24,8 @@ export type PersistedEncounterState = {
   encounterGroups: EncounterGroup[]
   terrainRows: TerrainRowState[]
   groupTurnActed: boolean[]
+  /** Encounter-wide malice dashboard rows; omitted in legacy payloads. */
+  maliceRows: MaliceRowRef[]
 }
 
 function encounterStorageKey(encounterId: string): string {
@@ -37,9 +40,11 @@ export function serializeEncounterState(
   encounterGroups: EncounterGroup[],
   terrainRows: TerrainRowState[],
   groupTurnActed: boolean[],
+  maliceRows: MaliceRowRef[] = ensureMaliceRows(undefined),
 ): string {
   const stripped: EncounterGroup[] = encounterGroups.map((g) => ({
-    ...g,
+    id: g.id,
+    color: g.color,
     monsters: g.monsters.map((m) => {
       const { features: _features, ...rest } = m
       return rest as Monster
@@ -50,13 +55,15 @@ export function serializeEncounterState(
     encounterGroups: stripped,
     terrainRows,
     groupTurnActed,
+    maliceRows: ensureMaliceRows(maliceRows),
   }
   return JSON.stringify(payload)
 }
 
 function rehydrateFeatures(groups: EncounterGroup[]): EncounterGroup[] {
   return groups.map((g) => ({
-    ...g,
+    id: g.id,
+    color: g.color,
     monsters: g.monsters.map((m) => {
       if (m.custom != null) {
         return { ...m, features: [] }
@@ -72,13 +79,48 @@ function rehydrateFeatures(groups: EncounterGroup[]): EncounterGroup[] {
   }))
 }
 
-function isValidPersistedState(o: unknown): o is PersistedEncounterState {
+/** Legacy: per-group `maliceRows` with monster refs keyed only by monsterIndex. */
+function hoistLegacyMaliceFromParsedGroups(encounterGroups: unknown[]): MaliceRowRef[] {
+  const merged: MaliceRowRef[] = []
+  for (let gi = 0; gi < encounterGroups.length; gi++) {
+    const g = encounterGroups[gi] as Record<string, unknown> | undefined
+    if (!g) continue
+    const raw = g.maliceRows
+    if (!Array.isArray(raw)) continue
+    for (const item of raw) {
+      if (item == null || typeof item !== 'object') continue
+      const r = item as Record<string, unknown>
+      if (r.kind === 'core' && typeof r.coreId === 'string') {
+        merged.push(r as MaliceRowRef)
+        continue
+      }
+      if (r.kind === 'monster' && typeof r.sourceKey === 'string' && typeof r.monsterIndex === 'number') {
+        const id =
+          typeof r.id === 'string'
+            ? r.id
+            : `m-${gi}-${r.monsterIndex}-${String(r.sourceKey).slice(0, 24)}`
+        const gIdx = typeof r.groupIndex === 'number' ? r.groupIndex : gi
+        merged.push({
+          kind: 'monster',
+          id,
+          groupIndex: gIdx,
+          monsterIndex: r.monsterIndex,
+          sourceKey: r.sourceKey,
+        })
+      }
+    }
+  }
+  return merged
+}
+
+function isValidPersistedState(o: unknown): boolean {
   if (o == null || typeof o !== 'object') return false
   const obj = o as Record<string, unknown>
   if (obj.version !== STORAGE_VERSION) return false
   if (!Array.isArray(obj.encounterGroups)) return false
   if (!Array.isArray(obj.terrainRows)) return false
   if (!Array.isArray(obj.groupTurnActed)) return false
+  if (obj.maliceRows != null && !Array.isArray(obj.maliceRows)) return false
   for (const g of obj.encounterGroups) {
     if (g == null || typeof g !== 'object') return false
     const grp = g as Record<string, unknown>
@@ -104,11 +146,26 @@ export function deserializeEncounterState(raw: string | null): DeserializeResult
       }
       return { ok: false, reason: 'corrupt' }
     }
+    const stored = parsed as {
+      version: number
+      encounterGroups: EncounterGroup[]
+      terrainRows: TerrainRowState[]
+      groupTurnActed: boolean[]
+      maliceRows?: MaliceRowRef[]
+    }
+    const hoisted = hoistLegacyMaliceFromParsedGroups(stored.encounterGroups as unknown[])
+    const rootMalice = Array.isArray(stored.maliceRows) ? stored.maliceRows : []
+    const merged =
+      rootMalice.length > 0 ? rootMalice : hoisted.length > 0 ? hoisted : undefined
+    const maliceRows = ensureMaliceRows(merged)
     return {
       ok: true,
       state: {
-        ...parsed,
-        encounterGroups: rehydrateFeatures(parsed.encounterGroups),
+        version: stored.version,
+        encounterGroups: rehydrateFeatures(stored.encounterGroups),
+        terrainRows: stored.terrainRows,
+        groupTurnActed: stored.groupTurnActed,
+        maliceRows,
       },
     }
   } catch {
@@ -184,9 +241,15 @@ export function saveToLocalStorage(
   terrainRows: TerrainRowState[],
   groupTurnActed: boolean[],
   encounterId?: string,
+  maliceRows?: MaliceRowRef[],
 ): { ok: true } | { ok: false; error: unknown } {
   try {
-    const json = serializeEncounterState(encounterGroups, terrainRows, groupTurnActed)
+    const json = serializeEncounterState(
+      encounterGroups,
+      terrainRows,
+      groupTurnActed,
+      maliceRows ?? ensureMaliceRows(undefined),
+    )
     const key = encounterId != null ? encounterStorageKey(encounterId) : STORAGE_KEY
     localStorage.setItem(key, json)
     return { ok: true }
