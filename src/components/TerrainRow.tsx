@@ -295,7 +295,7 @@ export function TerrainRow({
                 )}
               </div>
             </div>
-            <div className={`terrain-row__stamina ${bodyCell} relative z-0 min-w-0 justify-center overflow-x-clip overflow-y-visible hover:z-20 focus-within:z-20`}>
+            <div className={`terrain-row__stamina ${bodyCell} relative z-0 min-w-0 justify-center overflow-visible hover:z-20 focus-within:z-20`}>
               <EditableStaminaCell
                 current={tc}
                 max={tm}

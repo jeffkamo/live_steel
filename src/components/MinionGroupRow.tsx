@@ -451,7 +451,7 @@ export function MinionGroupRow({
           </div>
         <div className="roster-creature__mid">
           <div
-            className={`roster-creature__stamina ${bodyCell} relative z-0 min-w-0 justify-center overflow-x-clip overflow-y-visible hover:z-20 focus-within:z-20`}
+            className={`roster-creature__stamina ${bodyCell} relative z-0 min-w-0 justify-center overflow-visible hover:z-20 focus-within:z-20`}
           >
             <EditableStaminaCell
               current={sc}
