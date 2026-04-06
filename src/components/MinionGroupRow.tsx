@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react'
+import { useState, useRef, useEffect, useCallback, type ReactNode } from 'react'
 import type { DragEvent } from 'react'
 import type {
   CaptainRef,
@@ -40,11 +40,36 @@ type MinionRowDragBinding = {
   onDrop: (e: DragEvent) => void
 }
 
+/** Minion horde parent whose {@link Monster.captainId} points at `captainTarget`, if any. */
+function findSquadUsingCaptain(
+  groups: readonly EncounterGroup[] | undefined,
+  captainTarget: CaptainRef,
+): { groupIndex: number; monsterIndex: number } | null {
+  if (!groups) return null
+  for (let gi = 0; gi < groups.length; gi++) {
+    const g = groups[gi]!
+    for (let mi = 0; mi < g.monsters.length; mi++) {
+      const m = g.monsters[mi]!
+      if (!m.minions?.length) continue
+      const cap = m.captainId
+      if (
+        cap &&
+        cap.groupIndex === captainTarget.groupIndex &&
+        cap.monsterIndex === captainTarget.monsterIndex
+      ) {
+        return { groupIndex: gi, monsterIndex: mi }
+      }
+    }
+  }
+  return null
+}
+
 export function MinionGroupRow({
   monster,
   row,
   creatureOrdinalMap,
   monsterIndex,
+  encounterGroupIndex,
   totalCreatures,
   groupKey,
   groupNumber,
@@ -81,6 +106,8 @@ export function MinionGroupRow({
   row: number
   creatureOrdinalMap: Map<string, number>
   monsterIndex: number
+  /** Encounter group index (for captain dropdown: which squad is being edited). */
+  encounterGroupIndex: number
   totalCreatures: number
   groupKey: string
   groupNumber: number
@@ -433,24 +460,58 @@ export function MinionGroupRow({
                   {candidateMonsters.map((c) => {
                     const isCurrentCaptain = captainRef?.groupIndex === c.groupIndex && captainRef?.monsterIndex === c.monsterIndex
                     const cBadge = GROUP_COLOR_BADGE[c.color]
+                    const captainTarget: CaptainRef = { groupIndex: c.groupIndex, monsterIndex: c.monsterIndex }
+                    const squadUsing = findSquadUsingCaptain(allGroups, captainTarget)
+                    let captainAssignmentLine: ReactNode = null
+                    let captainAssignmentAria: string | null = null
+                    if (squadUsing && allGroups) {
+                      const squadGroup = allGroups[squadUsing.groupIndex]!
+                      const hordeParent = squadGroup.monsters[squadUsing.monsterIndex]!
+                      const squadOrdMap = buildCreatureOrdinalMap(squadGroup.monsters)
+                      const squadOrd =
+                        squadOrdMap.get(`${squadUsing.monsterIndex}`) ?? squadUsing.monsterIndex + 1
+                      const squadBadge = GROUP_COLOR_BADGE[squadGroup.color]
+                      captainAssignmentAria = `Captain for squad ${hordeParent.name}, creature ${squadOrd}`
+                      captainAssignmentLine = (
+                        <span className="mt-0.5 flex min-w-0 flex-wrap items-center gap-1.5 text-[0.6rem] leading-snug text-zinc-500 dark:text-zinc-400">
+                          <span className="shrink-0">Captain for</span>
+                          <span
+                            className={`inline-flex size-5 shrink-0 items-center justify-center rounded-full border text-[0.6rem] font-semibold tabular-nums leading-none ${squadBadge.border} ${squadBadge.bg} ${squadBadge.text}`}
+                            aria-hidden
+                          >
+                            {squadOrd}
+                          </span>
+                          <span className="min-w-0 truncate font-medium text-zinc-600 dark:text-zinc-300">
+                            {hordeParent.name}
+                          </span>
+                        </span>
+                      )
+                    }
+                    const optionAriaLabel =
+                      captainAssignmentAria != null ? `${c.name}. ${captainAssignmentAria}` : c.name
                     return (
                       <button
                         type="button"
                         role="option"
                         aria-selected={isCurrentCaptain}
                         key={`captain-${c.groupIndex}-${c.monsterIndex}`}
+                        aria-label={optionAriaLabel}
                         onClick={() => {
                           onCaptainChange?.({ groupIndex: c.groupIndex, monsterIndex: c.monsterIndex })
                           closeCaptainDropdown()
                         }}
-                        className={`flex w-full cursor-pointer items-center gap-2 px-3 py-2 text-left text-xs transition-colors hover:bg-zinc-300 dark:hover:bg-zinc-800 ${isCurrentCaptain ? 'bg-zinc-200 dark:bg-zinc-800/60 text-zinc-900 dark:text-zinc-100' : 'text-zinc-700 dark:text-zinc-300'}`}
+                        className={`flex w-full cursor-pointer items-start gap-2 px-3 py-2 text-left text-xs transition-colors hover:bg-zinc-300 dark:hover:bg-zinc-800 ${isCurrentCaptain ? 'bg-zinc-200 dark:bg-zinc-800/60 text-zinc-900 dark:text-zinc-100' : 'text-zinc-700 dark:text-zinc-300'}`}
+                        data-testid={`captain-candidate-${c.groupIndex}-${c.monsterIndex}`}
                       >
                         <span
                           className={`inline-flex size-5 shrink-0 items-center justify-center rounded-full border text-[0.6rem] font-semibold tabular-nums leading-none ${cBadge.border} ${cBadge.bg} ${cBadge.text}`}
                         >
                           {c.ordinal}
                         </span>
-                        <span className="truncate">{c.name}</span>
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate">{c.name}</span>
+                          {captainAssignmentLine}
+                        </span>
                       </button>
                     )
                   })}

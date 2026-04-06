@@ -57,6 +57,7 @@ import {
   remapEncounterGroupIndex,
   remapEotConfirmedAfterMonsterMove,
   reorderEncounterGroupsWithCaptainRemap,
+  applyExclusiveMinionCaptain,
   GROUP_COLOR_BADGE,
   ROSTER_GRID_TEMPLATE,
   transferConditionBetweenCreatures,
@@ -481,16 +482,7 @@ function App() {
   const patchMinionCaptain = useCallback(
     (groupIndex: number, monsterIndex: number, captainId: CaptainRef | null) => {
       setEncounterGroups((prev) =>
-        prev.map((g, gi) => {
-          if (gi !== groupIndex) return g
-          return {
-            ...g,
-            monsters: g.monsters.map((m, mi) => {
-              if (mi !== monsterIndex || !m.minions) return m
-              return { ...m, captainId }
-            }),
-          }
-        }),
+        applyExclusiveMinionCaptain(prev, groupIndex, monsterIndex, captainId),
       )
     },
     [],

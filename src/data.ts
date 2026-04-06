@@ -499,6 +499,51 @@ export function remapCaptainIdsAfterMonsterRemovedFromGroup(
 }
 
 /**
+ * Sets {@link Monster.captainId} on the minion horde at `(groupIndex, monsterIndex)`.
+ * When assigning a non-null captain, clears that same {@link CaptainRef} from every
+ * other minion horde so one roster creature cannot captain multiple squads at once.
+ * (Two different creatures with the same display name remain distinct via ref.)
+ */
+export function applyExclusiveMinionCaptain(
+  groups: EncounterGroup[],
+  groupIndex: number,
+  monsterIndex: number,
+  captainId: CaptainRef | null,
+): EncounterGroup[] {
+  const refEqual = (
+    a: CaptainRef | null | undefined,
+    b: CaptainRef | null | undefined,
+  ): boolean => {
+    const na = a == null ? null : a
+    const nb = b == null ? null : b
+    if (na === null && nb === null) return true
+    if (na === null || nb === null) return false
+    return na.groupIndex === nb.groupIndex && na.monsterIndex === nb.monsterIndex
+  }
+
+  return groups.map((g, gi) => ({
+    ...g,
+    monsters: g.monsters.map((m, mi) => {
+      if (!m.minions?.length) return m
+      if (captainId == null) {
+        if (gi === groupIndex && mi === monsterIndex) {
+          return m.captainId != null ? { ...m, captainId: null } : m
+        }
+        return m
+      }
+      let nextCaptain: CaptainRef | null = m.captainId ?? null
+      if (gi === groupIndex && mi === monsterIndex) {
+        nextCaptain = captainId
+      } else if (refEqual(m.captainId, captainId)) {
+        nextCaptain = null
+      }
+      if (refEqual(nextCaptain, m.captainId)) return m
+      return { ...m, captainId: nextCaptain }
+    }),
+  }))
+}
+
+/**
  * Merge a solo top-level monster into another creature's horde at `toMinion` (insert-before index).
  * Removes the solo row and remaps captain ids that referenced it.
  */

@@ -324,6 +324,7 @@ export function GroupSection({
               row={startRow}
               creatureOrdinalMap={creatureOrdinalMap}
               monsterIndex={i}
+              encounterGroupIndex={thisGroupIndex}
               totalCreatures={totalCreatures}
               groupKey={groupKey}
               groupNumber={groupNumber}

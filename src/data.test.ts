@@ -36,6 +36,7 @@ import {
   remapEncounterGroupIndex,
   remapEotConfirmedAfterMonsterMove,
   reorderEncounterGroupsWithCaptainRemap,
+  applyExclusiveMinionCaptain,
   transferConditionBetweenCreatures,
   CONDITION_CATALOG,
   GROUP_COLOR_ORDER,
@@ -45,7 +46,14 @@ import {
   buildCreatureOrdinalMap,
   totalCreaturesInGroup,
 } from './data'
-import type { ConditionEntry, EncounterGroup, GroupColorId, MinionEntry, Monster } from './types'
+import type {
+  CaptainRef,
+  ConditionEntry,
+  EncounterGroup,
+  GroupColorId,
+  MinionEntry,
+  Monster,
+} from './types'
 
 describe('conditionEntryFromLabel', () => {
   it('creates a neutral condition entry', () => {
@@ -612,6 +620,143 @@ describe('remapEotConfirmedAfterMonsterMove', () => {
     const prev = new Map<number, Set<string>>([[0, new Set(['2:Eot'])]])
     const next = remapEotConfirmedAfterMonsterMove(prev, 1, 0, 2, 0, 0)
     expect(next.get(0)).toEqual(new Set(['0:Eot']))
+  })
+})
+
+describe('applyExclusiveMinionCaptain', () => {
+  const minion = (): MinionEntry => ({
+    name: 'm',
+    initials: 'm',
+    conditions: [],
+    dead: false,
+  })
+
+  it('clears the same captain ref from other hordes when assigning to a new horde', () => {
+    const captain: CaptainRef = { groupIndex: 0, monsterIndex: 0 }
+    const groups: EncounterGroup[] = [
+      {
+        id: 'g0',
+        color: 'red',
+        monsters: [
+          {
+            encounterInstanceId: 'solo',
+            name: 'Solo',
+            subtitle: '',
+            initials: 'S',
+            stamina: [1, 1],
+            marip: null,
+            fs: 0,
+            dist: 0,
+            stab: 0,
+            conditions: [],
+          },
+          {
+            encounterInstanceId: 'horde1',
+            name: 'Horde1',
+            subtitle: '',
+            initials: 'H',
+            stamina: [10, 10],
+            marip: null,
+            fs: 0,
+            dist: 0,
+            stab: 0,
+            conditions: [],
+            minions: [minion()],
+            captainId: captain,
+          },
+        ],
+      },
+      {
+        id: 'g1',
+        color: 'blue',
+        monsters: [
+          {
+            encounterInstanceId: 'horde2',
+            name: 'Horde2',
+            subtitle: '',
+            initials: 'H',
+            stamina: [10, 10],
+            marip: null,
+            fs: 0,
+            dist: 0,
+            stab: 0,
+            conditions: [],
+            minions: [minion()],
+          },
+        ],
+      },
+    ]
+    const next = applyExclusiveMinionCaptain(groups, 1, 0, captain)
+    expect(next[0]!.monsters[1]!.captainId).toBeNull()
+    expect(next[1]!.monsters[0]!.captainId).toEqual(captain)
+  })
+
+  it('allows two squads to use different captains with the same display name (distinct slots)', () => {
+    const capA: CaptainRef = { groupIndex: 0, monsterIndex: 0 }
+    const capB: CaptainRef = { groupIndex: 0, monsterIndex: 1 }
+    const groups: EncounterGroup[] = [
+      {
+        id: 'g0',
+        color: 'red',
+        monsters: [
+          {
+            encounterInstanceId: 'a',
+            name: 'Goblin',
+            subtitle: '',
+            initials: 'G',
+            stamina: [1, 1],
+            marip: null,
+            fs: 0,
+            dist: 0,
+            stab: 0,
+            conditions: [],
+          },
+          {
+            encounterInstanceId: 'b',
+            name: 'Goblin',
+            subtitle: '',
+            initials: 'G',
+            stamina: [1, 1],
+            marip: null,
+            fs: 0,
+            dist: 0,
+            stab: 0,
+            conditions: [],
+          },
+          {
+            encounterInstanceId: 'h1',
+            name: 'Squad1',
+            subtitle: '',
+            initials: 'S',
+            stamina: [10, 10],
+            marip: null,
+            fs: 0,
+            dist: 0,
+            stab: 0,
+            conditions: [],
+            minions: [minion()],
+            captainId: capA,
+          },
+          {
+            encounterInstanceId: 'h2',
+            name: 'Squad2',
+            subtitle: '',
+            initials: 'S',
+            stamina: [10, 10],
+            marip: null,
+            fs: 0,
+            dist: 0,
+            stab: 0,
+            conditions: [],
+            minions: [minion()],
+            captainId: capB,
+          },
+        ],
+      },
+    ]
+    const next = applyExclusiveMinionCaptain(groups, 0, 3, capA)
+    expect(next[0]!.monsters[2]!.captainId).toBeNull()
+    expect(next[0]!.monsters[3]!.captainId).toEqual(capA)
   })
 })
 
