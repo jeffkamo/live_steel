@@ -257,38 +257,41 @@ export function TerrainRow({
     'flex h-full min-h-[3.75rem] items-center p-3 sm:min-h-[4rem] sm:p-3.5'
   return (
     <div
-      className={`${terrainGridClass} min-w-0 max-w-full overflow-visible rounded-lg border border-zinc-200/95 bg-white font-sans shadow-sm dark:border-transparent dark:bg-zinc-900/80 dark:shadow-none ${
+      className={`${terrainGridClass} min-w-0 w-full max-w-full overflow-visible rounded-lg border border-zinc-200/95 bg-white font-sans shadow-sm dark:border-transparent dark:bg-zinc-900/80 dark:shadow-none ${
         isDrawerOpen ? 'ring-1 ring-amber-500/40' : ''
       }`}
     >
-      <div className="min-w-0" aria-hidden="true" />
-      <div className="terrain-row min-w-0">
-        <div className="terrain-row__inner px-2 py-2 sm:px-2.5 sm:py-2.5">
+      <div className="flex min-h-0 min-w-0 items-center justify-start self-stretch pl-0.5 sm:pl-1">
+        {!uiLocked && dragHandle ? (
+          <ReorderGripWithMenu
+            reorderAriaLabel={dragHandle.ariaLabel}
+            onDragStart={dragHandle.onDragStart}
+            onDragEnd={dragHandle.onDragEnd}
+            menuItems={gripMenuItems}
+            className="group flex w-9 shrink-0 cursor-grab touch-none select-none items-center justify-center rounded-md border border-transparent transition-[background-color,border-color,box-shadow,color] duration-150 ease-out hover:border-zinc-700/45 hover:bg-zinc-300 dark:hover:bg-zinc-800/55 hover:shadow-sm active:cursor-grabbing motion-reduce:transition-none sm:w-10"
+            iconClassName="size-3.5 text-zinc-600 transition-colors group-hover:text-zinc-900 dark:group-hover:text-zinc-200 sm:size-4"
+          />
+        ) : (
+          <div className="min-h-0 min-w-0" aria-hidden />
+        )}
+      </div>
+      <div className="terrain-row min-w-0 w-full">
+        <div className="terrain-row__inner py-2 pl-0 pr-2 sm:py-2.5 sm:pr-2.5">
           <div className="terrain-row__top">
             <div className={`terrain-row__identity ${creatureNameColCell} min-w-0 !p-0`}>
-              <div className="flex min-h-0 min-w-0 flex-1 items-stretch gap-1 p-1 sm:p-1.5">
-                {!uiLocked && dragHandle && (
-                  <ReorderGripWithMenu
-                    reorderAriaLabel={dragHandle.ariaLabel}
-                    onDragStart={dragHandle.onDragStart}
-                    onDragEnd={dragHandle.onDragEnd}
-                    menuItems={gripMenuItems}
-                    className="group flex w-9 shrink-0 cursor-grab touch-none select-none items-center justify-center rounded-md border border-transparent transition-[background-color,border-color,box-shadow,color] duration-150 ease-out hover:border-zinc-700/45 hover:bg-zinc-300 dark:hover:bg-zinc-800/55 hover:shadow-sm active:cursor-grabbing motion-reduce:transition-none sm:w-10"
-                    iconClassName="size-3.5 text-zinc-600 transition-colors group-hover:text-zinc-900 dark:group-hover:text-zinc-200 sm:size-4"
-                  />
-                )}
+              <div className="flex min-h-0 min-w-0 flex-1 items-stretch py-1 sm:py-1.5">
                 {hasStatBlock ? (
                   <button
                     type="button"
                     onClick={onClick}
-                    className={`min-w-0 flex-1 cursor-pointer rounded-md px-2 py-2 text-left text-sm leading-relaxed break-words text-zinc-900 [overflow-wrap:anywhere] dark:text-zinc-100 transition-colors hover:bg-zinc-200/90 dark:hover:bg-zinc-800/70 hover:text-amber-800 dark:hover:text-amber-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber-500/60 sm:text-base ${deadDim} ${deadStrike}`}
+                    className={`min-w-0 flex-1 cursor-pointer rounded-md px-2 py-2 pl-0 text-left text-sm leading-relaxed break-words text-zinc-900 [overflow-wrap:anywhere] dark:text-zinc-100 transition-colors hover:bg-zinc-200/90 dark:hover:bg-zinc-800/70 hover:text-amber-800 dark:hover:text-amber-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber-500/60 sm:text-base ${deadDim} ${deadStrike}`}
                     aria-label={`View stat block for ${row.object}`}
                   >
                     {row.object}
                   </button>
                 ) : (
                   <p
-                    className={`min-w-0 flex-1 break-words px-2 py-2 text-sm leading-relaxed [overflow-wrap:anywhere] text-zinc-900 dark:text-zinc-100 sm:text-base ${deadDim} ${deadStrike}`}
+                    className={`min-w-0 flex-1 break-words px-2 py-2 pl-0 text-sm leading-relaxed [overflow-wrap:anywhere] text-zinc-900 dark:text-zinc-100 sm:text-base ${deadDim} ${deadStrike}`}
                   >
                     {row.object}
                   </p>

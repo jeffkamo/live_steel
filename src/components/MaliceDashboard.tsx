@@ -17,6 +17,9 @@ const MALICE_DRAG_MIME = 'application/x-live-steel-malice-row-index'
 const MONSTER_TAG_CLASS =
   'inline-flex max-w-[min(16rem,100%)] shrink-0 truncate rounded-md border border-zinc-300/80 bg-zinc-100/90 px-1.5 py-0.5 font-sans text-[0.62rem] font-medium leading-none text-zinc-600 dark:border-zinc-600/70 dark:bg-zinc-800/80 dark:text-zinc-400'
 
+/** Grip column matches {@link ReorderGripWithMenu} width on terrain rows (w-9 / sm:w-10). */
+const MALICE_ROW_GRID_CLASS = 'grid-cols-[2.5rem_minmax(0,1fr)] sm:grid-cols-[2.75rem_minmax(0,1fr)]'
+
 /** Leading core rows (Brutal Effectiveness, Malicious Strike, …); monster rows may only reorder below this block. */
 function corePrefixLength(rows: readonly MaliceRowRef[]): number {
   let n = 0
@@ -284,7 +287,7 @@ export function MaliceDashboard({
 
             const rowLayoutClass = uiLocked
               ? 'grid grid-cols-1 gap-3'
-              : 'grid grid-cols-[2.25rem_minmax(0,1fr)] items-stretch gap-3 sm:grid-cols-[2.5rem_minmax(0,1fr)]'
+              : `grid ${MALICE_ROW_GRID_CLASS} items-stretch gap-2`
 
             return (
               <li
@@ -317,13 +320,13 @@ export function MaliceDashboard({
                     onDragStart={(e) => onMaliceDragStart(index, e)}
                     onDragEnd={onMaliceDragEnd}
                     menuItems={menuItems}
-                    className="group flex h-full min-h-0 w-full cursor-grab touch-none select-none items-center justify-center rounded-md border border-transparent transition-[background-color,border-color,box-shadow,color] duration-150 ease-out hover:border-zinc-700/45 hover:bg-zinc-300 dark:hover:bg-zinc-800/55 hover:shadow-sm active:cursor-grabbing motion-reduce:transition-none"
+                    className="group flex h-full min-h-0 w-9 shrink-0 cursor-grab touch-none select-none items-center justify-center rounded-md border border-transparent transition-[background-color,border-color,box-shadow,color] duration-150 ease-out hover:border-zinc-700/45 hover:bg-zinc-300 dark:hover:bg-zinc-800/55 hover:shadow-sm active:cursor-grabbing motion-reduce:transition-none sm:w-10"
                     iconClassName="size-3.5 text-zinc-600 transition-colors group-hover:text-zinc-900 dark:group-hover:text-zinc-200 sm:size-4"
                   />
                 ) : !uiLocked ? (
                   <div className="min-h-0 min-w-0" aria-hidden />
                 ) : null}
-                <div className="min-w-0 font-sans">
+                <div className="min-w-0 w-full font-sans">
                   {monsterTag != null ? (
                     <>
                       <div className="flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-0.5">

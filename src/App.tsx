@@ -2148,7 +2148,7 @@ function App() {
                 </h2>
                 <TitleRule />
               </header>
-              <div className="min-w-0 px-4">
+              <div className="flex min-w-0 flex-col gap-4 px-4">
               {terrainRows.map((row, i) => (
                 <div
                   key={i}

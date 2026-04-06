@@ -167,7 +167,7 @@
   @container terrain (min-width: 640px) {
     .terrain-row__inner {
       display: grid;
-      grid-template-columns: minmax(0, 1.6fr) minmax(5rem, 8.5rem) minmax(0, 1fr);
+      grid-template-columns: minmax(0, 1.05fr) minmax(4.5rem, 7rem) minmax(12rem, 1.95fr);
       gap: 0.5rem 0.75rem;
       align-items: start;
     }

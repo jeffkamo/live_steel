@@ -1473,8 +1473,11 @@ export function reorderEncounterGroupsWithCaptainRemap(
   }))
 }
 
+/** Body column tracks: turn / spacer + main content; matches {@link ROSTER_GRID_TEMPLATE}. */
+export const ROSTER_BODY_GRID_COLS_CLASS = 'grid-cols-[5.5rem_minmax(0,1fr)]'
+
 /** Same outer columns as {@link ROSTER_GRID_TEMPLATE} (terrain body uses container queries). */
-export const terrainGridClass = 'grid grid-cols-[5.5rem_minmax(0,1fr)]'
+export const terrainGridClass = `grid ${ROSTER_BODY_GRID_COLS_CLASS} gap-x-2 gap-y-0`
 
 export function conditionEntryFromLabel(label: string): ConditionEntry {
   return { label, state: 'neutral' }
