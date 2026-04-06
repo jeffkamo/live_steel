@@ -91,6 +91,11 @@ function hasMaliceCost(cost: string | undefined): boolean {
   return cost != null && /malice/i.test(cost)
 }
 
+/** Main / maneuver / triggered lines on the stat block (may still cost Malice). */
+function featureHasUsage(f: RawFeature): boolean {
+  return f.usage != null && f.usage.trim().length > 0
+}
+
 function mapEffect(raw: RawEffect): PowerRollEffect {
   return {
     ...(raw.roll != null ? { roll: raw.roll } : {}),
@@ -107,9 +112,10 @@ export function mapFeatures(raw: RawFeature[] | undefined): MonsterFeature[] {
   if (!raw || raw.length === 0) return []
   return raw
     .filter((f) => f.feature_type === 'ability' || f.feature_type === 'trait')
-    .filter((f) => !hasMaliceCost(f.cost))
+    .filter((f) => !hasMaliceCost(f.cost) || featureHasUsage(f))
     .map((f) => {
-      const effects = f.effects?.filter((e) => !hasMaliceCost(e.cost))
+      const keepMaliceEffects = featureHasUsage(f)
+      const effects = f.effects?.filter((e) => keepMaliceEffects || !hasMaliceCost(e.cost))
       return {
         type: 'feature' as const,
         feature_type: f.feature_type as 'ability' | 'trait',

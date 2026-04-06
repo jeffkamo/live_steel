@@ -1,5 +1,6 @@
-import type { EncounterGroup, MaliceCoreId, MaliceRowRef, Monster } from './types'
+import type { EncounterGroup, MaliceCoreId, MaliceRowRef, Monster, PowerRollEffect } from './types'
 import { baseName, lookupStatblock, type BestiaryStatblock } from './bestiary'
+import { registeredMaliceFeatureblocks } from './maliceFeatureblockRegistry'
 
 function newMaliceRowId(): string {
   return globalThis.crypto?.randomUUID?.() ?? `malice-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
@@ -20,11 +21,17 @@ type RawFeature = {
   feature_type: string
   name: string
   cost?: string
+  usage?: string
   effects?: RawEffect[]
 }
 
 function hasMaliceCost(cost: string | undefined): boolean {
   return cost != null && /malice/i.test(cost)
+}
+
+/** Main / maneuver / triggered lines belong on the stat block even when they cost Malice. */
+function featureHasUsage(f: RawFeature): boolean {
+  return f.usage != null && f.usage.trim().length > 0
 }
 
 function formatEffectPlain(eff: RawEffect): string {
@@ -37,11 +44,28 @@ function formatEffectPlain(eff: RawEffect): string {
   return parts.join(' ')
 }
 
+function rawEffectToPowerRoll(e: RawEffect): PowerRollEffect {
+  return {
+    ...(e.roll != null ? { roll: e.roll } : {}),
+    ...(e.tier1 != null ? { tier1: e.tier1 } : {}),
+    ...(e.tier2 != null ? { tier2: e.tier2 } : {}),
+    ...(e.tier3 != null ? { tier3: e.tier3 } : {}),
+    ...(e.name != null ? { name: e.name } : {}),
+    ...(e.cost != null ? { cost: e.cost } : {}),
+    ...(e.effect != null ? { effect: e.effect } : {}),
+  }
+}
+
 export type MaliceFeaturePick = {
   sourceKey: string
   name: string
   cost: string
+  /** Fallback plain text (search, legacy); prefer {@link MaliceFeaturePick.effects} when set. */
   effect: string
+  /** When present, rendered like stat block effects (power rolls, tiers, rich text). */
+  effects?: PowerRollEffect[]
+  /** Badge label in the malice dashboard (ancestry pools); omit for creature-specific picks. */
+  listTag?: string
 }
 
 /** Stable id for “the same” malice option across duplicate creatures / stat blocks (name + cost). */
@@ -61,21 +85,33 @@ export function maliceCostSortKey(cost: string): number {
   return Number.POSITIVE_INFINITY
 }
 
-function malicePicksFromStatblock(sb: BestiaryStatblock): MaliceFeaturePick[] {
-  const raw = sb.features as RawFeature[] | undefined
+function malicePicksFromFeatures(
+  raw: RawFeature[] | undefined,
+  opts: {
+    sourceKeyPrefix: string
+    omitFeaturesWithUsage: boolean
+    listTag?: string
+  },
+): MaliceFeaturePick[] {
   if (!raw?.length) return []
+  const { sourceKeyPrefix, omitFeaturesWithUsage, listTag } = opts
   const out: MaliceFeaturePick[] = []
   for (let fi = 0; fi < raw.length; fi++) {
     const f = raw[fi]!
     if (f.feature_type !== 'ability' && f.feature_type !== 'trait') continue
+    if (omitFeaturesWithUsage && featureHasUsage(f)) continue
     if (hasMaliceCost(f.cost)) {
+      const rawFx = f.effects ?? []
       const body =
-        f.effects?.map((e) => formatEffectPlain(e)).filter((s) => s.length > 0).join(' ') ?? ''
+        rawFx.map((e) => formatEffectPlain(e)).filter((s) => s.length > 0).join(' ') ?? ''
+      const effects = rawFx.length > 0 ? rawFx.map(rawEffectToPowerRoll) : undefined
       out.push({
-        sourceKey: `f:${fi}`,
+        sourceKey: `${sourceKeyPrefix}f:${fi}`,
         name: f.name,
         cost: f.cost!,
         effect: body.length > 0 ? body : '—',
+        ...(effects != null ? { effects } : {}),
+        ...(listTag != null ? { listTag } : {}),
       })
       continue
     }
@@ -88,29 +124,88 @@ function malicePicksFromStatblock(sb: BestiaryStatblock): MaliceFeaturePick[] {
         e.name && e.name !== 'Effect' ? `${f.name} — ${e.name}` : f.name
       const body = formatEffectPlain(e)
       out.push({
-        sourceKey: `f:${fi}:e:${ei}`,
+        sourceKey: `${sourceKeyPrefix}f:${fi}:e:${ei}`,
         name: label,
         cost: e.cost!,
         effect: body.length > 0 ? body : '—',
+        effects: [rawEffectToPowerRoll(e)],
+        ...(listTag != null ? { listTag } : {}),
       })
     }
   }
   return out
 }
 
+function malicePicksFromStatblock(sb: BestiaryStatblock): MaliceFeaturePick[] {
+  return malicePicksFromFeatures(sb.features as RawFeature[] | undefined, {
+    sourceKeyPrefix: '',
+    omitFeaturesWithUsage: true,
+  })
+}
+
+/** Featureblock JSON titles end with " Malice"; UI tags show only the type (e.g. "Demon", "Goblin"). */
+function maliceFeatureblockTagLabel(blockName: string): string {
+  return blockName.replace(/\s+Malice$/u, '').trim()
+}
+
+function ancestryMalicePicksForStatblock(sb: BestiaryStatblock): MaliceFeaturePick[] {
+  const creatureLevel = sb.level ?? 0
+  const sbBase = baseName(sb.name)
+  const out: MaliceFeaturePick[] = []
+
+  for (const b of registeredMaliceFeatureblocks()) {
+    if (b.kind === 'tiered') {
+      if (!sb.ancestry.includes(b.ancestry)) continue
+      if (b.level > creatureLevel) continue
+      const listTag = `${maliceFeatureblockTagLabel(b.blockName)} (${b.level}+)`
+      out.push(
+        ...malicePicksFromFeatures(b.features as RawFeature[], {
+          sourceKeyPrefix: `a:${b.ancestry}:${b.level}:`,
+          omitFeaturesWithUsage: false,
+          listTag,
+        }),
+      )
+    } else if (b.kind === 'ancestryTag') {
+      if (!sb.ancestry.includes(b.ancestryTag)) continue
+      const slug = b.ancestryTag.replace(/\s+/g, '_')
+      out.push(
+        ...malicePicksFromFeatures(b.features as RawFeature[], {
+          sourceKeyPrefix: `a:${slug}::`,
+          omitFeaturesWithUsage: false,
+          listTag: maliceFeatureblockTagLabel(b.blockName),
+        }),
+      )
+    } else {
+      if (baseName(b.statblockName) !== sbBase) continue
+      const slug = b.statblockName.replace(/\s+/g, '_')
+      out.push(
+        ...malicePicksFromFeatures(b.features as RawFeature[], {
+          sourceKeyPrefix: `n:${slug}:`,
+          omitFeaturesWithUsage: false,
+          listTag: maliceFeatureblockTagLabel(b.blockName),
+        }),
+      )
+    }
+  }
+  return out
+}
+
+function bestiaryStatblockForMalice(m: Monster): BestiaryStatblock | undefined {
+  if (m.custom != null) return undefined
+  const direct = lookupStatblock(m.name)
+  if (direct) return direct
+  const firstMinion = m.minions?.[0]?.name
+  return firstMinion ? lookupStatblock(firstMinion) : undefined
+}
+
+function malicePicksForResolvedStatblock(sb: BestiaryStatblock): MaliceFeaturePick[] {
+  return [...malicePicksFromStatblock(sb), ...ancestryMalicePicksForStatblock(sb)]
+}
+
 export function malicePicksForMonsterRow(m: Monster): MaliceFeaturePick[] {
   if (m.custom != null) return []
-  const direct = lookupStatblock(m.name)
-  if (direct) {
-    const picks = malicePicksFromStatblock(direct)
-    if (picks.length > 0) return picks
-  }
-  const firstMinion = m.minions?.[0]?.name
-  if (firstMinion) {
-    const sb = lookupStatblock(firstMinion)
-    if (sb) return malicePicksFromStatblock(sb)
-  }
-  return []
+  const sb = bestiaryStatblockForMalice(m)
+  return sb ? malicePicksForResolvedStatblock(sb) : []
 }
 
 /**
@@ -122,19 +217,8 @@ export function maliceMonsterFamilyTag(m: Monster): string {
     const n = m.name.trim()
     return n.length > 0 ? n : 'Custom'
   }
-  const direct = lookupStatblock(m.name)
-  if (direct) {
-    const picks = malicePicksFromStatblock(direct)
-    if (picks.length > 0) return direct.name
-  }
-  const firstMinion = m.minions?.[0]?.name
-  if (firstMinion) {
-    const sb = lookupStatblock(firstMinion)
-    if (sb) {
-      const picks = malicePicksFromStatblock(sb)
-      if (picks.length > 0) return sb.name
-    }
-  }
+  const sb = bestiaryStatblockForMalice(m)
+  if (sb && malicePicksForResolvedStatblock(sb).length > 0) return sb.name
   return baseName(m.name)
 }
 

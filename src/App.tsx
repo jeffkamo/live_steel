@@ -1735,13 +1735,13 @@ function App() {
     terrainDrawerRow != null && (terrainDrawerRow.terrainName != null || terrainDrawerRow.custom != null)
 
   return (
-    <div className="min-h-svh bg-zinc-50 dark:bg-zinc-950 p-4 font-serif text-zinc-900 dark:text-zinc-100 antialiased md:p-8">
+    <div className="min-h-svh bg-zinc-50 dark:bg-zinc-950 p-4 font-sans text-zinc-900 dark:text-zinc-100 antialiased md:p-8">
       <SettingsMenu colorScheme={colorScheme} onColorSchemeChange={setColorScheme} />
       <div className="mx-auto flex w-full max-w-[min(92rem,100%)] items-stretch gap-0">
         <div className="min-w-0 flex-1">
           <div className="mx-auto max-w-6xl">
             <header className="px-4 pt-5 pb-0 text-center">
-              <h1 className="text-lg font-normal uppercase tracking-[0.2em] text-zinc-900 dark:text-white md:text-xl">
+              <h1 className="font-serif text-lg font-normal uppercase tracking-[0.2em] text-zinc-900 dark:text-white md:text-xl">
                 Live Steel
               </h1>
               <div className="relative mt-1.5 flex items-center justify-center gap-2">
@@ -2142,7 +2142,7 @@ function App() {
 
             <section aria-label="Dynamic terrain" className="mt-8 flex flex-col gap-2 md:mt-10">
               <header className="px-4 pt-2 pb-0 text-center md:pt-3">
-                <h2 className="text-lg font-normal uppercase tracking-[0.2em] text-zinc-900 dark:text-white md:text-xl">
+                <h2 className="font-serif text-lg font-normal uppercase tracking-[0.2em] text-zinc-900 dark:text-white md:text-xl">
                   Dynamic Terrain
                 </h2>
                 <TitleRule />

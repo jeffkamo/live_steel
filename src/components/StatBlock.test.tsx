@@ -95,9 +95,7 @@ describe('StatBlock', () => {
 
   it('renders keywords, usage, distance, target for abilities', () => {
     render(<StatBlock features={[sampleAbility]} monsterName="Test Monster" />)
-    expect(screen.getByText('Melee')).toBeInTheDocument()
-    expect(screen.getByText('Strike')).toBeInTheDocument()
-    expect(screen.getByText('Weapon')).toBeInTheDocument()
+    expect(screen.getByText('Melee, Strike, Weapon')).toBeInTheDocument()
     expect(screen.getByText(/Main action/)).toBeInTheDocument()
     expect(screen.getByText(/Melee 1/)).toBeInTheDocument()
     expect(screen.getByText(/One creature or object/)).toBeInTheDocument()
@@ -278,9 +276,7 @@ describe('StatBlock Draw Steel glyphs (STAT-002)', () => {
   it('renders attack keywords as plain words, not symbol glyphs', () => {
     render(<StatBlock features={[sampleAbility]} monsterName="Test Monster" />)
     expect(screen.queryByTestId('draw-steel-keyword-glyph')).not.toBeInTheDocument()
-    expect(screen.getByText('Melee')).toBeInTheDocument()
-    expect(screen.getByText('Strike')).toBeInTheDocument()
-    expect(screen.getByText('Weapon')).toBeInTheDocument()
+    expect(screen.getByText('Melee, Strike, Weapon')).toBeInTheDocument()
   })
 
   it('exposes five MARIP letter slots for bestiary monsters', () => {
@@ -491,7 +487,7 @@ function GroupSectionWithDrawerHarness(
   const openMonster =
     drawer != null ? group.monsters[drawer.monsterIndex] : undefined
   return (
-    <div className="flex font-serif">
+    <div className="flex font-sans">
       <GroupSection
         {...rest}
         group={group}

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react'
-import type { EncounterGroup, MaliceRowRef } from '../types'
+import type { EncounterGroup, MaliceRowRef, PowerRollEffect } from '../types'
 import {
   CORE_MALICE_FEATURES,
   ensureMaliceRows,
@@ -10,6 +10,7 @@ import {
   malicePicksForMonsterRow,
 } from '../malice'
 import { ReorderGripWithMenu, type ReorderGripMenuItem } from './ReorderGripWithMenu'
+import { EffectBlock } from './StatBlock'
 
 const MALICE_DRAG_MIME = 'application/x-live-steel-malice-row-index'
 
@@ -65,7 +66,7 @@ export function MaliceDashboard({
             featureOptionKey: key,
             name: p.name,
             cost: p.cost,
-            monsterTag: maliceMonsterFamilyTag(m),
+            monsterTag: p.listTag ?? maliceMonsterFamilyTag(m),
           })
         }
       }
@@ -171,7 +172,7 @@ export function MaliceDashboard({
   )
 
   return (
-    <div className="rounded-lg border border-zinc-200/95 bg-white shadow-sm dark:border-transparent dark:bg-zinc-900/80 dark:shadow-none">
+    <div className="rounded-lg border border-zinc-200/95 bg-white font-sans shadow-sm dark:border-transparent dark:bg-zinc-900/80 dark:shadow-none">
       <div className="border-b border-zinc-200/90 bg-zinc-50/90 px-3 py-2.5 dark:border-zinc-800/90 dark:bg-zinc-950/40">
         <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
           <h3 className="font-sans text-[0.65rem] font-semibold uppercase tracking-wide text-zinc-600 dark:text-zinc-400">
@@ -234,6 +235,7 @@ export function MaliceDashboard({
             let cost: string
             let effect: string
             let monsterTag: string | null = null
+            let monsterEffectBlocks: PowerRollEffect[] | undefined
             if (row.kind === 'core') {
               const c = CORE_MALICE_FEATURES[row.coreId]
               name = c.name
@@ -245,7 +247,8 @@ export function MaliceDashboard({
               name = resolved.pick.name
               cost = resolved.pick.cost
               effect = resolved.pick.effect
-              monsterTag = maliceMonsterFamilyTag(resolved.monster)
+              monsterEffectBlocks = resolved.pick.effects
+              monsterTag = resolved.pick.listTag ?? maliceMonsterFamilyTag(resolved.monster)
             }
 
             const isMonsterRow = row.kind === 'monster'
@@ -320,7 +323,7 @@ export function MaliceDashboard({
                 ) : !uiLocked ? (
                   <div className="min-h-0 min-w-0" aria-hidden />
                 ) : null}
-                <div className="min-w-0">
+                <div className="min-w-0 font-sans">
                   {monsterTag != null ? (
                     <>
                       <div className="flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-0.5">
@@ -347,9 +350,17 @@ export function MaliceDashboard({
                       </span>
                     </div>
                   )}
-                  <p className="mt-1 font-sans text-[0.72rem] leading-snug text-zinc-600 dark:text-zinc-400">
-                    {effect}
-                  </p>
+                  {monsterEffectBlocks != null && monsterEffectBlocks.length > 0 ? (
+                    <div className="mt-1 space-y-1">
+                      {monsterEffectBlocks.map((eff, ei) => (
+                        <EffectBlock key={ei} eff={eff} />
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="mt-1 font-sans text-[0.72rem] leading-snug text-zinc-600 dark:text-zinc-400">
+                      {effect}
+                    </p>
+                  )}
                 </div>
               </li>
             )

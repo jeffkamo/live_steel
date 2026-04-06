@@ -193,14 +193,41 @@ describe('mapFeatures', () => {
     expect(features[0]!.cost).toBe('3 Stamina')
   })
 
-  it('filters out features with malice cost', () => {
+  it('filters out pure malice traits (no usage line) from the stat block', () => {
     const raw = [
       { type: 'feature', feature_type: 'ability', name: 'Normal Strike', effects: [] },
-      { type: 'feature', feature_type: 'ability', name: 'Shadow Chains', cost: '3 Malice', effects: [] },
+      {
+        type: 'feature',
+        feature_type: 'trait',
+        name: 'Director Only',
+        cost: '3 Malice',
+        effects: [{ effect: 'Spend malice for an effect.' }],
+      },
     ]
     const features = mapFeatures(raw)
     expect(features).toHaveLength(1)
     expect(features[0]!.name).toBe('Normal Strike')
+  })
+
+  it('keeps malice-cost abilities that have a usage line (main / maneuver / triggered)', () => {
+    const raw = [
+      {
+        type: 'feature',
+        feature_type: 'ability',
+        name: 'Pain Absorption',
+        cost: '1 Malice',
+        usage: 'Triggered action',
+        distance: 'Self',
+        target: 'Self',
+        trigger: 'Targeted.',
+        effects: [{ name: 'Effect', effect: 'Halve damage.' }],
+      },
+    ]
+    const features = mapFeatures(raw)
+    expect(features).toHaveLength(1)
+    expect(features[0]!.name).toBe('Pain Absorption')
+    expect(features[0]!.cost).toBe('1 Malice')
+    expect(features[0]!.effects).toHaveLength(1)
   })
 
   it('filters out effects with malice cost within a feature', () => {
@@ -221,12 +248,13 @@ describe('mapFeatures', () => {
     expect(features[0]!.effects![0]!.name).toBe('Normal')
   })
 
-  it('keeps feature when only some effects are malice', () => {
+  it('keeps malice-cost effects when the parent has a usage line (optional malice augments)', () => {
     const raw = [
       {
         type: 'feature',
         feature_type: 'ability',
         name: 'Sword Slash',
+        usage: 'Main action',
         effects: [
           { roll: 'Power Roll + 2', tier1: '4 damage', tier2: '6 damage', tier3: '7 damage' },
           { name: 'Malice Effect', cost: '2 Malice', effect: 'Extra slash.' },
@@ -235,8 +263,9 @@ describe('mapFeatures', () => {
     ]
     const features = mapFeatures(raw)
     expect(features).toHaveLength(1)
-    expect(features[0]!.effects).toHaveLength(1)
+    expect(features[0]!.effects).toHaveLength(2)
     expect(features[0]!.effects![0]!.roll).toBe('Power Roll + 2')
+    expect(features[0]!.effects![1]!.cost).toBe('2 Malice')
   })
 })
 

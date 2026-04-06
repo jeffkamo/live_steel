@@ -33,7 +33,7 @@ export function CustomTerrainStatForm({
   const statCardBorderClass = GROUP_COLOR_STAT_BLOCK_CARD.grey ?? statBlockCardBorderDefault
 
   return (
-    <div role="region" aria-label={`Custom stats for ${row.object}`} className="py-2">
+    <div role="region" aria-label={`Custom stats for ${row.object}`} className="py-2 font-sans">
       <div className={`${statBlockCardBaseClass} ${statCardBorderClass}`}>
         <p className="mb-3 text-[0.65rem] font-semibold uppercase tracking-widest text-zinc-600 dark:text-zinc-400">
           Custom terrain

@@ -33,8 +33,8 @@ function baseMonster(partial: Partial<Monster> & Pick<Monster, 'name'>): Monster
 
 describe('maliceMonsterFamilyTag', () => {
   it('uses bestiary stat block name for numbered encounter copies', () => {
-    const m = baseMonster({ name: 'Goblin Assassin 2', encounterInstanceId: 'x' })
-    expect(maliceMonsterFamilyTag(m)).toBe('Goblin Assassin')
+    const m = baseMonster({ name: 'Chimeron 2', encounterInstanceId: 'x' })
+    expect(maliceMonsterFamilyTag(m)).toBe('Chimeron')
   })
 })
 
@@ -51,13 +51,41 @@ describe('maliceCostSortKey', () => {
 })
 
 describe('malicePicksForMonsterRow', () => {
-  it('returns feature-level malice from bestiary (Goblin Assassin)', () => {
+  it('returns ancestry malice tiers for demons (Chimeron)', () => {
+    const m = baseMonster({ name: 'Chimeron' })
+    const picks = malicePicksForMonsterRow(m)
+    const soulburn = picks.find((p) => p.name === 'Soulburn')
+    expect(soulburn).toBeDefined()
+    expect(soulburn?.cost).toMatch(/Malice/i)
+    expect(soulburn?.effect.length).toBeGreaterThan(0)
+    expect(soulburn?.listTag).toBe('Demon (1+)')
+    expect(picks.some((p) => p.name === 'Pain Absorption')).toBe(false)
+  })
+
+  it('returns Goblin Malice for goblin ancestry', () => {
     const m = baseMonster({ name: 'Goblin Assassin' })
     const picks = malicePicksForMonsterRow(m)
-    const shadow = picks.find((p) => p.name === 'Shadow Chains')
-    expect(shadow).toBeDefined()
-    expect(shadow?.cost).toMatch(/Malice/i)
-    expect(shadow?.effect.length).toBeGreaterThan(0)
+    const goblinMode = picks.find((p) => p.name === 'Goblin Mode')
+    expect(goblinMode).toBeDefined()
+    expect(goblinMode?.listTag).toBe('Goblin')
+  })
+
+  it("returns Ajax's Malice for Ajax the Invincible by stat block name", () => {
+    const m = baseMonster({ name: 'Ajax the Invincible' })
+    const picks = malicePicksForMonsterRow(m)
+    const reason = picks.find((p) => p.name === 'Reason')
+    expect(reason).toBeDefined()
+    expect(reason?.listTag).toBe("Ajax's")
+  })
+
+  it('includes structured effects for tiered malice (Minotaur Bullseye)', () => {
+    const m = baseMonster({ name: 'Minotaur' })
+    const picks = malicePicksForMonsterRow(m)
+    const bull = picks.find((p) => p.name === 'Bullseye')
+    expect(bull?.effects?.length).toBe(1)
+    expect(bull?.effects?.[0]?.effect).toMatch(/psychic impressions/i)
+    expect(bull?.effects?.[0]?.tier1).toMatch(/line of effect/i)
+    expect(bull?.effects?.[0]?.tier3).toMatch(/No effect/)
   })
 
   it('returns empty for custom creatures', () => {
@@ -87,7 +115,7 @@ describe('ensureMaliceRows', () => {
   })
 
   it('dedupes creature rows that share the same featureOptionKey', () => {
-    const k = 'Shadow Chains\u00013 Malice'
+    const k = 'Soulburn\u00013 Malice'
     const rows = [
       { kind: 'core' as const, coreId: 'brutal-effectiveness' as const },
       { kind: 'monster' as const, id: 'a', featureOptionKey: k },
@@ -100,10 +128,10 @@ describe('ensureMaliceRows', () => {
 
 describe('findMalicePickForFeatureKey', () => {
   it('returns the first roster creature that has the feature', () => {
-    const m1 = baseMonster({ name: 'Goblin Assassin', encounterInstanceId: 'a' })
-    const m2 = baseMonster({ name: 'Goblin Assassin 2', encounterInstanceId: 'b' })
+    const m1 = baseMonster({ name: 'Chimeron', encounterInstanceId: 'a' })
+    const m2 = baseMonster({ name: 'Chimeron 2', encounterInstanceId: 'b' })
     const picks = malicePicksForMonsterRow(m1)
-    const shadow = picks.find((p) => p.name === 'Shadow Chains')
+    const shadow = picks.find((p) => p.name === 'Soulburn')
     expect(shadow).toBeDefined()
     const key = maliceFeatureOptionKey(shadow!)
     const groups: EncounterGroup[] = [
@@ -135,11 +163,11 @@ describe('normalizeMonsterMaliceRowRefs', () => {
       {
         id: 'g0',
         color: 'red',
-        monsters: [baseMonster({ name: 'Goblin Assassin', encounterInstanceId: 'legacy-1' })],
+        monsters: [baseMonster({ name: 'Chimeron', encounterInstanceId: 'legacy-1' })],
       },
     ]
     const picks = malicePicksForMonsterRow(groups[0]!.monsters[0]!)
-    const shadow = picks.find((p) => p.name === 'Shadow Chains')
+    const shadow = picks.find((p) => p.name === 'Soulburn')
     expect(shadow).toBeDefined()
     const raw = [
       {
@@ -179,10 +207,10 @@ describe('pruneOrphanMaliceRows', () => {
   })
 
   it('keeps a row when another creature still provides the same feature', () => {
-    const m1 = baseMonster({ name: 'Goblin Assassin', encounterInstanceId: 'a' })
-    const m2 = baseMonster({ name: 'Goblin Assassin 2', encounterInstanceId: 'b' })
+    const m1 = baseMonster({ name: 'Chimeron', encounterInstanceId: 'a' })
+    const m2 = baseMonster({ name: 'Chimeron 2', encounterInstanceId: 'b' })
     const picks = malicePicksForMonsterRow(m1)
-    const shadow = picks.find((p) => p.name === 'Shadow Chains')
+    const shadow = picks.find((p) => p.name === 'Soulburn')
     expect(shadow).toBeDefined()
     const key = maliceFeatureOptionKey(shadow!)
     const groups: EncounterGroup[] = [{ id: 'g0', color: 'red', monsters: [m2] }]

@@ -350,7 +350,7 @@ function PowerRollTiers({ effect }: { effect: PowerRollEffect }) {
  * - Hybrid effects that have both effect text and tier data (e.g. terrain
  *   traits where the effect paragraph is followed by a Presence test table)
  */
-function EffectBlock({ eff, highlight }: { eff: PowerRollEffect; highlight?: boolean }) {
+export function EffectBlock({ eff, highlight }: { eff: PowerRollEffect; highlight?: boolean }) {
   const hasTiers = eff.tier1 || eff.tier2 || eff.tier3
   const hasRoll = !!eff.roll
 
@@ -410,16 +410,11 @@ function StatBlockFeatureIcon({ icon }: { icon?: string }) {
 }
 
 function KeywordLine({ keywords }: { keywords: string[] }) {
-  return (
-    <span className="inline-flex flex-wrap items-baseline gap-x-1 text-zinc-800 dark:text-zinc-200">
-      {keywords.map((kw, i) => (
-        <span key={`${kw}-${i}`} className="inline-flex items-baseline">
-          {i > 0 ? <span className="text-zinc-600">, </span> : null}
-          {kw}
-        </span>
-      ))}
-    </span>
-  )
+  const line = keywords
+    .map((kw) => kw.trim())
+    .filter(Boolean)
+    .join(', ')
+  return <span className="text-zinc-800 dark:text-zinc-200">{line}</span>
 }
 
 function AbilityBlock({ feature }: { feature: MonsterFeature }) {
@@ -600,7 +595,7 @@ export function StatBlock({
 
   if (features.length === 0 && !statblock) {
     return (
-      <p className="py-2 text-center text-xs text-zinc-500" data-testid="stat-block-empty">
+      <p className="py-2 text-center font-sans text-xs text-zinc-500" data-testid="stat-block-empty">
         No features available.
       </p>
     )
@@ -610,7 +605,7 @@ export function StatBlock({
 
   return (
     <div
-      className="py-2"
+      className="py-2 font-sans"
       role="region"
       aria-label={`Stat block for ${monsterName}`}
       data-testid="stat-block-root"

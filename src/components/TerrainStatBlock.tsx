@@ -61,14 +61,14 @@ export function TerrainStatBlock({
 
   if (!sb && features.length === 0) {
     return (
-      <p className="py-2 text-center text-xs text-zinc-500">
+      <p className="py-2 text-center font-sans text-xs text-zinc-500">
         No terrain data available.
       </p>
     )
   }
 
   return (
-    <div role="region" aria-label={`Stat block for ${terrainName}`} className="py-2">
+    <div role="region" aria-label={`Stat block for ${terrainName}`} className="py-2 font-sans">
       <div className="rounded-md border border-amber-200/90 border-l-2 border-l-amber-600/70 bg-[linear-gradient(165deg,rgb(250_250_250/0.98)_0%,rgb(244_244_245/0.98)_55%)] px-3 pt-2.5 pb-3 shadow-[inset_0_1px_0_rgb(251_191_36/0.12)] dark:border-amber-950/55 dark:border-l-amber-700/45 dark:bg-[linear-gradient(165deg,rgb(39_39_42/0.95)_0%,rgb(9_9_11/0.98)_55%)] dark:shadow-[inset_0_1px_0_rgb(251_191_36/0.07)]">
         {sb && <TerrainCoreStats sb={sb} />}
         {sb && features.length > 0 && (

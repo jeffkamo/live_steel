@@ -257,7 +257,7 @@ export function TerrainRow({
     'flex h-full min-h-[3.75rem] items-center p-3 sm:min-h-[4rem] sm:p-3.5'
   return (
     <div
-      className={`${terrainGridClass} overflow-visible rounded-lg border border-zinc-200/95 bg-white shadow-sm dark:border-transparent dark:bg-zinc-900/80 dark:shadow-none ${
+      className={`${terrainGridClass} overflow-visible rounded-lg border border-zinc-200/95 bg-white font-sans shadow-sm dark:border-transparent dark:bg-zinc-900/80 dark:shadow-none ${
         isDrawerOpen ? 'ring-1 ring-amber-500/40' : ''
       }`}
     >
