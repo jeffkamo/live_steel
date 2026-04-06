@@ -1744,28 +1744,33 @@ function App() {
               <h1 className="font-serif text-lg font-normal uppercase tracking-[0.2em] text-zinc-900 dark:text-white md:text-xl">
                 Live Steel
               </h1>
-              <div className="relative mt-1.5 flex items-center justify-center gap-2">
-                <button
-                  type="button"
-                  aria-label="Switch encounter"
-                  aria-expanded={showEncounterSwitcher}
-                  onClick={() => setShowEncounterSwitcher((v) => !v)}
-                  className="inline-flex cursor-pointer items-center gap-1 rounded-md px-2 py-0.5 text-[0.65rem] font-normal uppercase tracking-[0.28em] text-zinc-700 dark:text-zinc-400 transition-colors hover:bg-zinc-200/95 dark:hover:bg-zinc-800/70 hover:text-zinc-950 dark:hover:text-zinc-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500/60"
-                >
-                  {encounterName}
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3 w-3" aria-hidden>
-                    <path fillRule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z" clipRule="evenodd" />
-                  </svg>
-                </button>
+              <div
+                ref={encounterSwitcherRef}
+                className="relative mt-1.5 flex min-w-0 max-w-full flex-wrap items-center justify-center gap-2"
+              >
+                <div className="min-w-0 max-w-[min(24rem,calc(100vw-6rem))]">
+                  <button
+                    type="button"
+                    aria-label="Switch encounter"
+                    aria-expanded={showEncounterSwitcher}
+                    title={encounterName}
+                    onClick={() => setShowEncounterSwitcher((v) => !v)}
+                    className="inline-flex w-full min-w-0 cursor-pointer items-center gap-1 rounded-md px-2 py-0.5 text-[0.65rem] font-normal uppercase tracking-[0.28em] text-zinc-700 dark:text-zinc-400 transition-colors hover:bg-zinc-200/95 dark:hover:bg-zinc-800/70 hover:text-zinc-950 dark:hover:text-zinc-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500/60"
+                  >
+                    <span className="min-w-0 truncate">{encounterName}</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3 w-3 shrink-0" aria-hidden>
+                      <path fillRule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z" clipRule="evenodd" />
+                    </svg>
+                  </button>
+                </div>
                 {showEncounterSwitcher && (
                   <div
-                    ref={encounterSwitcherRef}
                     role="listbox"
                     aria-label="Select encounter"
-                    className="absolute top-full z-20 mt-1 max-h-72 min-w-[14rem] overflow-y-auto rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 py-1 shadow-xl"
+                    className="absolute left-1/2 top-full z-20 mt-1 max-h-72 w-[min(100%,calc(100vw-2rem))] min-w-0 -translate-x-1/2 overflow-x-hidden overflow-y-auto rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 py-1 shadow-xl"
                   >
                     {encounterIndex.encounters.map((entry) => (
-                      <div key={entry.id} className="group/entry relative flex items-center">
+                      <div key={entry.id} className="group/entry relative flex min-w-0 items-center">
                         {renamingEncounterId === entry.id ? (
                           <div className="flex w-full items-center gap-1 px-2 py-1">
                             <input
@@ -1802,7 +1807,9 @@ function App() {
                               ) : (
                                 <span className="inline-block h-3.5 w-3.5 shrink-0" aria-hidden />
                               )}
-                              <span className="min-w-0 truncate">{entry.name}</span>
+                              <span className="min-w-0 truncate" title={entry.name}>
+                                {entry.name}
+                              </span>
                             </button>
                             <div className="flex shrink-0 items-center gap-0.5 pr-1.5 opacity-0 transition-opacity group-hover/entry:opacity-100 focus-within:opacity-100">
                               <button
