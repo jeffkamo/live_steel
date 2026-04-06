@@ -2361,6 +2361,11 @@ function App() {
                           />
                         )
                       }
+                      const captainEffectActive =
+                        Boolean(
+                          drawerMonster.minions?.length &&
+                            drawerMonster.captainId,
+                        )
                       return (
                         <>
                           <StatBlock
@@ -2368,6 +2373,7 @@ function App() {
                             monsterName={drawerMonster.name}
                             encounterGroupColor={drawerGroupColor}
                             statblockOverride={customStatblock ?? undefined}
+                            captainEffectActive={captainEffectActive}
                           />
                           {customStatblock != null &&
                             uiLocked &&

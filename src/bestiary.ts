@@ -1,5 +1,6 @@
 import type { Monster, MonsterFeature, PowerRollEffect } from './types'
 import statblockData from '../data/bestiary/Monsters/statblocks.json'
+import { parseWithCaptainEffect, type CaptainNumericBonuses } from './withCaptainEffect'
 
 export type BestiaryStatblock = {
   name: string
@@ -240,7 +241,7 @@ export function bestiaryStatblockFromCustomMonster(m: Monster): BestiaryStatbloc
   }
 }
 
-export function rosterCombatStats(m: Monster): { fs: number; spd: number; stab: number } {
+function rosterCombatStatsBase(m: Monster): { fs: number; spd: number; stab: number } {
   if (m.custom != null) {
     return { fs: m.fs, spd: m.dist, stab: m.stab }
   }
@@ -250,6 +251,43 @@ export function rosterCombatStats(m: Monster): { fs: number; spd: number; stab: 
     return { fs: sb.free_strike, spd: sb.speed, stab: sb.stability }
   }
   return { fs: m.fs, spd: m.dist, stab: m.stab }
+}
+
+/**
+ * When a minion horde has a captain, numeric parts of {@link BestiaryStatblock.with_captain}
+ * (speed, stamina, free strike, stability) apply to roster FS / SPD / Stab.
+ */
+export function captainNumericBonusesFromMonster(m: Monster): CaptainNumericBonuses | null {
+  if (!m.minions?.length || !m.captainId) return null
+  const sb =
+    lookupStatblock(m.name) ?? (m.minions[0] ? lookupStatblock(m.minions[0].name) : undefined)
+  if (!sb?.with_captain) return null
+  return parseWithCaptainEffect(sb.with_captain).numeric
+}
+
+export function rosterCombatStats(m: Monster): { fs: number; spd: number; stab: number } {
+  const base = rosterCombatStatsBase(m)
+  const bonus = captainNumericBonusesFromMonster(m)
+  if (!bonus) return base
+  return {
+    fs: base.fs + bonus.freeStrike,
+    spd: base.spd + bonus.speed,
+    stab: base.stab + bonus.stability,
+  }
+}
+
+export function rosterCombatStatsCaptainHighlights(m: Monster): {
+  fs: boolean
+  spd: boolean
+  stab: boolean
+} {
+  const bonus = captainNumericBonusesFromMonster(m)
+  if (!bonus) return { fs: false, spd: false, stab: false }
+  return {
+    fs: bonus.freeStrike !== 0,
+    spd: bonus.speed !== 0,
+    stab: bonus.stability !== 0,
+  }
 }
 
 /**

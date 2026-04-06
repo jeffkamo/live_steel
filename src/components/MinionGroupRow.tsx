@@ -8,7 +8,13 @@ import type {
   Monster,
   MonsterCardDrawerView,
 } from '../types'
-import { minionIntervalFromMonster, rosterCombatStats, suggestedDeadCount } from '../bestiary'
+import {
+  lookupStatblock,
+  minionIntervalFromMonster,
+  rosterCombatStats,
+  rosterCombatStatsCaptainHighlights,
+  suggestedDeadCount,
+} from '../bestiary'
 import { GROUP_COLOR_BADGE, GROUP_COLOR_LABEL, buildCreatureOrdinalMap } from '../data'
 import { EditableStaminaCell } from './EditableStaminaCell'
 import { MinionStaminaDisplay } from './MinionStaminaDisplay'
@@ -220,6 +226,12 @@ export function MinionGroupRow({
   const creatureNameColCell =
     'flex h-full min-h-[3.75rem] items-stretch px-2 py-2 sm:min-h-[4rem] sm:px-2.5 sm:py-2.5'
   const combat = rosterCombatStats(monster)
+  const combatCaptainHighlights = rosterCombatStatsCaptainHighlights(monster)
+  const sbCaptain =
+    lookupStatblock(monster.name) ??
+    (monster.minions?.[0] ? lookupStatblock(monster.minions[0].name) : undefined)
+  const captainWithCaptainLine =
+    captainRef && sbCaptain?.with_captain ? sbCaptain.with_captain : null
   const rowTone =
     'transition-opacity duration-200 ease-out motion-reduce:transition-none ' +
     (turnComplete ? 'opacity-[0.38]' : 'opacity-100')
@@ -445,6 +457,14 @@ export function MinionGroupRow({
                 </div>
               )}
             </div>
+            {captainWithCaptainLine != null && (
+              <p
+                className="mt-1.5 border-l-2 border-amber-500/45 pl-2 text-[0.6rem] leading-snug text-amber-900 dark:text-amber-100/90"
+                data-testid="captain-effect-notes"
+              >
+                {captainWithCaptainLine}
+              </p>
+            )}
           </div>
           </div>
         </div>
@@ -482,7 +502,14 @@ export function MinionGroupRow({
             <MaripCluster values={monster.marip} />
           </div>
           <div className={`roster-creature__stats ${bodyCell} justify-center ${rowTone}`}>
-            <StatCluster fs={combat.fs} spd={combat.spd} stab={combat.stab} />
+            <StatCluster
+              fs={combat.fs}
+              spd={combat.spd}
+              stab={combat.stab}
+              highlightFs={combatCaptainHighlights.fs}
+              highlightSpd={combatCaptainHighlights.spd}
+              highlightStab={combatCaptainHighlights.stab}
+            />
           </div>
         </div>
         <div className="roster-creature__conditions relative z-0 flex h-full min-h-[3.75rem] w-full items-stretch overflow-visible hover:z-20 focus-within:z-20 has-[[data-condition-picker]]:z-[120] sm:min-h-[4rem]">
@@ -639,6 +666,7 @@ function MinionChildRow({
   ]
   const badge = GROUP_COLOR_BADGE[groupColor]
   const childCombat = rosterCombatStats(parentMonster)
+  const childCaptainHighlights = rosterCombatStatsCaptainHighlights(parentMonster)
   const bodyCell =
     'flex h-full min-h-[3rem] items-center p-2 sm:min-h-[3.25rem] sm:p-2.5'
   const nameColCell =
@@ -753,7 +781,14 @@ function MinionChildRow({
             <MaripCluster values={parentMonster.marip} />
           </div>
           <div className={`roster-creature__stats ${bodyCell} justify-center ${rowTone} ${deadDim}`}>
-            <StatCluster fs={childCombat.fs} spd={childCombat.spd} stab={childCombat.stab} />
+            <StatCluster
+              fs={childCombat.fs}
+              spd={childCombat.spd}
+              stab={childCombat.stab}
+              highlightFs={childCaptainHighlights.fs}
+              highlightSpd={childCaptainHighlights.spd}
+              highlightStab={childCaptainHighlights.stab}
+            />
           </div>
         </div>
         <div

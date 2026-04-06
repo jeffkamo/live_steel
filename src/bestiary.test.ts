@@ -11,6 +11,7 @@ import {
   minionThresholds,
   minionSegmentDisplay,
   rosterCombatStats,
+  rosterCombatStatsCaptainHighlights,
   bestiaryStatblockFromCustomMonster,
   minionIntervalFromMonster,
   suggestedDeadCount,
@@ -589,6 +590,22 @@ describe('rosterCombatStats', () => {
       stab: 7,
     } as unknown as Monster
     expect(rosterCombatStats(m)).toEqual({ fs: 9, spd: 8, stab: 7 })
+  })
+
+  it('adds captain with_captain numeric bonuses when a horde has a captain', () => {
+    const sb = lookupStatblock('Goblin Spinecleaver')
+    expect(sb?.with_captain).toBe('+1 damage bonus to strikes')
+    const m = {
+      name: 'Goblin Spinecleaver',
+      captainId: { groupIndex: 0, monsterIndex: 0 },
+      minions: [{ name: 'Goblin Spinecleaver 1', initials: 'G', conditions: [], dead: false }],
+    } as unknown as Monster
+    expect(rosterCombatStats(m).fs).toBe(sb!.free_strike + 1)
+    expect(rosterCombatStatsCaptainHighlights(m)).toEqual({
+      fs: true,
+      spd: false,
+      stab: false,
+    })
   })
 })
 

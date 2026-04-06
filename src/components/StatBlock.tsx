@@ -2,6 +2,12 @@ import { Fragment, type ReactNode, useId, useLayoutEffect, useRef, useState } fr
 import type { MonsterFeature, PowerRollEffect } from '../types'
 import type { BestiaryStatblock } from '../bestiary'
 import { lookupStatblock } from '../bestiary'
+import {
+  applyCaptainNumericToStatblock,
+  captainHighlightsFromBonuses,
+  parseWithCaptainEffect,
+  type CaptainStatHighlights,
+} from '../withCaptainEffect'
 import { GROUP_COLOR_STAT_BLOCK_CARD } from '../data'
 import type { GroupColorId } from '../types'
 import {
@@ -206,12 +212,25 @@ function rangeGlyphForDistance(distance: string): string | undefined {
   return DRAW_STEEL_DISTANCE_RULER_GLYPH
 }
 
-function CoreStatsSection({ sb }: { sb: BestiaryStatblock }) {
+const captainStatHighlightClass =
+  'rounded-sm px-0.5 ring-1 ring-amber-500/45 bg-amber-100/90 dark:bg-amber-500/15 dark:ring-amber-400/40'
+
+function CoreStatsSection({
+  sb,
+  captainHighlights,
+  captainEffectLabel,
+}: {
+  sb: BestiaryStatblock
+  captainHighlights?: CaptainStatHighlights | null
+  /** When set, "With Captain" label uses this suffix (e.g. "active") */
+  captainEffectLabel?: 'active' | null
+}) {
   const statValueClass = 'text-base font-medium tabular-nums leading-tight text-zinc-900 dark:text-zinc-100'
   const statLabelClass =
     'mt-1 text-[0.65rem] font-semibold uppercase tracking-wide text-zinc-600 dark:text-zinc-500'
 
   const { immunity, weakness } = immunityWeaknessLine(sb)
+  const h = captainHighlights
 
   const maripRow: { letter: string; title: string; value: number }[] = [
     { letter: 'M', title: 'Might', value: sb.might },
@@ -238,19 +257,39 @@ function CoreStatsSection({ sb }: { sb: BestiaryStatblock }) {
           <div className={statLabelClass}>Size</div>
         </div>
         <div>
-          <div className={statValueClass}>{sb.speed}</div>
+          <div
+            className={`${statValueClass} ${h?.speed ? captainStatHighlightClass : ''}`}
+            data-testid={h?.speed ? 'stat-block-speed-captain' : undefined}
+          >
+            {sb.speed}
+          </div>
           <div className={statLabelClass}>Speed</div>
         </div>
         <div>
-          <div className={statValueClass}>{sb.stamina}</div>
+          <div
+            className={`${statValueClass} ${h?.stamina ? captainStatHighlightClass : ''}`}
+            data-testid={h?.stamina ? 'stat-block-stamina-captain' : undefined}
+          >
+            {sb.stamina}
+          </div>
           <div className={statLabelClass}>Stamina</div>
         </div>
         <div>
-          <div className={statValueClass}>{sb.stability}</div>
+          <div
+            className={`${statValueClass} ${h?.stability ? captainStatHighlightClass : ''}`}
+            data-testid={h?.stability ? 'stat-block-stability-captain' : undefined}
+          >
+            {sb.stability}
+          </div>
           <div className={statLabelClass}>Stability</div>
         </div>
         <div>
-          <div className={statValueClass}>{sb.free_strike}</div>
+          <div
+            className={`${statValueClass} ${h?.freeStrike ? captainStatHighlightClass : ''}`}
+            data-testid={h?.freeStrike ? 'stat-block-freestrike-captain' : undefined}
+          >
+            {sb.free_strike}
+          </div>
           <div className={statLabelClass}>Free Strike</div>
         </div>
       </div>
@@ -299,8 +338,19 @@ function CoreStatsSection({ sb }: { sb: BestiaryStatblock }) {
 
       {sb.with_captain && (
         <div className="mt-2 text-[0.68rem]">
-          <span className="font-medium text-zinc-600 dark:text-zinc-400">With Captain: </span>
-          <span className="text-zinc-700 dark:text-zinc-300">{sb.with_captain}</span>
+          <span className="font-medium text-zinc-600 dark:text-zinc-400">
+            {captainEffectLabel === 'active' ? 'With Captain (active): ' : 'With Captain: '}
+          </span>
+          <span
+            className={
+              captainEffectLabel === 'active'
+                ? 'rounded-sm px-1 py-0.5 font-medium text-amber-950 ring-1 ring-amber-500/45 bg-amber-100/90 dark:bg-amber-500/15 dark:text-amber-100 dark:ring-amber-400/40'
+                : 'text-zinc-700 dark:text-zinc-300'
+            }
+            data-testid={captainEffectLabel === 'active' ? 'with-captain-effect-highlight' : undefined}
+          >
+            {sb.with_captain}
+          </span>
         </div>
       )}
     </div>
@@ -579,6 +629,7 @@ export function StatBlock({
   monsterName,
   encounterGroupColor,
   statblockOverride,
+  captainEffectActive = false,
 }: {
   features: MonsterFeature[]
   monsterName: string
@@ -586,8 +637,26 @@ export function StatBlock({
   encounterGroupColor?: GroupColorId
   /** When set, core stats use this object instead of bestiary lookup (e.g. locked custom creatures). */
   statblockOverride?: BestiaryStatblock
+  /**
+   * When true and the statblock has `with_captain`, numeric captain bonuses are applied
+   * to Speed, Stamina, Free Strike, and Stability in the header, with highlights.
+   */
+  captainEffectActive?: boolean
 }) {
-  const statblock = statblockOverride ?? lookupStatblock(monsterName)
+  const rawStatblock = statblockOverride ?? lookupStatblock(monsterName)
+  const captainParsed =
+    captainEffectActive && rawStatblock?.with_captain
+      ? parseWithCaptainEffect(rawStatblock.with_captain)
+      : null
+  const statblock =
+    captainParsed && rawStatblock
+      ? applyCaptainNumericToStatblock(rawStatblock, captainParsed.numeric)
+      : rawStatblock
+  const captainHighlights =
+    captainParsed && captainEffectActive ? captainHighlightsFromBonuses(captainParsed.numeric) : null
+  const captainLabel =
+    captainEffectActive && rawStatblock?.with_captain ? ('active' as const) : null
+
   const statCardBorderClass =
     encounterGroupColor != null
       ? GROUP_COLOR_STAT_BLOCK_CARD[encounterGroupColor]
@@ -615,7 +684,13 @@ export function StatBlock({
           statblock || hasFeatures ? `${statBlockCardBaseClass} ${statCardBorderClass}` : ''
         }
       >
-        {statblock && <CoreStatsSection sb={statblock} />}
+        {statblock && (
+          <CoreStatsSection
+            sb={statblock}
+            captainHighlights={captainHighlights}
+            captainEffectLabel={captainLabel}
+          />
+        )}
 
         {statblock && hasFeatures && <StatBlockSeparator />}
 

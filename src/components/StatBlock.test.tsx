@@ -187,6 +187,18 @@ describe('StatBlock core stats from bestiary', () => {
     render(<StatBlock features={[sampleAbility]} monsterName="Goblin Spinecleaver" />)
     expect(screen.getByText('+1 damage bonus to strikes')).toBeInTheDocument()
     expect(screen.getByText(/With Captain:/)).toBeInTheDocument()
+    expect(screen.queryByTestId('with-captain-effect-highlight')).not.toBeInTheDocument()
+  })
+
+  it('applies captain numeric bonuses and highlights when captainEffectActive', () => {
+    render(
+      <StatBlock features={[sampleAbility]} monsterName="Goblin Spinecleaver" captainEffectActive />,
+    )
+    expect(screen.getByTestId('stat-block-freestrike-captain')).toHaveTextContent('3')
+    expect(screen.getByText(/With Captain \(active\):/)).toBeInTheDocument()
+    expect(screen.getByTestId('with-captain-effect-highlight')).toHaveTextContent(
+      '+1 damage bonus to strikes',
+    )
   })
 
   it('renders immunities and weaknesses when present', () => {
