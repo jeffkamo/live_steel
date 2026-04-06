@@ -223,7 +223,7 @@ export function MonsterRowCells({
           </div>
         </div>
         <div
-          className="roster-creature__conditions relative z-0 flex h-full min-h-[3.75rem] w-full min-w-0 items-stretch overflow-visible hover:z-20 focus-within:z-20 has-[[data-condition-picker]]:z-[100] sm:min-h-[4rem]"
+          className="roster-creature__conditions relative z-0 flex h-full min-h-[3.75rem] w-full min-w-0 items-stretch overflow-visible hover:z-20 focus-within:z-20 has-[[data-condition-picker]]:z-[120] sm:min-h-[4rem]"
         >
           <div className="flex min-w-0 flex-1 items-stretch">
             <CreatureConditionCell

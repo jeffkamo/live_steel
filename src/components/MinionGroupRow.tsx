@@ -485,7 +485,7 @@ export function MinionGroupRow({
             <StatCluster fs={combat.fs} spd={combat.spd} stab={combat.stab} />
           </div>
         </div>
-        <div className="roster-creature__conditions relative z-0 flex h-full min-h-[3.75rem] w-full items-stretch overflow-visible hover:z-20 focus-within:z-20 has-[[data-condition-picker]]:z-[100] sm:min-h-[4rem]">
+        <div className="roster-creature__conditions relative z-0 flex h-full min-h-[3.75rem] w-full items-stretch overflow-visible hover:z-20 focus-within:z-20 has-[[data-condition-picker]]:z-[120] sm:min-h-[4rem]">
           <div className="flex min-w-0 flex-1 items-stretch">
             <CreatureConditionCell
               monsterName={monster.name}
@@ -757,7 +757,7 @@ function MinionChildRow({
           </div>
         </div>
         <div
-          className={`roster-creature__conditions relative z-0 flex h-full min-h-[3rem] w-full items-stretch overflow-visible hover:z-20 focus-within:z-20 has-[[data-condition-picker]]:z-[100] sm:min-h-[3.25rem] ${deadDim}`}
+          className={`roster-creature__conditions relative z-0 flex h-full min-h-[3rem] w-full items-stretch overflow-visible hover:z-20 focus-within:z-20 has-[[data-condition-picker]]:z-[120] sm:min-h-[3.25rem] ${deadDim}`}
         >
           <CreatureConditionCell
             monsterName={minion.name}
