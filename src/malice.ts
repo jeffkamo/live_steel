@@ -1,5 +1,9 @@
-import type { MaliceCoreId, MaliceRowRef, Monster } from './types'
-import { lookupStatblock, type BestiaryStatblock } from './bestiary'
+import type { EncounterGroup, MaliceCoreId, MaliceRowRef, Monster } from './types'
+import { baseName, lookupStatblock, type BestiaryStatblock } from './bestiary'
+
+function newMaliceRowId(): string {
+  return globalThis.crypto?.randomUUID?.() ?? `malice-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
+}
 
 type RawEffect = {
   name?: string
@@ -38,6 +42,23 @@ export type MaliceFeaturePick = {
   name: string
   cost: string
   effect: string
+}
+
+/** Stable id for “the same” malice option across duplicate creatures / stat blocks (name + cost). */
+export const MALICE_FEATURE_KEY_SEP = '\u0001'
+
+export function maliceFeatureOptionKey(p: MaliceFeaturePick): string {
+  return `${p.name}${MALICE_FEATURE_KEY_SEP}${p.cost}`
+}
+
+/** Leading integer in cost text (e.g. `"3 Malice"` → 3). Non-numeric costs sort after all numbers. */
+export function maliceCostSortKey(cost: string): number {
+  const m = cost.trim().match(/^(\d+)/)
+  if (m) {
+    const n = Number.parseInt(m[1]!, 10)
+    return Number.isFinite(n) ? n : Number.POSITIVE_INFINITY
+  }
+  return Number.POSITIVE_INFINITY
 }
 
 function malicePicksFromStatblock(sb: BestiaryStatblock): MaliceFeaturePick[] {
@@ -92,8 +113,149 @@ export function malicePicksForMonsterRow(m: Monster): MaliceFeaturePick[] {
   return []
 }
 
+/**
+ * Bestiary family name for malice UI (stat block title), matching how {@link malicePicksForMonsterRow}
+ * resolves—solo uses the creature’s stat block; hordes use the first minion’s block when the parent has no direct block.
+ */
+export function maliceMonsterFamilyTag(m: Monster): string {
+  if (m.custom != null) {
+    const n = m.name.trim()
+    return n.length > 0 ? n : 'Custom'
+  }
+  const direct = lookupStatblock(m.name)
+  if (direct) {
+    const picks = malicePicksFromStatblock(direct)
+    if (picks.length > 0) return direct.name
+  }
+  const firstMinion = m.minions?.[0]?.name
+  if (firstMinion) {
+    const sb = lookupStatblock(firstMinion)
+    if (sb) {
+      const picks = malicePicksFromStatblock(sb)
+      if (picks.length > 0) return sb.name
+    }
+  }
+  return baseName(m.name)
+}
+
 export function malicePickBySourceKey(m: Monster, sourceKey: string): MaliceFeaturePick | undefined {
   return malicePicksForMonsterRow(m).find((p) => p.sourceKey === sourceKey)
+}
+
+/** First roster creature (group order, then monster order) that provides this malice option key. */
+export function findMalicePickForFeatureKey(
+  groups: readonly EncounterGroup[],
+  featureOptionKey: string,
+): { monster: Monster; pick: MaliceFeaturePick } | undefined {
+  for (const g of groups) {
+    for (const m of g.monsters) {
+      for (const p of malicePicksForMonsterRow(m)) {
+        if (maliceFeatureOptionKey(p) === featureOptionKey) {
+          return { monster: m, pick: p }
+        }
+      }
+    }
+  }
+  return undefined
+}
+
+export function findMonsterSlotByEncounterInstanceId(
+  groups: readonly EncounterGroup[],
+  encounterInstanceId: string,
+): { groupIndex: number; monsterIndex: number; monster: Monster } | undefined {
+  for (let gi = 0; gi < groups.length; gi++) {
+    const ms = groups[gi]!.monsters
+    for (let mi = 0; mi < ms.length; mi++) {
+      const monster = ms[mi]!
+      if (monster.encounterInstanceId === encounterInstanceId) {
+        return { groupIndex: gi, monsterIndex: mi, monster }
+      }
+    }
+  }
+  return undefined
+}
+
+/**
+ * Normalize persisted malice rows: current shape uses `featureOptionKey`; legacy used
+ * `monsterEncounterId` + `sourceKey` or `groupIndex` + `monsterIndex` + `sourceKey`.
+ */
+export function normalizeMonsterMaliceRowRefs(
+  rows: unknown[] | undefined,
+  groups: EncounterGroup[],
+): MaliceRowRef[] {
+  if (rows == null || rows.length === 0) return []
+  const out: MaliceRowRef[] = []
+  for (const raw of rows) {
+    if (raw == null || typeof raw !== 'object') continue
+    const r = raw as Record<string, unknown>
+    if (r.kind === 'core' && r.coreId === 'brutal-effectiveness') {
+      out.push({ kind: 'core', coreId: 'brutal-effectiveness' })
+      continue
+    }
+    if (r.kind === 'core' && r.coreId === 'malicious-strike') {
+      out.push({ kind: 'core', coreId: 'malicious-strike' })
+      continue
+    }
+    if (r.kind !== 'monster') continue
+    const rowId = typeof r.id === 'string' ? r.id : newMaliceRowId()
+    const fk = r.featureOptionKey
+    if (typeof fk === 'string' && fk.length > 0) {
+      out.push({ kind: 'monster', id: rowId, featureOptionKey: fk })
+      continue
+    }
+    const sourceKey = typeof r.sourceKey === 'string' ? r.sourceKey : null
+    if (sourceKey == null) continue
+    const mid = r.monsterEncounterId
+    if (typeof mid === 'string' && mid.length > 0) {
+      const slot = findMonsterSlotByEncounterInstanceId(groups, mid)
+      const pick = slot ? malicePickBySourceKey(slot.monster, sourceKey) : undefined
+      if (pick) {
+        out.push({ kind: 'monster', id: rowId, featureOptionKey: maliceFeatureOptionKey(pick) })
+      }
+      continue
+    }
+    const gi = typeof r.groupIndex === 'number' ? r.groupIndex : 0
+    const mi = typeof r.monsterIndex === 'number' ? r.monsterIndex : 0
+    const monster = groups[gi]?.monsters[mi]
+    const pick = monster ? malicePickBySourceKey(monster, sourceKey) : undefined
+    if (pick) {
+      out.push({ kind: 'monster', id: rowId, featureOptionKey: maliceFeatureOptionKey(pick) })
+    }
+  }
+  return out
+}
+
+/** Sorted id multiset fingerprint: changes when creatures are added, removed, or replaced (e.g. duplicate). */
+export function monsterEncounterInstanceIdFingerprint(groups: readonly EncounterGroup[]): string {
+  const parts: string[] = []
+  for (const g of groups) {
+    for (const m of g.monsters) {
+      parts.push(m.encounterInstanceId ?? '')
+    }
+  }
+  parts.sort()
+  return parts.join('\0')
+}
+
+/** Drop creature malice rows when no roster creature still provides that feature (by name + cost key). */
+export function pruneOrphanMaliceRows(
+  groups: readonly EncounterGroup[],
+  rows: MaliceRowRef[] | undefined,
+): MaliceRowRef[] {
+  if (rows == null || rows.length === 0) {
+    return ensureMaliceRows(rows)
+  }
+  let removed = false
+  const filtered = rows.filter((row) => {
+    if (row.kind !== 'monster') return true
+    if (!findMalicePickForFeatureKey(groups, row.featureOptionKey)) {
+      removed = true
+      return false
+    }
+    return true
+  })
+  if (!removed) return rows
+  return ensureMaliceRows(filtered)
 }
 
 /** Core Director malice options (rule text is paraphrased for quick reference at the table). */
@@ -125,6 +287,7 @@ export function ensureMaliceRows(rows: MaliceRowRef[] | undefined): MaliceRowRef
   }
   let hasBrutal = false
   let hasMalicious = false
+  const seenCreatureMaliceKeys = new Set<string>()
   const out: MaliceRowRef[] = []
   for (const r of rows) {
     if (r.kind === 'core' && r.coreId === 'brutal-effectiveness') {
@@ -141,6 +304,10 @@ export function ensureMaliceRows(rows: MaliceRowRef[] | undefined): MaliceRowRef
       }
       continue
     }
+    if (r.kind === 'monster') {
+      if (seenCreatureMaliceKeys.has(r.featureOptionKey)) continue
+      seenCreatureMaliceKeys.add(r.featureOptionKey)
+    }
     out.push(r)
   }
   const head: MaliceRowRef[] = []
@@ -149,124 +316,3 @@ export function ensureMaliceRows(rows: MaliceRowRef[] | undefined): MaliceRowRef
   return [...head, ...out]
 }
 
-/** Same index math as {@link remapCaptainRefAfterMonsterMove} in data.ts (pair: group + monster). */
-export function remapGroupMonsterRefAfterMove(
-  ref: { groupIndex: number; monsterIndex: number },
-  fromG: number,
-  fromM: number,
-  toG: number,
-  insertIndex: number,
-): { groupIndex: number; monsterIndex: number } {
-  const g = ref.groupIndex
-  let m = ref.monsterIndex
-  if (g === fromG && m === fromM) {
-    return { groupIndex: toG, monsterIndex: insertIndex }
-  }
-  if (g === fromG && m > fromM) {
-    m -= 1
-  }
-  if (g === toG && m >= insertIndex) {
-    m += 1
-  }
-  return { groupIndex: g, monsterIndex: m }
-}
-
-export function remapMaliceRowsAfterMonsterMove(
-  rows: MaliceRowRef[] | undefined,
-  fromG: number,
-  fromM: number,
-  toG: number,
-  insertIndex: number,
-): MaliceRowRef[] {
-  const base = ensureMaliceRows(rows)
-  return base.map((row) => {
-    if (row.kind !== 'monster') return row
-    const out = remapGroupMonsterRefAfterMove(
-      { groupIndex: row.groupIndex, monsterIndex: row.monsterIndex },
-      fromG,
-      fromM,
-      toG,
-      insertIndex,
-    )
-    return { ...row, groupIndex: out.groupIndex, monsterIndex: out.monsterIndex }
-  })
-}
-
-export function remapMaliceRowsAfterMonsterDeleted(
-  rows: MaliceRowRef[] | undefined,
-  groupIndex: number,
-  removedMonsterIndex: number,
-): MaliceRowRef[] {
-  const base = ensureMaliceRows(rows)
-  return base
-    .filter(
-      (row) =>
-        row.kind !== 'monster' ||
-        row.groupIndex !== groupIndex ||
-        row.monsterIndex !== removedMonsterIndex,
-    )
-    .map((row) => {
-      if (row.kind !== 'monster') return row
-      if (row.groupIndex === groupIndex && row.monsterIndex > removedMonsterIndex) {
-        return { ...row, monsterIndex: row.monsterIndex - 1 }
-      }
-      return row
-    })
-}
-
-export function remapMaliceRowsAfterMonsterDuplicated(
-  rows: MaliceRowRef[] | undefined,
-  groupIndex: number,
-  duplicatedMonsterIndex: number,
-): MaliceRowRef[] {
-  const base = ensureMaliceRows(rows)
-  return base.map((row) => {
-    if (row.kind !== 'monster') return row
-    if (row.groupIndex === groupIndex && row.monsterIndex > duplicatedMonsterIndex) {
-      return { ...row, monsterIndex: row.monsterIndex + 1 }
-    }
-    return row
-  })
-}
-
-/** After removing the encounter group at `removedGroupIndex`, drop its malice rows and renumber higher groups. */
-export function remapMaliceRowsAfterEncounterGroupRemoved(
-  rows: MaliceRowRef[] | undefined,
-  removedGroupIndex: number,
-): MaliceRowRef[] {
-  const base = ensureMaliceRows(rows)
-  return base
-    .filter((row) => row.kind !== 'monster' || row.groupIndex !== removedGroupIndex)
-    .map((row) => {
-      if (row.kind !== 'monster') return row
-      if (row.groupIndex > removedGroupIndex) {
-        return { ...row, groupIndex: row.groupIndex - 1 }
-      }
-      return row
-    })
-}
-
-/** After inserting a new encounter group at `insertGroupIndex`, shift malice row group indices at or above it. */
-export function remapMaliceRowsAfterEncounterGroupInserted(
-  rows: MaliceRowRef[] | undefined,
-  insertGroupIndex: number,
-): MaliceRowRef[] {
-  const base = ensureMaliceRows(rows)
-  return base.map((row) => {
-    if (row.kind !== 'monster') return row
-    if (row.groupIndex >= insertGroupIndex) {
-      return { ...row, groupIndex: row.groupIndex + 1 }
-    }
-    return row
-  })
-}
-
-export function remapMaliceRowsAfterEncounterGroupsReordered(
-  rows: MaliceRowRef[] | undefined,
-  remapGroupIndex: (oldIndex: number) => number,
-): MaliceRowRef[] {
-  const base = ensureMaliceRows(rows)
-  return base.map((row) =>
-    row.kind === 'monster' ? { ...row, groupIndex: remapGroupIndex(row.groupIndex) } : row,
-  )
-}

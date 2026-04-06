@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import type { DragEvent } from 'react'
 import type {
   CaptainRef,
@@ -27,7 +27,6 @@ import {
   cloneEncounterGroups,
   cloneMonster,
   cloneTerrainRows,
-  computeMonsterInsertIndex,
   CONDITION_DRAG_MIME,
   ENCOUNTER_GROUP_DRAG_MIME,
   MONSTER_DRAG_MIME,
@@ -51,6 +50,7 @@ import {
   remapEotConfirmedAfterSoloMergedIntoHorde,
   remapEotConfirmedAfterConvertToSquad,
   newEncounterGroupId,
+  newMonsterEncounterInstanceId,
   nextUnusedColor,
   randomUnusedColor,
   parseConditionDragPayload,
@@ -81,12 +81,8 @@ import { useColorScheme } from './hooks/useColorScheme'
 import { bestiaryStatblockFromCustomMonster } from './bestiary'
 import {
   ensureMaliceRows,
-  remapMaliceRowsAfterEncounterGroupInserted,
-  remapMaliceRowsAfterEncounterGroupRemoved,
-  remapMaliceRowsAfterEncounterGroupsReordered,
-  remapMaliceRowsAfterMonsterDeleted,
-  remapMaliceRowsAfterMonsterDuplicated,
-  remapMaliceRowsAfterMonsterMove,
+  monsterEncounterInstanceIdFingerprint,
+  pruneOrphanMaliceRows,
 } from './malice'
 
 const DRAWER_PANEL_W_CLASS = 'w-[min(20rem,calc(100vw-2rem))]'
@@ -212,6 +208,20 @@ function App() {
   const eotConfirmedLatest = useRef(eotConfirmed)
   eotConfirmedLatest.current = eotConfirmed
   const prevTurnActedRef = useRef<boolean[]>([...initTurns])
+
+  const maliceMonsterFingerprint = useMemo(
+    () => monsterEncounterInstanceIdFingerprint(encounterGroups),
+    [encounterGroups],
+  )
+
+  useEffect(() => {
+    setMaliceRows((prev) => {
+      const next = pruneOrphanMaliceRows(encounterGroups, prev)
+      return next === prev ? prev : next
+    })
+    // `encounterGroups` omitted from deps: fingerprint tracks the creature id multiset; pruning only needed when that changes (not on every roster re-render).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [maliceMonsterFingerprint])
 
   const scheduleEotTimerForGroup = useCallback((gi: number) => {
     const existing = eotTimersRef.current.get(gi)
@@ -491,7 +501,11 @@ function App() {
       setEncounterGroups((prev) =>
         prev.map((g, gi) => {
           if (gi !== groupIndex) return g
-          return { ...g, monsters: [...g.monsters, monster] }
+          const m =
+            monster.encounterInstanceId != null && monster.encounterInstanceId !== ''
+              ? monster
+              : { ...monster, encounterInstanceId: newMonsterEncounterInstanceId() }
+          return { ...g, monsters: [...g.monsters, m] }
         }),
       )
     },
@@ -512,7 +526,6 @@ function App() {
           return { ...g, monsters }
         }),
       )
-      setMaliceRows((mr) => remapMaliceRowsAfterMonsterDuplicated(mr, groupIndex, monsterIndex))
     },
     [],
   )
@@ -703,7 +716,6 @@ function App() {
       }
       return prev
     })
-    setMaliceRows((mr) => remapMaliceRowsAfterEncounterGroupRemoved(mr, groupIndex))
   }, [])
 
   const deleteMonster = useCallback(
@@ -711,7 +723,8 @@ function App() {
       let groupRemoved = false
 
       setEncounterGroups((prev) => {
-        groupRemoved = prev[groupIndex]?.monsters.length === 1
+        const grp = prev[groupIndex]
+        groupRemoved = grp?.monsters.length === 1
 
         const afterRemove = prev.map((g, gi) => {
           if (gi !== groupIndex) return g
@@ -743,13 +756,6 @@ function App() {
             return m
           }),
         }))
-        queueMicrotask(() => {
-          setMaliceRows((mr) =>
-            groupRemoved
-              ? remapMaliceRowsAfterEncounterGroupRemoved(mr, groupIndex)
-              : remapMaliceRowsAfterMonsterDeleted(mr, groupIndex, monsterIndex),
-          )
-        })
         return next
       })
 
@@ -881,14 +887,10 @@ function App() {
       setEncounterGroups((prev) => {
         const next = moveMonsterInEncounterWithCaptainRemap(prev, fromG, fromM, toG, toM)
         if (!next) return prev
-        const insertIndex = computeMonsterInsertIndex(fromG, fromM, toG, toM)
         queueMicrotask(() => {
           setEotConfirmed((e) =>
             remapEotConfirmedAfterMonsterMove(e, next.length, fromG, fromM, toG, toM),
           )
-          if (insertIndex != null) {
-            setMaliceRows((mr) => remapMaliceRowsAfterMonsterMove(mr, fromG, fromM, toG, insertIndex))
-          }
         })
         return next
       })
@@ -1092,9 +1094,6 @@ function App() {
                 toMinion,
               ),
             )
-            setMaliceRows((mr) =>
-              remapMaliceRowsAfterMonsterDeleted(mr, payload.fromGroup, payload.fromMonster),
-            )
             setMonsterCardDrawer((drawer) => {
               if (
                 drawer != null &&
@@ -1148,9 +1147,6 @@ function App() {
       prevTurnActedRef.current = moveIndexInArray(prevTurnActedRef.current, from, to)
 
       setEncounterGroups((prev) => reorderEncounterGroupsWithCaptainRemap(prev, from, to))
-      setMaliceRows((mr) =>
-        remapMaliceRowsAfterEncounterGroupsReordered(mr, (gi) => remapEncounterGroupIndex(from, to, gi)),
-      )
       setGroupTurnActed((prev) => moveIndexInArray(prev, from, to))
       setEotConfirmed((prev) => {
         const next = new Map<number, Set<string>>()
@@ -1205,9 +1201,6 @@ function App() {
         }
         const next = [...prev]
         next.splice(groupIndex + 1, 0, copy)
-        queueMicrotask(() => {
-          setMaliceRows((mr) => remapMaliceRowsAfterEncounterGroupInserted(mr, groupIndex + 1))
-        })
         return next
       })
       setGroupTurnActed((prev) => {

@@ -1,6 +1,7 @@
 import type { EncounterGroup, MaliceRowRef, Monster, TerrainRowState } from './types'
 import { featuresForMonster } from './bestiary'
-import { ensureMaliceRows } from './malice'
+import { ensureMonsterEncounterInstanceIds } from './data'
+import { ensureMaliceRows, normalizeMonsterMaliceRowRefs } from './malice'
 
 const STORAGE_KEY = 'live-steel-encounter'
 const STORAGE_VERSION = 1
@@ -80,8 +81,8 @@ function rehydrateFeatures(groups: EncounterGroup[]): EncounterGroup[] {
 }
 
 /** Legacy: per-group `maliceRows` with monster refs keyed only by monsterIndex. */
-function hoistLegacyMaliceFromParsedGroups(encounterGroups: unknown[]): MaliceRowRef[] {
-  const merged: MaliceRowRef[] = []
+function hoistLegacyMaliceFromParsedGroups(encounterGroups: unknown[]): unknown[] {
+  const merged: unknown[] = []
   for (let gi = 0; gi < encounterGroups.length; gi++) {
     const g = encounterGroups[gi] as Record<string, unknown> | undefined
     if (!g) continue
@@ -91,7 +92,7 @@ function hoistLegacyMaliceFromParsedGroups(encounterGroups: unknown[]): MaliceRo
       if (item == null || typeof item !== 'object') continue
       const r = item as Record<string, unknown>
       if (r.kind === 'core' && typeof r.coreId === 'string') {
-        merged.push(r as MaliceRowRef)
+        merged.push(r)
         continue
       }
       if (r.kind === 'monster' && typeof r.sourceKey === 'string' && typeof r.monsterIndex === 'number') {
@@ -157,12 +158,15 @@ export function deserializeEncounterState(raw: string | null): DeserializeResult
     const rootMalice = Array.isArray(stored.maliceRows) ? stored.maliceRows : []
     const merged =
       rootMalice.length > 0 ? rootMalice : hoisted.length > 0 ? hoisted : undefined
-    const maliceRows = ensureMaliceRows(merged)
+    const encounterGroups = ensureMonsterEncounterInstanceIds(
+      rehydrateFeatures(stored.encounterGroups),
+    )
+    const maliceRows = ensureMaliceRows(normalizeMonsterMaliceRowRefs(merged, encounterGroups))
     return {
       ok: true,
       state: {
         version: stored.version,
-        encounterGroups: rehydrateFeatures(stored.encounterGroups),
+        encounterGroups,
         terrainRows: stored.terrainRows,
         groupTurnActed: stored.groupTurnActed,
         maliceRows,

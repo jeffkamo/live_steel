@@ -1,16 +1,21 @@
 import { describe, expect, it } from 'vitest'
 import {
   ensureMaliceRows,
+  findMalicePickForFeatureKey,
+  findMonsterSlotByEncounterInstanceId,
+  maliceCostSortKey,
+  maliceFeatureOptionKey,
+  maliceMonsterFamilyTag,
   malicePicksForMonsterRow,
-  remapMaliceRowsAfterEncounterGroupRemoved,
-  remapMaliceRowsAfterMonsterDeleted,
-  remapMaliceRowsAfterMonsterDuplicated,
-  remapMaliceRowsAfterMonsterMove,
+  normalizeMonsterMaliceRowRefs,
+  pruneOrphanMaliceRows,
 } from './malice'
+import type { EncounterGroup } from './types'
 import type { Monster } from './types'
 
 function baseMonster(partial: Partial<Monster> & Pick<Monster, 'name'>): Monster {
   return {
+    encounterInstanceId: partial.encounterInstanceId ?? 'test-m-id',
     name: partial.name,
     subtitle: partial.subtitle ?? '',
     initials: partial.initials ?? 'GA',
@@ -25,6 +30,25 @@ function baseMonster(partial: Partial<Monster> & Pick<Monster, 'name'>): Monster
     ...('custom' in partial ? { custom: partial.custom } : {}),
   }
 }
+
+describe('maliceMonsterFamilyTag', () => {
+  it('uses bestiary stat block name for numbered encounter copies', () => {
+    const m = baseMonster({ name: 'Goblin Assassin 2', encounterInstanceId: 'x' })
+    expect(maliceMonsterFamilyTag(m)).toBe('Goblin Assassin')
+  })
+})
+
+describe('maliceCostSortKey', () => {
+  it('parses leading digit from typical cost strings', () => {
+    expect(maliceCostSortKey('1 Malice')).toBe(1)
+    expect(maliceCostSortKey('3 Malice')).toBe(3)
+    expect(maliceCostSortKey('10 Malice')).toBe(10)
+  })
+
+  it('sends non-numeric costs to the end', () => {
+    expect(maliceCostSortKey('Malice')).toBe(Number.POSITIVE_INFINITY)
+  })
+})
 
 describe('malicePicksForMonsterRow', () => {
   it('returns feature-level malice from bestiary (Goblin Assassin)', () => {
@@ -61,57 +85,112 @@ describe('ensureMaliceRows', () => {
       { kind: 'core', coreId: 'malicious-strike' },
     ])
   })
-})
 
-describe('remapMaliceRowsAfterMonsterDeleted', () => {
-  it('drops rows for removed monster and shifts higher indices in that group', () => {
+  it('dedupes creature rows that share the same featureOptionKey', () => {
+    const k = 'Shadow Chains\u00013 Malice'
     const rows = [
       { kind: 'core' as const, coreId: 'brutal-effectiveness' as const },
-      { kind: 'monster' as const, id: 'a', groupIndex: 0, monsterIndex: 1, sourceKey: 'f:0' },
+      { kind: 'monster' as const, id: 'a', featureOptionKey: k },
+      { kind: 'monster' as const, id: 'b', featureOptionKey: k },
     ]
-    const next = remapMaliceRowsAfterMonsterDeleted(rows, 0, 0)
-    const monsterRows = next.filter((r) => r.kind === 'monster')
-    expect(monsterRows).toHaveLength(1)
-    expect((monsterRows[0] as { monsterIndex: number }).monsterIndex).toBe(0)
+    const next = ensureMaliceRows(rows)
+    expect(next.filter((r) => r.kind === 'monster')).toHaveLength(1)
   })
 })
 
-describe('remapMaliceRowsAfterMonsterDuplicated', () => {
-  it('shifts indices in the affected group after a duplicated monster slot', () => {
+describe('findMalicePickForFeatureKey', () => {
+  it('returns the first roster creature that has the feature', () => {
+    const m1 = baseMonster({ name: 'Goblin Assassin', encounterInstanceId: 'a' })
+    const m2 = baseMonster({ name: 'Goblin Assassin 2', encounterInstanceId: 'b' })
+    const picks = malicePicksForMonsterRow(m1)
+    const shadow = picks.find((p) => p.name === 'Shadow Chains')
+    expect(shadow).toBeDefined()
+    const key = maliceFeatureOptionKey(shadow!)
+    const groups: EncounterGroup[] = [
+      { id: 'g0', color: 'red', monsters: [m1] },
+      { id: 'g1', color: 'blue', monsters: [m2] },
+    ]
+    const hit = findMalicePickForFeatureKey(groups, key)
+    expect(hit?.monster.encounterInstanceId).toBe('a')
+  })
+})
+
+describe('findMonsterSlotByEncounterInstanceId', () => {
+  it('finds a creature in any group', () => {
+    const m = baseMonster({ name: 'A', encounterInstanceId: 'mid' })
+    const groups: EncounterGroup[] = [
+      { id: 'g0', color: 'red', monsters: [] },
+      { id: 'g1', color: 'blue', monsters: [m] },
+    ]
+    const slot = findMonsterSlotByEncounterInstanceId(groups, 'mid')
+    expect(slot?.groupIndex).toBe(1)
+    expect(slot?.monsterIndex).toBe(0)
+    expect(slot?.monster.name).toBe('A')
+  })
+})
+
+describe('normalizeMonsterMaliceRowRefs', () => {
+  it('maps legacy groupIndex/monsterIndex + sourceKey to featureOptionKey', () => {
+    const groups: EncounterGroup[] = [
+      {
+        id: 'g0',
+        color: 'red',
+        monsters: [baseMonster({ name: 'Goblin Assassin', encounterInstanceId: 'legacy-1' })],
+      },
+    ]
+    const picks = malicePicksForMonsterRow(groups[0]!.monsters[0]!)
+    const shadow = picks.find((p) => p.name === 'Shadow Chains')
+    expect(shadow).toBeDefined()
+    const raw = [
+      {
+        kind: 'monster',
+        id: 'r1',
+        groupIndex: 0,
+        monsterIndex: 0,
+        sourceKey: shadow!.sourceKey,
+      },
+    ]
+    const out = normalizeMonsterMaliceRowRefs(raw, groups)
+    expect(out).toEqual([
+      { kind: 'monster', id: 'r1', featureOptionKey: maliceFeatureOptionKey(shadow!) },
+    ])
+  })
+})
+
+describe('pruneOrphanMaliceRows', () => {
+  it('removes rows when no creature provides that feature', () => {
+    const groups: EncounterGroup[] = [
+      {
+        id: 'g0',
+        color: 'red',
+        monsters: [baseMonster({ name: 'Only', encounterInstanceId: 'only' })],
+      },
+    ]
     const rows = [
       { kind: 'core' as const, coreId: 'brutal-effectiveness' as const },
-      { kind: 'monster' as const, id: 'a', groupIndex: 0, monsterIndex: 2, sourceKey: 'f:0' },
+      {
+        kind: 'monster' as const,
+        id: 'z',
+        featureOptionKey: 'Nope Ability\u000199 Malice',
+      },
     ]
-    const next = remapMaliceRowsAfterMonsterDuplicated(rows, 0, 0)
-    const m = next.find((r) => r.kind === 'monster') as { monsterIndex: number }
-    expect(m.monsterIndex).toBe(3)
+    const next = pruneOrphanMaliceRows(groups, rows)
+    expect(next.some((r) => r.kind === 'monster')).toBe(false)
   })
-})
 
-describe('remapMaliceRowsAfterMonsterMove', () => {
-  it('moves malice ref when the creature moves to another group', () => {
-    const rows: import('./types').MaliceRowRef[] = [
-      { kind: 'core', coreId: 'brutal-effectiveness' },
-      { kind: 'monster', id: 'm', groupIndex: 0, monsterIndex: 0, sourceKey: 'f:0' },
+  it('keeps a row when another creature still provides the same feature', () => {
+    const m1 = baseMonster({ name: 'Goblin Assassin', encounterInstanceId: 'a' })
+    const m2 = baseMonster({ name: 'Goblin Assassin 2', encounterInstanceId: 'b' })
+    const picks = malicePicksForMonsterRow(m1)
+    const shadow = picks.find((p) => p.name === 'Shadow Chains')
+    expect(shadow).toBeDefined()
+    const key = maliceFeatureOptionKey(shadow!)
+    const groups: EncounterGroup[] = [{ id: 'g0', color: 'red', monsters: [m2] }]
+    const rows = [
+      { kind: 'core' as const, coreId: 'brutal-effectiveness' as const },
+      { kind: 'monster' as const, id: 'row', featureOptionKey: key },
     ]
-    const next = remapMaliceRowsAfterMonsterMove(rows, 0, 0, 1, 1)
-    const m = next.find((r) => r.kind === 'monster') as {
-      groupIndex: number
-      monsterIndex: number
-    }
-    expect(m.groupIndex).toBe(1)
-    expect(m.monsterIndex).toBe(1)
-  })
-})
-
-describe('remapMaliceRowsAfterEncounterGroupRemoved', () => {
-  it('removes rows for the deleted group and decrements higher group indices', () => {
-    const rows: import('./types').MaliceRowRef[] = [
-      { kind: 'core', coreId: 'brutal-effectiveness' },
-      { kind: 'monster', id: 'a', groupIndex: 1, monsterIndex: 0, sourceKey: 'f:0' },
-    ]
-    const next = remapMaliceRowsAfterEncounterGroupRemoved(rows, 0)
-    const m = next.find((r) => r.kind === 'monster') as { groupIndex: number }
-    expect(m.groupIndex).toBe(0)
+    const next = pruneOrphanMaliceRows(groups, rows)
+    expect(next.some((r) => r.kind === 'monster')).toBe(true)
   })
 })

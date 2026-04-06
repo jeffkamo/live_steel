@@ -57,6 +57,11 @@ export type CustomMonsterStats = {
 }
 
 export type Monster = {
+  /**
+   * Stable id for this creature slot in the encounter (malice rows, future cross-refs).
+   * Persists with save data; duplicated or newly added creatures get a new id.
+   */
+  encounterInstanceId: string
   name: string
   subtitle: string
   initials: string
@@ -101,7 +106,8 @@ export type MaliceCoreId = 'brutal-effectiveness' | 'malicious-strike'
  */
 export type MaliceRowRef =
   | { kind: 'core'; coreId: MaliceCoreId }
-  | { kind: 'monster'; id: string; groupIndex: number; monsterIndex: number; sourceKey: string }
+  /** Creature malice option: keyed by feature name + cost so any roster creature with that feature satisfies the row. */
+  | { kind: 'monster'; id: string; featureOptionKey: string }
 
 export type EncounterGroup = {
   /** Stable key for React lists and future cross-index state (timers, etc.). */

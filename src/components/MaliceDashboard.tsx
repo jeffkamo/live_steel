@@ -3,12 +3,18 @@ import type { EncounterGroup, MaliceRowRef } from '../types'
 import {
   CORE_MALICE_FEATURES,
   ensureMaliceRows,
-  malicePickBySourceKey,
+  findMalicePickForFeatureKey,
+  maliceCostSortKey,
+  maliceFeatureOptionKey,
+  maliceMonsterFamilyTag,
   malicePicksForMonsterRow,
 } from '../malice'
 import { ReorderGripWithMenu, type ReorderGripMenuItem } from './ReorderGripWithMenu'
 
 const MALICE_DRAG_MIME = 'application/x-live-steel-malice-row-index'
+
+const MONSTER_TAG_CLASS =
+  'inline-flex max-w-[min(16rem,100%)] shrink-0 truncate rounded-md border border-zinc-300/80 bg-zinc-100/90 px-1.5 py-0.5 font-sans text-[0.62rem] font-medium leading-none text-zinc-600 dark:border-zinc-600/70 dark:bg-zinc-800/80 dark:text-zinc-400'
 
 /** Leading core rows (Brutal Effectiveness, Malicious Strike, …); monster rows may only reorder below this block. */
 function corePrefixLength(rows: readonly MaliceRowRef[]): number {
@@ -44,28 +50,32 @@ export function MaliceDashboard({
   const addOptions = useMemo(() => {
     const used = new Set<string>()
     for (const r of rows) {
-      if (r.kind === 'monster') used.add(`${r.groupIndex}:${r.monsterIndex}:${r.sourceKey}`)
+      if (r.kind === 'monster') used.add(r.featureOptionKey)
     }
-    const opts: {
-      groupIndex: number
-      monsterIndex: number
-      label: string
-      sourceKey: string
-    }[] = []
-    encounterGroups.forEach((g, gi) => {
-      g.monsters.forEach((m, mi) => {
+    const seenInEncounter = new Set<string>()
+    const opts: { featureOptionKey: string; name: string; cost: string; monsterTag: string }[] = []
+    for (const g of encounterGroups) {
+      for (const m of g.monsters) {
         const picks = malicePicksForMonsterRow(m)
         for (const p of picks) {
-          const key = `${gi}:${mi}:${p.sourceKey}`
-          if (used.has(key)) continue
+          const key = maliceFeatureOptionKey(p)
+          if (used.has(key) || seenInEncounter.has(key)) continue
+          seenInEncounter.add(key)
           opts.push({
-            groupIndex: gi,
-            monsterIndex: mi,
-            sourceKey: p.sourceKey,
-            label: `Group ${gi + 1} · ${m.name}: ${p.name}`,
+            featureOptionKey: key,
+            name: p.name,
+            cost: p.cost,
+            monsterTag: maliceMonsterFamilyTag(m),
           })
         }
-      })
+      }
+    }
+    opts.sort((a, b) => {
+      const byCost = maliceCostSortKey(a.cost) - maliceCostSortKey(b.cost)
+      if (byCost !== 0) return byCost
+      const byName = a.name.localeCompare(b.name, undefined, { sensitivity: 'base' })
+      if (byName !== 0) return byName
+      return a.monsterTag.localeCompare(b.monsterTag, undefined, { sensitivity: 'base' })
     })
     return opts
   }, [encounterGroups, rows])
@@ -117,12 +127,9 @@ export function MaliceDashboard({
   )
 
   const addPick = useCallback(
-    (groupIndex: number, monsterIndex: number, sourceKey: string) => {
+    (featureOptionKey: string) => {
       const id = globalThis.crypto?.randomUUID?.() ?? `malice-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
-      onMaliceRowsChange([
-        ...rows,
-        { kind: 'monster', id, groupIndex, monsterIndex, sourceKey },
-      ])
+      onMaliceRowsChange([...rows, { kind: 'monster', id, featureOptionKey }])
       setAddOpen(false)
     },
     [onMaliceRowsChange, rows],
@@ -199,13 +206,21 @@ export function MaliceDashboard({
                 ) : (
                   addOptions.map((o) => (
                     <button
-                      key={`${o.groupIndex}-${o.monsterIndex}-${o.sourceKey}`}
+                      key={o.featureOptionKey}
                       type="button"
                       role="menuitem"
-                      className="flex w-full px-3 py-2 text-left text-xs text-zinc-800 hover:bg-zinc-100 dark:text-zinc-200 dark:hover:bg-zinc-800"
-                      onClick={() => addPick(o.groupIndex, o.monsterIndex, o.sourceKey)}
+                      className="flex w-full flex-col gap-1 px-3 py-2 text-left hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                      onClick={() => addPick(o.featureOptionKey)}
                     >
-                      {o.label}
+                      <span className="min-w-0 font-sans text-xs font-medium text-zinc-900 dark:text-zinc-100">
+                        {o.name}
+                      </span>
+                      <span className={`${MONSTER_TAG_CLASS} self-start`} title={o.monsterTag}>
+                        {o.monsterTag}
+                      </span>
+                      <span className="font-sans text-[0.65rem] font-medium text-amber-800 dark:text-amber-200/95">
+                        {o.cost}
+                      </span>
                     </button>
                   ))
                 )}
@@ -218,25 +233,19 @@ export function MaliceDashboard({
             let name: string
             let cost: string
             let effect: string
-            let groupHint: string | null = null
+            let monsterTag: string | null = null
             if (row.kind === 'core') {
               const c = CORE_MALICE_FEATURES[row.coreId]
               name = c.name
               cost = c.cost
               effect = c.effect
             } else {
-              groupHint = `Group ${row.groupIndex + 1}`
-              const m = encounterGroups[row.groupIndex]?.monsters[row.monsterIndex]
-              const pick = m ? malicePickBySourceKey(m, row.sourceKey) : undefined
-              if (pick) {
-                name = pick.name
-                cost = pick.cost
-                effect = pick.effect
-              } else {
-                name = 'Unknown feature'
-                cost = '—'
-                effect = 'This creature or feature is no longer in the encounter.'
-              }
+              const resolved = findMalicePickForFeatureKey(encounterGroups, row.featureOptionKey)
+              if (!resolved) return null
+              name = resolved.pick.name
+              cost = resolved.pick.cost
+              effect = resolved.pick.effect
+              monsterTag = maliceMonsterFamilyTag(resolved.monster)
             }
 
             const isMonsterRow = row.kind === 'monster'
@@ -276,11 +285,7 @@ export function MaliceDashboard({
 
             return (
               <li
-                key={
-                  row.kind === 'core'
-                    ? `core-${row.coreId}`
-                    : `${row.id}-${row.groupIndex}-${row.monsterIndex}-${row.sourceKey}`
-                }
+                key={row.kind === 'core' ? `core-${row.coreId}` : row.id}
                 className={`${rowLayoutClass} rounded-md border border-zinc-200/80 bg-white/90 px-2 py-2 transition-shadow dark:border-zinc-700/70 dark:bg-zinc-900/60 has-[[data-grip-menu-open]]:z-[200] ${monsterDropRing}`}
                 onDragOver={
                   uiLocked || !isMonsterRow
@@ -316,19 +321,32 @@ export function MaliceDashboard({
                   <div className="min-h-0 min-w-0" aria-hidden />
                 ) : null}
                 <div className="min-w-0">
-                  {groupHint != null && (
-                    <p className="mb-0.5 font-sans text-[0.62rem] font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-500">
-                      {groupHint}
-                    </p>
+                  {monsterTag != null ? (
+                    <>
+                      <div className="flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-0.5">
+                        <span className="min-w-0 font-sans text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+                          {name}
+                        </span>
+                        <span className="shrink-0 font-sans text-xs font-medium text-amber-800 dark:text-amber-200/95">
+                          {cost}
+                        </span>
+                      </div>
+                      <div className="mt-0.5">
+                        <span className={`${MONSTER_TAG_CLASS} self-start`} title={monsterTag}>
+                          {monsterTag}
+                        </span>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+                      <span className="font-sans text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+                        {name}
+                      </span>
+                      <span className="font-sans text-xs font-medium text-amber-800 dark:text-amber-200/95">
+                        {cost}
+                      </span>
+                    </div>
                   )}
-                  <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-                    <span className="font-sans text-sm font-semibold text-zinc-900 dark:text-zinc-100">
-                      {name}
-                    </span>
-                    <span className="font-sans text-xs font-medium text-amber-800 dark:text-amber-200/95">
-                      {cost}
-                    </span>
-                  </div>
                   <p className="mt-1 font-sans text-[0.72rem] leading-snug text-zinc-600 dark:text-zinc-400">
                     {effect}
                   </p>

@@ -1465,16 +1465,30 @@ export function cloneEncounterGroups(): EncounterGroup[] {
   return []
 }
 
+export function newMonsterEncounterInstanceId(): string {
+  return globalThis.crypto?.randomUUID?.() ?? `m-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`
+}
+
+/** Assign {@link Monster.encounterInstanceId} to any monster missing it (legacy saves / tests). */
+export function ensureMonsterEncounterInstanceIds(groups: EncounterGroup[]): EncounterGroup[] {
+  let changed = false
+  const next = groups.map((g) => ({
+    ...g,
+    monsters: g.monsters.map((m) => {
+      if (m.encounterInstanceId) return m
+      changed = true
+      return { ...m, encounterInstanceId: newMonsterEncounterInstanceId() }
+    }),
+  }))
+  return changed ? next : groups
+}
+
 export function cloneMonster(m: Monster): Monster {
   return {
-    name: m.name,
-    subtitle: m.subtitle,
-    initials: m.initials,
+    ...m,
+    encounterInstanceId: newMonsterEncounterInstanceId(),
     stamina: [m.stamina[0], m.stamina[1]],
     marip: m.marip === null ? null : ([...m.marip] as unknown as Marip),
-    fs: m.fs,
-    dist: m.dist,
-    stab: m.stab,
     conditions: m.conditions.map((c) => ({ ...c })),
     ...(m.minions
       ? { minions: m.minions.map((mn) => ({ ...mn, conditions: mn.conditions.map((c) => ({ ...c })) })) }
@@ -1571,6 +1585,7 @@ export function cloneExampleEncounterGroups(): EncounterGroup[] {
     id: newEncounterGroupId(),
     color: GROUP_COLOR_ORDER[groupIndex % GROUP_COLOR_ORDER.length]!,
     monsters: group.monsters.map((m) => ({
+      encounterInstanceId: newMonsterEncounterInstanceId(),
       name: m.name,
       subtitle: m.subtitle,
       initials: m.initials,
@@ -1607,6 +1622,7 @@ export function monsterFromBestiary(bestiaryName: string, ordinalSuffix?: number
   const displayName = ordinalSuffix != null ? `${bestiaryName} ${ordinalSuffix}` : bestiaryName
   if (!sb) {
     return {
+      encounterInstanceId: newMonsterEncounterInstanceId(),
       name: displayName,
       subtitle: '',
       initials: deriveInitials(bestiaryName),
@@ -1623,6 +1639,7 @@ export function monsterFromBestiary(bestiaryName: string, ordinalSuffix?: number
   const stamina: [number, number] = Number.isNaN(stam) ? [0, 0] : [stam, stam]
   const features = featuresForMonster(bestiaryName) ?? []
   return {
+    encounterInstanceId: newMonsterEncounterInstanceId(),
     name: displayName,
     subtitle: bestiarySubtitle(sb),
     initials: deriveInitials(bestiaryName),
@@ -1650,6 +1667,7 @@ export function blankCustomMonster(): Monster {
     notes: '',
   }
   return {
+    encounterInstanceId: newMonsterEncounterInstanceId(),
     name: 'Custom monster',
     subtitle: '',
     initials: deriveInitials('Custom monster'),
