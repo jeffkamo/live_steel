@@ -253,7 +253,7 @@ export function GroupSection({
 
   return (
     <div
-      className="grid items-stretch overflow-visible rounded-lg border border-zinc-200/95 bg-white font-sans shadow-sm dark:border-transparent dark:bg-zinc-900/80 dark:shadow-none"
+      className="grid min-w-0 items-stretch overflow-visible rounded-lg border border-zinc-200/95 bg-white font-sans shadow-sm dark:border-transparent dark:bg-zinc-900/80 dark:shadow-none"
       style={{
         gridTemplateColumns: ROSTER_GRID_TEMPLATE,
         gridTemplateRows: `repeat(${gridRowCount}, minmax(0, auto))`,

@@ -1918,44 +1918,45 @@ function App() {
             </header>
 
             <section aria-label="Creature tracker" className="mt-0 flex flex-col gap-2 px-0">
-              <div
-                className="grid w-full min-w-0 items-center py-2"
-                style={{ gridTemplateColumns: ROSTER_GRID_TEMPLATE }}
-              >
-                <div className="flex justify-center" style={{ gridColumn: 1 }}>
-                  <button
-                    type="button"
-                    onClick={resetAllTurns}
-                    aria-label="Start a new turn: reset all encounter group turn diamonds to pending"
-                    className="min-h-10 min-w-[5.25rem] cursor-pointer rounded-md px-4 py-2 font-sans text-xs tracking-wide text-zinc-700 dark:text-zinc-400 transition-colors hover:bg-zinc-200/95 dark:hover:bg-zinc-900 hover:text-zinc-950 dark:hover:text-zinc-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500/60"
+              <div className="flex min-w-0 flex-col gap-2">
+                  <div
+                    className="grid w-full min-w-0 items-center py-2"
+                    style={{ gridTemplateColumns: ROSTER_GRID_TEMPLATE }}
                   >
-                    New turn
-                  </button>
-                </div>
-                <div className="flex justify-end pr-1 sm:pr-2" style={{ gridColumn: '2 / -1' }}>
-                  <button
-                    type="button"
-                    aria-pressed={uiLocked}
-                    onClick={() => setUiLocked((v) => !v)}
-                    aria-label={
-                      uiLocked
-                        ? 'Unlock encounter editing controls'
-                        : 'Lock encounter editing controls'
-                    }
-                    className="min-h-10 min-w-[5.25rem] cursor-pointer rounded-md px-4 py-2 font-sans text-xs tracking-wide transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500/60 bg-zinc-200/95 dark:bg-zinc-800/85 text-zinc-900 dark:text-zinc-100 hover:bg-zinc-300/95 dark:hover:bg-zinc-700/90 hover:text-zinc-950 dark:hover:text-white aria-pressed:bg-transparent aria-pressed:text-zinc-500 dark:aria-pressed:text-zinc-400 aria-pressed:hover:bg-zinc-100 dark:aria-pressed:hover:bg-zinc-900 aria-pressed:hover:text-zinc-800 dark:aria-pressed:hover:text-zinc-200"
-                  >
-                    {uiLocked ? 'Unlock' : 'Lock'}
-                  </button>
-                </div>
-              </div>
-              <MaliceDashboard
-                encounterGroups={encounterGroups}
-                maliceRows={maliceRows}
-                uiLocked={uiLocked}
-                onMaliceRowsChange={(next) => setMaliceRows(ensureMaliceRows(next))}
-              />
-              <div className="flex flex-col gap-2">
-                {encounterGroups.map((group, gi) => (
+                    <div className="flex justify-center" style={{ gridColumn: 1 }}>
+                      <button
+                        type="button"
+                        onClick={resetAllTurns}
+                        aria-label="Start a new turn: reset all encounter group turn diamonds to pending"
+                        className="min-h-10 min-w-[5.25rem] cursor-pointer rounded-md px-4 py-2 font-sans text-xs tracking-wide text-zinc-700 dark:text-zinc-400 transition-colors hover:bg-zinc-200/95 dark:hover:bg-zinc-900 hover:text-zinc-950 dark:hover:text-zinc-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500/60"
+                      >
+                        New turn
+                      </button>
+                    </div>
+                    <div className="flex justify-end pr-1 sm:pr-2" style={{ gridColumn: '2 / -1' }}>
+                      <button
+                        type="button"
+                        aria-pressed={uiLocked}
+                        onClick={() => setUiLocked((v) => !v)}
+                        aria-label={
+                          uiLocked
+                            ? 'Unlock encounter editing controls'
+                            : 'Lock encounter editing controls'
+                        }
+                        className="min-h-10 min-w-[5.25rem] cursor-pointer rounded-md px-4 py-2 font-sans text-xs tracking-wide transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500/60 bg-zinc-200/95 dark:bg-zinc-800/85 text-zinc-900 dark:text-zinc-100 hover:bg-zinc-300/95 dark:hover:bg-zinc-700/90 hover:text-zinc-950 dark:hover:text-white aria-pressed:bg-transparent aria-pressed:text-zinc-500 dark:aria-pressed:text-zinc-400 aria-pressed:hover:bg-zinc-100 dark:aria-pressed:hover:bg-zinc-900 aria-pressed:hover:text-zinc-800 dark:aria-pressed:hover:text-zinc-200"
+                      >
+                        {uiLocked ? 'Unlock' : 'Lock'}
+                      </button>
+                    </div>
+                  </div>
+                  <MaliceDashboard
+                    encounterGroups={encounterGroups}
+                    maliceRows={maliceRows}
+                    uiLocked={uiLocked}
+                    onMaliceRowsChange={(next) => setMaliceRows(ensureMaliceRows(next))}
+                  />
+                  <div className="flex flex-col gap-2">
+                    {encounterGroups.map((group, gi) => (
                   <div
                     key={group.id}
                     data-testid="encounter-group-drop-target"
@@ -2137,6 +2138,7 @@ function App() {
                     Add group
                   </button>
                 )}
+                  </div>
               </div>
             </section>
 
@@ -2147,6 +2149,7 @@ function App() {
                 </h2>
                 <TitleRule />
               </header>
+              <div className="min-w-0 px-4">
               {terrainRows.map((row, i) => (
                 <div
                   key={i}
@@ -2209,6 +2212,7 @@ function App() {
                   />
                 </div>
               ))}
+              </div>
               {!uiLocked && (
                 <AddTerrainButton onAdd={addTerrainRow} />
               )}

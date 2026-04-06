@@ -64,11 +64,11 @@ export function EditableStaminaCell({
     `pointer-events-none flex min-h-[2.5rem] w-full items-center justify-center px-1 text-center transition-opacity duration-150 group-hover:opacity-0 group-focus-within:opacity-0${dimContent ? ' opacity-[0.38]' : ''}`
 
   const editorOverlayClass =
-    'pointer-events-none absolute left-1/2 top-1/2 z-50 w-max max-w-[min(22rem,calc(100vw-1.25rem))] -translate-x-1/2 -translate-y-1/2 opacity-0 transition-opacity duration-150 group-hover:pointer-events-auto group-hover:opacity-100 group-focus-within:pointer-events-auto group-focus-within:opacity-100'
+    'pointer-events-none absolute left-1/2 top-1/2 z-50 w-max min-w-0 max-w-[min(22rem,calc(100vw-1.25rem),100%)] -translate-x-1/2 -translate-y-1/2 opacity-0 transition-opacity duration-150 group-hover:pointer-events-auto group-hover:opacity-100 group-focus-within:pointer-events-auto group-focus-within:opacity-100'
 
   return (
     <div
-      className="group relative isolate flex w-full min-h-[2.5rem] justify-center rounded-md outline-none focus-within:ring-2 focus-within:ring-amber-500/45 focus-within:ring-offset-2 focus-within:ring-offset-zinc-50 dark:focus-within:ring-offset-zinc-950"
+      className="group relative isolate flex w-full min-w-0 min-h-[2.5rem] justify-center rounded-md outline-none focus-within:ring-2 focus-within:ring-amber-500/45 focus-within:ring-offset-2 focus-within:ring-offset-zinc-50 dark:focus-within:ring-offset-zinc-950"
       aria-label={ariaLabel}
       role="group"
     >
@@ -97,7 +97,7 @@ export function EditableStaminaCell({
         {renderEditor ? (
           renderEditor({ current, max, bump })
         ) : (
-          <div className="flex flex-nowrap items-center gap-2 rounded-lg border border-zinc-500/80 bg-zinc-100 dark:bg-zinc-900 py-1.5 pl-2 pr-2 shadow-xl shadow-black/50 ring-1 ring-black/20">
+          <div className="flex max-w-full min-w-0 flex-nowrap items-center gap-2 overflow-x-auto rounded-lg border border-zinc-500/80 bg-zinc-100 dark:bg-zinc-900 py-1.5 pl-2 pr-2 shadow-xl shadow-black/50 ring-1 ring-black/20">
             <div className="flex shrink-0 items-center gap-1">
               <button
                 type="button"

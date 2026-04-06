@@ -306,9 +306,12 @@ export const MARIP_HEADERS = [
   { letter: 'P', title: 'Presence' },
 ] as const
 
-/** 6 columns: group | creatures (shrinks first) | stamina | MARIP | FS/SPD/Stab | conditions (width = icon row) */
-export const ROSTER_GRID_TEMPLATE =
-  '5.5rem minmax(0,1fr) minmax(7rem,8.5rem) minmax(5.75rem,7.25rem) 7.25rem max-content'
+/**
+ * Outer encounter grid: turn column + one flexible column per creature row.
+ * Each creature’s cells (name, stamina, MARIP, stats, conditions) live inside that column
+ * and reflow with container queries (see `index.css` `.roster-creature`).
+ */
+export const ROSTER_GRID_TEMPLATE = '5.5rem minmax(0,1fr)'
 
 /** MIME type for HTML5 drag payload: source encounter group index (stringified). */
 export const ENCOUNTER_GROUP_DRAG_MIME = 'application/x-live-steel-encounter-group-index'
@@ -1425,9 +1428,8 @@ export function reorderEncounterGroupsWithCaptainRemap(
   }))
 }
 
-// Match the roster grid so terrain stamina aligns with monster stamina.
-export const terrainGridClass =
-  'grid grid-cols-[5.5rem_minmax(0,1fr)_minmax(7rem,8.5rem)_minmax(5.75rem,7.25rem)_7.25rem_23.0625rem]'
+/** Same outer columns as {@link ROSTER_GRID_TEMPLATE} (terrain body uses container queries). */
+export const terrainGridClass = 'grid grid-cols-[5.5rem_minmax(0,1fr)]'
 
 export function conditionEntryFromLabel(label: string): ConditionEntry {
   return { label, state: 'neutral' }

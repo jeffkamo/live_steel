@@ -80,7 +80,7 @@ export function ConditionCatalogIconStrip({
   if (interactive) {
     return (
       <div
-        className={`inline-flex max-w-full flex-nowrap items-center justify-start gap-[0.1875rem] ${conditionStripOutlinePad}`}
+        className={`flex max-w-full min-w-0 flex-wrap items-center justify-start gap-x-[0.1875rem] gap-y-1.5 ${conditionStripOutlinePad}`}
       >
         {iconRow}
       </div>

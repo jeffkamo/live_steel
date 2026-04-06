@@ -23,6 +23,198 @@
   }
 }
 
+@layer components {
+  /**
+   * Roster creature row (container `roster-creature`):
+   * - ≥720px: one row, five columns.
+   * - 420–719px: three rows; stamina + MARIP + stats share one flex row (`mid`).
+   * - ≤419px: five rows (name, stamina, MARIP, stats, conditions); `mid` uses `display: contents`.
+   */
+  .roster-creature {
+    container-type: inline-size;
+    container-name: roster-creature;
+    min-width: 0;
+  }
+
+  .roster-creature__grid {
+    display: grid;
+    min-width: 0;
+    width: 100%;
+    gap: 0.5rem 0.75rem;
+    align-items: stretch;
+  }
+
+  .roster-creature__mid {
+    display: contents;
+  }
+
+  @container roster-creature (min-width: 720px) {
+    .roster-creature__grid {
+      grid-template-columns:
+        minmax(0, 1.6fr) minmax(5rem, 8.5rem) minmax(4.25rem, 7.25rem) minmax(4.5rem, 7.25rem) minmax(9rem, 1fr);
+      grid-template-rows: auto;
+    }
+    .roster-creature__name {
+      grid-column: 1;
+      grid-row: 1;
+    }
+    .roster-creature__stamina {
+      grid-column: 2;
+      grid-row: 1;
+    }
+    .roster-creature__marip {
+      grid-column: 3;
+      grid-row: 1;
+    }
+    .roster-creature__stats {
+      grid-column: 4;
+      grid-row: 1;
+    }
+    .roster-creature__conditions {
+      grid-column: 5;
+      grid-row: 1;
+    }
+  }
+
+  @container roster-creature (max-width: 719px) and (min-width: 420px) {
+    .roster-creature__grid {
+      grid-template-columns: 1fr;
+      grid-template-rows: auto auto auto;
+    }
+    .roster-creature__name {
+      grid-column: 1;
+      grid-row: 1;
+      min-width: 0;
+    }
+    .roster-creature__mid {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem 0.75rem;
+      min-width: 0;
+      grid-column: 1;
+      grid-row: 2;
+    }
+    .roster-creature__stamina,
+    .roster-creature__marip,
+    .roster-creature__stats {
+      min-width: 0;
+    }
+    .roster-creature__conditions {
+      grid-column: 1;
+      grid-row: 3;
+    }
+  }
+
+  @container roster-creature (max-width: 419px) {
+    .roster-creature__grid {
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-rows: auto auto auto auto auto;
+      gap: 0.5rem;
+    }
+    .roster-creature__name {
+      grid-column: 1;
+      grid-row: 1;
+      min-width: 0;
+    }
+    .roster-creature__mid {
+      display: contents;
+    }
+    .roster-creature__stamina {
+      grid-column: 1;
+      grid-row: 2;
+      min-width: 0;
+      width: 100%;
+      max-width: 100%;
+    }
+    .roster-creature__marip {
+      grid-column: 1;
+      grid-row: 3;
+      min-width: 0;
+      width: 100%;
+      max-width: 100%;
+    }
+    .roster-creature__stats {
+      grid-column: 1;
+      grid-row: 4;
+      min-width: 0;
+      width: 100%;
+      max-width: 100%;
+    }
+    .roster-creature__conditions {
+      grid-column: 1;
+      grid-row: 5;
+      min-width: 0;
+      width: 100%;
+      max-width: 100%;
+    }
+  }
+
+  /**
+   * Terrain row: wide = identity | stamina | note in one row; narrow = identity + stamina, then note.
+   */
+  .terrain-row {
+    container-type: inline-size;
+    container-name: terrain;
+    min-width: 0;
+  }
+
+  .terrain-row__inner {
+    min-width: 0;
+  }
+
+  @container terrain (min-width: 640px) {
+    .terrain-row__inner {
+      display: grid;
+      grid-template-columns: minmax(0, 1.6fr) minmax(5rem, 8.5rem) minmax(0, 1fr);
+      gap: 0.5rem 0.75rem;
+      align-items: start;
+    }
+    .terrain-row__top {
+      display: contents;
+    }
+    .terrain-row__identity {
+      grid-column: 1;
+      grid-row: 1;
+    }
+    .terrain-row__stamina {
+      grid-column: 2;
+      grid-row: 1;
+      align-self: center;
+    }
+    .terrain-row__note {
+      grid-column: 3;
+      grid-row: 1;
+    }
+  }
+
+  @container terrain (max-width: 639px) {
+    .terrain-row__inner {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .terrain-row__top {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .terrain-row__identity {
+      flex: 1 1 min(100%, 12rem);
+      min-width: 0;
+    }
+    .terrain-row__stamina {
+      flex-shrink: 0;
+    }
+    .terrain-row__note {
+      width: 100%;
+      min-width: 0;
+    }
+  }
+}
+
 @keyframes glow-eot {
   0%, 100% { box-shadow: 0 0 4px 1px rgb(245 158 11 / 0.45); }
   50%      { box-shadow: 0 0 10px 3px rgb(245 158 11 / 0.7); }

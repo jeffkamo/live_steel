@@ -2,7 +2,7 @@ import type { Marip } from '../types'
 import { MARIP_HEADERS } from '../data'
 
 export function MaripCluster({ values }: { values: Marip | null }) {
-  const track = 'grid w-full min-w-0 grid-cols-5 gap-x-0.5 text-center'
+  const track = 'grid w-full min-w-0 grid-cols-5 gap-x-1 text-center sm:gap-x-1.5'
   return (
     <div
       className="flex w-full min-w-0 flex-col justify-center gap-0"

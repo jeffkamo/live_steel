@@ -260,11 +260,13 @@ export function MinionGroupRow({
 
   const lockedOrdinalBalancePad = monsterDrag == null ? 'pl-1 sm:pl-1.5' : ''
 
+  const squadOrdinal = creatureOrdinalMap.get(`${monsterIndex}`) ?? monsterIndex + 1
+
   return (
     <>
       {/* --- parent minion summary row --- */}
       <div
-        className={`${creatureNameColCell} min-w-0 ${rowTone} has-[[data-grip-menu-open]]:opacity-100 has-[[data-grip-menu-open]]:z-[200] has-[[data-captain-menu-open]]:opacity-100 has-[[data-captain-menu-open]]:z-[200] ${parentMonsterDropRing}`}
+        className={`roster-creature ${rowTone} has-[[data-grip-menu-open]]:opacity-100 has-[[data-grip-menu-open]]:z-[200] has-[[data-captain-menu-open]]:opacity-100 has-[[data-captain-menu-open]]:z-[200] ${parentMonsterDropRing}`}
         style={{ gridColumn: 2, gridRow: row }}
         data-testid="monster-drop-target"
         data-group-index={monsterDrag?.groupIndex}
@@ -273,6 +275,8 @@ export function MinionGroupRow({
         onDragLeave={monsterDrag?.onDragLeave}
         onDrop={monsterDrag?.onDrop}
       >
+        <div className="roster-creature__grid">
+          <div className={`roster-creature__name ${creatureNameColCell} min-w-0`}>
         <div className={`flex min-h-0 min-w-0 flex-1 items-stretch gap-3 ${lockedOrdinalBalancePad}`}>
           {monsterDrag != null && (
             <ReorderGripWithMenu
@@ -293,7 +297,9 @@ export function MinionGroupRow({
             aria-haspopup="dialog"
             className={`flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-full border-2 text-sm font-semibold tabular-nums leading-none outline-none transition-[filter,transform] duration-150 ease-out motion-reduce:transition-none hover:brightness-110 focus-visible:ring-2 focus-visible:ring-amber-500/45 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-50 dark:focus-visible:ring-offset-zinc-950 active:scale-[0.97] sm:size-10 sm:text-base ${badge.border} ${badge.bg} ${badge.text}`}
             onClick={(e) => onGroupColorOrdinalClick(monsterIndex, e.currentTarget)}
-          ></button>
+          >
+            {squadOrdinal}
+          </button>
           <div className="min-w-0 flex-1">
             {hasStatBlock && onStatCardToggle ? (
               <button
@@ -442,65 +448,59 @@ export function MinionGroupRow({
           </div>
           </div>
         </div>
-      </div>
-      <div
-        className={`${bodyCell} relative z-0 justify-center overflow-visible hover:z-20 focus-within:z-20`}
-        style={{ gridColumn: 3, gridRow: row }}
-      >
-        <EditableStaminaCell
-          current={sc}
-          max={sm}
-          onChange={onStaminaChange}
-          ariaLabel={`Edit stamina for ${monster.name}`}
-          dimContent={turnComplete}
-          renderDisplay={(cur, mx) => (
-            <MinionStaminaDisplay
-              current={cur}
-              max={mx}
-              parentMonster={monster}
-              minionCount={minions.length}
-              actualDeadCount={minions.filter((m) => m.dead).length}
+          </div>
+        <div className="roster-creature__mid">
+          <div
+            className={`roster-creature__stamina ${bodyCell} relative z-0 min-w-0 justify-center overflow-x-clip overflow-y-visible hover:z-20 focus-within:z-20`}
+          >
+            <EditableStaminaCell
+              current={sc}
+              max={sm}
+              onChange={onStaminaChange}
+              ariaLabel={`Edit stamina for ${monster.name}`}
+              dimContent={turnComplete}
+              renderDisplay={(cur, mx) => (
+                <MinionStaminaDisplay
+                  current={cur}
+                  max={mx}
+                  parentMonster={monster}
+                  minionCount={minions.length}
+                  actualDeadCount={minions.filter((m) => m.dead).length}
+                />
+              )}
+              renderEditor={({ current: cur, bump }) => (
+                <MinionStaminaEditor
+                  current={cur}
+                  bump={bump}
+                  parentMonster={monster}
+                  minionCount={minions.length}
+                />
+              )}
             />
-          )}
-          renderEditor={({ current: cur, bump }) => (
-            <MinionStaminaEditor
-              current={cur}
-              bump={bump}
-              parentMonster={monster}
-              minionCount={minions.length}
-            />
-          )}
-        />
-      </div>
-      <div
-        className={`${bodyCell} justify-center ${rowTone}`}
-        style={{ gridColumn: 4, gridRow: row }}
-      >
-        <MaripCluster values={monster.marip} />
-      </div>
-      <div
-        className={`${bodyCell} justify-center ${rowTone}`}
-        style={{ gridColumn: 5, gridRow: row }}
-      >
-        <StatCluster fs={combat.fs} spd={combat.spd} stab={combat.stab} />
-      </div>
-      <div
-        className="relative z-0 flex h-full min-h-[3.75rem] w-full items-stretch overflow-visible hover:z-20 focus-within:z-20 has-[[data-condition-picker]]:z-[100] sm:min-h-[4rem]"
-        style={{ gridColumn: 6, gridRow: row }}
-      >
-        <div className="flex min-w-0 flex-1 items-stretch">
-          <CreatureConditionCell
-            monsterName={monster.name}
-            conditions={monster.conditions}
-            onRemove={onConditionRemove}
-            onAddOrSetCondition={onConditionAddOrSet}
-            turnComplete={turnComplete}
-            seActPhaseGlow={seActPhaseGlow}
-            onConfirmEot={onConfirmEot ? (label) => onConfirmEot(label) : undefined}
-            isEotConfirmed={isEotConfirmed ? (label) => isEotConfirmed(label) : undefined}
-            conditionDnD={conditionDnDParent}
-          />
+          </div>
+          <div className={`roster-creature__marip ${bodyCell} justify-center ${rowTone}`}>
+            <MaripCluster values={monster.marip} />
+          </div>
+          <div className={`roster-creature__stats ${bodyCell} justify-center ${rowTone}`}>
+            <StatCluster fs={combat.fs} spd={combat.spd} stab={combat.stab} />
+          </div>
         </div>
+        <div className="roster-creature__conditions relative z-0 flex h-full min-h-[3.75rem] w-full items-stretch overflow-visible hover:z-20 focus-within:z-20 has-[[data-condition-picker]]:z-[100] sm:min-h-[4rem]">
+          <div className="flex min-w-0 flex-1 items-stretch">
+            <CreatureConditionCell
+              monsterName={monster.name}
+              conditions={monster.conditions}
+              onRemove={onConditionRemove}
+              onAddOrSetCondition={onConditionAddOrSet}
+              turnComplete={turnComplete}
+              seActPhaseGlow={seActPhaseGlow}
+              onConfirmEot={onConfirmEot ? (label) => onConfirmEot(label) : undefined}
+              isEotConfirmed={isEotConfirmed ? (label) => isEotConfirmed(label) : undefined}
+              conditionDnD={conditionDnDParent}
+            />
+          </div>
+        </div>
+      </div>
       </div>
 
       {/* --- minion child rows --- */}
@@ -658,126 +658,120 @@ function MinionChildRow({
           : ''
 
   return (
-    <>
-      <div
-        className={`${nameColCell} min-w-0 border-t border-zinc-200/90 dark:border-zinc-800/60 ${rowTone} has-[[data-grip-menu-open]]:opacity-100 has-[[data-grip-menu-open]]:z-[200] ${minionDropRing}`}
-        style={{ gridColumn: 2, gridRow: gridRow }}
-        data-testid="minion-drop-target"
-        data-group-index={minionDrag?.groupIndex}
-        data-monster-index={minionDrag?.monsterIndex}
-        data-minion-index={minionDrag?.minionIndex}
-        onDragOver={minionDrag?.onDragOver}
-        onDragLeave={minionDrag?.onDragLeave}
-        onDrop={minionDrag?.onDrop}
-      >
-        <div className="flex min-h-0 min-w-0 flex-1 items-stretch gap-2 pl-6 sm:gap-3">
-          {minionDrag != null && (
-            <ReorderGripWithMenu
-              reorderAriaLabel={`Reorder ${minion.name} within horde`}
-              onDragStart={minionDrag.onDragStart}
-              onDragEnd={minionDrag.onDragEnd}
-              menuItems={minionGripMenuItems}
-              className="group flex w-8 shrink-0 cursor-grab touch-none select-none items-center justify-center rounded-md border border-transparent transition-[background-color,border-color,box-shadow,color] duration-150 ease-out hover:border-zinc-700/45 hover:bg-zinc-300 dark:hover:bg-zinc-800/55 hover:shadow-sm active:cursor-grabbing motion-reduce:transition-none sm:w-9"
-              iconClassName="size-3.5 text-zinc-600 transition-colors group-hover:text-zinc-900 dark:group-hover:text-zinc-200"
-            />
-          )}
-          <div className={`flex min-w-0 flex-1 items-center gap-2 sm:gap-3 ${deadDim}`}>
-            <span
-              className={`flex size-7 shrink-0 items-center justify-center rounded-full border-2 text-[0.65rem] font-semibold tabular-nums leading-none sm:size-8 sm:text-xs ${badge.border} ${badge.bg} ${badge.text}`}
-              aria-label={`${minion.name}: creature ${creatureOrdinal} of ${totalCreatures} in encounter group ${groupNumber}`}
-            >
-              {creatureOrdinal}
-            </span>
-            <div className="min-w-0 flex-1">
-              {onMinionStatCardClick ? (
-                <button
-                  type="button"
-                  aria-expanded={monsterCardDrawerOpen}
-                  aria-controls="monster-stat-card-drawer"
-                  aria-label={`Stat card for ${minion.name}`}
-                  onClick={onMinionStatCardClick}
-                  className="block w-full min-w-0 cursor-pointer rounded-md px-3 py-2 text-left outline-none transition-[background-color,box-shadow,color] duration-150 ease-out motion-reduce:transition-none hover:bg-zinc-200/95 dark:hover:bg-zinc-800/55 hover:shadow-sm hover:shadow-black/20 hover:[&>span]:text-amber-900 dark:hover:[&>span]:text-amber-50/95 focus-visible:ring-2 focus-visible:ring-amber-500/45 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-50 dark:focus-visible:ring-offset-zinc-950"
-                >
-                  <span
-                    className={`block truncate text-sm font-medium leading-tight text-zinc-900 dark:text-zinc-200 transition-colors duration-150 ${minion.dead ? 'line-through' : ''}`}
+    <div
+      className={`roster-creature border-t border-zinc-200/90 dark:border-zinc-800/60 ${rowTone} has-[[data-grip-menu-open]]:opacity-100 has-[[data-grip-menu-open]]:z-[200] ${minionDropRing}`}
+      style={{ gridColumn: 2, gridRow: gridRow }}
+      data-testid="minion-drop-target"
+      data-group-index={minionDrag?.groupIndex}
+      data-monster-index={minionDrag?.monsterIndex}
+      data-minion-index={minionDrag?.minionIndex}
+      onDragOver={minionDrag?.onDragOver}
+      onDragLeave={minionDrag?.onDragLeave}
+      onDrop={minionDrag?.onDrop}
+    >
+      <div className="roster-creature__grid">
+        <div className={`roster-creature__name ${nameColCell} min-w-0`}>
+          <div className="flex min-h-0 min-w-0 flex-1 items-stretch gap-2 pl-6 sm:gap-3">
+            {minionDrag != null && (
+              <ReorderGripWithMenu
+                reorderAriaLabel={`Reorder ${minion.name} within horde`}
+                onDragStart={minionDrag.onDragStart}
+                onDragEnd={minionDrag.onDragEnd}
+                menuItems={minionGripMenuItems}
+                className="group flex w-8 shrink-0 cursor-grab touch-none select-none items-center justify-center rounded-md border border-transparent transition-[background-color,border-color,box-shadow,color] duration-150 ease-out hover:border-zinc-700/45 hover:bg-zinc-300 dark:hover:bg-zinc-800/55 hover:shadow-sm active:cursor-grabbing motion-reduce:transition-none sm:w-9"
+                iconClassName="size-3.5 text-zinc-600 transition-colors group-hover:text-zinc-900 dark:group-hover:text-zinc-200"
+              />
+            )}
+            <div className={`flex min-w-0 flex-1 items-center gap-2 sm:gap-3 ${deadDim}`}>
+              <span
+                className={`flex size-7 shrink-0 items-center justify-center rounded-full border-2 text-[0.65rem] font-semibold tabular-nums leading-none sm:size-8 sm:text-xs ${badge.border} ${badge.bg} ${badge.text}`}
+                aria-label={`${minion.name}: creature ${creatureOrdinal} of ${totalCreatures} in encounter group ${groupNumber}`}
+              >
+                {creatureOrdinal}
+              </span>
+              <div className="min-w-0 flex-1">
+                {onMinionStatCardClick ? (
+                  <button
+                    type="button"
+                    aria-expanded={monsterCardDrawerOpen}
+                    aria-controls="monster-stat-card-drawer"
+                    aria-label={`Stat card for ${minion.name}`}
+                    onClick={onMinionStatCardClick}
+                    className="block w-full min-w-0 cursor-pointer rounded-md px-3 py-2 text-left outline-none transition-[background-color,box-shadow,color] duration-150 ease-out motion-reduce:transition-none hover:bg-zinc-200/95 dark:hover:bg-zinc-800/55 hover:shadow-sm hover:shadow-black/20 hover:[&>span]:text-amber-900 dark:hover:[&>span]:text-amber-50/95 focus-visible:ring-2 focus-visible:ring-amber-500/45 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-50 dark:focus-visible:ring-offset-zinc-950"
+                  >
+                    <span
+                      className={`block truncate text-sm font-medium leading-tight text-zinc-900 dark:text-zinc-200 transition-colors duration-150 ${minion.dead ? 'line-through' : ''}`}
+                    >
+                      {minion.name}
+                    </span>
+                  </button>
+                ) : (
+                  <p
+                    className={`truncate px-3 py-2 text-sm font-medium leading-tight text-zinc-900 dark:text-zinc-200 transition-colors duration-150 ease-out motion-reduce:transition-none hover:text-amber-800 dark:hover:text-amber-50/95 ${minion.dead ? 'line-through' : ''}`}
                   >
                     {minion.name}
-                  </span>
-                </button>
-              ) : (
-                <p
-                  className={`truncate px-3 py-2 text-sm font-medium leading-tight text-zinc-900 dark:text-zinc-200 transition-colors duration-150 ease-out motion-reduce:transition-none hover:text-amber-800 dark:hover:text-amber-50/95 ${minion.dead ? 'line-through' : ''}`}
-                >
-                  {minion.name}
-                </p>
-              )}
+                  </p>
+                )}
+              </div>
             </div>
           </div>
         </div>
-      </div>
-      <div
-        className={`${bodyCell} justify-center border-t border-zinc-200/90 dark:border-zinc-800/60 ${rowTone}`}
-        style={{ gridColumn: 3, gridRow: gridRow }}
-      >
-        <button
-          type="button"
-          aria-pressed={minion.dead}
-          title={
-            minion.dead
-              ? 'Dead — click to mark alive'
-              : 'Alive — click to mark dead'
-          }
-          aria-label={
-            minion.dead
-              ? `${minion.name}: dead. Click to mark alive.`
-              : `${minion.name}: alive. Click to mark dead.`
-          }
-          onClick={() => onDeadChange(!minion.dead)}
-          className={`inline-flex shrink-0 cursor-pointer items-center justify-center rounded-md p-1 outline-none transition-[color,transform,box-shadow] duration-200 ease-out motion-reduce:transition-none hover:brightness-125 active:scale-[0.93] focus-visible:ring-2 focus-visible:ring-amber-500/45 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950 ${
-            minion.dead ? 'text-zinc-400' : 'text-rose-300'
-          } ${
-            lifeToggleCue === 'kill'
-              ? 'z-[1] ring-2 ring-red-500/80 ring-offset-2 ring-offset-zinc-50 dark:ring-offset-zinc-950 motion-safe:animate-glow-cue-kill motion-reduce:shadow-[0_0_10px_rgba(239,68,68,0.45)]'
-              : lifeToggleCue === 'revive'
-                ? 'z-[1] ring-2 ring-emerald-500/80 ring-offset-2 ring-offset-zinc-50 dark:ring-offset-zinc-950 motion-safe:animate-glow-cue-revive motion-reduce:shadow-[0_0_10px_rgba(34,197,94,0.45)]'
-                : ''
-          }`}
+        <div className="roster-creature__mid">
+          <div className={`roster-creature__stamina ${bodyCell} justify-center ${rowTone}`}>
+            <button
+              type="button"
+              aria-pressed={minion.dead}
+              title={
+                minion.dead
+                  ? 'Dead — click to mark alive'
+                  : 'Alive — click to mark dead'
+              }
+              aria-label={
+                minion.dead
+                  ? `${minion.name}: dead. Click to mark alive.`
+                  : `${minion.name}: alive. Click to mark dead.`
+              }
+              onClick={() => onDeadChange(!minion.dead)}
+              className={`inline-flex shrink-0 cursor-pointer items-center justify-center rounded-md p-1 outline-none transition-[color,transform,box-shadow] duration-200 ease-out motion-reduce:transition-none hover:brightness-125 active:scale-[0.93] focus-visible:ring-2 focus-visible:ring-amber-500/45 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950 ${
+                minion.dead ? 'text-zinc-400' : 'text-rose-300'
+              } ${
+                lifeToggleCue === 'kill'
+                  ? 'z-[1] ring-2 ring-red-500/80 ring-offset-2 ring-offset-zinc-50 dark:ring-offset-zinc-950 motion-safe:animate-glow-cue-kill motion-reduce:shadow-[0_0_10px_rgba(239,68,68,0.45)]'
+                  : lifeToggleCue === 'revive'
+                    ? 'z-[1] ring-2 ring-emerald-500/80 ring-offset-2 ring-offset-zinc-50 dark:ring-offset-zinc-950 motion-safe:animate-glow-cue-revive motion-reduce:shadow-[0_0_10px_rgba(34,197,94,0.45)]'
+                    : ''
+              }`}
+            >
+              {minion.dead ? (
+                <StaminaSkullIcon className="size-5" />
+              ) : (
+                <StaminaHeartFullIcon className="size-5" />
+              )}
+            </button>
+          </div>
+          <div className={`roster-creature__marip ${bodyCell} justify-center ${rowTone} ${deadDim}`}>
+            <MaripCluster values={parentMonster.marip} />
+          </div>
+          <div className={`roster-creature__stats ${bodyCell} justify-center ${rowTone} ${deadDim}`}>
+            <StatCluster fs={childCombat.fs} spd={childCombat.spd} stab={childCombat.stab} />
+          </div>
+        </div>
+        <div
+          className={`roster-creature__conditions relative z-0 flex h-full min-h-[3rem] w-full items-stretch overflow-visible hover:z-20 focus-within:z-20 has-[[data-condition-picker]]:z-[100] sm:min-h-[3.25rem] ${deadDim}`}
         >
-          {minion.dead ? (
-            <StaminaSkullIcon className="size-5" />
-          ) : (
-            <StaminaHeartFullIcon className="size-5" />
-          )}
-        </button>
+          <CreatureConditionCell
+            monsterName={minion.name}
+            conditions={minion.conditions}
+            onRemove={onConditionRemove}
+            onAddOrSetCondition={onConditionAddOrSet}
+            turnComplete={turnComplete}
+            seActPhaseGlow={seActPhaseGlow}
+            onConfirmEot={onConfirmEot}
+            isEotConfirmed={isEotConfirmed}
+            conditionDnD={conditionDnD}
+          />
+        </div>
       </div>
-      <div
-        className={`${bodyCell} justify-center border-t border-zinc-200/90 dark:border-zinc-800/60 ${rowTone} ${deadDim}`}
-        style={{ gridColumn: 4, gridRow: gridRow }}
-      >
-        <MaripCluster values={parentMonster.marip} />
-      </div>
-      <div
-        className={`${bodyCell} justify-center border-t border-zinc-200/90 dark:border-zinc-800/60 ${rowTone} ${deadDim}`}
-        style={{ gridColumn: 5, gridRow: gridRow }}
-      >
-        <StatCluster fs={childCombat.fs} spd={childCombat.spd} stab={childCombat.stab} />
-      </div>
-      <div
-        className={`relative z-0 flex h-full min-h-[3rem] w-full items-stretch overflow-visible border-t border-zinc-200/90 dark:border-zinc-800/60 hover:z-20 focus-within:z-20 has-[[data-condition-picker]]:z-[100] sm:min-h-[3.25rem] ${deadDim}`}
-        style={{ gridColumn: 6, gridRow: gridRow }}
-      >
-        <CreatureConditionCell
-          monsterName={minion.name}
-          conditions={minion.conditions}
-          onRemove={onConditionRemove}
-          onAddOrSetCondition={onConditionAddOrSet}
-          turnComplete={turnComplete}
-          seActPhaseGlow={seActPhaseGlow}
-          onConfirmEot={onConfirmEot}
-          isEotConfirmed={isEotConfirmed}
-          conditionDnD={conditionDnD}
-        />
-      </div>
-    </>
+    </div>
   )
 }
