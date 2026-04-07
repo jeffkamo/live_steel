@@ -86,7 +86,9 @@ import {
   pruneOrphanMaliceRows,
 } from './malice'
 
-const DRAWER_PANEL_W_CLASS = 'w-[min(20rem,calc(100vw-2rem))]'
+/** Desktop: drawer column width in the main flex row (mobile uses fixed overlay; width lives on the panel). */
+const DRAWER_PANEL_W_MD = 'md:w-[min(20rem,calc(100vw-2rem))]'
+const DRAWER_PANEL_W_MOBILE = 'max-md:w-[min(20rem,calc(100vw-2rem))]'
 const MONSTER_DRAWER_CLOSE_MS = 300
 
 function prefersReducedMotion(): boolean {
@@ -1727,27 +1729,31 @@ function App() {
     terrainDrawerRow != null && (terrainDrawerRow.terrainName != null || terrainDrawerRow.custom != null)
 
   return (
-    <div className="min-h-svh bg-zinc-50 dark:bg-zinc-950 p-4 font-sans text-zinc-900 dark:text-zinc-100 antialiased md:p-8">
-      <SettingsMenu colorScheme={colorScheme} onColorSchemeChange={setColorScheme} />
-      <div className="mx-auto flex w-full max-w-[min(92rem,100%)] items-stretch gap-0">
+    <div className="min-h-svh w-full bg-zinc-50 dark:bg-zinc-950 p-4 font-sans text-zinc-900 dark:text-zinc-100 antialiased md:p-8">
+      <div className="mx-auto flex w-full min-w-0 max-w-[min(92rem,100%)] items-stretch gap-0">
         <div className="min-w-0 flex-1">
           <div className="mx-auto max-w-6xl">
-            <header className="px-4 pt-5 pb-0 text-center">
-              <h1 className="font-serif text-lg font-normal uppercase tracking-[0.2em] text-zinc-900 dark:text-white md:text-xl">
-                Live Steel
-              </h1>
-              <div
-                ref={encounterSwitcherRef}
-                className="relative mt-1.5 flex min-w-0 max-w-full flex-wrap items-center justify-center gap-2"
-              >
-                <div className="min-w-0 max-w-[min(24rem,calc(100vw-6rem))]">
+            <header className="px-4 pt-5 pb-0">
+              <div className="grid grid-cols-[1fr_auto_1fr] items-start gap-x-2">
+                <div className="flex justify-start pt-0.5">
+                  <SettingsMenu colorScheme={colorScheme} onColorSchemeChange={setColorScheme} />
+                </div>
+                <div className="min-w-0 max-w-full text-center">
+                  <h1 className="font-serif text-lg font-normal uppercase tracking-[0.2em] text-zinc-900 dark:text-white md:text-xl">
+                    Live Steel
+                  </h1>
+                  <div
+                    ref={encounterSwitcherRef}
+                    className="relative mt-1.5 flex min-w-0 max-w-full flex-wrap items-center justify-center gap-x-2 gap-y-1.5"
+                  >
+                <div className="flex min-w-0 max-w-[min(24rem,calc(100vw-6rem))] items-center justify-center">
                   <button
                     type="button"
                     aria-label="Switch encounter"
                     aria-expanded={showEncounterSwitcher}
                     title={encounterName}
                     onClick={() => setShowEncounterSwitcher((v) => !v)}
-                    className="inline-flex w-full min-w-0 cursor-pointer items-center gap-1 rounded-md px-2 py-0.5 text-[0.65rem] font-normal uppercase tracking-[0.28em] text-zinc-700 dark:text-zinc-400 transition-colors hover:bg-zinc-200/95 dark:hover:bg-zinc-800/70 hover:text-zinc-950 dark:hover:text-zinc-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500/60"
+                    className="inline-flex w-full min-w-0 cursor-pointer items-center justify-center gap-1 rounded-md px-2 py-1 text-[0.65rem] font-normal uppercase leading-none tracking-[0.28em] text-zinc-700 dark:text-zinc-400 transition-colors hover:bg-zinc-200/95 dark:hover:bg-zinc-800/70 hover:text-zinc-950 dark:hover:text-zinc-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500/60"
                   >
                     <span className="min-w-0 truncate">{encounterName}</span>
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3 w-3 shrink-0" aria-hidden>
@@ -1864,55 +1870,58 @@ function App() {
                     setShowNewEncounterPrompt(true)
                     setShowEncounterSwitcher(false)
                   }}
-                  className="inline-flex cursor-pointer items-center rounded-md px-1.5 py-0.5 font-sans text-[0.6rem] uppercase tracking-[0.15em] text-zinc-700 dark:text-zinc-400 transition-colors hover:bg-zinc-200/95 dark:hover:bg-zinc-800/70 hover:text-zinc-950 dark:hover:text-zinc-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500/60"
+                  className="inline-flex shrink-0 cursor-pointer items-center justify-center rounded-md px-2 py-1 font-sans text-[0.65rem] uppercase leading-none tracking-[0.15em] text-zinc-700 dark:text-zinc-400 transition-colors hover:bg-zinc-200/95 dark:hover:bg-zinc-800/70 hover:text-zinc-950 dark:hover:text-zinc-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500/60"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="mr-0.5 h-3 w-3">
                     <path d="M10.75 4.75a.75.75 0 0 0-1.5 0v4.5h-4.5a.75.75 0 0 0 0 1.5h4.5v4.5a.75.75 0 0 0 1.5 0v-4.5h4.5a.75.75 0 0 0 0-1.5h-4.5v-4.5Z" />
                   </svg>
                   New
                 </button>
-              </div>
-              {showNewEncounterPrompt && (
-                <div className="mx-auto mt-2 flex max-w-xs items-center gap-2 font-sans" role="dialog" aria-label="Name new encounter">
-                  <input
-                    ref={newEncounterInputRef}
-                    type="text"
-                    value={newEncounterNameInput}
-                    onChange={(e) => setNewEncounterNameInput(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && newEncounterNameInput.trim()) {
-                        createNewEncounter(newEncounterNameInput)
-                        setShowNewEncounterPrompt(false)
-                      }
-                      if (e.key === 'Escape') {
-                        setShowNewEncounterPrompt(false)
-                      }
-                    }}
-                    placeholder="Encounter name…"
-                    aria-label="Encounter name"
-                    className="min-w-0 flex-1 rounded-md border border-zinc-300 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-900 px-2.5 py-1.5 text-xs text-zinc-900 dark:text-zinc-100 placeholder-zinc-500 outline-none focus:border-amber-500/60 focus:ring-1 focus:ring-amber-500/40"
-                  />
-                  <button
-                    type="button"
-                    disabled={!newEncounterNameInput.trim()}
-                    onClick={() => {
-                      createNewEncounter(newEncounterNameInput)
-                      setShowNewEncounterPrompt(false)
-                    }}
-                    className="cursor-pointer rounded-md bg-amber-600/80 px-3 py-1.5 text-xs font-medium text-zinc-900 dark:text-white transition-colors hover:bg-amber-500/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500/60 disabled:cursor-not-allowed disabled:opacity-40"
-                  >
-                    Create
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setShowNewEncounterPrompt(false)}
-                    aria-label="Cancel new encounter"
-                    className="cursor-pointer rounded-md px-2 py-1.5 text-xs text-zinc-400 transition-colors hover:bg-zinc-300 dark:hover:bg-zinc-800 hover:text-zinc-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500/60"
-                  >
-                    Cancel
-                  </button>
+                  </div>
+                  {showNewEncounterPrompt && (
+                    <div className="mx-auto mt-2 flex max-w-xs items-center gap-2 font-sans" role="dialog" aria-label="Name new encounter">
+                      <input
+                        ref={newEncounterInputRef}
+                        type="text"
+                        value={newEncounterNameInput}
+                        onChange={(e) => setNewEncounterNameInput(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' && newEncounterNameInput.trim()) {
+                            createNewEncounter(newEncounterNameInput)
+                            setShowNewEncounterPrompt(false)
+                          }
+                          if (e.key === 'Escape') {
+                            setShowNewEncounterPrompt(false)
+                          }
+                        }}
+                        placeholder="Encounter name…"
+                        aria-label="Encounter name"
+                        className="min-w-0 flex-1 rounded-md border border-zinc-300 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-900 px-2.5 py-1.5 text-xs text-zinc-900 dark:text-zinc-100 placeholder-zinc-500 outline-none focus:border-amber-500/60 focus:ring-1 focus:ring-amber-500/40"
+                      />
+                      <button
+                        type="button"
+                        disabled={!newEncounterNameInput.trim()}
+                        onClick={() => {
+                          createNewEncounter(newEncounterNameInput)
+                          setShowNewEncounterPrompt(false)
+                        }}
+                        className="cursor-pointer rounded-md bg-amber-600/80 px-3 py-1.5 text-xs font-medium text-zinc-900 dark:text-white transition-colors hover:bg-amber-500/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500/60 disabled:cursor-not-allowed disabled:opacity-40"
+                      >
+                        Create
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setShowNewEncounterPrompt(false)}
+                        aria-label="Cancel new encounter"
+                        className="cursor-pointer rounded-md px-2 py-1.5 text-xs text-zinc-400 transition-colors hover:bg-zinc-300 dark:hover:bg-zinc-800 hover:text-zinc-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500/60"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  )}
                 </div>
-              )}
+                <div className="min-w-0" aria-hidden />
+              </div>
               <TitleRule flushBelow />
             </header>
 
@@ -2220,23 +2229,32 @@ function App() {
         </div>
 
         <div
-          className={`sticky top-4 shrink-0 self-start overflow-hidden md:top-8 ${
-            anyDrawerOpen ? `z-[110] ${DRAWER_PANEL_W_CLASS}` : 'z-10 w-0'
+          className={`flex max-md:min-w-0 shrink-0 flex-col overflow-visible md:min-h-0 ${
+            anyDrawerOpen
+              ? `z-[110] max-md:w-0 ${DRAWER_PANEL_W_MD}`
+              : 'z-10 w-0'
           }`}
         >
           {anyDrawerOpen && (
-            <aside
-              id="stat-card-drawer"
-              aria-label={
-                terrainDrawerOpen && terrainDrawerRow
-                  ? `Stat block for ${terrainDrawerRow.object}`
-                  : drawerAsideAriaLabel
-              }
-              aria-hidden={!statCardDrawerOpen && !terrainDrawerOpen}
-              className={`box-border flex h-[calc(100svh-2rem)] ${DRAWER_PANEL_W_CLASS} flex-col overflow-hidden bg-zinc-50 dark:bg-zinc-950 transition-transform duration-300 ease-out motion-reduce:transition-none md:h-[calc(100svh-4rem)] ${
-                drawerEntered && !drawerAnimatingOut ? 'translate-x-0' : 'translate-x-full'
-              }`}
-            >
+            <>
+              <div
+                className="fixed inset-0 z-[105] bg-zinc-950/45 backdrop-blur-[1px] dark:bg-black/55 md:hidden"
+                aria-hidden
+                onClick={requestDrawerClose}
+              />
+              <div className="w-full max-md:contents md:sticky md:top-8 md:z-auto md:self-start">
+                <aside
+                  id="stat-card-drawer"
+                  aria-label={
+                    terrainDrawerOpen && terrainDrawerRow
+                      ? `Stat block for ${terrainDrawerRow.object}`
+                      : drawerAsideAriaLabel
+                  }
+                  aria-hidden={!statCardDrawerOpen && !terrainDrawerOpen}
+                  className={`box-border flex flex-col overflow-hidden bg-zinc-50 dark:bg-zinc-950 transition-transform duration-300 ease-out motion-reduce:transition-none max-md:fixed max-md:inset-y-0 max-md:right-0 max-md:z-[110] max-md:h-[100dvh] max-md:shadow-2xl ${DRAWER_PANEL_W_MOBILE} md:relative md:inset-auto md:z-auto md:h-[calc(100svh-4rem)] md:w-full md:shadow-none ${
+                    drawerEntered && !drawerAnimatingOut ? 'translate-x-0' : 'translate-x-full'
+                  }`}
+                >
               {terrainDrawerOpen && terrainDrawerRow ? (
                 <div className="box-border flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden font-sans">
                   <div className="relative z-10 flex shrink-0 items-start justify-between gap-2 border-b border-zinc-200/90 dark:border-zinc-800/60 px-3 py-2.5">
@@ -2385,7 +2403,9 @@ function App() {
                   </div>
                 </div>
               ) : null}
-            </aside>
+                </aside>
+              </div>
+            </>
           )}
         </div>
       </div>

@@ -21,6 +21,14 @@
   body {
     @apply bg-zinc-50 font-sans text-zinc-900 antialiased dark:bg-zinc-950 dark:text-zinc-100;
   }
+
+  /**
+   * Prevent horizontal scroll from off-canvas UI (e.g. fixed drawers using translate-x-full)
+   * and occasional 100vw width quirks on narrow viewports.
+   */
+  html {
+    overflow-x: hidden;
+  }
 }
 
 @layer components {
@@ -51,7 +59,7 @@
   @container roster-creature (min-width: 720px) {
     .roster-creature__grid {
       grid-template-columns:
-        minmax(0, 1.6fr) minmax(5rem, 8.5rem) minmax(4.25rem, 7.25rem) minmax(4.5rem, 7.25rem) minmax(9rem, 1fr);
+        minmax(0, 1.6fr) minmax(5rem, 8.5rem) minmax(9.5rem, 1.5fr) minmax(4.5rem, 7.25rem) minmax(9rem, 1fr);
       grid-template-rows: auto;
     }
     .roster-creature__name {

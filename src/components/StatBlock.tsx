@@ -294,19 +294,36 @@ function CoreStatsSection({
         </div>
       </div>
 
-      <div className="mt-3 flex flex-wrap justify-between gap-x-6 gap-y-1 text-[0.72rem] leading-snug text-zinc-700 dark:text-zinc-300">
-        <span>
+      <div className="mt-3 grid grid-cols-2 gap-x-6 gap-y-1 text-[0.72rem] leading-snug text-zinc-700 dark:text-zinc-300">
+        <span className="min-w-0">
           <span className="font-medium text-zinc-600 dark:text-zinc-400">Immunity: </span>
           {immunity}
         </span>
-        <span>
+        <span className="min-w-0">
           <span className="font-medium text-zinc-600 dark:text-zinc-400">Weakness: </span>
           {weakness}
         </span>
-      </div>
-      <div className="mt-1 text-[0.72rem] text-zinc-700 dark:text-zinc-300">
-        <span className="font-medium text-zinc-600 dark:text-zinc-400">Movement: </span>
-        {sb.movement ?? '—'}
+        <span className={`min-w-0 ${sb.with_captain ? '' : 'col-span-2'}`}>
+          <span className="font-medium text-zinc-600 dark:text-zinc-400">Movement: </span>
+          {sb.movement ?? '—'}
+        </span>
+        {sb.with_captain ? (
+          <div className="min-w-0">
+            <span className="font-medium text-zinc-600 dark:text-zinc-400">
+              {captainEffectLabel === 'active' ? 'With Captain (active): ' : 'With Captain: '}
+            </span>
+            <span
+              className={
+                captainEffectLabel === 'active'
+                  ? 'rounded-sm px-1 py-0.5 font-medium text-amber-950 ring-1 ring-amber-500/45 bg-amber-100/90 dark:bg-amber-500/15 dark:text-amber-100 dark:ring-amber-400/40'
+                  : 'text-zinc-700 dark:text-zinc-300'
+              }
+              data-testid={captainEffectLabel === 'active' ? 'with-captain-effect-highlight' : undefined}
+            >
+              {sb.with_captain}
+            </span>
+          </div>
+        ) : null}
       </div>
 
       <StatBlockSeparator />
@@ -335,24 +352,6 @@ function CoreStatsSection({
           )
         })}
       </div>
-
-      {sb.with_captain && (
-        <div className="mt-2 text-[0.68rem]">
-          <span className="font-medium text-zinc-600 dark:text-zinc-400">
-            {captainEffectLabel === 'active' ? 'With Captain (active): ' : 'With Captain: '}
-          </span>
-          <span
-            className={
-              captainEffectLabel === 'active'
-                ? 'rounded-sm px-1 py-0.5 font-medium text-amber-950 ring-1 ring-amber-500/45 bg-amber-100/90 dark:bg-amber-500/15 dark:text-amber-100 dark:ring-amber-400/40'
-                : 'text-zinc-700 dark:text-zinc-300'
-            }
-            data-testid={captainEffectLabel === 'active' ? 'with-captain-effect-highlight' : undefined}
-          >
-            {sb.with_captain}
-          </span>
-        </div>
-      )}
     </div>
   )
 }
