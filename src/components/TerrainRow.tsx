@@ -82,108 +82,116 @@ function TerrainRowUpgrades({
 
   if (!showAny) return null
 
-  return (
-    <div className="mt-2" data-testid="terrain-row-upgrades">
-      {showAdd && (
-        <div
-          ref={containerRef}
-          className="relative w-full"
-          onKeyDownCapture={
-            open
-              ? (e) => {
-                  const root = containerRef.current
-                  if (!root) return
-                  if (e.key === 'Escape') {
-                    e.preventDefault()
-                    close()
-                    return
-                  }
-                  tabWrapKeyDown(e.nativeEvent, root)
-                }
-              : undefined
-          }
-        >
-          {!open ? (
-            <button
-              ref={triggerRef}
-              type="button"
-              aria-label="Add upgrade"
-              onClick={openPanel}
-              className="flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-md border border-dashed border-zinc-400 dark:border-zinc-700 px-3 py-1.5 font-sans text-[0.7rem] text-zinc-700 transition-colors hover:border-zinc-500 hover:bg-zinc-50/90 dark:hover:bg-transparent hover:text-zinc-950 dark:hover:text-zinc-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500/60"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="size-3.5" aria-hidden>
-                <path d="M8.75 3.75a.75.75 0 0 0-1.5 0v3.5h-3.5a.75.75 0 0 0 0 1.5h3.5v3.5a.75.75 0 0 0 1.5 0v-3.5h3.5a.75.75 0 0 0 0-1.5h-3.5v-3.5Z" />
-              </svg>
-              Add upgrade
-            </button>
-          ) : (
-            <>
-              <div className="min-h-9 w-full shrink-0" aria-hidden />
-              <div className="absolute left-0 right-0 top-0 z-50 flex max-h-[min(40vh,11rem)] flex-col overflow-hidden rounded-md border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 shadow-2xl ring-1 ring-black/15 dark:ring-black/30">
-                <div className="flex shrink-0 items-center justify-between gap-2 border-b border-zinc-200 dark:border-zinc-800 px-3 py-2">
-                  <span className="font-sans text-[0.7rem] font-medium text-zinc-700 dark:text-zinc-300">Choose upgrade</span>
-                  <button
-                    type="button"
-                    aria-label="Close upgrade picker"
-                    onClick={close}
-                    className="shrink-0 cursor-pointer rounded p-0.5 text-zinc-500 transition-colors hover:text-zinc-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber-500/60"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="size-3" aria-hidden>
-                      <path d="M3.72 3.72a.75.75 0 0 1 1.06 0L8 6.94l3.22-3.22a.75.75 0 1 1 1.06 1.06L9.06 8l3.22 3.22a.75.75 0 1 1-1.06 1.06L8 9.06l-3.22 3.22a.75.75 0 0 1-1.06-1.06L6.94 8 3.72 4.78a.75.75 0 0 1 0-1.06Z" />
-                    </svg>
-                  </button>
-                </div>
-                <ul role="listbox" aria-label="Available upgrades" className="min-h-0 flex-1 overflow-y-auto py-1">
-                  {remaining.map((o) => (
-                    <li key={o.name} role="option" aria-selected={false}>
-                      <button
-                        type="button"
-                        data-upgrade-option
-                        onClick={() => {
-                          onAddUpgrade?.(o.name)
-                          close()
-                        }}
-                        className="w-full cursor-pointer px-3 py-1.5 text-left font-sans text-xs text-zinc-800 dark:text-zinc-300 transition-colors hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-950 dark:hover:text-zinc-100 focus-visible:bg-zinc-100 focus-visible:text-zinc-950 dark:focus-visible:bg-zinc-800 dark:focus-visible:text-zinc-100 focus-visible:outline-none"
-                      >
-                        {o.name}
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </>
-          )}
-        </div>
-      )}
+  const hasPills = selectedUpgrades.length > 0
+  const addControlWrapperClass = hasPills ? 'relative shrink-0' : 'relative inline-flex shrink-0'
 
-      {selectedUpgrades.length > 0 && (
-        <div className={`${showAdd ? 'mt-2' : ''} space-y-1`}>
-          <div className="font-sans text-[0.65rem] font-semibold uppercase tracking-wide text-zinc-600 dark:text-zinc-500">
-            Active upgrades
+  const addControl = showAdd ? (
+    <div
+      ref={containerRef}
+      className={addControlWrapperClass}
+      onKeyDownCapture={
+        open
+          ? (e) => {
+              const root = containerRef.current
+              if (!root) return
+              if (e.key === 'Escape') {
+                e.preventDefault()
+                close()
+                return
+              }
+              tabWrapKeyDown(e.nativeEvent, root)
+            }
+          : undefined
+      }
+    >
+      <button
+        ref={triggerRef}
+        type="button"
+        aria-label="Add upgrade"
+        aria-expanded={open}
+        aria-haspopup="listbox"
+        onClick={open ? close : openPanel}
+        className={`inline-flex cursor-pointer items-center gap-1.5 rounded-md border border-dashed px-2.5 py-1.5 font-sans text-[0.7rem] text-zinc-700 transition-colors hover:border-zinc-500 hover:bg-zinc-50/90 dark:border-zinc-700 dark:hover:bg-transparent hover:text-zinc-950 dark:hover:text-zinc-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500/60 ${
+          open ? 'border-zinc-500 bg-zinc-100 dark:bg-zinc-800/80' : 'border-zinc-400'
+        }`}
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="size-3.5 shrink-0" aria-hidden>
+          <path d="M8.75 3.75a.75.75 0 0 0-1.5 0v3.5h-3.5a.75.75 0 0 0 0 1.5h3.5v3.5a.75.75 0 0 0 1.5 0v-3.5h3.5a.75.75 0 0 0 0-1.5h-3.5v-3.5Z" />
+        </svg>
+        Add upgrade
+      </button>
+      {open && (
+        <div className="absolute left-0 top-full z-50 mt-1 flex max-h-[min(40vh,11rem)] w-max min-w-[11rem] max-w-[min(18rem,calc(100vw-2rem))] flex-col overflow-hidden rounded-md border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 shadow-2xl ring-1 ring-black/15 dark:ring-black/30">
+          <div className="flex shrink-0 items-center justify-between gap-2 border-b border-zinc-200 dark:border-zinc-800 px-3 py-2">
+            <span className="font-sans text-[0.7rem] font-medium text-zinc-700 dark:text-zinc-300">Choose upgrade</span>
+            <button
+              type="button"
+              aria-label="Close upgrade picker"
+              onClick={close}
+              className="shrink-0 cursor-pointer rounded p-0.5 text-zinc-500 transition-colors hover:text-zinc-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber-500/60"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="size-3" aria-hidden>
+                <path d="M3.72 3.72a.75.75 0 0 1 1.06 0L8 6.94l3.22-3.22a.75.75 0 1 1 1.06 1.06L9.06 8l3.22 3.22a.75.75 0 1 1-1.06 1.06L8 9.06l-3.22 3.22a.75.75 0 0 1-1.06-1.06L6.94 8 3.72 4.78a.75.75 0 0 1 0-1.06Z" />
+              </svg>
+            </button>
           </div>
-          <ul className="flex flex-wrap gap-1.5">
-            {selectedUpgrades.map((name) => (
-              <li
-                key={name}
-                className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-amber-600/45 bg-amber-50/95 px-2.5 py-1 font-sans text-[0.7rem] text-amber-950 shadow-[inset_0_1px_0_rgb(251_191_36/0.12)] dark:border-amber-500/35 dark:bg-amber-500/10 dark:text-amber-200 dark:shadow-[inset_0_1px_0_rgb(251_191_36/0.10)]"
-              >
-                <span className="min-w-0 truncate">{name}</span>
-                {!uiLocked && onRemoveUpgrade != null && (
-                  <button
-                    type="button"
-                    aria-label={`Remove upgrade: ${name}`}
-                    onClick={() => onRemoveUpgrade(name)}
-                    className="shrink-0 cursor-pointer rounded-full p-0.5 text-amber-800/90 transition-colors hover:bg-amber-200/80 hover:text-amber-950 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-amber-600/60 dark:text-amber-200/80 dark:hover:bg-amber-500/15 dark:hover:text-amber-100 dark:focus-visible:outline-amber-500/60"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="size-3" aria-hidden>
-                      <path d="M3.72 3.72a.75.75 0 0 1 1.06 0L8 6.94l3.22-3.22a.75.75 0 1 1 1.06 1.06L9.06 8l3.22 3.22a.75.75 0 1 1-1.06 1.06L8 9.06l-3.22 3.22a.75.75 0 0 1-1.06-1.06L6.94 8 3.72 4.78a.75.75 0 0 1 0-1.06Z" />
-                    </svg>
-                  </button>
-                )}
+          <ul role="listbox" aria-label="Available upgrades" className="min-h-0 max-h-[min(40vh,9rem)] overflow-y-auto py-1">
+            {remaining.map((o) => (
+              <li key={o.name} role="option" aria-selected={false}>
+                <button
+                  type="button"
+                  data-upgrade-option
+                  onClick={() => {
+                    onAddUpgrade?.(o.name)
+                    close()
+                  }}
+                  className="w-full cursor-pointer px-3 py-1.5 text-left font-sans text-xs text-zinc-800 dark:text-zinc-300 transition-colors hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-950 dark:hover:text-zinc-100 focus-visible:bg-zinc-100 focus-visible:text-zinc-950 dark:focus-visible:bg-zinc-800 dark:focus-visible:text-zinc-100 focus-visible:outline-none"
+                >
+                  {o.name}
+                </button>
               </li>
             ))}
           </ul>
         </div>
+      )}
+    </div>
+  ) : null
+
+  return (
+    <div className="mt-2" data-testid="terrain-row-upgrades">
+      {hasPills ? (
+        <div className="space-y-1">
+          <div className="font-sans text-[0.65rem] font-semibold uppercase tracking-wide text-zinc-600 dark:text-zinc-500">
+            Active upgrades
+          </div>
+          <div className="flex flex-wrap items-center gap-1.5">
+            <ul className="contents">
+              {selectedUpgrades.map((name) => (
+                <li
+                  key={name}
+                  className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-amber-600/45 bg-amber-50/95 px-2.5 py-1 font-sans text-[0.7rem] text-amber-950 shadow-[inset_0_1px_0_rgb(251_191_36/0.12)] dark:border-amber-500/35 dark:bg-amber-500/10 dark:text-amber-200 dark:shadow-[inset_0_1px_0_rgb(251_191_36/0.10)]"
+                >
+                  <span className="min-w-0 truncate">{name}</span>
+                  {!uiLocked && onRemoveUpgrade != null && (
+                    <button
+                      type="button"
+                      aria-label={`Remove upgrade: ${name}`}
+                      onClick={() => onRemoveUpgrade(name)}
+                      className="shrink-0 cursor-pointer rounded-full p-0.5 text-amber-800/90 transition-colors hover:bg-amber-200/80 hover:text-amber-950 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-amber-600/60 dark:text-amber-200/80 dark:hover:bg-amber-500/15 dark:hover:text-amber-100 dark:focus-visible:outline-amber-500/60"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="size-3" aria-hidden>
+                        <path d="M3.72 3.72a.75.75 0 0 1 1.06 0L8 6.94l3.22-3.22a.75.75 0 1 1 1.06 1.06L9.06 8l3.22 3.22a.75.75 0 1 1-1.06 1.06L8 9.06l-3.22 3.22a.75.75 0 0 1-1.06-1.06L6.94 8 3.72 4.78a.75.75 0 0 1 0-1.06Z" />
+                      </svg>
+                    </button>
+                  )}
+                </li>
+              ))}
+            </ul>
+            {addControl}
+          </div>
+        </div>
+      ) : (
+        addControl
       )}
     </div>
   )
@@ -261,7 +269,7 @@ export function TerrainRow({
         isDrawerOpen ? 'ring-1 ring-amber-500/40' : ''
       }`}
     >
-      <div className="flex min-h-0 min-w-0 items-center justify-start self-stretch pl-0.5 sm:pl-1">
+      <div className="flex min-h-0 items-center justify-start self-stretch py-1 pl-0.5 sm:py-1.5 sm:pl-1">
         {!uiLocked && dragHandle ? (
           <ReorderGripWithMenu
             reorderAriaLabel={dragHandle.ariaLabel}
@@ -278,20 +286,20 @@ export function TerrainRow({
       <div className="terrain-row min-w-0 w-full">
         <div className="terrain-row__inner py-2 pl-0 pr-2 sm:py-2.5 sm:pr-2.5">
           <div className="terrain-row__top">
-            <div className={`terrain-row__identity ${creatureNameColCell} min-w-0 !p-0`}>
-              <div className="flex min-h-0 min-w-0 flex-1 items-stretch py-1 sm:py-1.5">
+            <div className={`terrain-row__identity ${creatureNameColCell} min-w-0 w-full !p-0`}>
+              <div className="flex min-h-0 min-w-0 w-full flex-1 items-stretch justify-start py-1 sm:py-1.5">
                 {hasStatBlock ? (
                   <button
                     type="button"
                     onClick={onClick}
-                    className={`min-w-0 flex-1 cursor-pointer rounded-md px-2 py-2 pl-0 text-left text-sm leading-relaxed break-words text-zinc-900 [overflow-wrap:anywhere] dark:text-zinc-100 transition-colors hover:bg-zinc-200/90 dark:hover:bg-zinc-800/70 hover:text-amber-800 dark:hover:text-amber-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber-500/60 sm:text-base ${deadDim} ${deadStrike}`}
+                    className={`block w-full min-w-0 cursor-pointer rounded-md px-2 py-2 text-left text-sm leading-relaxed break-words text-zinc-900 [overflow-wrap:anywhere] dark:text-zinc-100 transition-colors hover:bg-zinc-200/90 dark:hover:bg-zinc-800/70 hover:text-amber-800 dark:hover:text-amber-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber-500/60 sm:px-2.5 sm:py-2 sm:text-base ${deadDim} ${deadStrike}`}
                     aria-label={`View stat block for ${row.object}`}
                   >
                     {row.object}
                   </button>
                 ) : (
                   <p
-                    className={`min-w-0 flex-1 break-words px-2 py-2 pl-0 text-sm leading-relaxed [overflow-wrap:anywhere] text-zinc-900 dark:text-zinc-100 sm:text-base ${deadDim} ${deadStrike}`}
+                    className={`min-w-0 w-full flex-1 break-words px-2 py-2 text-sm leading-relaxed [overflow-wrap:anywhere] text-zinc-900 dark:text-zinc-100 sm:px-2.5 sm:py-2 sm:text-base ${deadDim} ${deadStrike}`}
                   >
                     {row.object}
                   </p>

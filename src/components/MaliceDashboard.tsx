@@ -102,6 +102,10 @@ export function MaliceDashboard({
     if (totalCreatures === 0) setAddOpen(false)
   }, [totalCreatures])
 
+  useEffect(() => {
+    if (uiLocked) setAddOpen(false)
+  }, [uiLocked])
+
   /** Move a monster malice row to insert before index `to` (in the pre-move array). Core prefix stays fixed. */
   const moveRow = useCallback(
     (from: number, to: number) => {
@@ -177,60 +181,10 @@ export function MaliceDashboard({
   return (
     <div className="rounded-lg border border-zinc-200/95 bg-white font-sans shadow-sm dark:border-transparent dark:bg-zinc-900/80 dark:shadow-none">
       <div className="border-b border-zinc-200/90 bg-zinc-50/90 px-3 py-2.5 dark:border-zinc-800/90 dark:bg-zinc-950/40">
-        <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+        <div className="mb-2">
           <h3 className="font-sans text-[0.65rem] font-semibold uppercase tracking-wide text-zinc-600 dark:text-zinc-400">
             Malice
           </h3>
-          <div className="relative" ref={addAnchorRef}>
-            <button
-              type="button"
-              disabled={addDisabled}
-              aria-expanded={addOpen}
-              aria-haspopup="menu"
-              aria-controls={addOpen ? addMenuId : undefined}
-              onClick={() => !addDisabled && setAddOpen((o) => !o)}
-              className={`rounded-md px-2.5 py-1 font-sans text-xs transition-colors ${
-                !addDisabled
-                  ? 'bg-zinc-200/95 text-zinc-900 hover:bg-zinc-300/95 dark:bg-zinc-800/90 dark:text-zinc-100 dark:hover:bg-zinc-700/90'
-                  : 'cursor-not-allowed bg-zinc-100 text-zinc-400 dark:bg-zinc-900 dark:text-zinc-600'
-              }`}
-            >
-              + Add Malice feature
-            </button>
-            {addOpen && !addDisabled && (
-              <div
-                id={addMenuId}
-                role="menu"
-                className="absolute right-0 z-[120] mt-1 max-h-64 min-w-[14rem] overflow-y-auto rounded-lg border border-zinc-300/85 bg-white py-1 shadow-xl dark:border-zinc-700/80 dark:bg-zinc-900"
-              >
-                {addOptions.length === 0 ? (
-                  <div className="px-3 py-2 text-xs text-zinc-500 dark:text-zinc-400">
-                    No creature malice features to add (or all are already listed).
-                  </div>
-                ) : (
-                  addOptions.map((o) => (
-                    <button
-                      key={o.featureOptionKey}
-                      type="button"
-                      role="menuitem"
-                      className="flex w-full flex-col gap-1 px-3 py-2 text-left hover:bg-zinc-100 dark:hover:bg-zinc-800"
-                      onClick={() => addPick(o.featureOptionKey)}
-                    >
-                      <span className="min-w-0 font-sans text-xs font-medium text-zinc-900 dark:text-zinc-100">
-                        {o.name}
-                      </span>
-                      <span className={`${MONSTER_TAG_CLASS} self-start`} title={o.monsterTag}>
-                        {o.monsterTag}
-                      </span>
-                      <span className="font-sans text-[0.65rem] font-medium text-amber-800 dark:text-amber-200/95">
-                        {o.cost}
-                      </span>
-                    </button>
-                  ))
-                )}
-              </div>
-            )}
-          </div>
         </div>
         <ul className="space-y-2">
           {rows.map((row, index) => {
@@ -369,6 +323,64 @@ export function MaliceDashboard({
             )
           })}
         </ul>
+        {!uiLocked && (
+          <div className="relative mt-2" ref={addAnchorRef}>
+            <button
+              type="button"
+              disabled={addDisabled}
+              aria-label="Add Malice feature"
+              aria-expanded={addOpen}
+              aria-haspopup="menu"
+              aria-controls={addOpen ? addMenuId : undefined}
+              onClick={() => !addDisabled && setAddOpen((o) => !o)}
+              className={`flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-dashed px-3 py-2 font-sans text-xs transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500/60 ${
+                !addDisabled
+                  ? 'border-zinc-400 text-zinc-700 hover:border-zinc-500 hover:bg-zinc-100/95 hover:text-zinc-900 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-900/60 dark:hover:text-zinc-200'
+                  : 'cursor-not-allowed border-zinc-200 text-zinc-600 opacity-60 dark:border-zinc-800 dark:text-zinc-600'
+              }`}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="size-3.5 shrink-0" aria-hidden>
+                <path d="M8.75 3.75a.75.75 0 0 0-1.5 0v3.5h-3.5a.75.75 0 0 0 0 1.5h3.5v3.5a.75.75 0 0 0 1.5 0v-3.5h3.5a.75.75 0 0 0 0-1.5h-3.5v-3.5Z" />
+              </svg>
+              Add Malice feature
+            </button>
+            {addOpen && !addDisabled && (
+              <div
+                id={addMenuId}
+                role="menu"
+                className="absolute left-0 right-0 top-full z-[120] mt-1 max-h-64 overflow-y-auto rounded-lg border border-zinc-300/85 bg-white py-1 shadow-xl dark:border-zinc-700/80 dark:bg-zinc-900"
+              >
+                {addOptions.length === 0 ? (
+                  <div className="px-3 py-2 text-xs text-zinc-500 dark:text-zinc-400">
+                    No creature malice features to add (or all are already listed).
+                  </div>
+                ) : (
+                  addOptions.map((o) => (
+                    <button
+                      key={o.featureOptionKey}
+                      type="button"
+                      role="menuitem"
+                      className="flex w-full min-w-0 justify-start px-3 py-1.5 text-left hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                      onClick={() => addPick(o.featureOptionKey)}
+                    >
+                      <span className="inline-flex max-w-full flex-wrap items-center gap-x-2 gap-y-1">
+                        <span className="min-w-0 break-words font-sans text-xs font-medium text-zinc-900 dark:text-zinc-100">
+                          {o.name}
+                        </span>
+                        <span className="shrink-0 font-sans text-xs font-medium tabular-nums text-amber-800 dark:text-amber-200/95">
+                          {o.cost}
+                        </span>
+                        <span className={MONSTER_TAG_CLASS} title={o.monsterTag}>
+                          {o.monsterTag}
+                        </span>
+                      </span>
+                    </button>
+                  ))
+                )}
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   )
