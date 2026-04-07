@@ -70,8 +70,8 @@ Ideas and enhancements tracked for future work (not committed to a roadmap).
 
 # Ideas from my first session with the game
 
-- [ ] Add way to add malice features, both exist and custom
-- [ ] Add way to collapse squads to hide children minions. They should be default open. Maybe auto collapse when all are dead
+- [x] Add way to add malice features, both exist and custom
+- [x] Add way to collapse squads to hide children minions. They should be default open. Maybe auto collapse when all are dead
 - [ ] Add ability to define custom abilities to monsters
 - [ ] Add ability to save monsters (can be saved, added from monster dropdown, and exported/imported)
 - [ ] There needs to be a faster way to enter monster data (import tool?)
