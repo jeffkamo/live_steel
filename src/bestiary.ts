@@ -218,12 +218,15 @@ export function bestiaryStatblockFromCustomMonster(m: Monster): BestiaryStatbloc
       .filter((x) => x.length > 0)
   const imm = splitList(c.immunity)
   const weak = splitList(c.weakness)
-  const headerLine = m.subtitle.trim()
+  const rolesFromType = c.monsterType
+    .split('·')
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0)
   return {
     name: m.name,
     level: c.level > 0 ? c.level : undefined,
-    roles: [],
-    ancestry: headerLine ? [headerLine] : [],
+    roles: rolesFromType,
+    ancestry: [],
     ev: (c.ev ?? '').trim() ? (c.ev ?? '').trim() : '—',
     stamina: String(m.stamina[1]),
     speed: m.dist,

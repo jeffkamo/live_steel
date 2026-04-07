@@ -1,7 +1,7 @@
 import { Fragment, type ReactNode, useId, useLayoutEffect, useRef, useState } from 'react'
 import type { MonsterFeature, PowerRollEffect } from '../types'
 import type { BestiaryStatblock } from '../bestiary'
-import { lookupStatblock } from '../bestiary'
+import { bestiarySubtitle, lookupStatblock } from '../bestiary'
 import {
   applyCaptainNumericToStatblock,
   captainHighlightsFromBonuses,
@@ -231,6 +231,7 @@ function CoreStatsSection({
 
   const { immunity, weakness } = immunityWeaknessLine(sb)
   const h = captainHighlights
+  const levelAndTypeLine = bestiarySubtitle(sb)
 
   const maripRow: { letter: string; title: string; value: number }[] = [
     { letter: 'M', title: 'Might', value: sb.might },
@@ -248,6 +249,15 @@ function CoreStatsSection({
         </span>
         <span className="text-[0.65rem] text-zinc-600 dark:text-zinc-400">EV {sb.ev}</span>
       </div>
+
+      {levelAndTypeLine ? (
+        <p
+          className="mt-1 text-[0.65rem] font-medium leading-snug tracking-wide text-zinc-600 dark:text-zinc-400"
+          data-testid="stat-block-level-type"
+        >
+          {levelAndTypeLine}
+        </p>
+      ) : null}
 
       <StatBlockSeparator />
 

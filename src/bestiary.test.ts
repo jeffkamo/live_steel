@@ -470,8 +470,8 @@ describe('bestiaryStatblockFromCustomMonster', () => {
     expect(sb).toEqual({
       name: 'River Troll',
       level: 2,
-      roles: [],
-      ancestry: ['Level 2 · Solo'],
+      roles: ['Solo'],
+      ancestry: [],
       ev: '—',
       stamina: '40',
       speed: 5,

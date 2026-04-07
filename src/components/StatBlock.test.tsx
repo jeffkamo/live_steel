@@ -224,8 +224,9 @@ describe('StatBlock core stats from bestiary', () => {
   it('renders core stats from statblockOverride when bestiary has no entry', () => {
     const override: BestiaryStatblock = {
       name: 'Custom',
-      roles: [],
-      ancestry: ['Level 1 · Solo'],
+      level: 1,
+      roles: ['Solo'],
+      ancestry: [],
       ev: '—',
       stamina: '10',
       speed: 6,
@@ -241,7 +242,7 @@ describe('StatBlock core stats from bestiary', () => {
     render(<StatBlock features={[]} monsterName="Unknown Custom" statblockOverride={override} />)
     expect(screen.queryByText('No features available.')).not.toBeInTheDocument()
     expect(screen.getByTestId('core-stats-header')).toBeInTheDocument()
-    expect(screen.getByText('Level 1 · Solo')).toBeInTheDocument()
+    expect(screen.getByTestId('stat-block-level-type')).toHaveTextContent('Level 1 · Solo')
     expect(screen.getByText('EV —')).toBeInTheDocument()
     const nums = screen.getAllByTestId('draw-steel-marip-num')
     expect(nums.map((n) => n.textContent).join(' ')).toBe('+1 0 -1 0 +2')
@@ -262,6 +263,7 @@ describe('StatBlock core stats from bestiary', () => {
   it('renders stat block with bestiary data even when no features', () => {
     render(<StatBlock features={[]} monsterName="Goblin Assassin" />)
     expect(screen.getByTestId('core-stats-header')).toBeInTheDocument()
+    expect(screen.getByTestId('stat-block-level-type')).toHaveTextContent('Level 1 · Horde Ambusher')
     expect(screen.queryByTestId('stat-block-empty')).not.toBeInTheDocument()
   })
 
