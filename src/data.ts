@@ -1573,6 +1573,8 @@ export type CustomMonsterPatch = {
   dist?: number
   stab?: number
   custom?: Partial<CustomMonsterStats>
+  /** Replaces the creature's encounter features (abilities / traits) when set. */
+  features?: MonsterFeature[]
 }
 
 export function applyCustomMonsterPatch(m: Monster, patch: CustomMonsterPatch): Monster {
@@ -1598,6 +1600,7 @@ export function applyCustomMonsterPatch(m: Monster, patch: CustomMonsterPatch): 
     dist: patch.dist ?? m.dist,
     stab: patch.stab ?? m.stab,
     custom,
+    ...(patch.features !== undefined ? { features: patch.features } : {}),
     subtitle: formatCustomSubtitle(custom.level, custom.monsterType),
   }
 }

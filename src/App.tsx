@@ -2379,7 +2379,7 @@ function App() {
                       return (
                         <>
                           <StatBlock
-                            features={customStatblock != null ? [] : drawerFeatures ?? []}
+                            features={drawerFeatures ?? []}
                             monsterName={drawerMonster.name}
                             encounterGroupColor={drawerGroupColor}
                             statblockOverride={customStatblock ?? undefined}

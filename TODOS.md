@@ -72,16 +72,16 @@ Ideas and enhancements tracked for future work (not committed to a roadmap).
 
 - [x] Add way to add malice features, both exist and custom
 - [x] Add way to collapse squads to hide children minions. They should be default open. Maybe auto collapse when all are dead
-- [ ] Add ability to define custom abilities to monsters
+- [x] Add ability to define custom abilities to monsters
 - [ ] Add ability to save monsters (can be saved, added from monster dropdown, and exported/imported)
 - [ ] There needs to be a faster way to enter monster data (import tool?)
-- [ ] Add missing "Villain actions" to monster statblocks
+- [x] Add missing "Villain actions" to monster statblocks
 
 ---
 
 # Mobile support
 
-- [ ] Make design responsive
+- [x] Make design responsive
 - [ ] Make sure all interactive elements work with touch (ex. reveal things on hover)
 - [ ] Add ability to create sharable links (encodes local storage data in a URL param?)
 - [ ] Create an export/import data feature

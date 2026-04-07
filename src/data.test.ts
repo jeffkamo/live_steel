@@ -1035,6 +1035,22 @@ describe('custom monsters', () => {
     expect(m.stamina).toEqual([10, 10])
   })
 
+  it('applyCustomMonsterPatch replaces features when provided', () => {
+    let m = blankCustomMonster()
+    const feats = [
+      {
+        type: 'feature' as const,
+        feature_type: 'ability' as const,
+        name: 'Slam',
+        icon: '🗡',
+        usage: 'Main action',
+        effects: [{ roll: 'Power Roll + 2', tier1: '5 damage' }],
+      },
+    ]
+    m = applyCustomMonsterPatch(m, { features: feats })
+    expect(m.features).toEqual(feats)
+  })
+
   it('hordePoolMaxFromMinions uses custom perMinionStamina for each slot', () => {
     const base = blankCustomMonster()
     const m: Monster = {
