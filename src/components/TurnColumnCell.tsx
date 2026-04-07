@@ -36,6 +36,7 @@ export function GroupTurnColumn({
   acted,
   onToggle,
   turnAriaLabel,
+  squadsCollapse,
   encounterGroupDragHandle,
   encounterGroupReorderMenu,
   onDeleteEncounterGroup,
@@ -46,6 +47,8 @@ export function GroupTurnColumn({
   acted: boolean
   onToggle: () => void
   turnAriaLabel: string
+  /** When set, shows a minimal chevron control above Turn to hide or show squad minion rows. */
+  squadsCollapse?: { collapsed: boolean; onToggle: () => void }
   encounterGroupDragHandle?: {
     onDragStart: (e: DragEvent) => void
     onDragEnd: (e: DragEvent) => void
@@ -110,6 +113,46 @@ export function GroupTurnColumn({
         </div>
       )}
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+        {squadsCollapse != null && (
+          <button
+            type="button"
+            data-testid="squads-collapse-toggle"
+            onClick={squadsCollapse.onToggle}
+            aria-expanded={!squadsCollapse.collapsed}
+            aria-label={squadsCollapse.collapsed ? 'Expand squads' : 'Collapse squads'}
+            className="flex min-h-11 w-full shrink-0 cursor-pointer items-center justify-center border-b border-zinc-200/95 px-2 py-2 text-zinc-600 transition-colors hover:bg-zinc-200/80 dark:border-zinc-800/60 dark:text-zinc-400 dark:hover:bg-zinc-800/50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-amber-500/70"
+          >
+            {squadsCollapse.collapsed ? (
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+                className="size-5 shrink-0"
+                aria-hidden
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M8.22 5.22a.75.75 0 0 1 1.06 0l4.25 4.25a.75.75 0 0 1 0 1.06l-4.25 4.25a.75.75 0 0 1-1.06-1.06L11.94 10 8.22 6.28a.75.75 0 0 1 0-1.06Z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            ) : (
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+                className="size-5 shrink-0"
+                aria-hidden
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            )}
+          </button>
+        )}
         <TurnColumnCell acted={acted} onToggle={onToggle} label={turnAriaLabel} />
       </div>
     </div>

@@ -101,6 +101,7 @@ export function MinionGroupRow({
   minionReorderMenu,
   conditionDnDParent,
   conditionDnDForMinion,
+  squadsCollapsed = false,
 }: {
   monster: Monster
   row: number
@@ -162,6 +163,8 @@ export function MinionGroupRow({
   }
   conditionDnDParent?: CreatureConditionDnDBinding
   conditionDnDForMinion?: (minionIndex: number) => CreatureConditionDnDBinding | undefined
+  /** When true, minion rows are hidden (squad parent row remains). */
+  squadsCollapsed?: boolean
 }) {
   const [sc, sm] = monster.stamina
   const badge = GROUP_COLOR_BADGE[groupColor]
@@ -592,7 +595,8 @@ export function MinionGroupRow({
       </div>
 
       {/* --- minion child rows --- */}
-      {minions.map((minion, mi) => {
+      {!squadsCollapsed &&
+        minions.map((minion, mi) => {
         const childRow = row + 1 + mi
         let lifeToggleCue: 'kill' | 'revive' | null = null
         if (needKillCue && !minion.dead) lifeToggleCue = 'kill'
@@ -646,6 +650,7 @@ export function MinionGroupRow({
     </>
   )
 }
+
 
 function MinionChildRow({
   minion,

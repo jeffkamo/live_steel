@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import type { DragEvent } from 'react'
 import type {
   CaptainRef,
@@ -141,6 +141,12 @@ export function GroupSection({
     anchor: null,
     monsterIndex: null,
   })
+  const [squadsCollapsed, setSquadsCollapsed] = useState(false)
+
+  const hasSquads = group.monsters.some((m) => (m.minions?.length ?? 0) > 0)
+  useEffect(() => {
+    if (!hasSquads) setSquadsCollapsed(false)
+  }, [hasSquads])
 
   const closeColorMenu = useCallback(() => {
     setColorMenu({ open: false, anchor: null, monsterIndex: null })
@@ -167,7 +173,7 @@ export function GroupSection({
     const m = group.monsters[i]!
     const isMinion = m.minions && m.minions.length > 0
     let count = 1
-    if (isMinion) count += m.minions!.length
+    if (isMinion) count += squadsCollapsed ? 0 : m.minions!.length
     monsterRows.push({ monsterIndex: i, startRow: currentRow, rowCount: count })
     currentRow += count
   }
@@ -264,6 +270,14 @@ export function GroupSection({
         acted={turnActed}
         onToggle={onToggleTurn}
         turnAriaLabel={turnAriaLabel}
+        squadsCollapse={
+          hasSquads
+            ? {
+                collapsed: squadsCollapsed,
+                onToggle: () => setSquadsCollapsed((c) => !c),
+              }
+            : undefined
+        }
         encounterGroupDragHandle={encounterGroupDragHandle}
         encounterGroupReorderMenu={encounterGroupReorderMenu}
         onDeleteEncounterGroup={onDeleteEncounterGroup}
@@ -398,6 +412,7 @@ export function GroupSection({
                     }
                   : undefined
               }
+              squadsCollapsed={squadsCollapsed}
             />
           )
         }

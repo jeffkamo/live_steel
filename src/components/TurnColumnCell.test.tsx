@@ -70,4 +70,39 @@ describe('GroupTurnColumn', () => {
     )
     expect((container.firstChild as HTMLElement).className).toContain('opacity-100')
   })
+
+  it('renders squads collapse chevron above Turn when squadsCollapse is set', () => {
+    render(
+      <GroupTurnColumn
+        gridRowSpan={2}
+        acted={false}
+        onToggle={vi.fn()}
+        turnAriaLabel="group turn"
+        squadsCollapse={{ collapsed: false, onToggle: vi.fn() }}
+      />,
+    )
+    const collapseBtn = screen.getByTestId('squads-collapse-toggle')
+    expect(collapseBtn).toHaveAttribute('aria-expanded', 'true')
+    expect(collapseBtn.querySelector('svg')).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'group turn' })).toBeInTheDocument()
+  })
+
+  it('shows > when squads are collapsed and calls squadsCollapse onToggle', async () => {
+    const user = userEvent.setup()
+    const onSquadsToggle = vi.fn()
+    render(
+      <GroupTurnColumn
+        gridRowSpan={2}
+        acted={false}
+        onToggle={vi.fn()}
+        turnAriaLabel="group turn"
+        squadsCollapse={{ collapsed: true, onToggle: onSquadsToggle }}
+      />,
+    )
+    const collapseBtn = screen.getByTestId('squads-collapse-toggle')
+    expect(collapseBtn).toHaveAttribute('aria-expanded', 'false')
+    expect(collapseBtn.querySelector('svg')).toBeTruthy()
+    await user.click(collapseBtn)
+    expect(onSquadsToggle).toHaveBeenCalledOnce()
+  })
 })
