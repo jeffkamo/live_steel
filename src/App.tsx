@@ -31,6 +31,7 @@ import {
   ENCOUNTER_GROUP_DRAG_MIME,
   MONSTER_DRAG_MIME,
   TERRAIN_DRAG_MIME,
+  computeInsertIndexAfterRemoval,
   mapMinionIndexAfterReorder,
   mapMinionDrawerSlotAfterMinionInserted,
   mapMinionDrawerSlotAfterMinionRemoved,
@@ -56,7 +57,7 @@ import {
   parseConditionDragPayload,
   remapEncounterGroupIndex,
   remapEotConfirmedAfterMonsterMove,
-  reorderEncounterGroupsWithCaptainRemap,
+  reorderEncounterGroupsWithCaptainRemapInsert,
   applyExclusiveMinionCaptain,
   GROUP_COLOR_BADGE,
   ROSTER_GRID_TEMPLATE,
@@ -78,6 +79,7 @@ import { AddTerrainButton } from './components/AddTerrainButton'
 import { TerrainStatBlock } from './components/TerrainStatBlock'
 import { CustomTerrainStatForm } from './components/CustomTerrainStatForm'
 import { SettingsMenu } from './components/SettingsMenu'
+import { InsertDropZone } from './components/InsertDropZone'
 import { useColorScheme } from './hooks/useColorScheme'
 import { bestiaryStatblockFromCustomMonster } from './bestiary'
 import {
@@ -180,7 +182,7 @@ function App() {
   const [terrainDrawerIndex, setTerrainDrawerIndex] = useState<number | null>(null)
   const [drawerAnimatingOut, setDrawerAnimatingOut] = useState(false)
   const [drawerEntered, setDrawerEntered] = useState(false)
-  const [dropTargetTerrainIndex, setDropTargetTerrainIndex] = useState<number | null>(null)
+  const [dropTargetTerrainInsert, setDropTargetTerrainInsert] = useState<number | null>(null)
 
   const [encounterIndex, setEncounterIndex] = useState<PersistedEncounterIndex>(() => initIndex)
   const [activeEncounterId, setActiveEncounterId] = useState(() => initEncId)
@@ -760,7 +762,7 @@ function App() {
     [],
   )
 
-  const [dropTargetGroupIndex, setDropTargetGroupIndex] = useState<number | null>(null)
+  const [dropTargetGroupInsert, setDropTargetGroupInsert] = useState<number | null>(null)
   const monsterDragSourceRef = useRef<MonsterDragPayload | null>(null)
 
   const [monsterDropTarget, setMonsterDropTarget] = useState<{
@@ -898,6 +900,9 @@ function App() {
         ? { fromGroup: fromG, fromMonster: fromM, fromMinion }
         : { fromGroup: fromG, fromMonster: fromM }
     monsterDragSourceRef.current = payload
+    // Clear any previous hover / reject styling immediately on a new drag.
+    setMonsterDropTarget(null)
+    setMonsterDropRejectFlash(null)
     e.dataTransfer.setData(MONSTER_DRAG_MIME, JSON.stringify(payload))
     e.dataTransfer.effectAllowed = 'move'
   }, [])
@@ -994,8 +999,50 @@ function App() {
       const source = monsterDragSourceRef.current
       if (!source) return
       e.preventDefault()
+
+      // Hovering the exact source slot should not show an "invalid" red target.
+      if (
+        source.fromMinion == null &&
+        toMinion == null &&
+        source.fromGroup === toG &&
+        source.fromMonster === toM
+      ) {
+        e.dataTransfer.dropEffect = 'none'
+        setMonsterDropTarget(null)
+        return
+      }
+      if (
+        source.fromMinion != null &&
+        toMinion != null &&
+        source.fromGroup === toG &&
+        source.fromMonster === toM &&
+        source.fromMinion === toMinion
+      ) {
+        e.dataTransfer.dropEffect = 'none'
+        setMonsterDropTarget(null)
+        return
+      }
+
       const valid = monsterDragDropIsValid(source, toG, toM, toMinion, encounterGroups)
-      e.dataTransfer.dropEffect = valid ? 'move' : 'none'
+
+      const noOp =
+        valid &&
+        (source.fromMinion == null
+          ? // Top-level monster insert: `toM` is an insert-slot (0..len). No-op if it maps back to the same index.
+            toMinion == null &&
+            source.fromGroup === toG &&
+            computeInsertIndexAfterRemoval(source.fromMonster, toM) === source.fromMonster
+          : // Minion insert within the same horde: no-op if it maps back to the same slot.
+            toMinion != null &&
+            source.fromGroup === toG &&
+            source.fromMonster === toM &&
+            computeInsertIndexAfterRemoval(source.fromMinion, toMinion) === source.fromMinion)
+
+      e.dataTransfer.dropEffect = valid && !noOp ? 'move' : 'none'
+      if (noOp) {
+        setMonsterDropTarget(null)
+        return
+      }
       setMonsterDropTarget({
         groupIndex: toG,
         monsterIndex: toM,
@@ -1046,6 +1093,38 @@ function App() {
         triggerMonsterDropRejectFlash(toG, toM, toMinion)
         return
       }
+
+      // Dropping onto the exact source slot is a silent no-op.
+      if (
+        payload.fromMinion == null &&
+        toMinion == null &&
+        payload.fromGroup === toG &&
+        payload.fromMonster === toM
+      ) {
+        return
+      }
+      if (
+        payload.fromMinion != null &&
+        toMinion != null &&
+        payload.fromGroup === toG &&
+        payload.fromMonster === toM &&
+        payload.fromMinion === toMinion
+      ) {
+        return
+      }
+
+      const noOp =
+        payload.fromMinion == null
+          ? toMinion == null &&
+            payload.fromGroup === toG &&
+            computeInsertIndexAfterRemoval(payload.fromMonster, toM) === payload.fromMonster
+          : toMinion != null &&
+            payload.fromGroup === toG &&
+            payload.fromMonster === toM &&
+            computeInsertIndexAfterRemoval(payload.fromMinion, toMinion) === payload.fromMinion
+
+      if (noOp) return
+
       if (payload.fromMinion != null) {
         if (toMinion == null) return
         const fromMinion = payload.fromMinion
@@ -1130,8 +1209,11 @@ function App() {
   )
 
   const reorderEncounterGroups = useCallback(
-    (from: number, to: number) => {
-      if (from === to) return
+    (from: number, toInsert: number) => {
+      const nextGroups = reorderEncounterGroupsWithCaptainRemapInsert(encounterGroups, from, toInsert)
+      if (!nextGroups) return
+      const to = computeInsertIndexAfterRemoval(from, toInsert)
+      if (to == null) return
       const scheduledOld = [...eotTimersRef.current.keys()]
       for (const t of eotTimersRef.current.values()) clearTimeout(t)
       eotTimersRef.current.clear()
@@ -1140,7 +1222,7 @@ function App() {
 
       prevTurnActedRef.current = moveIndexInArray(prevTurnActedRef.current, from, to)
 
-      setEncounterGroups((prev) => reorderEncounterGroupsWithCaptainRemap(prev, from, to))
+      setEncounterGroups(() => nextGroups)
       setGroupTurnActed((prev) => moveIndexInArray(prev, from, to))
       setEotConfirmed((prev) => {
         const next = new Map<number, Set<string>>()
@@ -1161,7 +1243,7 @@ function App() {
         }
       })
     },
-    [scheduleEotTimerForGroup],
+    [encounterGroups, scheduleEotTimerForGroup],
   )
 
   const addNewGroup = useCallback(() => {
@@ -1472,18 +1554,24 @@ function App() {
     })
   }, [])
 
-  const reorderTerrainRows = useCallback((from: number, to: number) => {
-    if (from === to) return
-    setTerrainRows((prev) => moveIndexInArray(prev, from, to))
+  const reorderTerrainRows = useCallback((from: number, toInsert: number) => {
+    setTerrainRows((prev) => {
+      if (from < 0 || from >= prev.length) return prev
+      if (toInsert < 0 || toInsert > prev.length) return prev
+      const ins = computeInsertIndexAfterRemoval(from, toInsert)
+      if (ins == null) return prev
+      const next = [...prev]
+      const [moved] = next.splice(from, 1)
+      next.splice(ins, 0, moved!)
+      return next
+    })
     setTerrainDrawerIndex((prev) => {
       if (prev === null) return null
-      if (prev === from) return to
-      if (from < to) {
-        if (prev > from && prev <= to) return prev - 1
-      } else {
-        if (prev >= to && prev < from) return prev + 1
-      }
-      return prev
+      const ins = computeInsertIndexAfterRemoval(from, toInsert)
+      if (ins == null) return prev
+      if (prev === from) return ins
+      const removedShift = prev > from ? prev - 1 : prev
+      return removedShift >= ins ? removedShift + 1 : removedShift
     })
   }, [])
 
@@ -1963,170 +2051,208 @@ function App() {
                     uiLocked={uiLocked}
                     onMaliceRowsChange={(next) => setMaliceRows(ensureMaliceRows(next))}
                   />
-                  <div className="flex flex-col gap-2">
-                    {encounterGroups.map((group, gi) => (
-                  <div
-                    key={group.id}
-                    data-testid="encounter-group-drop-target"
-                    data-group-index={gi}
-                    className={`rounded-lg transition-[box-shadow] duration-150 ${
-                      dropTargetGroupIndex === gi ? 'ring-2 ring-amber-500/45 ring-offset-2 ring-offset-zinc-50 dark:ring-offset-zinc-950' : ''
-                    }`}
-                    onDragOver={(e) => {
-                      if (![...e.dataTransfer.types].includes(ENCOUNTER_GROUP_DRAG_MIME)) return
-                      e.preventDefault()
-                      e.dataTransfer.dropEffect = 'move'
-                      setDropTargetGroupIndex(gi)
-                    }}
-                    onDragLeave={(e) => {
-                      if (!e.currentTarget.contains(e.relatedTarget as Node | null)) {
-                        setDropTargetGroupIndex((v) => (v === gi ? null : v))
-                      }
-                    }}
-                    onDrop={(e) => {
-                      e.preventDefault()
-                      setDropTargetGroupIndex(null)
-                      const raw = e.dataTransfer.getData(ENCOUNTER_GROUP_DRAG_MIME)
-                      const from = Number.parseInt(raw, 10)
-                      if (Number.isNaN(from) || from === gi) return
-                      reorderEncounterGroups(from, gi)
-                    }}
-                  >
-                    <GroupSection
-                      group={group}
-                      groupKey={`g${gi}`}
-                      groupNumber={gi + 1}
-                      thisGroupIndex={gi}
-                      encounterGroupColors={encounterGroups.map((g) => g.color)}
-                      turnActed={groupTurnActed[gi] ?? false}
-                      seActPhaseGlow={
-                        (groupTurnActed[gi] ?? false) && !seActWindowElapsedGroup.has(gi)
-                      }
-                      onToggleTurn={() => toggleGroupTurn(gi)}
-                      turnAriaLabel={`Encounter group ${gi + 1}: turn ${groupTurnActed[gi] ? 'acted' : 'pending'}`}
-                      onGroupColorChange={(c) => patchGroupColor(gi, c)}
-                      onMonsterStaminaChange={(mi, st) => patchMonsterStamina(gi, mi, st)}
-                      onMonsterConditionRemove={(mi, ci) => patchMonsterConditionRemove(gi, mi, ci)}
-                      onMonsterConditionAddOrSet={(mi, label, state) =>
-                        patchMonsterConditionAddOrSet(gi, mi, label, state)
-                      }
-                      allGroups={encounterGroups}
-                      onMinionCaptainChange={(mi, captainId) =>
-                        patchMinionCaptain(gi, mi, captainId)
-                      }
-                      onMinionDeadChange={(mi, mni, dead) =>
-                        patchMinionDead(gi, mi, mni, dead)
-                      }
-                      onMinionConditionRemove={(mi, mni, ci) =>
-                        patchMinionConditionRemove(gi, mi, mni, ci)
-                      }
-                      onMinionConditionAddOrSet={(mi, mni, label, state) =>
-                        patchMinionConditionAddOrSet(gi, mi, mni, label, state)
-                      }
-                      onDeleteMonster={
-                        uiLocked ? undefined : (mi) => deleteMonster(gi, mi)
-                      }
-                      onDuplicateMonster={
-                        uiLocked ? undefined : (mi) => duplicateMonster(gi, mi)
-                      }
-                      onDeleteMinion={
-                        uiLocked ? undefined : (mi, mni) => deleteMinionFromHorde(gi, mi, mni)
-                      }
-                      onDuplicateMinion={
-                        uiLocked ? undefined : (mi, mni) => duplicateMinionFromHorde(gi, mi, mni)
-                      }
-                      onConvertMonsterToSquad={
-                        uiLocked ? undefined : (mi) => convertMonsterToSquad(gi, mi)
-                      }
-                      onDeleteEncounterGroup={
-                        uiLocked ? undefined : () => deleteEncounterGroup(gi)
-                      }
-                      onDuplicateEncounterGroup={
-                        uiLocked ? undefined : () => duplicateEncounterGroup(gi)
-                      }
-                      duplicateEncounterGroupDisabled={!canAddGroup}
-                      onAddMonster={
-                        uiLocked ? undefined : (monster) => addMonsterToGroup(gi, monster)
-                      }
-                      onConfirmEot={(mi, label, minionIndex) =>
-                        confirmEotCondition(gi, mi, label, minionIndex)
-                      }
-                      isEotConfirmed={(mi, label, minionIndex) =>
-                        isEotConfirmed(gi, mi, label, minionIndex)
-                      }
-                      encounterGroupReorderMenu={
-                        uiLocked
-                          ? undefined
-                          : {
-                              onMoveUp: () => reorderEncounterGroups(gi, gi - 1),
-                              onMoveDown: () => reorderEncounterGroups(gi, gi + 1),
-                              moveUpDisabled: gi === 0,
-                              moveDownDisabled: gi === encounterGroups.length - 1,
+                  <div className="flex flex-col gap-1">
+                    {Array.from({ length: encounterGroups.length + 1 }, (_, insertIndex) => {
+                      const showGroup = insertIndex < encounterGroups.length
+                      const group = showGroup ? encounterGroups[insertIndex]! : null
+                      const highlight = dropTargetGroupInsert === insertIndex
+                      return (
+                        <div key={showGroup ? `g-${group!.id}` : 'g-end'} className="min-w-0">
+                          <InsertDropZone
+                            label={
+                              insertIndex === 0
+                                ? 'Insert encounter group at top'
+                                : insertIndex === encounterGroups.length
+                                  ? 'Insert encounter group at bottom'
+                                  : `Insert encounter group between ${insertIndex} and ${insertIndex + 1}`
                             }
-                      }
-                      monsterReorderMenu={
-                        uiLocked
-                          ? undefined
-                          : {
-                              onMoveUp: (mi) => moveMonsterInEncounter(gi, mi, gi, mi - 1),
-                              onMoveDown: (mi) => moveMonsterInEncounter(gi, mi, gi, mi + 1),
-                            }
-                      }
-                      minionReorderMenu={
-                        uiLocked
-                          ? undefined
-                          : {
-                              onMoveUp: (mi, mni) => {
-                                if (mni <= 0) return
-                                commitMinionTransfer(gi, mi, mni, gi, mi, mni - 1)
-                              },
-                              onMoveDown: (mi, mni) => {
-                                const horde = encounterGroups[gi]?.monsters[mi]?.minions
-                                if (!horde || mni >= horde.length - 1) return
-                                commitMinionTransfer(gi, mi, mni, gi, mi, mni + 1)
-                              },
-                            }
-                      }
-                      encounterGroupDragHandle={
-                        uiLocked
-                          ? undefined
-                          : {
-                              onDragStart: (e) => {
-                                e.dataTransfer.setData(ENCOUNTER_GROUP_DRAG_MIME, String(gi))
-                                e.dataTransfer.effectAllowed = 'move'
-                              },
-                              onDragEnd: () => setDropTargetGroupIndex(null),
-                              ariaLabel: `Reorder encounter group ${gi + 1}`,
-                            }
-                      }
-                      monsterDrag={
-                        uiLocked
-                          ? undefined
-                          : {
-                              thisGroupIndex: gi,
-                              dropTarget: monsterDropTarget,
-                              dropRejectFlash: monsterDropRejectFlash,
-                              onMonsterDragStart: (mi, e, fromMinion) =>
-                                onMonsterDragStart(gi, mi, e, fromMinion),
-                              onMonsterDragEnd: onMonsterDragEnd,
-                              onMonsterDragOver: (mi, mni, e) => onMonsterDragOver(gi, mi, mni, e),
-                              onMonsterDragLeave: (mi, mni, e) => onMonsterDragLeave(gi, mi, mni, e),
-                              onMonsterDrop: (mi, mni, e) => onMonsterDrop(gi, mi, mni, e),
-                            }
-                      }
-                      conditionDrag={{
-                        dropTarget: conditionDropTarget,
-                        onDragStart: (mi, mni, label, e) => onConditionDragStart(gi, mi, mni, label, e),
-                        onDragEnd: onConditionDragEnd,
-                        onDragOver: (mi, mni, e) => onConditionDragOver(gi, mi, mni, e),
-                        onDragLeave: (mi, mni, e) => onConditionDragLeave(gi, mi, mni, e),
-                        onDrop: (mi, mni, e) => onConditionDrop(gi, mi, mni, e),
-                      }}
-                      monsterCardDrawer={monsterCardDrawer}
-                      onToggleMonsterCard={(mi, view) => toggleMonsterCard(gi, mi, view)}
-                    />
-                  </div>
-                ))}
+                            active={highlight}
+                            onDragOver={(e: DragEvent) => {
+                              if (![...e.dataTransfer.types].includes(ENCOUNTER_GROUP_DRAG_MIME)) return
+                              e.preventDefault()
+                              const raw = e.dataTransfer.getData(ENCOUNTER_GROUP_DRAG_MIME)
+                              const from = Number.parseInt(raw, 10)
+                              const noOp = !Number.isNaN(from) && computeInsertIndexAfterRemoval(from, insertIndex) === from
+                              e.dataTransfer.dropEffect = noOp ? 'none' : 'move'
+                              setDropTargetGroupInsert(noOp ? null : insertIndex)
+                            }}
+                            onDragLeave={(e: DragEvent) => {
+                              if (!e.currentTarget.contains(e.relatedTarget as Node | null)) {
+                                setDropTargetGroupInsert((v) => (v === insertIndex ? null : v))
+                              }
+                            }}
+                            onDrop={(e: DragEvent) => {
+                              e.preventDefault()
+                              setDropTargetGroupInsert(null)
+                              const raw = e.dataTransfer.getData(ENCOUNTER_GROUP_DRAG_MIME)
+                              const from = Number.parseInt(raw, 10)
+                              if (Number.isNaN(from)) return
+                              if (computeInsertIndexAfterRemoval(from, insertIndex) === from) return
+                              reorderEncounterGroups(from, insertIndex)
+                            }}
+                          />
+                          {showGroup && (
+                            <div
+                              data-testid="encounter-group-drop-target"
+                              data-group-index={insertIndex}
+                              className="min-w-0"
+                              onDragOver={(e) => {
+                                if (![...e.dataTransfer.types].includes(ENCOUNTER_GROUP_DRAG_MIME)) return
+                                e.preventDefault()
+                                e.dataTransfer.dropEffect = 'move'
+                                const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
+                                const y = e.clientY
+                                const toInsert =
+                                  rect.height > 0 && y >= rect.top && y <= rect.bottom
+                                    ? y < rect.top + rect.height / 2
+                                      ? insertIndex
+                                      : insertIndex + 1
+                                    : insertIndex + 1
+                                setDropTargetGroupInsert(toInsert)
+                              }}
+                              onDragLeave={(e) => {
+                                if (!e.currentTarget.contains(e.relatedTarget as Node | null)) {
+                                  setDropTargetGroupInsert((v) =>
+                                    v === insertIndex || v === insertIndex + 1 ? null : v,
+                                  )
+                                }
+                              }}
+                              onDrop={(e) => {
+                                e.preventDefault()
+                                const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
+                                const y = e.clientY
+                                const toInsert =
+                                  rect.height > 0 && y >= rect.top && y <= rect.bottom
+                                    ? y < rect.top + rect.height / 2
+                                      ? insertIndex
+                                      : insertIndex + 1
+                                    : insertIndex + 1
+                                setDropTargetGroupInsert(null)
+                                const raw = e.dataTransfer.getData(ENCOUNTER_GROUP_DRAG_MIME)
+                                const from = Number.parseInt(raw, 10)
+                                if (Number.isNaN(from)) return
+                                reorderEncounterGroups(from, toInsert)
+                              }}
+                            >
+                              <GroupSection
+                                group={group!}
+                                groupKey={`g${insertIndex}`}
+                                groupNumber={insertIndex + 1}
+                                thisGroupIndex={insertIndex}
+                                encounterGroupColors={encounterGroups.map((g) => g.color)}
+                                turnActed={groupTurnActed[insertIndex] ?? false}
+                                seActPhaseGlow={
+                                  (groupTurnActed[insertIndex] ?? false) &&
+                                  !seActWindowElapsedGroup.has(insertIndex)
+                                }
+                                onToggleTurn={() => toggleGroupTurn(insertIndex)}
+                                turnAriaLabel={`Encounter group ${insertIndex + 1}: turn ${groupTurnActed[insertIndex] ? 'acted' : 'pending'}`}
+                                onGroupColorChange={(c) => patchGroupColor(insertIndex, c)}
+                                onMonsterStaminaChange={(mi, st) => patchMonsterStamina(insertIndex, mi, st)}
+                                onMonsterConditionRemove={(mi, ci) => patchMonsterConditionRemove(insertIndex, mi, ci)}
+                                onMonsterConditionAddOrSet={(mi, label, state) =>
+                                  patchMonsterConditionAddOrSet(insertIndex, mi, label, state)
+                                }
+                                allGroups={encounterGroups}
+                                onMinionCaptainChange={(mi, captainId) =>
+                                  patchMinionCaptain(insertIndex, mi, captainId)
+                                }
+                                onMinionDeadChange={(mi, mni, dead) =>
+                                  patchMinionDead(insertIndex, mi, mni, dead)
+                                }
+                                onMinionConditionRemove={(mi, mni, ci) =>
+                                  patchMinionConditionRemove(insertIndex, mi, mni, ci)
+                                }
+                                onMinionConditionAddOrSet={(mi, mni, label, state) =>
+                                  patchMinionConditionAddOrSet(insertIndex, mi, mni, label, state)
+                                }
+                                onDeleteMonster={uiLocked ? undefined : (mi) => deleteMonster(insertIndex, mi)}
+                                onDuplicateMonster={uiLocked ? undefined : (mi) => duplicateMonster(insertIndex, mi)}
+                                onDeleteMinion={uiLocked ? undefined : (mi, mni) => deleteMinionFromHorde(insertIndex, mi, mni)}
+                                onDuplicateMinion={uiLocked ? undefined : (mi, mni) => duplicateMinionFromHorde(insertIndex, mi, mni)}
+                                onConvertMonsterToSquad={uiLocked ? undefined : (mi) => convertMonsterToSquad(insertIndex, mi)}
+                                onDeleteEncounterGroup={uiLocked ? undefined : () => deleteEncounterGroup(insertIndex)}
+                                onDuplicateEncounterGroup={uiLocked ? undefined : () => duplicateEncounterGroup(insertIndex)}
+                                duplicateEncounterGroupDisabled={!canAddGroup}
+                                onAddMonster={uiLocked ? undefined : (monster) => addMonsterToGroup(insertIndex, monster)}
+                                onConfirmEot={(mi, label, minionIndex) => confirmEotCondition(insertIndex, mi, label, minionIndex)}
+                                isEotConfirmed={(mi, label, minionIndex) => isEotConfirmed(insertIndex, mi, label, minionIndex)}
+                                encounterGroupReorderMenu={
+                                  uiLocked
+                                    ? undefined
+                                    : {
+                                        onMoveUp: () => reorderEncounterGroups(insertIndex, insertIndex - 1),
+                                        onMoveDown: () => reorderEncounterGroups(insertIndex, insertIndex + 2),
+                                        moveUpDisabled: insertIndex === 0,
+                                        moveDownDisabled: insertIndex === encounterGroups.length - 1,
+                                      }
+                                }
+                                monsterReorderMenu={
+                                  uiLocked
+                                    ? undefined
+                                    : {
+                                        onMoveUp: (mi) => moveMonsterInEncounter(insertIndex, mi, insertIndex, mi - 1),
+                                        onMoveDown: (mi) => moveMonsterInEncounter(insertIndex, mi, insertIndex, mi + 1),
+                                      }
+                                }
+                                minionReorderMenu={
+                                  uiLocked
+                                    ? undefined
+                                    : {
+                                        onMoveUp: (mi, mni) => {
+                                          if (mni <= 0) return
+                                          commitMinionTransfer(insertIndex, mi, mni, insertIndex, mi, mni - 1)
+                                        },
+                                        onMoveDown: (mi, mni) => {
+                                          const horde = encounterGroups[insertIndex]?.monsters[mi]?.minions
+                                          if (!horde || mni >= horde.length - 1) return
+                                          commitMinionTransfer(insertIndex, mi, mni, insertIndex, mi, mni + 1)
+                                        },
+                                      }
+                                }
+                                encounterGroupDragHandle={
+                                  uiLocked
+                                    ? undefined
+                                    : {
+                                        onDragStart: (e) => {
+                                          e.dataTransfer.setData(ENCOUNTER_GROUP_DRAG_MIME, String(insertIndex))
+                                          e.dataTransfer.effectAllowed = 'move'
+                                        },
+                                        onDragEnd: () => setDropTargetGroupInsert(null),
+                                        ariaLabel: `Reorder encounter group ${insertIndex + 1}`,
+                                      }
+                                }
+                                monsterDrag={
+                                  uiLocked
+                                    ? undefined
+                                    : {
+                                        thisGroupIndex: insertIndex,
+                              getDragSource: () => monsterDragSourceRef.current,
+                                        dropTarget: monsterDropTarget,
+                                        dropRejectFlash: monsterDropRejectFlash,
+                                        onMonsterDragStart: (mi, e, fromMinion) => onMonsterDragStart(insertIndex, mi, e, fromMinion),
+                                        onMonsterDragEnd: onMonsterDragEnd,
+                                        onMonsterDragOver: (mi, mni, e) => onMonsterDragOver(insertIndex, mi, mni, e),
+                                        onMonsterDragLeave: (mi, mni, e) => onMonsterDragLeave(insertIndex, mi, mni, e),
+                                        onMonsterDrop: (mi, mni, e) => onMonsterDrop(insertIndex, mi, mni, e),
+                                      }
+                                }
+                                conditionDrag={{
+                                  dropTarget: conditionDropTarget,
+                                  onDragStart: (mi, mni, label, e) => onConditionDragStart(insertIndex, mi, mni, label, e),
+                                  onDragEnd: onConditionDragEnd,
+                                  onDragOver: (mi, mni, e) => onConditionDragOver(insertIndex, mi, mni, e),
+                                  onDragLeave: (mi, mni, e) => onConditionDragLeave(insertIndex, mi, mni, e),
+                                  onDrop: (mi, mni, e) => onConditionDrop(insertIndex, mi, mni, e),
+                                }}
+                                monsterCardDrawer={monsterCardDrawer}
+                                onToggleMonsterCard={(mi, view) => toggleMonsterCard(insertIndex, mi, view)}
+                              />
+                            </div>
+                          )}
+                        </div>
+                      )
+                    })}
                 {!uiLocked && (
                   <button
                     type="button"
@@ -2157,69 +2283,100 @@ function App() {
                 </h2>
                 <TitleRule />
               </header>
-              <div className="flex min-w-0 flex-col gap-4 px-0">
-              {terrainRows.map((row, i) => (
-                <div
-                  key={i}
-                  className={`rounded-lg transition-[box-shadow] duration-150 ${
-                    dropTargetTerrainIndex === i ? 'ring-2 ring-amber-500/45 ring-offset-2 ring-offset-zinc-50 dark:ring-offset-zinc-950' : ''
-                  }`}
-                  onDragOver={(e) => {
-                    if (![...e.dataTransfer.types].includes(TERRAIN_DRAG_MIME)) return
-                    e.preventDefault()
-                    e.dataTransfer.dropEffect = 'move'
-                    setDropTargetTerrainIndex(i)
-                  }}
-                  onDragLeave={(e) => {
-                    if (!e.currentTarget.contains(e.relatedTarget as Node | null)) {
-                      setDropTargetTerrainIndex((v) => (v === i ? null : v))
-                    }
-                  }}
-                  onDrop={(e) => {
-                    e.preventDefault()
-                    setDropTargetTerrainIndex(null)
-                    const raw = e.dataTransfer.getData(TERRAIN_DRAG_MIME)
-                    const from = Number.parseInt(raw, 10)
-                    if (Number.isNaN(from) || from === i) return
-                    reorderTerrainRows(from, i)
-                  }}
-                >
-                  <TerrainRow
-                    row={row}
-                    rowIndex={i}
-                    onStaminaChange={(st) => patchTerrainStamina(i, st)}
-                    onClick={() => toggleTerrainDrawer(i)}
-                    isDrawerOpen={terrainDrawerIndex === i}
-                    uiLocked={uiLocked}
-                    onDelete={uiLocked ? undefined : () => deleteTerrainRow(i)}
-                    onDuplicate={uiLocked ? undefined : () => duplicateTerrainRow(i)}
-                    onAddUpgrade={uiLocked ? undefined : (name) => addTerrainUpgrade(i, name)}
-                    onRemoveUpgrade={uiLocked ? undefined : (name) => removeTerrainUpgrade(i, name)}
-                    dragHandle={
-                      uiLocked
-                        ? undefined
-                        : {
-                            onDragStart: (e) => {
-                              e.dataTransfer.setData(TERRAIN_DRAG_MIME, String(i))
-                              e.dataTransfer.effectAllowed = 'move'
-                            },
-                            onDragEnd: (_e: DragEvent) => setDropTargetTerrainIndex(null),
-                            ariaLabel: `Reorder terrain ${i + 1}`,
-                          }
-                    }
-                    terrainReorderMenu={
-                      uiLocked
-                        ? undefined
-                        : {
-                            onMoveUp: () => reorderTerrainRows(i, i - 1),
-                            onMoveDown: () => reorderTerrainRows(i, i + 1),
-                            moveUpDisabled: i === 0,
-                            moveDownDisabled: i === terrainRows.length - 1,
-                          }
-                    }
-                  />
-                </div>
-              ))}
+              <div className="flex min-w-0 flex-col gap-2 px-0">
+                {terrainRows.map((row, i) => {
+                  const showInsertTop = dropTargetTerrainInsert === i
+                  const showInsertBottom = i === terrainRows.length - 1 && dropTargetTerrainInsert === terrainRows.length
+                  const insertLine =
+                    showInsertTop || showInsertBottom
+                      ? `before:absolute before:left-2 before:right-2 before:h-[3px] before:rounded-full before:bg-sky-500/55 before:shadow-[0_0_0_1px_rgb(0_0_0/0.10)] ${
+                          showInsertTop ? 'before:top-0' : 'before:bottom-0'
+                        }`
+                      : ''
+
+                  return (
+                    <div
+                      key={i}
+                      className={`relative min-w-0 ${insertLine}`}
+                      onDragOver={(e) => {
+                        if (uiLocked) return
+                        if (![...e.dataTransfer.types].includes(TERRAIN_DRAG_MIME)) return
+                        e.preventDefault()
+                        const raw = e.dataTransfer.getData(TERRAIN_DRAG_MIME)
+                        const from = Number.parseInt(raw, 10)
+                        const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
+                        const y = e.clientY
+                        const insert =
+                          rect.height > 0 && y >= rect.top && y <= rect.bottom
+                            ? y < rect.top + rect.height / 2
+                              ? i
+                              : i + 1
+                            : i
+                        const noOp = !Number.isNaN(from) && computeInsertIndexAfterRemoval(from, insert) === from
+                        e.dataTransfer.dropEffect = noOp ? 'none' : 'move'
+                        setDropTargetTerrainInsert(noOp ? null : insert)
+                      }}
+                      onDragLeave={(e) => {
+                        if (!e.currentTarget.contains(e.relatedTarget as Node | null)) {
+                          setDropTargetTerrainInsert((v) => (v === i || v === i + 1 ? null : v))
+                        }
+                      }}
+                      onDrop={(e) => {
+                        if (uiLocked) return
+                        e.preventDefault()
+                        const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
+                        const y = e.clientY
+                        const insert =
+                          rect.height > 0 && y >= rect.top && y <= rect.bottom
+                            ? y < rect.top + rect.height / 2
+                              ? i
+                              : i + 1
+                            : i
+                        setDropTargetTerrainInsert(null)
+                        const raw = e.dataTransfer.getData(TERRAIN_DRAG_MIME)
+                        const from = Number.parseInt(raw, 10)
+                        if (Number.isNaN(from)) return
+                        if (computeInsertIndexAfterRemoval(from, insert) === from) return
+                        reorderTerrainRows(from, insert)
+                      }}
+                    >
+                      <TerrainRow
+                        row={row}
+                        rowIndex={i}
+                        onStaminaChange={(st) => patchTerrainStamina(i, st)}
+                        onClick={() => toggleTerrainDrawer(i)}
+                        isDrawerOpen={terrainDrawerIndex === i}
+                        uiLocked={uiLocked}
+                        onDelete={uiLocked ? undefined : () => deleteTerrainRow(i)}
+                        onDuplicate={uiLocked ? undefined : () => duplicateTerrainRow(i)}
+                        onAddUpgrade={uiLocked ? undefined : (name) => addTerrainUpgrade(i, name)}
+                        onRemoveUpgrade={uiLocked ? undefined : (name) => removeTerrainUpgrade(i, name)}
+                        dragHandle={
+                          uiLocked
+                            ? undefined
+                            : {
+                                onDragStart: (e) => {
+                                  e.dataTransfer.setData(TERRAIN_DRAG_MIME, String(i))
+                                  e.dataTransfer.effectAllowed = 'move'
+                                },
+                                onDragEnd: (_e: DragEvent) => setDropTargetTerrainInsert(null),
+                                ariaLabel: `Reorder terrain ${i + 1}`,
+                              }
+                        }
+                        terrainReorderMenu={
+                          uiLocked
+                            ? undefined
+                            : {
+                                onMoveUp: () => reorderTerrainRows(i, i - 1),
+                                onMoveDown: () => reorderTerrainRows(i, i + 2),
+                                moveUpDisabled: i === 0,
+                                moveDownDisabled: i === terrainRows.length - 1,
+                              }
+                        }
+                      />
+                    </div>
+                  )
+                })}
               </div>
               {!uiLocked && (
                 <AddTerrainButton onAdd={addTerrainRow} />

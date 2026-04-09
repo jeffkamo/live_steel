@@ -572,3 +572,40 @@ Switch between encounters — encounter name becomes clickable dropdown listing 
 - src/App.tsx
 - src/App.test.tsx
 - PRD.json
+
+
+[DND-004]
+
+Insert-between drag & drop across sections — switched from “drop onto a row” to “drop between rows” semantics for encounter groups, monsters/minions, terrain, and malice.
+
+**Key decisions:**
+- Use HTML5 DnD with explicit insert slots: insert indices range `0..len` (where `len` means append).
+- Highlight uses a thin insertion line (blue for valid hover, rose for invalid/reject flash) rather than full-row rings.
+- Suppress misleading feedback:
+  - No highlight when the computed drop is a no-op (insert would not change order).
+  - No “invalid red” highlight when hovering the exact source slot while dragging (treat as silent no-op).
+- “Bottom insert” rendering:
+  - For monsters/minions, the drop target can be an insert slot equal to `len`; since there is no row at index `len`, the UI renders that as a **bottom-edge line on the last row**.
+  - `insertLineAt: 'top' | 'bottom'` is computed in `GroupSection` from whether the hover target equals `i` (top) or `i+1` (bottom).
+- Terrain and malice no longer depend on tiny “between-row” hitboxes: hovering the top/bottom half of a row chooses insert-before/after.
+- Malice core rows remain pinned: insert/reorder for monster malice rows is clamped to `corePrefixLength(rows)` so core features always stay at the top.
+
+**Implementation notes / reminders:**
+- **No-op detection**
+  - Encounter groups + terrain: use `computeInsertIndexAfterRemoval(from, toInsert)` to detect no-op.
+  - Monsters/minions: treat same-slot and `from+1` insert-slot boundaries as no-op (important to avoid showing a line between the dragged row and the next row down).
+- **Stale state**
+  - Clear `monsterDropTarget` and reject flash on drag start to avoid immediate “red line” from a previous rejected drop.
+- **Tests**
+  - JSDOM doesn’t provide meaningful pointer coords/rects; `GroupSection` has direction-based defaults when rects are zero so drag tests remain stable.
+
+**Files changed:**
+- src/App.tsx
+- src/data.ts
+- src/types.ts
+- src/components/GroupSection.tsx
+- src/components/MonsterRowCells.tsx
+- src/components/MinionGroupRow.tsx
+- src/components/MaliceDashboard.tsx
+- src/components/TerrainRow.tsx
+- src/components/InsertDropZone.tsx (created during exploration; may be unused depending on current approach)

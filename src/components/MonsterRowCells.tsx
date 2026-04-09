@@ -65,6 +65,7 @@ export function MonsterRowCells({
     dropHighlighted: boolean
     dropInvalidHover?: boolean
     dropRejectFlash?: boolean
+    insertLineAt?: 'top' | 'bottom'
     onDragStart: (e: DragEvent) => void
     onDragEnd: (e: DragEvent) => void
     onDragOver: (e: DragEvent) => void
@@ -129,20 +130,22 @@ export function MonsterRowCells({
     'transition-opacity duration-200 ease-out motion-reduce:transition-none ' +
     (turnComplete ? 'opacity-[0.38]' : 'opacity-100')
 
-  const monsterDropRing =
-    monsterDrag?.dropHighlighted
-      ? 'ring-2 ring-inset ring-sky-500/40'
-      : monsterDrag?.dropRejectFlash
-        ? 'ring-2 ring-inset ring-rose-500/70 motion-safe:animate-pulse'
-        : monsterDrag?.dropInvalidHover
-          ? 'ring-2 ring-inset ring-rose-500/45'
-          : ''
+  const insertEdgeClass =
+    monsterDrag?.insertLineAt === 'bottom' ? 'before:bottom-0' : 'before:top-0'
+
+  const monsterInsertLine = monsterDrag?.dropRejectFlash
+    ? `before:absolute before:left-2 before:right-2 before:h-[3px] before:rounded-full before:bg-rose-500/70 before:shadow-[0_0_0_1px_rgb(0_0_0/0.10)] motion-safe:animate-pulse ${insertEdgeClass}`
+    : monsterDrag?.dropInvalidHover
+      ? `before:absolute before:left-2 before:right-2 before:h-[3px] before:rounded-full before:bg-rose-500/45 before:shadow-[0_0_0_1px_rgb(0_0_0/0.10)] ${insertEdgeClass}`
+      : monsterDrag?.dropHighlighted
+        ? `before:absolute before:left-2 before:right-2 before:h-[3px] before:rounded-full before:bg-sky-500/55 before:shadow-[0_0_0_1px_rgb(0_0_0/0.10)] ${insertEdgeClass}`
+        : ''
 
   const lockedOrdinalBalancePad = 'pl-1 sm:pl-1.5'
 
   return (
     <div
-      className={`group/row-reorder roster-creature relative overflow-visible ${rowTone} has-[[data-grip-menu-open]]:opacity-100 has-[[data-grip-menu-open]]:z-[200] ${monsterDropRing}`}
+      className={`group/row-reorder roster-creature relative overflow-visible ${rowTone} has-[[data-grip-menu-open]]:opacity-100 has-[[data-grip-menu-open]]:z-[200] ${monsterInsertLine}`}
       style={{ gridColumn: 2, gridRow: row }}
       data-testid="monster-drop-target"
       data-group-index={monsterDrag?.groupIndex}

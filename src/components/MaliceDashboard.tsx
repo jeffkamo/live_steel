@@ -41,8 +41,7 @@ export function MaliceDashboard({
   const addMenuId = useId()
   const [addOpen, setAddOpen] = useState(false)
   const addAnchorRef = useRef<HTMLDivElement>(null)
-  const [maliceDragFrom, setMaliceDragFrom] = useState<number | null>(null)
-  const [maliceDropHover, setMaliceDropHover] = useState<number | null>(null)
+  const [maliceDropHoverInsert, setMaliceDropHoverInsert] = useState<number | null>(null)
 
   const totalCreatures = useMemo(
     () => encounterGroups.reduce((n, g) => n + g.monsters.length, 0),
@@ -147,33 +146,102 @@ export function MaliceDashboard({
       if (rows[index]?.kind !== 'monster') return
       e.dataTransfer.setData(MALICE_DRAG_MIME, String(index))
       e.dataTransfer.effectAllowed = 'move'
-      setMaliceDragFrom(index)
     },
     [rows, uiLocked],
   )
 
   const onMaliceDragEnd = useCallback(() => {
-    setMaliceDragFrom(null)
-    setMaliceDropHover(null)
+    setMaliceDropHoverInsert(null)
   }, [])
 
-  const onMaliceDropOnRow = useCallback(
-    (targetIndex: number, e: React.DragEvent) => {
+  const onMaliceDropAtInsert = useCallback(
+    (insertIndex: number, e: React.DragEvent) => {
       e.preventDefault()
-      setMaliceDropHover(null)
-      setMaliceDragFrom(null)
+      setMaliceDropHoverInsert(null)
       if (uiLocked) return
       const raw = e.dataTransfer.getData(MALICE_DRAG_MIME)
       const from = Number.parseInt(raw, 10)
       if (Number.isNaN(from)) return
-      if (rows[from]?.kind !== 'monster' || rows[targetIndex]?.kind !== 'monster') return
-      if (from === targetIndex) return
-      /** Adjacent move down: drop target is the next row, so insert before `targetIndex + 1` (matches encounter monster DnD semantics). */
-      const insertBefore =
-        from < targetIndex && targetIndex === from + 1 ? targetIndex + 1 : targetIndex
-      moveRow(from, insertBefore)
+      if (rows[from]?.kind !== 'monster') return
+      moveRow(from, insertIndex)
     },
     [moveRow, rows, uiLocked],
+  )
+
+  const onMonsterRowDragOver = useCallback(
+    (index: number, e: React.DragEvent) => {
+      if (uiLocked) return
+      if (rows[index]?.kind !== 'monster') return
+      if (![...e.dataTransfer.types].includes(MALICE_DRAG_MIME)) return
+      e.preventDefault()
+      const raw = e.dataTransfer.getData(MALICE_DRAG_MIME)
+      const from = Number.parseInt(raw, 10)
+      const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
+      const y = e.clientY
+      const to =
+        rect.height > 0 && y >= rect.top && y <= rect.bottom
+          ? y < rect.top + rect.height / 2
+            ? index
+            : index + 1
+          : index
+      const clampedTo = Math.max(to, corePrefix)
+      if (!Number.isNaN(from) && rows[from]?.kind === 'monster') {
+        const nextLen = rows.length - 1
+        let ins = clampedTo
+        if (from < clampedTo) ins -= 1
+        ins = Math.max(ins, corePrefix)
+        ins = Math.min(ins, nextLen)
+        if (ins === from) {
+          e.dataTransfer.dropEffect = 'none'
+          setMaliceDropHoverInsert(null)
+          return
+        }
+      }
+      e.dataTransfer.dropEffect = 'move'
+      setMaliceDropHoverInsert(clampedTo)
+    },
+    [corePrefix, rows, uiLocked],
+  )
+
+  const onMonsterRowDragLeave = useCallback(
+    (index: number, e: React.DragEvent) => {
+      if (rows[index]?.kind !== 'monster') return
+      if (!e.currentTarget.contains(e.relatedTarget as Node | null)) {
+        setMaliceDropHoverInsert((v) => (v === index || v === index + 1 ? null : v))
+      }
+    },
+    [rows],
+  )
+
+  const onMonsterRowDrop = useCallback(
+    (index: number, e: React.DragEvent) => {
+      if (uiLocked) return
+      if (rows[index]?.kind !== 'monster') return
+      const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
+      const y = e.clientY
+      const to =
+        rect.height > 0 && y >= rect.top && y <= rect.bottom
+          ? y < rect.top + rect.height / 2
+            ? index
+            : index + 1
+          : index
+      const clampedTo = Math.max(to, corePrefix)
+      const raw = e.dataTransfer.getData(MALICE_DRAG_MIME)
+      const from = Number.parseInt(raw, 10)
+      if (!Number.isNaN(from) && rows[from]?.kind === 'monster') {
+        const nextLen = rows.length - 1
+        let ins = clampedTo
+        if (from < clampedTo) ins -= 1
+        ins = Math.max(ins, corePrefix)
+        ins = Math.min(ins, nextLen)
+        if (ins === from) {
+          setMaliceDropHoverInsert(null)
+          return
+        }
+      }
+      onMaliceDropAtInsert(clampedTo, e)
+    },
+    [corePrefix, onMaliceDropAtInsert, rows, uiLocked],
   )
 
   return (
@@ -229,41 +297,25 @@ export function MaliceDashboard({
               })
             }
 
-            const monsterDropRing =
-              isMonsterRow &&
-              maliceDropHover === index &&
-              maliceDragFrom != null &&
-              maliceDragFrom !== index
-                ? 'ring-2 ring-inset ring-sky-500/40'
+            const rowLayoutClass = uiLocked ? 'grid grid-cols-1 gap-3' : 'grid grid-cols-1 items-stretch gap-2'
+            const showInsertTop = !uiLocked && isMonsterRow && maliceDropHoverInsert === index
+            const showInsertBottom =
+              !uiLocked && isMonsterRow && index === rows.length - 1 && maliceDropHoverInsert === rows.length
+            const insertLine =
+              showInsertTop || showInsertBottom
+                ? `before:absolute before:left-2 before:right-2 before:h-[3px] before:rounded-full before:bg-sky-500/55 before:shadow-[0_0_0_1px_rgb(0_0_0/0.10)] ${
+                    showInsertTop ? 'before:top-0' : 'before:bottom-0'
+                  }`
                 : ''
 
-            const rowLayoutClass = uiLocked ? 'grid grid-cols-1 gap-3' : 'grid grid-cols-1 items-stretch gap-2'
-
             return (
-              <li
-                key={row.kind === 'core' ? `core-${row.coreId}` : row.id}
-                className={`group/row-reorder relative ${rowLayoutClass} rounded-md border border-zinc-200/80 bg-white/90 px-2 py-2 transition-shadow dark:border-zinc-700/70 dark:bg-zinc-900/60 has-[[data-grip-menu-open]]:z-[200] ${monsterDropRing}`}
-                onDragOver={
-                  uiLocked || !isMonsterRow
-                    ? undefined
-                    : (e) => {
-                        if (![...e.dataTransfer.types].includes(MALICE_DRAG_MIME)) return
-                        e.preventDefault()
-                        e.dataTransfer.dropEffect = 'move'
-                        setMaliceDropHover(index)
-                      }
-                }
-                onDragLeave={
-                  uiLocked || !isMonsterRow
-                    ? undefined
-                    : (e) => {
-                        if (!e.currentTarget.contains(e.relatedTarget as Node | null)) {
-                          setMaliceDropHover((v) => (v === index ? null : v))
-                        }
-                      }
-                }
-                onDrop={uiLocked || !isMonsterRow ? undefined : (e) => onMaliceDropOnRow(index, e)}
-              >
+              <li key={row.kind === 'core' ? `core-${row.coreId}` : row.id}>
+                <div
+                  className={`group/row-reorder relative ${rowLayoutClass} rounded-md border border-zinc-200/80 bg-white/90 px-2 py-2 transition-shadow dark:border-zinc-700/70 dark:bg-zinc-900/60 has-[[data-grip-menu-open]]:z-[200] ${insertLine}`}
+                  onDragOver={uiLocked || !isMonsterRow ? undefined : (e) => onMonsterRowDragOver(index, e)}
+                  onDragLeave={uiLocked || !isMonsterRow ? undefined : (e) => onMonsterRowDragLeave(index, e)}
+                  onDrop={uiLocked || !isMonsterRow ? undefined : (e) => onMonsterRowDrop(index, e)}
+                >
                 {!uiLocked && isMonsterRow ? (
                   <div className="pointer-events-none absolute top-0 left-0 z-[110] flex h-full items-center">
                     <div className="-translate-x-1/2">
@@ -316,6 +368,7 @@ export function MaliceDashboard({
                       {effect}
                     </p>
                   )}
+                </div>
                 </div>
               </li>
             )

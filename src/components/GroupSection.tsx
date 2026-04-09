@@ -87,6 +87,7 @@ export function GroupSection({
   }
   monsterDrag?: {
     thisGroupIndex: number
+    getDragSource?: () => { fromGroup: number; fromMonster: number; fromMinion?: number } | null
     dropTarget: {
       groupIndex: number
       monsterIndex: number
@@ -201,27 +202,91 @@ export function GroupSection({
     if (monsterDrag == null) return undefined
     const t = monsterDrag.dropTarget
     const f = monsterDrag.dropRejectFlash
-    const matchHover =
-      t != null &&
-      t.groupIndex === monsterDrag.thisGroupIndex &&
-      t.monsterIndex === i &&
-      t.minionIndex === null
-    const matchReject =
-      f != null &&
-      f.groupIndex === monsterDrag.thisGroupIndex &&
-      f.monsterIndex === i &&
-      f.minionIndex === null
+    const hoverPos =
+      t != null && t.groupIndex === monsterDrag.thisGroupIndex && t.minionIndex === null
+        ? t.monsterIndex === i
+          ? ('top' as const)
+          : t.monsterIndex === i + 1
+            ? ('bottom' as const)
+            : null
+        : null
+    const rejectPos =
+      f != null && f.groupIndex === monsterDrag.thisGroupIndex && f.minionIndex === null
+        ? f.monsterIndex === i
+          ? ('top' as const)
+          : f.monsterIndex === i + 1
+            ? ('bottom' as const)
+            : null
+        : null
     return {
       groupIndex: monsterDrag.thisGroupIndex,
       monsterIndex: i,
-      dropHighlighted: matchHover && !t.invalid,
-      dropInvalidHover: matchHover && t.invalid,
-      dropRejectFlash: matchReject,
+      dropHighlighted: hoverPos != null && t != null && !t.invalid,
+      dropInvalidHover: hoverPos != null && t != null && t.invalid,
+      dropRejectFlash: rejectPos != null,
+      insertLineAt: hoverPos ?? rejectPos ?? 'top',
       onDragStart: (e: DragEvent) => monsterDrag.onMonsterDragStart(i, e),
       onDragEnd: monsterDrag.onMonsterDragEnd,
-      onDragOver: (e: DragEvent) => monsterDrag.onMonsterDragOver(i, null, e),
-      onDragLeave: (e: DragEvent) => monsterDrag.onMonsterDragLeave(i, null, e),
-      onDrop: (e: DragEvent) => monsterDrag.onMonsterDrop(i, null, e),
+      onDragOver: (e: DragEvent) => {
+        const src = monsterDrag.getDragSource?.()
+        if (src && src.fromMinion == null && src.fromGroup === monsterDrag.thisGroupIndex && src.fromMonster === i) {
+          // Hovering over the active dragging row: treat as no-op.
+          monsterDrag.onMonsterDragOver(i, null, e)
+          return
+        }
+        const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
+        const y = e.clientY
+        const hasPointer = !(e.clientX === 0 && e.clientY === 0)
+        const insertIndex =
+          rect.height <= 0
+            ? (() => {
+                const src2 = monsterDrag.getDragSource?.()
+                if (src2 && src2.fromMinion == null && src2.fromGroup === monsterDrag.thisGroupIndex) {
+                  return src2.fromMonster > i ? i : i + 1
+                }
+                return i + 1
+              })()
+            : rect.height > 0 && y >= rect.top && y <= rect.bottom
+            ? hasPointer
+              ? y < rect.top + rect.height / 2
+                ? i
+                : i + 1
+              : // Synthetic events (tests) have no pointer coords; assume bottom-half behavior.
+                i + 1
+            : i
+        monsterDrag.onMonsterDragOver(insertIndex, null, e)
+      },
+      onDragLeave: (e: DragEvent) => {
+        monsterDrag.onMonsterDragLeave(i, null, e)
+        monsterDrag.onMonsterDragLeave(i + 1, null, e)
+      },
+      onDrop: (e: DragEvent) => {
+        const src = monsterDrag.getDragSource?.()
+        if (src && src.fromMinion == null && src.fromGroup === monsterDrag.thisGroupIndex && src.fromMonster === i) {
+          monsterDrag.onMonsterDrop(i, null, e)
+          return
+        }
+        const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
+        const y = e.clientY
+        const hasPointer = !(e.clientX === 0 && e.clientY === 0)
+        const insertIndex =
+          rect.height <= 0
+            ? (() => {
+                const src2 = monsterDrag.getDragSource?.()
+                if (src2 && src2.fromMinion == null && src2.fromGroup === monsterDrag.thisGroupIndex) {
+                  return src2.fromMonster > i ? i : i + 1
+                }
+                return i + 1
+              })()
+            : rect.height > 0 && y >= rect.top && y <= rect.bottom
+            ? hasPointer
+              ? y < rect.top + rect.height / 2
+                ? i
+                : i + 1
+              : i + 1
+            : i
+        monsterDrag.onMonsterDrop(insertIndex, null, e)
+      },
     }
   }
 
@@ -229,31 +294,113 @@ export function GroupSection({
     if (monsterDrag == null) return undefined
     const t = monsterDrag.dropTarget
     const f = monsterDrag.dropRejectFlash
-    const matchHover =
-      t != null &&
-      t.groupIndex === monsterDrag.thisGroupIndex &&
-      t.monsterIndex === parentMonsterIndex &&
-      t.minionIndex === minionIndex
-    const matchReject =
-      f != null &&
-      f.groupIndex === monsterDrag.thisGroupIndex &&
-      f.monsterIndex === parentMonsterIndex &&
-      f.minionIndex === minionIndex
+    const hoverPos =
+      t != null && t.groupIndex === monsterDrag.thisGroupIndex && t.monsterIndex === parentMonsterIndex
+        ? t.minionIndex === minionIndex
+          ? ('top' as const)
+          : t.minionIndex === minionIndex + 1
+            ? ('bottom' as const)
+            : null
+        : null
+    const rejectPos =
+      f != null && f.groupIndex === monsterDrag.thisGroupIndex && f.monsterIndex === parentMonsterIndex
+        ? f.minionIndex === minionIndex
+          ? ('top' as const)
+          : f.minionIndex === minionIndex + 1
+            ? ('bottom' as const)
+            : null
+        : null
     return {
       groupIndex: monsterDrag.thisGroupIndex,
       monsterIndex: parentMonsterIndex,
       minionIndex,
-      dropHighlighted: matchHover && !t.invalid,
-      dropInvalidHover: matchHover && t.invalid,
-      dropRejectFlash: matchReject,
+      dropHighlighted: hoverPos != null && t != null && !t.invalid,
+      dropInvalidHover: hoverPos != null && t != null && t.invalid,
+      dropRejectFlash: rejectPos != null,
+      insertLineAt: hoverPos ?? rejectPos ?? 'top',
       onDragStart: (e: DragEvent) =>
         monsterDrag.onMonsterDragStart(parentMonsterIndex, e, minionIndex),
       onDragEnd: monsterDrag.onMonsterDragEnd,
-      onDragOver: (e: DragEvent) =>
-        monsterDrag.onMonsterDragOver(parentMonsterIndex, minionIndex, e),
-      onDragLeave: (e: DragEvent) =>
-        monsterDrag.onMonsterDragLeave(parentMonsterIndex, minionIndex, e),
-      onDrop: (e: DragEvent) => monsterDrag.onMonsterDrop(parentMonsterIndex, minionIndex, e),
+      onDragOver: (e: DragEvent) => {
+        const src = monsterDrag.getDragSource?.()
+        if (
+          src &&
+          src.fromMinion != null &&
+          src.fromGroup === monsterDrag.thisGroupIndex &&
+          src.fromMonster === parentMonsterIndex &&
+          src.fromMinion === minionIndex
+        ) {
+          monsterDrag.onMonsterDragOver(parentMonsterIndex, minionIndex, e)
+          return
+        }
+        const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
+        const y = e.clientY
+        const hasPointer = !(e.clientX === 0 && e.clientY === 0)
+        const insertIndex =
+          rect.height <= 0
+            ? (() => {
+                const src2 = monsterDrag.getDragSource?.()
+                if (
+                  src2 &&
+                  src2.fromMinion != null &&
+                  src2.fromGroup === monsterDrag.thisGroupIndex &&
+                  src2.fromMonster === parentMonsterIndex
+                ) {
+                  return src2.fromMinion > minionIndex ? minionIndex : minionIndex + 1
+                }
+                return minionIndex + 1
+              })()
+            : rect.height > 0 && y >= rect.top && y <= rect.bottom
+            ? hasPointer
+              ? y < rect.top + rect.height / 2
+                ? minionIndex
+                : minionIndex + 1
+              : minionIndex + 1
+            : minionIndex
+        monsterDrag.onMonsterDragOver(parentMonsterIndex, insertIndex, e)
+      },
+      onDragLeave: (e: DragEvent) => {
+        monsterDrag.onMonsterDragLeave(parentMonsterIndex, minionIndex, e)
+        monsterDrag.onMonsterDragLeave(parentMonsterIndex, minionIndex + 1, e)
+      },
+      onDrop: (e: DragEvent) => {
+        const src = monsterDrag.getDragSource?.()
+        if (
+          src &&
+          src.fromMinion != null &&
+          src.fromGroup === monsterDrag.thisGroupIndex &&
+          src.fromMonster === parentMonsterIndex &&
+          src.fromMinion === minionIndex
+        ) {
+          monsterDrag.onMonsterDrop(parentMonsterIndex, minionIndex, e)
+          return
+        }
+        const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
+        const y = e.clientY
+        const hasPointer = !(e.clientX === 0 && e.clientY === 0)
+        const insertIndex =
+          rect.height <= 0
+            ? (() => {
+                const src2 = monsterDrag.getDragSource?.()
+                if (
+                  src2 &&
+                  src2.fromMinion != null &&
+                  src2.fromGroup === monsterDrag.thisGroupIndex &&
+                  src2.fromMonster === parentMonsterIndex
+                ) {
+                  return src2.fromMinion > minionIndex ? minionIndex : minionIndex + 1
+                }
+                return minionIndex + 1
+              })()
+            : rect.height > 0 && y >= rect.top && y <= rect.bottom
+            ? hasPointer
+              ? y < rect.top + rect.height / 2
+                ? minionIndex
+                : minionIndex + 1
+              : minionIndex + 1
+            : minionIndex
+        monsterDrag.onMonsterDrop(parentMonsterIndex, insertIndex, e)
+      },
     }
   }
 

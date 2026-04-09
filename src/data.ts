@@ -353,7 +353,18 @@ export function monsterDragDropIsValid(
   toMinion: number | null,
   groups: readonly EncounterGroup[],
 ): boolean {
-  const destMonster = groups[toGroup]?.monsters[toMonster]
+  const destGroup = groups[toGroup]
+  if (!destGroup) return false
+  const destLen = destGroup.monsters.length
+  if (toMinion == null) {
+    // Top-level insert: allow dropping at the end (toMonster === destLen).
+    if (toMonster < 0 || toMonster > destLen) return false
+  } else {
+    // Horde minion insert: requires a concrete horde parent row.
+    if (toMonster < 0 || toMonster >= destLen) return false
+  }
+
+  const destMonster = destGroup.monsters[toMonster]
   const destHorde = (destMonster?.minions?.length ?? 0) > 0
 
   const fromMini = source.fromMinion
@@ -363,6 +374,7 @@ export function monsterDragDropIsValid(
     const src = groups[fromG]?.monsters[fromParent]
     const srcIsSolo = (src?.minions?.length ?? 0) === 0
     if (toMinion == null) {
+      // No-op means "insert back into the same slot".
       return !(fromG === toGroup && fromParent === toMonster)
     }
     if (!destHorde || !srcIsSolo) return false
@@ -373,6 +385,18 @@ export function monsterDragDropIsValid(
     return fromMini !== toMinion
   }
   return true
+}
+
+/**
+ * Insert index in an array after removing the source element.
+ * `to` is the pre-move insertion slot (0..length), where `length` means append.
+ */
+export function computeInsertIndexAfterRemoval(from: number, to: number): number | null {
+  if (from < 0) return null
+  if (to < 0) return null
+  if (from === to) return null
+  if (from < to) return to - 1
+  return to
 }
 
 /** Reorder minions within one parent monster; returns null if indices are invalid or no-op. */
@@ -1466,6 +1490,36 @@ export function reorderEncounterGroupsWithCaptainRemap(
         ...m,
         captainId: {
           groupIndex: remapEncounterGroupIndex(from, to, ref.groupIndex),
+          monsterIndex: ref.monsterIndex,
+        },
+      }
+    }),
+  }))
+}
+
+/** Reorder encounter groups using insert-slot semantics (`to` in 0..length). */
+export function reorderEncounterGroupsWithCaptainRemapInsert(
+  groups: EncounterGroup[],
+  from: number,
+  to: number,
+): EncounterGroup[] | null {
+  if (from < 0 || from >= groups.length) return null
+  if (to < 0 || to > groups.length) return null
+  const insertIndex = computeInsertIndexAfterRemoval(from, to)
+  if (insertIndex === null) return null
+  const next = [...groups]
+  const [moved] = next.splice(from, 1)
+  next.splice(insertIndex, 0, moved!)
+  // Remap captain group indices based on the actual insert position.
+  return next.map((g) => ({
+    ...g,
+    monsters: g.monsters.map((m) => {
+      if (!m.captainId) return m
+      const ref = m.captainId
+      return {
+        ...m,
+        captainId: {
+          groupIndex: remapEncounterGroupIndex(from, insertIndex, ref.groupIndex),
           monsterIndex: ref.monsterIndex,
         },
       }

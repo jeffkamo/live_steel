@@ -33,6 +33,7 @@ type MinionRowDragBinding = {
   dropHighlighted: boolean
   dropInvalidHover?: boolean
   dropRejectFlash?: boolean
+  insertLineAt?: 'top' | 'bottom'
   onDragStart: (e: DragEvent) => void
   onDragEnd: (e: DragEvent) => void
   onDragOver: (e: DragEvent) => void
@@ -69,7 +70,7 @@ export function MinionGroupRow({
   row,
   creatureOrdinalMap,
   monsterIndex,
-  encounterGroupIndex,
+  encounterGroupIndex: _encounterGroupIndex,
   totalCreatures,
   groupKey,
   groupNumber,
@@ -746,18 +747,20 @@ function MinionChildRow({
     'transition-opacity duration-200 ease-out motion-reduce:transition-none ' +
     (turnComplete ? 'opacity-[0.38]' : 'opacity-100')
 
-  const minionDropRing =
-    minionDrag?.dropHighlighted
-      ? 'ring-2 ring-inset ring-sky-500/40'
-      : minionDrag?.dropRejectFlash
-        ? 'ring-2 ring-inset ring-rose-500/70 motion-safe:animate-pulse'
-        : minionDrag?.dropInvalidHover
-          ? 'ring-2 ring-inset ring-rose-500/45'
-          : ''
+  const insertEdgeClass =
+    minionDrag?.insertLineAt === 'bottom' ? 'before:bottom-0' : 'before:top-0'
+
+  const minionInsertLine = minionDrag?.dropRejectFlash
+    ? `before:absolute before:left-2 before:right-2 before:h-[3px] before:rounded-full before:bg-rose-500/70 before:shadow-[0_0_0_1px_rgb(0_0_0/0.10)] motion-safe:animate-pulse ${insertEdgeClass}`
+    : minionDrag?.dropInvalidHover
+      ? `before:absolute before:left-2 before:right-2 before:h-[3px] before:rounded-full before:bg-rose-500/45 before:shadow-[0_0_0_1px_rgb(0_0_0/0.10)] ${insertEdgeClass}`
+      : minionDrag?.dropHighlighted
+        ? `before:absolute before:left-2 before:right-2 before:h-[3px] before:rounded-full before:bg-sky-500/55 before:shadow-[0_0_0_1px_rgb(0_0_0/0.10)] ${insertEdgeClass}`
+        : ''
 
   return (
     <div
-      className={`group/row-reorder roster-creature relative overflow-visible border-t border-zinc-200/90 dark:border-zinc-800/60 ${rowTone} has-[[data-grip-menu-open]]:opacity-100 has-[[data-grip-menu-open]]:z-[200] ${minionDropRing}`}
+      className={`group/row-reorder roster-creature relative overflow-visible border-t border-zinc-200/90 dark:border-zinc-800/60 ${rowTone} has-[[data-grip-menu-open]]:opacity-100 has-[[data-grip-menu-open]]:z-[200] ${minionInsertLine}`}
       style={{ gridColumn: 2, gridRow: gridRow }}
       data-testid="minion-drop-target"
       data-group-index={minionDrag?.groupIndex}
