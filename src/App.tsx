@@ -763,6 +763,7 @@ function App() {
   )
 
   const [dropTargetGroupInsert, setDropTargetGroupInsert] = useState<number | null>(null)
+  const encounterGroupDragSourceRef = useRef<number | null>(null)
   const monsterDragSourceRef = useRef<MonsterDragPayload | null>(null)
 
   const [monsterDropTarget, setMonsterDropTarget] = useState<{
@@ -2071,8 +2072,10 @@ function App() {
                               if (![...e.dataTransfer.types].includes(ENCOUNTER_GROUP_DRAG_MIME)) return
                               e.preventDefault()
                               const raw = e.dataTransfer.getData(ENCOUNTER_GROUP_DRAG_MIME)
-                              const from = Number.parseInt(raw, 10)
-                              const noOp = !Number.isNaN(from) && computeInsertIndexAfterRemoval(from, insertIndex) === from
+                              const fromRaw = Number.parseInt(raw, 10)
+                              const from = !Number.isNaN(fromRaw) ? fromRaw : encounterGroupDragSourceRef.current
+                              const ins = from != null ? computeInsertIndexAfterRemoval(from, insertIndex) : null
+                              const noOp = from != null && (ins === null || ins === from)
                               e.dataTransfer.dropEffect = noOp ? 'none' : 'move'
                               setDropTargetGroupInsert(noOp ? null : insertIndex)
                             }}
@@ -2087,7 +2090,8 @@ function App() {
                               const raw = e.dataTransfer.getData(ENCOUNTER_GROUP_DRAG_MIME)
                               const from = Number.parseInt(raw, 10)
                               if (Number.isNaN(from)) return
-                              if (computeInsertIndexAfterRemoval(from, insertIndex) === from) return
+                              const ins = computeInsertIndexAfterRemoval(from, insertIndex)
+                              if (ins === null || ins === from) return
                               reorderEncounterGroups(from, insertIndex)
                             }}
                           />
@@ -2099,7 +2103,9 @@ function App() {
                               onDragOver={(e) => {
                                 if (![...e.dataTransfer.types].includes(ENCOUNTER_GROUP_DRAG_MIME)) return
                                 e.preventDefault()
-                                e.dataTransfer.dropEffect = 'move'
+                                const raw = e.dataTransfer.getData(ENCOUNTER_GROUP_DRAG_MIME)
+                                const fromRaw = Number.parseInt(raw, 10)
+                                const from = !Number.isNaN(fromRaw) ? fromRaw : encounterGroupDragSourceRef.current
                                 const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
                                 const y = e.clientY
                                 const toInsert =
@@ -2108,7 +2114,10 @@ function App() {
                                       ? insertIndex
                                       : insertIndex + 1
                                     : insertIndex + 1
-                                setDropTargetGroupInsert(toInsert)
+                                const ins = from != null ? computeInsertIndexAfterRemoval(from, toInsert) : null
+                                const noOp = from != null && (ins === null || ins === from)
+                                e.dataTransfer.dropEffect = noOp ? 'none' : 'move'
+                                setDropTargetGroupInsert(noOp ? null : toInsert)
                               }}
                               onDragLeave={(e) => {
                                 if (!e.currentTarget.contains(e.relatedTarget as Node | null)) {
@@ -2119,6 +2128,10 @@ function App() {
                               }}
                               onDrop={(e) => {
                                 e.preventDefault()
+                                setDropTargetGroupInsert(null)
+                                const raw = e.dataTransfer.getData(ENCOUNTER_GROUP_DRAG_MIME)
+                                const from = Number.parseInt(raw, 10)
+                                if (Number.isNaN(from)) return
                                 const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
                                 const y = e.clientY
                                 const toInsert =
@@ -2127,10 +2140,8 @@ function App() {
                                       ? insertIndex
                                       : insertIndex + 1
                                     : insertIndex + 1
-                                setDropTargetGroupInsert(null)
-                                const raw = e.dataTransfer.getData(ENCOUNTER_GROUP_DRAG_MIME)
-                                const from = Number.parseInt(raw, 10)
-                                if (Number.isNaN(from)) return
+                                const ins = computeInsertIndexAfterRemoval(from, toInsert)
+                                if (ins === null || ins === from) return
                                 reorderEncounterGroups(from, toInsert)
                               }}
                             >
@@ -2215,10 +2226,15 @@ function App() {
                                     ? undefined
                                     : {
                                         onDragStart: (e) => {
+                                          setDropTargetGroupInsert(null)
+                                          encounterGroupDragSourceRef.current = insertIndex
                                           e.dataTransfer.setData(ENCOUNTER_GROUP_DRAG_MIME, String(insertIndex))
                                           e.dataTransfer.effectAllowed = 'move'
                                         },
-                                        onDragEnd: () => setDropTargetGroupInsert(null),
+                                        onDragEnd: () => {
+                                          encounterGroupDragSourceRef.current = null
+                                          setDropTargetGroupInsert(null)
+                                        },
                                         ariaLabel: `Reorder encounter group ${insertIndex + 1}`,
                                       }
                                 }
@@ -2312,7 +2328,8 @@ function App() {
                               ? i
                               : i + 1
                             : i
-                        const noOp = !Number.isNaN(from) && computeInsertIndexAfterRemoval(from, insert) === from
+                        const ins = !Number.isNaN(from) ? computeInsertIndexAfterRemoval(from, insert) : null
+                        const noOp = !Number.isNaN(from) && (ins === null || ins === from)
                         e.dataTransfer.dropEffect = noOp ? 'none' : 'move'
                         setDropTargetTerrainInsert(noOp ? null : insert)
                       }}
@@ -2336,7 +2353,8 @@ function App() {
                         const raw = e.dataTransfer.getData(TERRAIN_DRAG_MIME)
                         const from = Number.parseInt(raw, 10)
                         if (Number.isNaN(from)) return
-                        if (computeInsertIndexAfterRemoval(from, insert) === from) return
+                        const ins = computeInsertIndexAfterRemoval(from, insert)
+                        if (ins === null || ins === from) return
                         reorderTerrainRows(from, insert)
                       }}
                     >

@@ -596,6 +596,9 @@ Insert-between drag & drop across sections — switched from “drop onto a row�
   - Monsters/minions: treat same-slot and `from+1` insert-slot boundaries as no-op (important to avoid showing a line between the dragged row and the next row down).
 - **Stale state**
   - Clear `monsterDropTarget` and reject flash on drag start to avoid immediate “red line” from a previous rejected drop.
+- **Bugfix (turn rows / group insert line)**
+  - `computeInsertIndexAfterRemoval(from, toInsert)` returns `null` for same-slot (`from === toInsert`); treat `null` as a silent no-op so we don’t show the insert line above the dragged row.
+  - Track encounter-group drag source in a ref and fall back to it during `dragover` (some browsers/tests can report the MIME type before `getData()` is readable), keeping no-op suppression consistent.
 - **Tests**
   - JSDOM doesn’t provide meaningful pointer coords/rects; `GroupSection` has direction-based defaults when rects are zero so drag tests remain stable.
 
