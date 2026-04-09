@@ -612,3 +612,18 @@ Insert-between drag & drop across sections — switched from “drop onto a row�
 - src/components/MaliceDashboard.tsx
 - src/components/TerrainRow.tsx
 - src/components/InsertDropZone.tsx (created during exploration; may be unused depending on current approach)
+
+
+[DND-005]
+
+Malice row insert indicator stability — fixed flicker/gaps and edge-drop behavior when reordering malice feature rows.
+
+**Key decisions:**
+- Treat the insertion line as a first-class drop target by adding explicit insert zones that extend into the inter-row gap; prevents the indicator from disappearing when the cursor hovers “on the line” or in the spacing between rows.
+- Stop relying on `dragLeave` + `relatedTarget` (often `null` during HTML5 drag). Instead, only clear hover state when the pointer is truly outside the relevant bounds and ignore synthetic/missing pointer coords (`clientX/Y === 0`).
+- Prevent conflicting handlers by stopping event propagation from insert zones so parent row `dragover` can’t overwrite the bottom-edge insert state (avoids “bottom line disappears then snaps to top of last row”).
+- Make top and bottom edge behavior consistent: once you activate the extreme edge insert (first movable slot below core rows, or bottom append), the indicator “sticks” while dragging beyond the list bounds.
+- Allow dropping slightly outside the malice list by adding extended, invisible edge drop zones above/below the list; otherwise drops beyond the container don’t dispatch to any malice handlers.
+
+**Files changed:**
+- src/components/MaliceDashboard.tsx

@@ -168,23 +168,14 @@ export function MaliceDashboard({
     [moveRow, rows, uiLocked],
   )
 
-  const onMonsterRowDragOver = useCallback(
-    (index: number, e: React.DragEvent) => {
-      if (uiLocked) return
-      if (rows[index]?.kind !== 'monster') return
-      if (![...e.dataTransfer.types].includes(MALICE_DRAG_MIME)) return
-      e.preventDefault()
-      const raw = e.dataTransfer.getData(MALICE_DRAG_MIME)
-      const from = Number.parseInt(raw, 10)
-      const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
-      const y = e.clientY
-      const to =
-        rect.height > 0 && y >= rect.top && y <= rect.bottom
-          ? y < rect.top + rect.height / 2
-            ? index
-            : index + 1
-          : index
-      const clampedTo = Math.max(to, corePrefix)
+  const canDragMaliceRowOver = useCallback((e: React.DragEvent): boolean => {
+    return [...e.dataTransfer.types].includes(MALICE_DRAG_MIME)
+  }, [])
+
+  const setHoverInsertFrom = useCallback(
+    (from: number, toInsert: number, e: React.DragEvent) => {
+      const clampedTo = Math.max(toInsert, corePrefix)
+      // Determine whether the drop would be a no-op after removal.
       if (!Number.isNaN(from) && rows[from]?.kind === 'monster') {
         const nextLen = rows.length - 1
         let ins = clampedTo
@@ -200,15 +191,107 @@ export function MaliceDashboard({
       e.dataTransfer.dropEffect = 'move'
       setMaliceDropHoverInsert(clampedTo)
     },
-    [corePrefix, rows, uiLocked],
+    [corePrefix, rows],
+  )
+
+  const onMaliceInsertZoneDragOver = useCallback(
+    (insertIndex: number, e: React.DragEvent) => {
+      if (uiLocked) return
+      if (!canDragMaliceRowOver(e)) return
+      e.stopPropagation()
+      e.preventDefault()
+      const raw = e.dataTransfer.getData(MALICE_DRAG_MIME)
+      const from = Number.parseInt(raw, 10)
+      if (Number.isNaN(from) || rows[from]?.kind !== 'monster') return
+      setHoverInsertFrom(from, insertIndex, e)
+    },
+    [canDragMaliceRowOver, rows, setHoverInsertFrom, uiLocked],
+  )
+
+  const onMaliceInsertZoneDragLeave = useCallback((insertIndex: number, e: React.DragEvent) => {
+    e.stopPropagation()
+    // Some browsers report (0,0) during HTML5 dragging; don't treat that as a real leave.
+    if (e.clientX === 0 && e.clientY === 0) return
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
+    const x = e.clientX
+    const y = e.clientY
+    const inside = x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom
+    if (inside) return
+    // Keep the extreme-edge indicator stable when you drag beyond the list bounds.
+    // This makes the top edge behave like the bottom edge (which tends to "stick" once activated).
+    if (insertIndex === corePrefix || insertIndex === rows.length) return
+    setMaliceDropHoverInsert((v) => (v === insertIndex ? null : v))
+  }, [corePrefix, rows.length])
+
+  const onMaliceInsertZoneDrop = useCallback(
+    (insertIndex: number, e: React.DragEvent) => {
+      if (uiLocked) return
+      e.stopPropagation()
+      onMaliceDropAtInsert(insertIndex, e)
+    },
+    [onMaliceDropAtInsert, uiLocked],
+  )
+
+  const onMaliceContainerDragOver = useCallback(
+    (e: React.DragEvent) => {
+      if (uiLocked) return
+      if (maliceDropHoverInsert == null) return
+      if (!canDragMaliceRowOver(e)) return
+      e.preventDefault()
+      const raw = e.dataTransfer.getData(MALICE_DRAG_MIME)
+      const from = Number.parseInt(raw, 10)
+      if (Number.isNaN(from) || rows[from]?.kind !== 'monster') return
+      // Keep dropEffect accurate even when dropping "outside" rows (e.g. beyond top/bottom edge).
+      setHoverInsertFrom(from, maliceDropHoverInsert, e)
+    },
+    [canDragMaliceRowOver, maliceDropHoverInsert, rows, setHoverInsertFrom, uiLocked],
+  )
+
+  const onMaliceContainerDrop = useCallback(
+    (e: React.DragEvent) => {
+      if (uiLocked) return
+      if (maliceDropHoverInsert == null) return
+      if (!canDragMaliceRowOver(e)) return
+      onMaliceDropAtInsert(maliceDropHoverInsert, e)
+    },
+    [canDragMaliceRowOver, maliceDropHoverInsert, onMaliceDropAtInsert, uiLocked],
+  )
+
+  const onMonsterRowDragOver = useCallback(
+    (index: number, e: React.DragEvent) => {
+      if (uiLocked) return
+      if (rows[index]?.kind !== 'monster') return
+      if (!canDragMaliceRowOver(e)) return
+      e.preventDefault()
+      const raw = e.dataTransfer.getData(MALICE_DRAG_MIME)
+      const from = Number.parseInt(raw, 10)
+      const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
+      const y = e.clientY
+      // Drag events can bubble from child drop zones; also some browsers can report coords outside
+      // the current target during a drag. Don't "snap" the indicator to the top in that case.
+      if (!(y >= rect.top && y <= rect.bottom)) return
+      const to =
+        rect.height > 0 && y < rect.top + rect.height / 2 ? index : index + 1
+      if (Number.isNaN(from) || rows[from]?.kind !== 'monster') return
+      setHoverInsertFrom(from, to, e)
+    },
+    [canDragMaliceRowOver, rows, setHoverInsertFrom, uiLocked],
   )
 
   const onMonsterRowDragLeave = useCallback(
     (index: number, e: React.DragEvent) => {
       if (rows[index]?.kind !== 'monster') return
-      if (!e.currentTarget.contains(e.relatedTarget as Node | null)) {
-        setMaliceDropHoverInsert((v) => (v === index || v === index + 1 ? null : v))
-      }
+      // During HTML5 drag, `relatedTarget` is frequently `null` (even when moving within the row),
+      // which can cause the insert indicator to flicker/disappear right when you hover the line itself.
+      // Use pointer position vs bounding box instead.
+      // Some browsers report (0,0) during HTML5 dragging; don't treat that as a real leave.
+      if (e.clientX === 0 && e.clientY === 0) return
+      const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
+      const x = e.clientX
+      const y = e.clientY
+      const inside = x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom
+      if (inside) return
+      setMaliceDropHoverInsert((v) => (v === index || v === index + 1 ? null : v))
     },
     [rows],
   )
@@ -252,27 +335,43 @@ export function MaliceDashboard({
             Malice
           </h3>
         </div>
-        <ul className="space-y-2">
-          {rows.map((row, index) => {
-            let name: string
-            let cost: string
-            let effect: string
-            let monsterTag: string | null = null
-            let monsterEffectBlocks: PowerRollEffect[] | undefined
-            if (row.kind === 'core') {
-              const c = CORE_MALICE_FEATURES[row.coreId]
-              name = c.name
-              cost = c.cost
-              effect = c.effect
-            } else {
-              const resolved = findMalicePickForFeatureKey(encounterGroups, row.featureOptionKey)
-              if (!resolved) return null
-              name = resolved.pick.name
-              cost = resolved.pick.cost
-              effect = resolved.pick.effect
-              monsterEffectBlocks = resolved.pick.effects
-              monsterTag = resolved.pick.listTag ?? maliceMonsterFamilyTag(resolved.monster)
-            }
+        <div className="relative">
+          {/* Extended edge drop zones so dropping slightly outside the list still works. */}
+          <div
+            aria-hidden
+            className="absolute left-0 right-0 top-0 -translate-y-full h-12"
+            onDragOver={(e) => onMaliceInsertZoneDragOver(corePrefix, e)}
+            onDragLeave={(e) => onMaliceInsertZoneDragLeave(corePrefix, e)}
+            onDrop={(e) => onMaliceInsertZoneDrop(corePrefix, e)}
+          />
+          <div
+            aria-hidden
+            className="absolute left-0 right-0 bottom-0 translate-y-full h-12"
+            onDragOver={(e) => onMaliceInsertZoneDragOver(rows.length, e)}
+            onDragLeave={(e) => onMaliceInsertZoneDragLeave(rows.length, e)}
+            onDrop={(e) => onMaliceInsertZoneDrop(rows.length, e)}
+          />
+          <ul className="space-y-2" onDragOver={onMaliceContainerDragOver} onDrop={onMaliceContainerDrop}>
+            {rows.map((row, index) => {
+              let name: string
+              let cost: string
+              let effect: string
+              let monsterTag: string | null = null
+              let monsterEffectBlocks: PowerRollEffect[] | undefined
+              if (row.kind === 'core') {
+                const c = CORE_MALICE_FEATURES[row.coreId]
+                name = c.name
+                cost = c.cost
+                effect = c.effect
+              } else {
+                const resolved = findMalicePickForFeatureKey(encounterGroups, row.featureOptionKey)
+                if (!resolved) return null
+                name = resolved.pick.name
+                cost = resolved.pick.cost
+                effect = resolved.pick.effect
+                monsterEffectBlocks = resolved.pick.effects
+                monsterTag = resolved.pick.listTag ?? maliceMonsterFamilyTag(resolved.monster)
+              }
 
             const isMonsterRow = row.kind === 'monster'
             const menuItems: ReorderGripMenuItem[] = []
@@ -301,21 +400,44 @@ export function MaliceDashboard({
             const showInsertTop = !uiLocked && isMonsterRow && maliceDropHoverInsert === index
             const showInsertBottom =
               !uiLocked && isMonsterRow && index === rows.length - 1 && maliceDropHoverInsert === rows.length
-            const insertLine =
-              showInsertTop || showInsertBottom
-                ? `before:absolute before:left-2 before:right-2 before:h-[3px] before:rounded-full before:bg-sky-500/55 before:shadow-[0_0_0_1px_rgb(0_0_0/0.10)] ${
-                    showInsertTop ? 'before:top-0' : 'before:bottom-0'
-                  }`
-                : ''
 
-            return (
-              <li key={row.kind === 'core' ? `core-${row.coreId}` : row.id}>
-                <div
-                  className={`group/row-reorder relative ${rowLayoutClass} rounded-md border border-zinc-200/80 bg-white/90 px-2 py-2 transition-shadow dark:border-zinc-700/70 dark:bg-zinc-900/60 has-[[data-grip-menu-open]]:z-[200] ${insertLine}`}
+              return (
+                <li key={row.kind === 'core' ? `core-${row.coreId}` : row.id}>
+                  <div
+                  className={`group/row-reorder relative ${rowLayoutClass} rounded-md border border-zinc-200/80 bg-white/90 px-2 py-2 transition-shadow dark:border-zinc-700/70 dark:bg-zinc-900/60 has-[[data-grip-menu-open]]:z-[200]`}
                   onDragOver={uiLocked || !isMonsterRow ? undefined : (e) => onMonsterRowDragOver(index, e)}
                   onDragLeave={uiLocked || !isMonsterRow ? undefined : (e) => onMonsterRowDragLeave(index, e)}
                   onDrop={uiLocked || !isMonsterRow ? undefined : (e) => onMonsterRowDrop(index, e)}
                 >
+                {!uiLocked && isMonsterRow && (
+                  <>
+                    {/* Insert target that extends into the inter-row gap so the line is a stable drop target. */}
+                    <div
+                      aria-hidden
+                      className="absolute left-0 right-0 -top-3 h-6"
+                      onDragOver={(e) => onMaliceInsertZoneDragOver(index, e)}
+                      onDragLeave={(e) => onMaliceInsertZoneDragLeave(index, e)}
+                      onDrop={(e) => onMaliceInsertZoneDrop(index, e)}
+                    >
+                      {showInsertTop && (
+                        <div className="pointer-events-none absolute left-2 right-2 top-1/2 -translate-y-1/2 h-[3px] rounded-full bg-sky-500/55 shadow-[0_0_0_1px_rgb(0_0_0/0.10)]" />
+                      )}
+                    </div>
+                    {index === rows.length - 1 && (
+                      <div
+                        aria-hidden
+                        className="absolute left-0 right-0 -bottom-3 h-6"
+                        onDragOver={(e) => onMaliceInsertZoneDragOver(rows.length, e)}
+                        onDragLeave={(e) => onMaliceInsertZoneDragLeave(rows.length, e)}
+                        onDrop={(e) => onMaliceInsertZoneDrop(rows.length, e)}
+                      >
+                        {showInsertBottom && (
+                          <div className="pointer-events-none absolute left-2 right-2 top-1/2 -translate-y-1/2 h-[3px] rounded-full bg-sky-500/55 shadow-[0_0_0_1px_rgb(0_0_0/0.10)]" />
+                        )}
+                      </div>
+                    )}
+                  </>
+                )}
                 {!uiLocked && isMonsterRow ? (
                   <div className="pointer-events-none absolute top-0 left-0 z-[110] flex h-full items-center">
                     <div className="-translate-x-1/2">
@@ -369,11 +491,12 @@ export function MaliceDashboard({
                     </p>
                   )}
                 </div>
-                </div>
-              </li>
-            )
-          })}
-        </ul>
+                  </div>
+                </li>
+              )
+            })}
+          </ul>
+        </div>
         {!uiLocked && (
           <div className="relative mt-2" ref={addAnchorRef}>
             <button
