@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type DragEvent } from 'react'
 import type { TerrainRowState } from '../types'
-import { terrainGridClass } from '../data'
 import { EditableStaminaCell } from './EditableStaminaCell'
 import { ReorderGripWithMenu } from './ReorderGripWithMenu'
 import { terrainUpgradeOptions } from '../terrainBestiary'
@@ -265,24 +264,24 @@ export function TerrainRow({
     'flex h-full min-h-[3.75rem] items-center p-3 sm:min-h-[4rem] sm:p-3.5'
   return (
     <div
-      className={`${terrainGridClass} min-w-0 w-full max-w-full overflow-visible rounded-lg border border-zinc-200/95 bg-white font-sans shadow-sm dark:border-transparent dark:bg-zinc-900/80 dark:shadow-none ${
+      className={`group/row-reorder relative min-w-0 w-full max-w-full overflow-visible rounded-lg border border-zinc-200/95 bg-white font-sans shadow-sm dark:border-transparent dark:bg-zinc-900/80 dark:shadow-none ${
         isDrawerOpen ? 'ring-1 ring-amber-500/40' : ''
       }`}
     >
-      <div className="flex min-h-0 items-center justify-start self-stretch py-1 pl-0.5 sm:py-1.5 sm:pl-1">
-        {!uiLocked && dragHandle ? (
-          <ReorderGripWithMenu
-            reorderAriaLabel={dragHandle.ariaLabel}
-            onDragStart={dragHandle.onDragStart}
-            onDragEnd={dragHandle.onDragEnd}
-            menuItems={gripMenuItems}
-            className="group flex w-9 shrink-0 cursor-grab touch-none select-none items-center justify-center rounded-md border border-transparent transition-[background-color,border-color,box-shadow,color] duration-150 ease-out hover:border-zinc-700/45 hover:bg-zinc-300 dark:hover:bg-zinc-800/55 hover:shadow-sm active:cursor-grabbing motion-reduce:transition-none sm:w-10"
-            iconClassName="size-3.5 text-zinc-600 transition-colors group-hover:text-zinc-900 dark:group-hover:text-zinc-200 sm:size-4"
-          />
-        ) : (
-          <div className="min-h-0 min-w-0" aria-hidden />
-        )}
-      </div>
+      {!uiLocked && dragHandle ? (
+        <div className="pointer-events-none absolute top-0 left-0 z-[110] flex h-full items-center">
+          <div className="-translate-x-1/2">
+            <ReorderGripWithMenu
+              reorderAriaLabel={dragHandle.ariaLabel}
+              onDragStart={dragHandle.onDragStart}
+              onDragEnd={dragHandle.onDragEnd}
+              menuItems={gripMenuItems}
+              className="h-9 shrink-0 cursor-grab touch-none select-none rounded-md sm:h-10"
+              iconClassName="text-zinc-700 dark:text-zinc-200"
+            />
+          </div>
+        </div>
+      ) : null}
       <div className="terrain-row min-w-0 w-full">
         <div className="terrain-row__inner py-2 pl-0 pr-2 sm:py-2.5 sm:pr-2.5">
           <div className="terrain-row__top">

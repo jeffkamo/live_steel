@@ -1,14 +1,16 @@
-/** Six-dot reorder grip; use on a parent with `group` for `group-hover:*` icon tint. */
+/** Three-dot column grip; visibility and width are driven by {@link ReorderGripWithMenu}. */
 export function ReorderGripIcon({ className }: { className?: string }) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 16 16"
+      viewBox="0 0 7 16"
       fill="currentColor"
-      className={className}
+      className={['reorder-grip-icon', className].filter(Boolean).join(' ')}
       aria-hidden
     >
-      <path d="M5 3a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0ZM5 8a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0ZM5 13a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0ZM14 3a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0ZM14 8a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0ZM14 13a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0Z" />
+      <circle cx="3.5" cy="3" r="1.5" />
+      <circle cx="3.5" cy="8" r="1.5" />
+      <circle cx="3.5" cy="13" r="1.5" />
     </svg>
   )
 }

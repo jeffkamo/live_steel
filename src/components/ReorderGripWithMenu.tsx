@@ -11,6 +11,9 @@ export type ReorderGripMenuItem = {
   disabled?: boolean
 }
 
+/** Which named Tailwind `group/*` ancestor drives hover visibility (must match parent `group/…` class). */
+export type ReorderGripRowHoverGroup = 'creature-row' | 'encounter-card'
+
 export function ReorderGripWithMenu({
   reorderAriaLabel,
   onDragStart,
@@ -19,6 +22,7 @@ export function ReorderGripWithMenu({
   className,
   iconClassName,
   draggable = true,
+  rowHoverGroup = 'creature-row',
 }: {
   reorderAriaLabel: string
   onDragStart: (e: DragEvent) => void
@@ -28,6 +32,11 @@ export function ReorderGripWithMenu({
   iconClassName: string
   /** When false, the grip opens the menu on click but does not initiate HTML5 drag (e.g. fixed rows). */
   draggable?: boolean
+  /**
+   * `creature-row`: parent row is `group/row-reorder` (monster / terrain / malice rows).
+   * `encounter-card`: parent is `group/encounter-card` on the whole encounter grid (hover anywhere in the group).
+   */
+  rowHoverGroup?: ReorderGripRowHoverGroup
 }) {
   const menuId = useId()
   const [open, setOpen] = useState(false)
@@ -88,34 +97,57 @@ export function ReorderGripWithMenu({
     setOpen((v) => !v)
   }, [menuItems.length])
 
+  const showChrome = open
+  const visibilityClass =
+    rowHoverGroup === 'encounter-card'
+      ? 'opacity-0 pointer-events-none transition-opacity duration-150 ease-out motion-reduce:transition-none ' +
+        'group-hover/encounter-card:opacity-100 group-hover/encounter-card:pointer-events-auto ' +
+        'focus-within:opacity-100 focus-within:pointer-events-auto' +
+        (showChrome ? ' !opacity-100 !pointer-events-auto' : '')
+      : 'opacity-0 pointer-events-none transition-opacity duration-150 ease-out motion-reduce:transition-none ' +
+        'group-hover/row-reorder:opacity-100 group-hover/row-reorder:pointer-events-auto ' +
+        'focus-within:opacity-100 focus-within:pointer-events-auto' +
+        (showChrome ? ' !opacity-100 !pointer-events-auto' : '')
+
+  const rowHoverPillClass =
+    rowHoverGroup === 'encounter-card'
+      ? 'group-hover/encounter-card:border-zinc-300 group-hover/encounter-card:bg-zinc-200 group-hover/encounter-card:shadow-sm dark:group-hover/encounter-card:border-zinc-600 dark:group-hover/encounter-card:bg-zinc-800'
+      : 'group-hover/row-reorder:border-zinc-300 group-hover/row-reorder:bg-zinc-200 group-hover/row-reorder:shadow-sm dark:group-hover/row-reorder:border-zinc-600 dark:group-hover/row-reorder:bg-zinc-800'
+
   return (
     <div
       ref={rootRef}
       data-grip-menu-open={open || undefined}
-      className={`flex h-full min-h-0 min-w-0 flex-col self-stretch ${open ? 'relative z-[200]' : ''}`}
+      className={`pointer-events-none flex min-h-0 min-w-0 flex-col items-center justify-center self-stretch ${open ? 'relative z-[200]' : ''}`}
     >
-      <div
-        draggable={draggable}
-        onDragStart={wrapDragStart}
-        onDragEnd={wrapDragEnd}
-        onClick={onGripClick}
-        onKeyDown={(e) => {
-          if (menuItems.length === 0) return
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault()
-            setOpen((v) => !v)
-          }
-        }}
-        role="button"
-        tabIndex={0}
-        aria-label={reorderAriaLabel}
-        aria-haspopup={menuItems.length > 0 ? 'menu' : undefined}
-        aria-expanded={menuItems.length > 0 ? open : undefined}
-        aria-controls={open ? menuId : undefined}
-        className={`${className} box-border flex min-h-0 min-w-0 flex-1`}
-      >
-        <span className="relative flex h-full min-h-0 min-w-0 items-center justify-center">
-          <ReorderGripIcon className={iconClassName} />
+      <div className={`flex h-full min-h-0 w-full min-w-0 flex-col items-center justify-center ${visibilityClass}`}>
+        <div
+          draggable={draggable}
+          onDragStart={wrapDragStart}
+          onDragEnd={wrapDragEnd}
+          onClick={onGripClick}
+          onKeyDown={(e) => {
+            if (menuItems.length === 0) return
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault()
+              setOpen((v) => !v)
+            }
+          }}
+          role="button"
+          tabIndex={0}
+          aria-label={reorderAriaLabel}
+          aria-haspopup={menuItems.length > 0 ? 'menu' : undefined}
+          aria-expanded={menuItems.length > 0 ? open : undefined}
+          aria-controls={open ? menuId : undefined}
+          className={`group/grip relative box-border inline-flex min-h-0 flex-none items-center justify-center border border-transparent bg-transparent transition-[width,min-width,max-width,background-color,border-color,box-shadow,color] duration-150 ease-out motion-reduce:transition-none ${open ? 'overflow-visible' : 'overflow-hidden'} ${rowHoverPillClass} w-1.5 min-w-1.5 max-w-1.5 hover:w-5 hover:min-w-5 hover:max-w-none hover:border-zinc-400 hover:bg-zinc-300 sm:hover:w-6 sm:hover:min-w-6 dark:hover:border-zinc-500 dark:hover:bg-zinc-700 focus-visible:w-5 focus-visible:min-w-5 focus-visible:max-w-none focus-visible:border-zinc-400 focus-visible:bg-zinc-300 focus-visible:[&_.reorder-grip-icon]:opacity-100 focus-visible:[&>span]:px-1 sm:focus-visible:w-6 sm:focus-visible:min-w-6 sm:focus-visible:[&>span]:px-1.5 dark:focus-visible:border-zinc-500 dark:focus-visible:bg-zinc-700 active:cursor-grabbing ${open ? '!w-7 !min-w-7 !max-w-none sm:!w-8 sm:!min-w-8 [&>span]:px-1 sm:[&>span]:px-1.5 !border-zinc-400 !bg-zinc-300 dark:!border-zinc-500 dark:!bg-zinc-700' : ''} ${className}`}
+        >
+          <span
+            className={`relative flex size-full min-h-0 min-w-0 items-center justify-center overflow-hidden rounded-[inherit] px-0 transition-[padding] duration-150 ease-out motion-reduce:transition-none group-hover/grip:px-1 sm:group-hover/grip:px-1.5 ${open ? '!px-1 sm:!px-1.5' : ''}`}
+          >
+            <ReorderGripIcon
+              className={`${iconClassName} h-3.5 w-[7px] shrink-0 opacity-0 transition-opacity duration-150 ease-out motion-reduce:transition-none group-hover/grip:opacity-100 dark:group-hover/grip:text-zinc-100 ${open ? '!opacity-100' : ''}`}
+            />
+          </span>
           {open && menuItems.length > 0 && (
             <div
               ref={menuRef}
@@ -173,7 +205,7 @@ export function ReorderGripWithMenu({
               ))}
             </div>
           )}
-        </span>
+        </div>
       </div>
     </div>
   )

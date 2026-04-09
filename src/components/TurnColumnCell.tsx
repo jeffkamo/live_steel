@@ -96,20 +96,23 @@ export function GroupTurnColumn({
   return (
     <div
       style={{ gridColumn: 1, gridRow: `1 / span ${gridRowSpan}` }}
-      className={`flex h-full min-h-0 w-full min-w-0 flex-row items-stretch overflow-visible border-r border-zinc-200/95 dark:border-zinc-800/60 bg-zinc-50/95 dark:bg-zinc-900/80 transition-opacity duration-200 ease-out motion-reduce:transition-none has-[[data-grip-menu-open]]:opacity-100 has-[[data-grip-menu-open]]:z-[200] ${
+      className={`relative flex h-full min-h-0 w-full min-w-0 flex-row items-stretch overflow-visible border-r border-zinc-200/95 dark:border-zinc-800/60 bg-zinc-50/95 dark:bg-zinc-900/80 transition-opacity duration-200 ease-out motion-reduce:transition-none has-[[data-grip-menu-open]]:opacity-100 has-[[data-grip-menu-open]]:z-[200] ${
         acted ? 'opacity-[0.38]' : 'opacity-100'
       }`}
     >
       {encounterGroupDragHandle != null && (
-        <div className="flex h-full min-h-0 shrink-0 items-stretch border-r border-zinc-200/90 dark:border-zinc-800/60 p-1 sm:p-1.5">
-          <ReorderGripWithMenu
-            reorderAriaLabel={encounterGroupDragHandle.ariaLabel}
-            onDragStart={encounterGroupDragHandle.onDragStart}
-            onDragEnd={encounterGroupDragHandle.onDragEnd}
-            menuItems={encounterGripMenuItems}
-            className="group flex w-7 cursor-grab touch-none select-none items-center justify-center rounded-md border border-transparent transition-[background-color,border-color,box-shadow,color] duration-150 ease-out hover:border-zinc-700/45 hover:bg-zinc-300 dark:hover:bg-zinc-800/55 hover:shadow-sm active:cursor-grabbing motion-reduce:transition-none sm:w-8"
-            iconClassName="size-3.5 text-zinc-600 transition-colors group-hover:text-zinc-900 dark:group-hover:text-zinc-200 sm:size-4"
-          />
+        <div className="pointer-events-none absolute top-0 left-0 z-[110] flex h-full items-center">
+          <div className="-translate-x-1/2">
+            <ReorderGripWithMenu
+              rowHoverGroup="encounter-card"
+              reorderAriaLabel={encounterGroupDragHandle.ariaLabel}
+              onDragStart={encounterGroupDragHandle.onDragStart}
+              onDragEnd={encounterGroupDragHandle.onDragEnd}
+              menuItems={encounterGripMenuItems}
+              className="h-8 shrink-0 cursor-grab touch-none select-none rounded-md sm:h-9"
+              iconClassName="text-zinc-700 dark:text-zinc-200"
+            />
+          </div>
         </div>
       )}
       <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-1 p-1 sm:p-1.5">

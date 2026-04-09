@@ -300,7 +300,7 @@ export function MinionGroupRow({
           ? 'ring-2 ring-inset ring-rose-500/45'
           : ''
 
-  const lockedOrdinalBalancePad = monsterDrag == null ? 'pl-1 sm:pl-1.5' : ''
+  const lockedOrdinalBalancePad = 'pl-1 sm:pl-1.5'
 
   const squadOrdinal = creatureOrdinalMap.get(`${monsterIndex}`) ?? monsterIndex + 1
 
@@ -308,7 +308,7 @@ export function MinionGroupRow({
     <>
       {/* --- parent minion summary row --- */}
       <div
-        className={`roster-creature ${rowTone} has-[[data-grip-menu-open]]:opacity-100 has-[[data-grip-menu-open]]:z-[200] has-[[data-captain-menu-open]]:opacity-100 has-[[data-captain-menu-open]]:z-[200] ${parentMonsterDropRing}`}
+        className={`group/row-reorder roster-creature relative overflow-visible ${rowTone} has-[[data-grip-menu-open]]:opacity-100 has-[[data-grip-menu-open]]:z-[200] has-[[data-captain-menu-open]]:opacity-100 has-[[data-captain-menu-open]]:z-[200] ${parentMonsterDropRing}`}
         style={{ gridColumn: 2, gridRow: row }}
         data-testid="monster-drop-target"
         data-group-index={monsterDrag?.groupIndex}
@@ -317,19 +317,23 @@ export function MinionGroupRow({
         onDragLeave={monsterDrag?.onDragLeave}
         onDrop={monsterDrag?.onDrop}
       >
+        {monsterDrag != null && (
+          <div className="pointer-events-none absolute top-0 left-0 z-[110] flex h-full items-center">
+            <div className="-translate-x-1/2">
+              <ReorderGripWithMenu
+                reorderAriaLabel={`Reorder ${monster.name} within encounter`}
+                onDragStart={monsterDrag.onDragStart}
+                onDragEnd={monsterDrag.onDragEnd}
+                menuItems={parentGripMenuItems}
+                className="h-9 shrink-0 cursor-grab touch-none select-none rounded-md sm:h-10"
+                iconClassName="text-zinc-700 dark:text-zinc-200"
+              />
+            </div>
+          </div>
+        )}
         <div className="roster-creature__grid">
           <div className={`roster-creature__name ${creatureNameColCell} min-w-0`}>
         <div className={`flex min-h-0 min-w-0 flex-1 items-stretch gap-3 ${lockedOrdinalBalancePad}`}>
-          {monsterDrag != null && (
-            <ReorderGripWithMenu
-              reorderAriaLabel={`Reorder ${monster.name} within encounter`}
-              onDragStart={monsterDrag.onDragStart}
-              onDragEnd={monsterDrag.onDragEnd}
-              menuItems={parentGripMenuItems}
-              className="group flex w-9 shrink-0 cursor-grab touch-none select-none items-center justify-center rounded-md border border-transparent transition-[background-color,border-color,box-shadow,color] duration-150 ease-out hover:border-zinc-700/45 hover:bg-zinc-300 dark:hover:bg-zinc-800/55 hover:shadow-sm active:cursor-grabbing motion-reduce:transition-none sm:w-10"
-              iconClassName="size-3.5 text-zinc-600 transition-colors group-hover:text-zinc-900 dark:group-hover:text-zinc-200 sm:size-4"
-            />
-          )}
           <div className="flex min-w-0 flex-1 items-center gap-3">
           <button
             type="button"
@@ -753,7 +757,7 @@ function MinionChildRow({
 
   return (
     <div
-      className={`roster-creature border-t border-zinc-200/90 dark:border-zinc-800/60 ${rowTone} has-[[data-grip-menu-open]]:opacity-100 has-[[data-grip-menu-open]]:z-[200] ${minionDropRing}`}
+      className={`group/row-reorder roster-creature relative overflow-visible border-t border-zinc-200/90 dark:border-zinc-800/60 ${rowTone} has-[[data-grip-menu-open]]:opacity-100 has-[[data-grip-menu-open]]:z-[200] ${minionDropRing}`}
       style={{ gridColumn: 2, gridRow: gridRow }}
       data-testid="minion-drop-target"
       data-group-index={minionDrag?.groupIndex}
@@ -763,19 +767,23 @@ function MinionChildRow({
       onDragLeave={minionDrag?.onDragLeave}
       onDrop={minionDrag?.onDrop}
     >
+      {minionDrag != null && (
+        <div className="pointer-events-none absolute top-0 left-0 z-[110] flex h-full items-center">
+          <div className="-translate-x-1/2">
+            <ReorderGripWithMenu
+              reorderAriaLabel={`Reorder ${minion.name} within horde`}
+              onDragStart={minionDrag.onDragStart}
+              onDragEnd={minionDrag.onDragEnd}
+              menuItems={minionGripMenuItems}
+              className="h-8 shrink-0 cursor-grab touch-none select-none rounded-md sm:h-9"
+              iconClassName="text-zinc-700 dark:text-zinc-200"
+            />
+          </div>
+        </div>
+      )}
       <div className="roster-creature__grid">
         <div className={`roster-creature__name ${nameColCell} min-w-0`}>
           <div className="flex min-h-0 min-w-0 flex-1 items-stretch gap-2 pl-6 sm:gap-3">
-            {minionDrag != null && (
-              <ReorderGripWithMenu
-                reorderAriaLabel={`Reorder ${minion.name} within horde`}
-                onDragStart={minionDrag.onDragStart}
-                onDragEnd={minionDrag.onDragEnd}
-                menuItems={minionGripMenuItems}
-                className="group flex w-8 shrink-0 cursor-grab touch-none select-none items-center justify-center rounded-md border border-transparent transition-[background-color,border-color,box-shadow,color] duration-150 ease-out hover:border-zinc-700/45 hover:bg-zinc-300 dark:hover:bg-zinc-800/55 hover:shadow-sm active:cursor-grabbing motion-reduce:transition-none sm:w-9"
-                iconClassName="size-3.5 text-zinc-600 transition-colors group-hover:text-zinc-900 dark:group-hover:text-zinc-200"
-              />
-            )}
             <div className={`flex min-w-0 flex-1 items-center gap-2 sm:gap-3 ${deadDim}`}>
               <span
                 className={`flex size-7 shrink-0 items-center justify-center rounded-full border-2 text-[0.65rem] font-semibold tabular-nums leading-none sm:size-8 sm:text-xs ${badge.border} ${badge.bg} ${badge.text}`}
