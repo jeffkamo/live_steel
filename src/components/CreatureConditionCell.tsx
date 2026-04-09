@@ -48,6 +48,7 @@ export function CreatureConditionCell({
   conditionDnD?: CreatureConditionDnDBinding
 }) {
   const [open, setOpen] = useState(false)
+  const shellRef = useRef<HTMLDivElement>(null)
   const cellRef = useRef<HTMLDivElement>(null)
   const pickerRef = useRef<HTMLDivElement>(null)
   const returnFocusRef = useRef<HTMLElement | null>(null)
@@ -72,7 +73,7 @@ export function CreatureConditionCell({
       return
     }
     const onDocMouseDown = (e: MouseEvent) => {
-      const el = cellRef.current
+      const el = shellRef.current
       if (el && !el.contains(e.target as Node)) {
         setOpen(false)
       }
@@ -104,31 +105,32 @@ export function CreatureConditionCell({
       : ''
 
   return (
-    <div
-      ref={cellRef}
-      data-testid={conditionDnD ? 'condition-drop-target' : undefined}
-      data-group-index={conditionDnD?.groupIndex}
-      data-monster-index={conditionDnD?.monsterIndex}
-      data-minion-index={
-        conditionDnD ? (conditionDnD.minionIndex == null ? '' : String(conditionDnD.minionIndex)) : undefined
-      }
-      onDragOver={conditionDnD?.onDragOver}
-      onDragLeave={conditionDnD?.onDragLeave}
-      onDrop={conditionDnD?.onDrop}
-      className={`relative flex h-full min-h-0 w-full cursor-pointer flex-col justify-center rounded-md p-3 outline-none transition-[background-color,box-shadow] duration-200 ease-out motion-reduce:transition-none hover:bg-zinc-300 dark:hover:bg-zinc-800/35 focus-visible:ring-2 focus-visible:ring-amber-500/45 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-50 dark:focus-visible:ring-offset-zinc-950 sm:p-3.5 ${dropRing}`}
-      role="group"
-      tabIndex={0}
-      aria-expanded={open}
-      aria-haspopup="dialog"
-      aria-label={`Conditions for ${monsterName}. Click outside the condition icons to open advanced options (duration). Click an icon to add or remove that condition.`}
-      onClick={() => setOpen((o) => !o)}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault()
-          setOpen((o) => !o)
+    <div ref={shellRef} className="box-border flex h-full min-h-0 w-full min-w-0 flex-col p-1 sm:p-1.5">
+      <div
+        ref={cellRef}
+        data-testid={conditionDnD ? 'condition-drop-target' : undefined}
+        data-group-index={conditionDnD?.groupIndex}
+        data-monster-index={conditionDnD?.monsterIndex}
+        data-minion-index={
+          conditionDnD ? (conditionDnD.minionIndex == null ? '' : String(conditionDnD.minionIndex)) : undefined
         }
-      }}
-    >
+        onDragOver={conditionDnD?.onDragOver}
+        onDragLeave={conditionDnD?.onDragLeave}
+        onDrop={conditionDnD?.onDrop}
+        className={`relative flex min-h-0 w-full flex-1 cursor-pointer flex-col justify-center rounded-md p-3 outline-none transition-[background-color,box-shadow] duration-200 ease-out motion-reduce:transition-none hover:bg-zinc-300 dark:hover:bg-zinc-800/35 focus-visible:ring-2 focus-visible:ring-amber-500/45 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-50 dark:focus-visible:ring-offset-zinc-950 sm:p-3.5 ${dropRing}`}
+        role="group"
+        tabIndex={0}
+        aria-expanded={open}
+        aria-haspopup="dialog"
+        aria-label={`Conditions for ${monsterName}. Click outside the condition icons to open advanced options (duration). Click an icon to add or remove that condition.`}
+        onClick={() => setOpen((o) => !o)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault()
+            setOpen((o) => !o)
+          }
+        }}
+      >
       <div className={`flex w-full flex-col justify-center ${contentDim}`}>
         <ConditionCatalogIconStrip
           conditions={conditions}
@@ -157,7 +159,7 @@ export function CreatureConditionCell({
         <div
           ref={pickerRef}
           data-condition-picker
-          className="absolute left-0 top-full z-50 mt-1 w-[min(20rem,calc(100vw-2rem))] max-h-[min(22rem,55vh)] overflow-y-auto rounded-lg border border-zinc-500/75 bg-zinc-100 dark:bg-zinc-900 py-1.5 pl-2 pr-1.5 shadow-xl shadow-black/50 ring-1 ring-black/25"
+          className="absolute left-0 top-full z-50 mt-1 w-[min(20rem,calc(100vw-2rem))] max-h-[min(22rem,55vh)] overflow-y-auto rounded-lg border border-zinc-500/75 bg-zinc-100 py-1.5 pl-2 pr-1.5 shadow-xl shadow-black/50 ring-1 ring-black/25 dark:bg-zinc-900"
           role="dialog"
           aria-label={`Add condition to ${monsterName}`}
           onClick={(e) => e.stopPropagation()}
@@ -270,6 +272,7 @@ export function CreatureConditionCell({
           </ul>
         </div>
       ) : null}
+      </div>
     </div>
   )
 }

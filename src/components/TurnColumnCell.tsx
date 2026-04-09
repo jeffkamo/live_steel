@@ -16,7 +16,7 @@ export function TurnColumnCell({
       onClick={onToggle}
       aria-pressed={acted}
       aria-label={label}
-      className="flex min-h-0 w-full min-w-0 flex-1 cursor-pointer flex-col items-center justify-center gap-2 px-2 py-3 text-center transition-[background-color] duration-200 ease-out motion-reduce:transition-none hover:bg-zinc-300 dark:hover:bg-zinc-800/35 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-amber-500/70 sm:px-3 sm:py-4"
+      className="flex min-h-0 w-full min-w-0 flex-1 cursor-pointer flex-col items-center justify-center gap-2 rounded-md px-2 py-3 text-center transition-[background-color] duration-200 ease-out motion-reduce:transition-none hover:bg-zinc-300 dark:hover:bg-zinc-800/35 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-amber-500/70 sm:px-3 sm:py-4"
     >
       <span className="font-serif text-[0.65rem] uppercase tracking-wide text-zinc-700 dark:text-zinc-300">
         Turn
@@ -112,7 +112,7 @@ export function GroupTurnColumn({
           />
         </div>
       )}
-      <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-1 p-1 sm:p-1.5">
         {squadsCollapse != null && (
           <button
             type="button"
@@ -120,7 +120,7 @@ export function GroupTurnColumn({
             onClick={squadsCollapse.onToggle}
             aria-expanded={!squadsCollapse.collapsed}
             aria-label={squadsCollapse.collapsed ? 'Expand squads' : 'Collapse squads'}
-            className="flex min-h-11 w-full shrink-0 cursor-pointer items-center justify-center border-b border-zinc-200/95 px-2 py-2 text-zinc-600 transition-colors hover:bg-zinc-200/80 dark:border-zinc-800/60 dark:text-zinc-400 dark:hover:bg-zinc-800/50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-amber-500/70"
+            className="flex min-h-11 w-full shrink-0 cursor-pointer items-center justify-center rounded-md border border-zinc-200/95 px-2 py-2 text-zinc-600 transition-colors hover:bg-zinc-200/80 dark:border-zinc-800/60 dark:text-zinc-400 dark:hover:bg-zinc-800/50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-amber-500/70"
           >
             {squadsCollapse.collapsed ? (
               <svg
