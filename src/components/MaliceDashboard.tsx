@@ -42,6 +42,7 @@ export function MaliceDashboard({
   const [addOpen, setAddOpen] = useState(false)
   const addAnchorRef = useRef<HTMLDivElement>(null)
   const [maliceDropHoverInsert, setMaliceDropHoverInsert] = useState<number | null>(null)
+  const [maliceDragging, setMaliceDragging] = useState(false)
 
   const totalCreatures = useMemo(
     () => encounterGroups.reduce((n, g) => n + g.monsters.length, 0),
@@ -146,18 +147,21 @@ export function MaliceDashboard({
       if (rows[index]?.kind !== 'monster') return
       e.dataTransfer.setData(MALICE_DRAG_MIME, String(index))
       e.dataTransfer.effectAllowed = 'move'
+      setMaliceDragging(true)
     },
     [rows, uiLocked],
   )
 
   const onMaliceDragEnd = useCallback(() => {
     setMaliceDropHoverInsert(null)
+    setMaliceDragging(false)
   }, [])
 
   const onMaliceDropAtInsert = useCallback(
     (insertIndex: number, e: React.DragEvent) => {
       e.preventDefault()
       setMaliceDropHoverInsert(null)
+      setMaliceDragging(false)
       if (uiLocked) return
       const raw = e.dataTransfer.getData(MALICE_DRAG_MIME)
       const from = Number.parseInt(raw, 10)
@@ -339,14 +343,18 @@ export function MaliceDashboard({
           {/* Extended edge drop zones so dropping slightly outside the list still works. */}
           <div
             aria-hidden
-            className="absolute left-0 right-0 top-0 -translate-y-full h-12"
+            className={`absolute left-0 right-0 top-0 -translate-y-full h-12 ${
+              maliceDragging ? 'pointer-events-auto z-[150]' : 'pointer-events-none'
+            }`}
             onDragOver={(e) => onMaliceInsertZoneDragOver(corePrefix, e)}
             onDragLeave={(e) => onMaliceInsertZoneDragLeave(corePrefix, e)}
             onDrop={(e) => onMaliceInsertZoneDrop(corePrefix, e)}
           />
           <div
             aria-hidden
-            className="absolute left-0 right-0 bottom-0 translate-y-full h-12"
+            className={`absolute left-0 right-0 bottom-0 translate-y-full h-12 ${
+              maliceDragging ? 'pointer-events-auto z-[150]' : 'pointer-events-none'
+            }`}
             onDragOver={(e) => onMaliceInsertZoneDragOver(rows.length, e)}
             onDragLeave={(e) => onMaliceInsertZoneDragLeave(rows.length, e)}
             onDrop={(e) => onMaliceInsertZoneDrop(rows.length, e)}
