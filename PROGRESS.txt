@@ -627,3 +627,17 @@ Malice row insert indicator stability — fixed flicker/gaps and edge-drop behav
 
 **Files changed:**
 - src/components/MaliceDashboard.tsx
+
+
+[DND-006]
+
+Terrain row reorder DnD — aligned with Malice insert-line stability, then fixed gap/half-row targeting and a double-drop bug.
+
+**Key decisions:**
+- **Malice-style behavior (first pass):** explicit insert strips into inter-row gaps, extended edge zones while dragging, `terrainDragSourceRef` + `terrainDragging` for MIME/`getData` quirks, bbox-based `dragLeave` (ignore `0,0` coords), list `dragover`/`drop` to refresh `dropEffect` and accept gap hits, insert zones use `stopPropagation` so parent handlers do not fight.
+- **Flex gap + half-row:** `terrainInsertIndexFromClientY(listEl, clientY)` walks the list’s row-wrapper children so hover works over row bodies and **flex `gap`** (not only the thin strips). List-level `dragLeave` clears hover only when leaving the whole list, avoiding clears when moving between rows.
+- **Single drop handler:** `drop` bubbles — row wrappers and the list both had `onDrop`, so two `reorderTerrainRows` runs used the stale `from` from `dataTransfer` after the first move and could undo or corrupt multi-row moves. Removed per-row `onDrop`; terrain drops resolve only on the list (insert/edge zones still `stopPropagation`). `onTerrainDropAtInsert` calls `stopPropagation`, clamps insert to `0..len`, and uses coordinate-based insert on list drop with fallback to last hover when `clientX/Y` are `(0,0)`.
+- **No-op:** unchanged — only adjacent slots `from` and `from+1` (pre-removal) suppress the line / move via `computeInsertIndexAfterRemoval`.
+
+**Files changed:**
+- src/App.tsx

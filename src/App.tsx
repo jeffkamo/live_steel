@@ -161,6 +161,21 @@ function initStateFromStorage(): {
   }
 }
 
+/** Insert index 0..n from pointer Y over the terrain list's row wrappers (flex gaps + half-row hit regions). */
+function terrainInsertIndexFromClientY(listEl: HTMLElement, clientY: number): number {
+  const { children } = listEl
+  const n = children.length
+  if (n === 0) return 0
+  for (let i = 0; i < n; i++) {
+    const rect = (children[i] as HTMLElement).getBoundingClientRect()
+    if (rect.height <= 0) continue
+    const midY = rect.top + rect.height / 2
+    if (clientY < midY) return i
+    if (clientY <= rect.bottom) return i + 1
+  }
+  return n
+}
+
 function App() {
   const { colorScheme, setColorScheme } = useColorScheme()
   const [{
@@ -183,6 +198,7 @@ function App() {
   const [drawerAnimatingOut, setDrawerAnimatingOut] = useState(false)
   const [drawerEntered, setDrawerEntered] = useState(false)
   const [dropTargetTerrainInsert, setDropTargetTerrainInsert] = useState<number | null>(null)
+  const [terrainDragging, setTerrainDragging] = useState(false)
 
   const [encounterIndex, setEncounterIndex] = useState<PersistedEncounterIndex>(() => initIndex)
   const [activeEncounterId, setActiveEncounterId] = useState(() => initEncId)
@@ -764,6 +780,7 @@ function App() {
 
   const [dropTargetGroupInsert, setDropTargetGroupInsert] = useState<number | null>(null)
   const encounterGroupDragSourceRef = useRef<number | null>(null)
+  const terrainDragSourceRef = useRef<number | null>(null)
   const monsterDragSourceRef = useRef<MonsterDragPayload | null>(null)
 
   const [monsterDropTarget, setMonsterDropTarget] = useState<{
@@ -1576,6 +1593,132 @@ function App() {
     })
   }, [])
 
+  const canDragTerrainOver = useCallback(
+    (e: DragEvent) => [...e.dataTransfer.types].includes(TERRAIN_DRAG_MIME),
+    [],
+  )
+
+  const terrainDragFrom = useCallback((e: DragEvent): number | null => {
+    const raw = e.dataTransfer.getData(TERRAIN_DRAG_MIME)
+    const parsed = Number.parseInt(raw, 10)
+    if (!Number.isNaN(parsed)) return parsed
+    const r = terrainDragSourceRef.current
+    return r != null ? r : null
+  }, [])
+
+  const setTerrainDropHoverInsertFrom = useCallback(
+    (from: number, toInsert: number, e: DragEvent, len: number) => {
+      const clamped = Math.max(0, Math.min(toInsert, len))
+      if (from >= 0 && from < len) {
+        const ins = computeInsertIndexAfterRemoval(from, clamped)
+        if (ins === null || ins === from) {
+          e.dataTransfer.dropEffect = 'none'
+          setDropTargetTerrainInsert(null)
+          return
+        }
+      }
+      e.dataTransfer.dropEffect = 'move'
+      setDropTargetTerrainInsert(clamped)
+    },
+    [],
+  )
+
+  const onTerrainDropAtInsert = useCallback(
+    (insertIndex: number, e: DragEvent) => {
+      e.preventDefault()
+      e.stopPropagation()
+      const fromRef = terrainDragSourceRef.current
+      let from = Number.parseInt(e.dataTransfer.getData(TERRAIN_DRAG_MIME), 10)
+      if (Number.isNaN(from) && fromRef != null) from = fromRef
+      setDropTargetTerrainInsert(null)
+      setTerrainDragging(false)
+      terrainDragSourceRef.current = null
+      if (uiLocked) return
+      if (Number.isNaN(from)) return
+      const len = terrainRows.length
+      const clamped = Math.max(0, Math.min(insertIndex, len))
+      reorderTerrainRows(from, clamped)
+    },
+    [reorderTerrainRows, terrainRows.length, uiLocked],
+  )
+
+  const onTerrainInsertZoneDragOver = useCallback(
+    (insertIndex: number, e: DragEvent) => {
+      if (uiLocked) return
+      if (!canDragTerrainOver(e)) return
+      e.stopPropagation()
+      e.preventDefault()
+      const len = terrainRows.length
+      const from = terrainDragFrom(e)
+      if (from == null || from < 0 || from >= len) return
+      setTerrainDropHoverInsertFrom(from, insertIndex, e, len)
+    },
+    [canDragTerrainOver, terrainDragFrom, terrainRows.length, setTerrainDropHoverInsertFrom, uiLocked],
+  )
+
+  const onTerrainInsertZoneDragLeave = useCallback(
+    (insertIndex: number, e: DragEvent) => {
+      e.stopPropagation()
+      if (e.clientX === 0 && e.clientY === 0) return
+      const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
+      const { clientX: x, clientY: y } = e
+      const inside = x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom
+      if (inside) return
+      const n = terrainRows.length
+      if (insertIndex === 0 || insertIndex === n) return
+      setDropTargetTerrainInsert((v) => (v === insertIndex ? null : v))
+    },
+    [terrainRows.length],
+  )
+
+  const onTerrainInsertZoneDrop = useCallback(
+    (insertIndex: number, e: DragEvent) => {
+      if (uiLocked) return
+      e.stopPropagation()
+      onTerrainDropAtInsert(insertIndex, e)
+    },
+    [onTerrainDropAtInsert, uiLocked],
+  )
+
+  const onTerrainListDragOver = useCallback(
+    (e: DragEvent) => {
+      if (uiLocked) return
+      if (!canDragTerrainOver(e)) return
+      e.preventDefault()
+      const len = terrainRows.length
+      const from = terrainDragFrom(e)
+      if (from == null || from < 0 || from >= len) return
+      const listEl = e.currentTarget as HTMLElement
+      const toInsert = terrainInsertIndexFromClientY(listEl, e.clientY)
+      setTerrainDropHoverInsertFrom(from, toInsert, e, len)
+    },
+    [canDragTerrainOver, terrainDragFrom, terrainRows.length, setTerrainDropHoverInsertFrom, uiLocked],
+  )
+
+  const onTerrainListDragLeave = useCallback((e: DragEvent) => {
+    if (e.clientX === 0 && e.clientY === 0) return
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
+    const { clientX: x, clientY: y } = e
+    const inside = x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom
+    if (inside) return
+    setDropTargetTerrainInsert(null)
+  }, [])
+
+  const onTerrainListDrop = useCallback(
+    (e: DragEvent) => {
+      if (uiLocked) return
+      if (!canDragTerrainOver(e)) return
+      const listEl = e.currentTarget as HTMLElement
+      // Prefer live coordinates so we don't depend on stale hover state; some browsers report (0,0) on drop.
+      let insert = terrainInsertIndexFromClientY(listEl, e.clientY)
+      if (e.clientX === 0 && e.clientY === 0 && dropTargetTerrainInsert != null) {
+        insert = dropTargetTerrainInsert
+      }
+      onTerrainDropAtInsert(insert, e)
+    },
+    [canDragTerrainOver, dropTargetTerrainInsert, onTerrainDropAtInsert, uiLocked],
+  )
+
   const toggleTerrainDrawer = useCallback((rowIndex: number) => {
     setTerrainDrawerIndex((prev) => {
       if (prev === rowIndex) {
@@ -2299,102 +2442,109 @@ function App() {
                 </h2>
                 <TitleRule />
               </header>
-              <div className="flex min-w-0 flex-col gap-2 px-0">
-                {terrainRows.map((row, i) => {
-                  const showInsertTop = dropTargetTerrainInsert === i
-                  const showInsertBottom = i === terrainRows.length - 1 && dropTargetTerrainInsert === terrainRows.length
-                  const insertLine =
-                    showInsertTop || showInsertBottom
-                      ? `before:absolute before:left-2 before:right-2 before:h-[3px] before:rounded-full before:bg-sky-500/55 before:shadow-[0_0_0_1px_rgb(0_0_0/0.10)] ${
-                          showInsertTop ? 'before:top-0' : 'before:bottom-0'
-                        }`
-                      : ''
+              <div className="relative min-w-0">
+                <div
+                  aria-hidden
+                  className={`absolute left-0 right-0 top-0 z-[150] h-12 -translate-y-full ${
+                    terrainDragging ? 'pointer-events-auto' : 'pointer-events-none'
+                  }`}
+                  onDragOver={(e) => onTerrainInsertZoneDragOver(0, e)}
+                  onDragLeave={(e) => onTerrainInsertZoneDragLeave(0, e)}
+                  onDrop={(e) => onTerrainInsertZoneDrop(0, e)}
+                />
+                <div
+                  aria-hidden
+                  className={`absolute right-0 bottom-0 left-0 z-[150] h-12 translate-y-full ${
+                    terrainDragging ? 'pointer-events-auto' : 'pointer-events-none'
+                  }`}
+                  onDragOver={(e) => onTerrainInsertZoneDragOver(terrainRows.length, e)}
+                  onDragLeave={(e) => onTerrainInsertZoneDragLeave(terrainRows.length, e)}
+                  onDrop={(e) => onTerrainInsertZoneDrop(terrainRows.length, e)}
+                />
+                <div
+                  className="flex min-w-0 flex-col gap-2 px-0"
+                  onDragOver={onTerrainListDragOver}
+                  onDragLeave={onTerrainListDragLeave}
+                  onDrop={onTerrainListDrop}
+                >
+                  {terrainRows.map((row, i) => {
+                    const showInsertTop = !uiLocked && dropTargetTerrainInsert === i
+                    const showInsertBottom =
+                      !uiLocked && i === terrainRows.length - 1 && dropTargetTerrainInsert === terrainRows.length
+                    const insertLineClass =
+                      'pointer-events-none absolute left-2 right-2 top-1/2 h-[3px] -translate-y-1/2 rounded-full bg-sky-500/55 shadow-[0_0_0_1px_rgb(0_0_0/0.10)]'
 
-                  return (
-                    <div
-                      key={i}
-                      className={`relative min-w-0 ${insertLine}`}
-                      onDragOver={(e) => {
-                        if (uiLocked) return
-                        if (![...e.dataTransfer.types].includes(TERRAIN_DRAG_MIME)) return
-                        e.preventDefault()
-                        const raw = e.dataTransfer.getData(TERRAIN_DRAG_MIME)
-                        const from = Number.parseInt(raw, 10)
-                        const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
-                        const y = e.clientY
-                        const insert =
-                          rect.height > 0 && y >= rect.top && y <= rect.bottom
-                            ? y < rect.top + rect.height / 2
-                              ? i
-                              : i + 1
-                            : i
-                        const ins = !Number.isNaN(from) ? computeInsertIndexAfterRemoval(from, insert) : null
-                        const noOp = !Number.isNaN(from) && (ins === null || ins === from)
-                        e.dataTransfer.dropEffect = noOp ? 'none' : 'move'
-                        setDropTargetTerrainInsert(noOp ? null : insert)
-                      }}
-                      onDragLeave={(e) => {
-                        if (!e.currentTarget.contains(e.relatedTarget as Node | null)) {
-                          setDropTargetTerrainInsert((v) => (v === i || v === i + 1 ? null : v))
-                        }
-                      }}
-                      onDrop={(e) => {
-                        if (uiLocked) return
-                        e.preventDefault()
-                        const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
-                        const y = e.clientY
-                        const insert =
-                          rect.height > 0 && y >= rect.top && y <= rect.bottom
-                            ? y < rect.top + rect.height / 2
-                              ? i
-                              : i + 1
-                            : i
-                        setDropTargetTerrainInsert(null)
-                        const raw = e.dataTransfer.getData(TERRAIN_DRAG_MIME)
-                        const from = Number.parseInt(raw, 10)
-                        if (Number.isNaN(from)) return
-                        const ins = computeInsertIndexAfterRemoval(from, insert)
-                        if (ins === null || ins === from) return
-                        reorderTerrainRows(from, insert)
-                      }}
-                    >
-                      <TerrainRow
-                        row={row}
-                        rowIndex={i}
-                        onStaminaChange={(st) => patchTerrainStamina(i, st)}
-                        onClick={() => toggleTerrainDrawer(i)}
-                        isDrawerOpen={terrainDrawerIndex === i}
-                        uiLocked={uiLocked}
-                        onDelete={uiLocked ? undefined : () => deleteTerrainRow(i)}
-                        onDuplicate={uiLocked ? undefined : () => duplicateTerrainRow(i)}
-                        onAddUpgrade={uiLocked ? undefined : (name) => addTerrainUpgrade(i, name)}
-                        onRemoveUpgrade={uiLocked ? undefined : (name) => removeTerrainUpgrade(i, name)}
-                        dragHandle={
-                          uiLocked
-                            ? undefined
-                            : {
-                                onDragStart: (e) => {
-                                  e.dataTransfer.setData(TERRAIN_DRAG_MIME, String(i))
-                                  e.dataTransfer.effectAllowed = 'move'
-                                },
-                                onDragEnd: (_e: DragEvent) => setDropTargetTerrainInsert(null),
-                                ariaLabel: `Reorder terrain ${i + 1}`,
-                              }
-                        }
-                        terrainReorderMenu={
-                          uiLocked
-                            ? undefined
-                            : {
-                                onMoveUp: () => reorderTerrainRows(i, i - 1),
-                                onMoveDown: () => reorderTerrainRows(i, i + 2),
-                                moveUpDisabled: i === 0,
-                                moveDownDisabled: i === terrainRows.length - 1,
-                              }
-                        }
-                      />
-                    </div>
-                  )
-                })}
+                    return (
+                      <div key={i} className="group/row-reorder relative min-w-0">
+                        {!uiLocked && (
+                          <>
+                            <div
+                              aria-hidden
+                              className="absolute left-0 right-0 z-[5] -top-3 h-6"
+                              onDragOver={(e) => onTerrainInsertZoneDragOver(i, e)}
+                              onDragLeave={(e) => onTerrainInsertZoneDragLeave(i, e)}
+                              onDrop={(e) => onTerrainInsertZoneDrop(i, e)}
+                            >
+                              {showInsertTop ? <div className={insertLineClass} /> : null}
+                            </div>
+                            {i === terrainRows.length - 1 ? (
+                              <div
+                                aria-hidden
+                                className="absolute left-0 right-0 z-[5] -bottom-3 h-6"
+                                onDragOver={(e) => onTerrainInsertZoneDragOver(terrainRows.length, e)}
+                                onDragLeave={(e) => onTerrainInsertZoneDragLeave(terrainRows.length, e)}
+                                onDrop={(e) => onTerrainInsertZoneDrop(terrainRows.length, e)}
+                              >
+                                {showInsertBottom ? <div className={insertLineClass} /> : null}
+                              </div>
+                            ) : null}
+                          </>
+                        )}
+                        <TerrainRow
+                          row={row}
+                          rowIndex={i}
+                          onStaminaChange={(st) => patchTerrainStamina(i, st)}
+                          onClick={() => toggleTerrainDrawer(i)}
+                          isDrawerOpen={terrainDrawerIndex === i}
+                          uiLocked={uiLocked}
+                          onDelete={uiLocked ? undefined : () => deleteTerrainRow(i)}
+                          onDuplicate={uiLocked ? undefined : () => duplicateTerrainRow(i)}
+                          onAddUpgrade={uiLocked ? undefined : (name) => addTerrainUpgrade(i, name)}
+                          onRemoveUpgrade={uiLocked ? undefined : (name) => removeTerrainUpgrade(i, name)}
+                          dragHandle={
+                            uiLocked
+                              ? undefined
+                              : {
+                                  onDragStart: (e) => {
+                                    setDropTargetTerrainInsert(null)
+                                    terrainDragSourceRef.current = i
+                                    setTerrainDragging(true)
+                                    e.dataTransfer.setData(TERRAIN_DRAG_MIME, String(i))
+                                    e.dataTransfer.effectAllowed = 'move'
+                                  },
+                                  onDragEnd: (_e: DragEvent) => {
+                                    terrainDragSourceRef.current = null
+                                    setDropTargetTerrainInsert(null)
+                                    setTerrainDragging(false)
+                                  },
+                                  ariaLabel: `Reorder terrain ${i + 1}`,
+                                }
+                          }
+                          terrainReorderMenu={
+                            uiLocked
+                              ? undefined
+                              : {
+                                  onMoveUp: () => reorderTerrainRows(i, i - 1),
+                                  onMoveDown: () => reorderTerrainRows(i, i + 2),
+                                  moveUpDisabled: i === 0,
+                                  moveDownDisabled: i === terrainRows.length - 1,
+                                }
+                          }
+                        />
+                      </div>
+                    )
+                  })}
+                </div>
               </div>
               {!uiLocked && (
                 <AddTerrainButton onAdd={addTerrainRow} />
