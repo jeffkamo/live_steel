@@ -161,8 +161,8 @@ function initStateFromStorage(): {
   }
 }
 
-/** Insert index 0..n from pointer Y over the terrain list's row wrappers (flex gaps + half-row hit regions). */
-function terrainInsertIndexFromClientY(listEl: HTMLElement, clientY: number): number {
+/** Insert index 0..n from pointer Y over a flex column of row wrappers (gaps + half-row hit regions). */
+function flexListInsertIndexFromClientY(listEl: HTMLElement, clientY: number): number {
   const { children } = listEl
   const n = children.length
   if (n === 0) return 0
@@ -779,6 +779,7 @@ function App() {
   )
 
   const [dropTargetGroupInsert, setDropTargetGroupInsert] = useState<number | null>(null)
+  const [encounterGroupDragging, setEncounterGroupDragging] = useState(false)
   const encounterGroupDragSourceRef = useRef<number | null>(null)
   const terrainDragSourceRef = useRef<number | null>(null)
   const monsterDragSourceRef = useRef<MonsterDragPayload | null>(null)
@@ -1264,6 +1265,143 @@ function App() {
     [encounterGroups, scheduleEotTimerForGroup],
   )
 
+  const canDragEncounterGroupOver = useCallback(
+    (e: DragEvent) => [...e.dataTransfer.types].includes(ENCOUNTER_GROUP_DRAG_MIME),
+    [],
+  )
+
+  const encounterGroupDragFrom = useCallback((e: DragEvent): number | null => {
+    const raw = e.dataTransfer.getData(ENCOUNTER_GROUP_DRAG_MIME)
+    const parsed = Number.parseInt(raw, 10)
+    if (!Number.isNaN(parsed)) return parsed
+    const r = encounterGroupDragSourceRef.current
+    return r != null ? r : null
+  }, [])
+
+  const setEncounterGroupDropHoverInsertFrom = useCallback(
+    (from: number, toInsert: number, e: DragEvent, len: number) => {
+      const clamped = Math.max(0, Math.min(toInsert, len))
+      if (from >= 0 && from < len) {
+        const ins = computeInsertIndexAfterRemoval(from, clamped)
+        if (ins === null || ins === from) {
+          e.dataTransfer.dropEffect = 'none'
+          setDropTargetGroupInsert(null)
+          return
+        }
+      }
+      e.dataTransfer.dropEffect = 'move'
+      setDropTargetGroupInsert(clamped)
+    },
+    [],
+  )
+
+  const onEncounterGroupDropAtInsert = useCallback(
+    (insertIndex: number, e: DragEvent) => {
+      e.preventDefault()
+      e.stopPropagation()
+      const fromRef = encounterGroupDragSourceRef.current
+      let from = Number.parseInt(e.dataTransfer.getData(ENCOUNTER_GROUP_DRAG_MIME), 10)
+      if (Number.isNaN(from) && fromRef != null) from = fromRef
+      setDropTargetGroupInsert(null)
+      setEncounterGroupDragging(false)
+      encounterGroupDragSourceRef.current = null
+      if (uiLocked) return
+      if (Number.isNaN(from)) return
+      const len = encounterGroups.length
+      const clamped = Math.max(0, Math.min(insertIndex, len))
+      const ins = computeInsertIndexAfterRemoval(from, clamped)
+      if (ins === null || ins === from) return
+      reorderEncounterGroups(from, clamped)
+    },
+    [encounterGroups.length, reorderEncounterGroups, uiLocked],
+  )
+
+  const onEncounterGroupInsertZoneDragOver = useCallback(
+    (insertIndex: number, e: DragEvent) => {
+      if (uiLocked) return
+      if (!canDragEncounterGroupOver(e)) return
+      e.stopPropagation()
+      e.preventDefault()
+      const len = encounterGroups.length
+      const from = encounterGroupDragFrom(e)
+      if (from == null || from < 0 || from >= len) return
+      setEncounterGroupDropHoverInsertFrom(from, insertIndex, e, len)
+    },
+    [canDragEncounterGroupOver, encounterGroupDragFrom, encounterGroups.length, setEncounterGroupDropHoverInsertFrom, uiLocked],
+  )
+
+  const onEncounterGroupInsertZoneDragLeave = useCallback(
+    (insertIndex: number, e: DragEvent) => {
+      e.stopPropagation()
+      if (e.clientX === 0 && e.clientY === 0) return
+      const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
+      const { clientX: x, clientY: y } = e
+      const inside = x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom
+      if (inside) return
+      const n = encounterGroups.length
+      if (insertIndex === 0 || insertIndex === n) return
+      setDropTargetGroupInsert((v) => (v === insertIndex ? null : v))
+    },
+    [encounterGroups.length],
+  )
+
+  const onEncounterGroupInsertZoneDrop = useCallback(
+    (insertIndex: number, e: DragEvent) => {
+      if (uiLocked) return
+      e.stopPropagation()
+      onEncounterGroupDropAtInsert(insertIndex, e)
+    },
+    [onEncounterGroupDropAtInsert, uiLocked],
+  )
+
+  const onEncounterGroupListDragOver = useCallback(
+    (e: DragEvent) => {
+      if (uiLocked) return
+      if (!canDragEncounterGroupOver(e)) return
+      e.preventDefault()
+      const len = encounterGroups.length
+      const from = encounterGroupDragFrom(e)
+      if (from == null || from < 0 || from >= len) return
+      const listEl = e.currentTarget as HTMLElement
+      const toInsert = flexListInsertIndexFromClientY(listEl, e.clientY)
+      setEncounterGroupDropHoverInsertFrom(from, toInsert, e, len)
+    },
+    [canDragEncounterGroupOver, encounterGroupDragFrom, encounterGroups.length, setEncounterGroupDropHoverInsertFrom, uiLocked],
+  )
+
+  const onEncounterGroupListDragLeave = useCallback((e: DragEvent) => {
+    if (e.clientX === 0 && e.clientY === 0) return
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
+    const { clientX: x, clientY: y } = e
+    const inside = x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom
+    if (inside) return
+    setDropTargetGroupInsert(null)
+  }, [])
+
+  const onEncounterGroupListDrop = useCallback(
+    (e: DragEvent) => {
+      if (uiLocked) return
+      if (!canDragEncounterGroupOver(e)) return
+      const listEl = e.currentTarget as HTMLElement
+      let insert = flexListInsertIndexFromClientY(listEl, e.clientY)
+      if (e.clientX === 0 && e.clientY === 0 && dropTargetGroupInsert != null) {
+        insert = dropTargetGroupInsert
+      }
+      onEncounterGroupDropAtInsert(insert, e)
+    },
+    [canDragEncounterGroupOver, dropTargetGroupInsert, onEncounterGroupDropAtInsert, uiLocked],
+  )
+
+  const onEncounterGroupCardDragLeave = useCallback((insertIndex: number, e: DragEvent) => {
+    e.stopPropagation()
+    if (e.clientX === 0 && e.clientY === 0) return
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
+    const { clientX: x, clientY: y } = e
+    const inside = x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom
+    if (inside) return
+    setDropTargetGroupInsert((v) => (v === insertIndex || v === insertIndex + 1 ? null : v))
+  }, [])
+
   const addNewGroup = useCallback(() => {
     let added = false
     setEncounterGroups((prev) => {
@@ -1689,7 +1827,7 @@ function App() {
       const from = terrainDragFrom(e)
       if (from == null || from < 0 || from >= len) return
       const listEl = e.currentTarget as HTMLElement
-      const toInsert = terrainInsertIndexFromClientY(listEl, e.clientY)
+      const toInsert = flexListInsertIndexFromClientY(listEl, e.clientY)
       setTerrainDropHoverInsertFrom(from, toInsert, e, len)
     },
     [canDragTerrainOver, terrainDragFrom, terrainRows.length, setTerrainDropHoverInsertFrom, uiLocked],
@@ -1710,7 +1848,7 @@ function App() {
       if (!canDragTerrainOver(e)) return
       const listEl = e.currentTarget as HTMLElement
       // Prefer live coordinates so we don't depend on stale hover state; some browsers report (0,0) on drop.
-      let insert = terrainInsertIndexFromClientY(listEl, e.clientY)
+      let insert = flexListInsertIndexFromClientY(listEl, e.clientY)
       if (e.clientX === 0 && e.clientY === 0 && dropTargetTerrainInsert != null) {
         insert = dropTargetTerrainInsert
       }
@@ -2195,7 +2333,31 @@ function App() {
                     uiLocked={uiLocked}
                     onMaliceRowsChange={(next) => setMaliceRows(ensureMaliceRows(next))}
                   />
-                  <div className="flex flex-col gap-1">
+                  <div className="relative min-w-0">
+                    <div
+                      aria-hidden
+                      className={`absolute right-0 left-0 top-0 z-[150] h-12 -translate-y-full ${
+                        encounterGroupDragging ? 'pointer-events-auto' : 'pointer-events-none'
+                      }`}
+                      onDragOver={(e) => onEncounterGroupInsertZoneDragOver(0, e)}
+                      onDragLeave={(e) => onEncounterGroupInsertZoneDragLeave(0, e)}
+                      onDrop={(e) => onEncounterGroupInsertZoneDrop(0, e)}
+                    />
+                    <div
+                      aria-hidden
+                      className={`absolute right-0 bottom-0 left-0 z-[150] h-12 translate-y-full ${
+                        encounterGroupDragging ? 'pointer-events-auto' : 'pointer-events-none'
+                      }`}
+                      onDragOver={(e) => onEncounterGroupInsertZoneDragOver(encounterGroups.length, e)}
+                      onDragLeave={(e) => onEncounterGroupInsertZoneDragLeave(encounterGroups.length, e)}
+                      onDrop={(e) => onEncounterGroupInsertZoneDrop(encounterGroups.length, e)}
+                    />
+                    <div
+                      className="flex min-w-0 flex-col gap-1"
+                      onDragOver={onEncounterGroupListDragOver}
+                      onDragLeave={onEncounterGroupListDragLeave}
+                      onDrop={onEncounterGroupListDrop}
+                    >
                     {Array.from({ length: encounterGroups.length + 1 }, (_, insertIndex) => {
                       const showGroup = insertIndex < encounterGroups.length
                       const group = showGroup ? encounterGroups[insertIndex]! : null
@@ -2211,32 +2373,9 @@ function App() {
                                   : `Insert encounter group between ${insertIndex} and ${insertIndex + 1}`
                             }
                             active={highlight}
-                            onDragOver={(e: DragEvent) => {
-                              if (![...e.dataTransfer.types].includes(ENCOUNTER_GROUP_DRAG_MIME)) return
-                              e.preventDefault()
-                              const raw = e.dataTransfer.getData(ENCOUNTER_GROUP_DRAG_MIME)
-                              const fromRaw = Number.parseInt(raw, 10)
-                              const from = !Number.isNaN(fromRaw) ? fromRaw : encounterGroupDragSourceRef.current
-                              const ins = from != null ? computeInsertIndexAfterRemoval(from, insertIndex) : null
-                              const noOp = from != null && (ins === null || ins === from)
-                              e.dataTransfer.dropEffect = noOp ? 'none' : 'move'
-                              setDropTargetGroupInsert(noOp ? null : insertIndex)
-                            }}
-                            onDragLeave={(e: DragEvent) => {
-                              if (!e.currentTarget.contains(e.relatedTarget as Node | null)) {
-                                setDropTargetGroupInsert((v) => (v === insertIndex ? null : v))
-                              }
-                            }}
-                            onDrop={(e: DragEvent) => {
-                              e.preventDefault()
-                              setDropTargetGroupInsert(null)
-                              const raw = e.dataTransfer.getData(ENCOUNTER_GROUP_DRAG_MIME)
-                              const from = Number.parseInt(raw, 10)
-                              if (Number.isNaN(from)) return
-                              const ins = computeInsertIndexAfterRemoval(from, insertIndex)
-                              if (ins === null || ins === from) return
-                              reorderEncounterGroups(from, insertIndex)
-                            }}
+                            onDragOver={(e: DragEvent) => onEncounterGroupInsertZoneDragOver(insertIndex, e)}
+                            onDragLeave={(e: DragEvent) => onEncounterGroupInsertZoneDragLeave(insertIndex, e)}
+                            onDrop={(e: DragEvent) => onEncounterGroupInsertZoneDrop(insertIndex, e)}
                           />
                           {showGroup && (
                             <div
@@ -2245,6 +2384,7 @@ function App() {
                               className="min-w-0"
                               onDragOver={(e) => {
                                 if (![...e.dataTransfer.types].includes(ENCOUNTER_GROUP_DRAG_MIME)) return
+                                e.stopPropagation()
                                 e.preventDefault()
                                 const raw = e.dataTransfer.getData(ENCOUNTER_GROUP_DRAG_MIME)
                                 const fromRaw = Number.parseInt(raw, 10)
@@ -2262,16 +2402,9 @@ function App() {
                                 e.dataTransfer.dropEffect = noOp ? 'none' : 'move'
                                 setDropTargetGroupInsert(noOp ? null : toInsert)
                               }}
-                              onDragLeave={(e) => {
-                                if (!e.currentTarget.contains(e.relatedTarget as Node | null)) {
-                                  setDropTargetGroupInsert((v) =>
-                                    v === insertIndex || v === insertIndex + 1 ? null : v,
-                                  )
-                                }
-                              }}
+                              onDragLeave={(e) => onEncounterGroupCardDragLeave(insertIndex, e)}
                               onDrop={(e) => {
-                                e.preventDefault()
-                                setDropTargetGroupInsert(null)
+                                e.stopPropagation()
                                 const raw = e.dataTransfer.getData(ENCOUNTER_GROUP_DRAG_MIME)
                                 const from = Number.parseInt(raw, 10)
                                 if (Number.isNaN(from)) return
@@ -2283,9 +2416,7 @@ function App() {
                                       ? insertIndex
                                       : insertIndex + 1
                                     : insertIndex + 1
-                                const ins = computeInsertIndexAfterRemoval(from, toInsert)
-                                if (ins === null || ins === from) return
-                                reorderEncounterGroups(from, toInsert)
+                                onEncounterGroupDropAtInsert(toInsert, e)
                               }}
                             >
                               <GroupSection
@@ -2370,6 +2501,7 @@ function App() {
                                     : {
                                         onDragStart: (e) => {
                                           setDropTargetGroupInsert(null)
+                                          setEncounterGroupDragging(true)
                                           encounterGroupDragSourceRef.current = insertIndex
                                           e.dataTransfer.setData(ENCOUNTER_GROUP_DRAG_MIME, String(insertIndex))
                                           e.dataTransfer.effectAllowed = 'move'
@@ -2377,6 +2509,7 @@ function App() {
                                         onDragEnd: () => {
                                           encounterGroupDragSourceRef.current = null
                                           setDropTargetGroupInsert(null)
+                                          setEncounterGroupDragging(false)
                                         },
                                         ariaLabel: `Reorder encounter group ${insertIndex + 1}`,
                                       }
@@ -2412,6 +2545,8 @@ function App() {
                         </div>
                       )
                     })}
+                    </div>
+                  </div>
                 {!uiLocked && (
                   <button
                     type="button"
@@ -2431,7 +2566,6 @@ function App() {
                     Add group
                   </button>
                 )}
-                  </div>
               </div>
             </section>
 

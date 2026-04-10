@@ -200,6 +200,22 @@ Delete monster from group — trash icon on each monster/minion row, immediate r
 
 **Files changed:**
 - src/App.tsx
+
+
+[DND-007]
+
+Encounter-group (turn-row) insert indicator stability — applied the same DND-005/006 line-targeting consistency fixes used for malice/terrain so group separators no longer disappear on hover.
+
+**Key decisions:**
+- Added encounter-group drag parity with terrain/malice: `encounterGroupDragging` state, drag-source fallback ref, and shared no-op suppression via `computeInsertIndexAfterRemoval` so same-slot hovers stay silent.
+- Switched group insert handling to explicit insert strips and list-level handlers: top/bottom extended edge zones, `InsertDropZone` gap-hit strips, list `dragover`/`drop`, and coordinate-based insert resolution with `(0,0)` fallback to last hover.
+- Replaced fragile `relatedTarget` leave checks with bounding-box checks and ignored synthetic `(0,0)` drag coordinates to prevent flicker/disappearing lines while crossing row boundaries.
+- Stopped propagation from insert/card drop zones so nested handlers do not fight over hover state, keeping top/bottom insert lines stable through fast hover transitions.
+- Generalized `terrainInsertIndexFromClientY` to `flexListInsertIndexFromClientY` and reused it for encounter groups to keep half-row and flex-gap targeting behavior consistent.
+
+**Files changed:**
+- src/App.tsx
+- src/components/InsertDropZone.tsx
 - src/components/GroupSection.tsx
 - src/components/MonsterRowCells.tsx
 - src/components/MinionGroupRow.tsx
