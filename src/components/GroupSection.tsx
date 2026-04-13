@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import type { DragEvent } from 'react'
 import type {
   CaptainRef,
@@ -143,6 +143,7 @@ export function GroupSection({
     monsterIndex: null,
   })
   const [squadsCollapsed, setSquadsCollapsed] = useState(false)
+  const encounterCardDragImageRef = useRef<HTMLDivElement | null>(null)
 
   const hasSquads = group.monsters.some((m) => (m.minions?.length ?? 0) > 0)
   useEffect(() => {
@@ -406,6 +407,7 @@ export function GroupSection({
 
   return (
     <div
+      ref={encounterGroupDragHandle != null ? encounterCardDragImageRef : undefined}
       className={`grid min-w-0 items-stretch overflow-visible rounded-lg border border-zinc-200/95 bg-white font-sans shadow-sm dark:border-transparent dark:bg-zinc-900/80 dark:shadow-none ${
         encounterGroupDragHandle != null ? 'group/encounter-card' : ''
       }`}
@@ -428,6 +430,7 @@ export function GroupSection({
             : undefined
         }
         encounterGroupDragHandle={encounterGroupDragHandle}
+        encounterCardDragImageRef={encounterCardDragImageRef}
         encounterGroupReorderMenu={encounterGroupReorderMenu}
         onDeleteEncounterGroup={onDeleteEncounterGroup}
         onDuplicateEncounterGroup={onDuplicateEncounterGroup}

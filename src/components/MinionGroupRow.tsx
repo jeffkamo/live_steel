@@ -189,6 +189,7 @@ export function MinionGroupRow({
   const captainDropdownRef = useRef<HTMLDivElement>(null)
   const captainMenuRef = useRef<HTMLDivElement>(null)
   const captainReturnFocusRef = useRef<HTMLElement | null>(null)
+  const parentRowDragImageRef = useRef<HTMLDivElement | null>(null)
 
   const closeCaptainDropdown = useCallback(() => setCaptainDropdownOpen(false), [])
 
@@ -309,6 +310,7 @@ export function MinionGroupRow({
     <>
       {/* --- parent minion summary row --- */}
       <div
+        ref={parentRowDragImageRef}
         className={`group/row-reorder roster-creature relative overflow-visible ${rowTone} has-[[data-grip-menu-open]]:opacity-100 has-[[data-grip-menu-open]]:z-[200] has-[[data-captain-menu-open]]:opacity-100 has-[[data-captain-menu-open]]:z-[200] ${parentMonsterDropRing}`}
         style={{ gridColumn: 2, gridRow: row }}
         data-testid="monster-drop-target"
@@ -325,6 +327,7 @@ export function MinionGroupRow({
                 reorderAriaLabel={`Reorder ${monster.name} within encounter`}
                 onDragStart={monsterDrag.onDragStart}
                 onDragEnd={monsterDrag.onDragEnd}
+                getDragImageElement={() => parentRowDragImageRef.current}
                 menuItems={parentGripMenuItems}
                 className="h-9 shrink-0 cursor-grab touch-none select-none rounded-md sm:h-10"
                 iconClassName="text-zinc-700 dark:text-zinc-200"
@@ -711,6 +714,7 @@ function MinionChildRow({
   }
   minionDrag?: MinionRowDragBinding
 }) {
+  const minionRowDragImageRef = useRef<HTMLDivElement | null>(null)
   const minionGripMenuItems = [
     ...(minionRowReorderMenu != null
       ? [
@@ -760,6 +764,7 @@ function MinionChildRow({
 
   return (
     <div
+      ref={minionRowDragImageRef}
       className={`group/row-reorder roster-creature relative overflow-visible border-t border-zinc-200/90 dark:border-zinc-800/60 ${rowTone} has-[[data-grip-menu-open]]:opacity-100 has-[[data-grip-menu-open]]:z-[200] ${minionInsertLine}`}
       style={{ gridColumn: 2, gridRow: gridRow }}
       data-testid="minion-drop-target"
@@ -777,6 +782,7 @@ function MinionChildRow({
               reorderAriaLabel={`Reorder ${minion.name} within horde`}
               onDragStart={minionDrag.onDragStart}
               onDragEnd={minionDrag.onDragEnd}
+              getDragImageElement={() => minionRowDragImageRef.current}
               menuItems={minionGripMenuItems}
               className="h-8 shrink-0 cursor-grab touch-none select-none rounded-md sm:h-9"
               iconClassName="text-zinc-700 dark:text-zinc-200"

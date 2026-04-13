@@ -23,6 +23,7 @@ export function ReorderGripWithMenu({
   iconClassName,
   draggable = true,
   rowHoverGroup = 'creature-row',
+  getDragImageElement,
 }: {
   reorderAriaLabel: string
   onDragStart: (e: DragEvent) => void
@@ -37,6 +38,8 @@ export function ReorderGripWithMenu({
    * `encounter-card`: parent is `group/encounter-card` on the whole encounter grid (hover anywhere in the group).
    */
   rowHoverGroup?: ReorderGripRowHoverGroup
+  /** Element used as the drag preview (defaults to the small grip). Typically the full row/card wrapper. */
+  getDragImageElement?: () => HTMLElement | null
 }) {
   const menuId = useId()
   const [open, setOpen] = useState(false)
@@ -52,8 +55,18 @@ export function ReorderGripWithMenu({
       if (!draggable) return
       dragDidStartRef.current = true
       onDragStart(e)
+      const imgEl = getDragImageElement?.()
+      const dt = e.dataTransfer
+      if (imgEl != null && dt != null && typeof dt.setDragImage === 'function') {
+        try {
+          const r = imgEl.getBoundingClientRect()
+          dt.setDragImage(imgEl, Math.round(e.clientX - r.left), Math.round(e.clientY - r.top))
+        } catch {
+          /* setDragImage unsupported or throws in some test environments */
+        }
+      }
     },
-    [draggable, onDragStart],
+    [draggable, getDragImageElement, onDragStart],
   )
 
   const wrapDragEnd = useCallback(

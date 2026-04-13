@@ -262,8 +262,10 @@ export function TerrainRow({
     'flex h-full min-h-[3.75rem] items-stretch px-2 py-2 sm:min-h-[4rem] sm:px-2.5 sm:py-2.5'
   const bodyCell =
     'flex h-full min-h-[3.75rem] items-center p-3 sm:min-h-[4rem] sm:p-3.5'
+  const rowDragImageRef = useRef<HTMLDivElement | null>(null)
   return (
     <div
+      ref={rowDragImageRef}
       className={`group/row-reorder relative min-w-0 w-full max-w-full overflow-visible rounded-lg border border-zinc-200/95 bg-white font-sans shadow-sm dark:border-transparent dark:bg-zinc-900/80 dark:shadow-none ${
         isDrawerOpen ? 'ring-1 ring-amber-500/40' : ''
       }`}
@@ -275,6 +277,7 @@ export function TerrainRow({
               reorderAriaLabel={dragHandle.ariaLabel}
               onDragStart={dragHandle.onDragStart}
               onDragEnd={dragHandle.onDragEnd}
+              getDragImageElement={() => rowDragImageRef.current}
               menuItems={gripMenuItems}
               className="h-9 shrink-0 cursor-grab touch-none select-none rounded-md sm:h-10"
               iconClassName="text-zinc-700 dark:text-zinc-200"

@@ -43,6 +43,7 @@ export function MaliceDashboard({
   const addAnchorRef = useRef<HTMLDivElement>(null)
   const [maliceDropHoverInsert, setMaliceDropHoverInsert] = useState<number | null>(null)
   const [maliceDragging, setMaliceDragging] = useState(false)
+  const maliceMonsterRowElsRef = useRef<Map<string, HTMLDivElement>>(new Map())
 
   const totalCreatures = useMemo(
     () => encounterGroups.reduce((n, g) => n + g.monsters.length, 0),
@@ -412,6 +413,15 @@ export function MaliceDashboard({
               return (
                 <li key={row.kind === 'core' ? `core-${row.coreId}` : row.id}>
                   <div
+                  ref={
+                    !uiLocked && isMonsterRow
+                      ? (el) => {
+                          const id = row.kind === 'monster' ? row.id : ''
+                          if (el) maliceMonsterRowElsRef.current.set(id, el)
+                          else maliceMonsterRowElsRef.current.delete(id)
+                        }
+                      : undefined
+                  }
                   className={`group/row-reorder relative ${rowLayoutClass} rounded-md border border-zinc-200/80 bg-white/90 px-2 py-2 transition-shadow dark:border-zinc-700/70 dark:bg-zinc-900/60 has-[[data-grip-menu-open]]:z-[200]`}
                   onDragOver={uiLocked || !isMonsterRow ? undefined : (e) => onMonsterRowDragOver(index, e)}
                   onDragLeave={uiLocked || !isMonsterRow ? undefined : (e) => onMonsterRowDragLeave(index, e)}
@@ -453,6 +463,9 @@ export function MaliceDashboard({
                         reorderAriaLabel={`Reorder or remove malice feature: ${name}`}
                         onDragStart={(e) => onMaliceDragStart(index, e)}
                         onDragEnd={onMaliceDragEnd}
+                        getDragImageElement={() =>
+                          row.kind === 'monster' ? maliceMonsterRowElsRef.current.get(row.id) ?? null : null
+                        }
                         menuItems={menuItems}
                         className="h-9 shrink-0 cursor-grab touch-none select-none rounded-md sm:h-10"
                         iconClassName="text-zinc-700 dark:text-zinc-200"

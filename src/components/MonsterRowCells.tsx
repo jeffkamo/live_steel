@@ -1,4 +1,4 @@
-import type { DragEvent } from 'react'
+import { useRef, type DragEvent } from 'react'
 import type { ConditionState, GroupColorId, Monster } from '../types'
 import { rosterCombatStats } from '../bestiary'
 import { GROUP_COLOR_BADGE, GROUP_COLOR_LABEL } from '../data'
@@ -142,9 +142,11 @@ export function MonsterRowCells({
         : ''
 
   const lockedOrdinalBalancePad = 'pl-1 sm:pl-1.5'
+  const rowDragImageRef = useRef<HTMLDivElement | null>(null)
 
   return (
     <div
+      ref={rowDragImageRef}
       className={`group/row-reorder roster-creature relative overflow-visible ${rowTone} has-[[data-grip-menu-open]]:opacity-100 has-[[data-grip-menu-open]]:z-[200] ${monsterInsertLine}`}
       style={{ gridColumn: 2, gridRow: row }}
       data-testid="monster-drop-target"
@@ -161,6 +163,7 @@ export function MonsterRowCells({
               reorderAriaLabel={`Reorder ${monster.name} within encounter`}
               onDragStart={monsterDrag.onDragStart}
               onDragEnd={monsterDrag.onDragEnd}
+              getDragImageElement={() => rowDragImageRef.current}
               menuItems={gripMenuItems}
               className="h-9 shrink-0 cursor-grab touch-none select-none rounded-md sm:h-10"
               iconClassName="text-zinc-700 dark:text-zinc-200"

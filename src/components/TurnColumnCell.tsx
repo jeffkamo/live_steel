@@ -1,4 +1,4 @@
-import type { DragEvent } from 'react'
+import type { DragEvent, RefObject } from 'react'
 import { ReorderGripWithMenu } from './ReorderGripWithMenu'
 
 export function TurnColumnCell({
@@ -38,6 +38,7 @@ export function GroupTurnColumn({
   turnAriaLabel,
   squadsCollapse,
   encounterGroupDragHandle,
+  encounterCardDragImageRef,
   encounterGroupReorderMenu,
   onDeleteEncounterGroup,
   onDuplicateEncounterGroup,
@@ -54,6 +55,7 @@ export function GroupTurnColumn({
     onDragEnd: (e: DragEvent) => void
     ariaLabel: string
   }
+  encounterCardDragImageRef?: RefObject<HTMLElement | null>
   encounterGroupReorderMenu?: {
     onMoveUp: () => void
     onMoveDown: () => void
@@ -108,6 +110,11 @@ export function GroupTurnColumn({
               reorderAriaLabel={encounterGroupDragHandle.ariaLabel}
               onDragStart={encounterGroupDragHandle.onDragStart}
               onDragEnd={encounterGroupDragHandle.onDragEnd}
+              getDragImageElement={
+                encounterCardDragImageRef != null
+                  ? () => encounterCardDragImageRef.current
+                  : undefined
+              }
               menuItems={encounterGripMenuItems}
               className="h-8 shrink-0 cursor-grab touch-none select-none rounded-md sm:h-9"
               iconClassName="text-zinc-700 dark:text-zinc-200"
