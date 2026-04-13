@@ -182,6 +182,13 @@ function flexListInsertIndexFromClientY(listEl: HTMLElement, clientY: number): n
   return n
 }
 
+function isCaptainRefAlive(groups: readonly EncounterGroup[], captainRef: CaptainRef | null | undefined): boolean {
+  if (captainRef == null) return false
+  const captain = groups[captainRef.groupIndex]?.monsters[captainRef.monsterIndex]
+  if (!captain) return false
+  return captain.stamina[0] > 0
+}
+
 function App() {
   const { colorScheme, setColorScheme } = useColorScheme()
   const [{
@@ -2876,11 +2883,10 @@ function App() {
                           />
                         )
                       }
-                      const captainEffectActive =
-                        Boolean(
-                          drawerMonster.minions?.length &&
-                            drawerMonster.captainId,
-                        )
+                      const captainEffectActive = Boolean(
+                        drawerMonster.minions?.length &&
+                          isCaptainRefAlive(encounterGroups, drawerMonster.captainId),
+                      )
                       return (
                         <>
                           <StatBlock

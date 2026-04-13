@@ -260,17 +260,23 @@ function rosterCombatStatsBase(m: Monster): { fs: number; spd: number; stab: num
  * When a minion horde has a captain, numeric parts of {@link BestiaryStatblock.with_captain}
  * (speed, stamina, free strike, stability) apply to roster FS / SPD / Stab.
  */
-export function captainNumericBonusesFromMonster(m: Monster): CaptainNumericBonuses | null {
-  if (!m.minions?.length || !m.captainId) return null
+export function captainNumericBonusesFromMonster(
+  m: Monster,
+  captainEffectActive = true,
+): CaptainNumericBonuses | null {
+  if (!captainEffectActive || !m.minions?.length || !m.captainId) return null
   const sb =
     lookupStatblock(m.name) ?? (m.minions[0] ? lookupStatblock(m.minions[0].name) : undefined)
   if (!sb?.with_captain) return null
   return parseWithCaptainEffect(sb.with_captain).numeric
 }
 
-export function rosterCombatStats(m: Monster): { fs: number; spd: number; stab: number } {
+export function rosterCombatStats(
+  m: Monster,
+  captainEffectActive = true,
+): { fs: number; spd: number; stab: number } {
   const base = rosterCombatStatsBase(m)
-  const bonus = captainNumericBonusesFromMonster(m)
+  const bonus = captainNumericBonusesFromMonster(m, captainEffectActive)
   if (!bonus) return base
   return {
     fs: base.fs + bonus.freeStrike,
@@ -279,12 +285,15 @@ export function rosterCombatStats(m: Monster): { fs: number; spd: number; stab: 
   }
 }
 
-export function rosterCombatStatsCaptainHighlights(m: Monster): {
+export function rosterCombatStatsCaptainHighlights(
+  m: Monster,
+  captainEffectActive = true,
+): {
   fs: boolean
   spd: boolean
   stab: boolean
 } {
-  const bonus = captainNumericBonusesFromMonster(m)
+  const bonus = captainNumericBonusesFromMonster(m, captainEffectActive)
   if (!bonus) return { fs: false, spd: false, stab: false }
   return {
     fs: bonus.freeStrike !== 0,

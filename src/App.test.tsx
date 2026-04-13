@@ -1250,6 +1250,48 @@ describe('App', () => {
     expect(within(grid).getByTestId('captain-pill')).toHaveTextContent('Goblin Assassin 1')
   })
 
+  it('marks the assigned captain dead in the pill and disables with-captain benefits', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    const grid = getMinionGrid()
+    await user.click(within(grid).getByRole('button', { name: /Assign captain for Minions/i }))
+    await user.click(within(grid).getByText('Goblin Underboss'))
+    expect(within(grid).getByTestId('captain-effect-notes')).toBeInTheDocument()
+
+    const captainStamina = screen.getByRole('group', { name: /^Edit stamina for Goblin Underboss$/i })
+    await user.hover(captainStamina)
+    const downTen = within(captainStamina).getByRole('button', { name: /^Decrease stamina by 10$/i })
+    await user.click(downTen)
+    await user.click(downTen)
+
+    const captainPill = within(grid).getByTestId('captain-pill')
+    expect(captainPill).toHaveTextContent('Goblin Underboss (dead)')
+    expect(within(grid).queryByTestId('captain-effect-notes')).not.toBeInTheDocument()
+  })
+
+  it('shows dead state in captain dropdown and restores effects after switching to a live captain', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    const grid = getMinionGrid()
+    await user.click(within(grid).getByRole('button', { name: /Assign captain for Minions/i }))
+    await user.click(within(grid).getByText('Goblin Underboss'))
+
+    const captainStamina = screen.getByRole('group', { name: /^Edit stamina for Goblin Underboss$/i })
+    await user.hover(captainStamina)
+    const downTen = within(captainStamina).getByRole('button', { name: /^Decrease stamina by 10$/i })
+    await user.click(downTen)
+    await user.click(downTen)
+
+    await user.click(within(grid).getByRole('button', { name: /Change captain for Minions/i }))
+    const dropdown = within(grid).getByRole('listbox', { name: /Select captain for Minions/i })
+    const deadOption = within(dropdown).getByTestId('captain-candidate-1-0')
+    expect(within(deadOption).getByText('Dead')).toBeInTheDocument()
+
+    await user.click(within(dropdown).getByText('Goblin Assassin 1'))
+    expect(within(grid).getByTestId('captain-pill')).toHaveTextContent('Goblin Assassin 1')
+    expect(within(grid).getByTestId('captain-effect-notes')).toBeInTheDocument()
+  })
+
   // --- Delete monster from group (DATA-003) ---
 
   it('each top-level creature row exposes delete via the reorder grip menu', async () => {

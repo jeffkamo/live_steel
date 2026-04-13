@@ -225,6 +225,8 @@ export function MinionGroupRow({
   const captainMonster = captainRef && allGroups
     ? allGroups[captainRef.groupIndex]?.monsters[captainRef.monsterIndex]
     : undefined
+  const captainMonsterDead = captainMonster != null && captainMonster.stamina[0] <= 0
+  const captainEffectActive = captainRef != null && !captainMonsterDead
   const captainGroupColor = captainRef && allGroups
     ? allGroups[captainRef.groupIndex]?.color
     : undefined
@@ -233,7 +235,14 @@ export function MinionGroupRow({
       ? buildCreatureOrdinalMap(allGroups[captainRef.groupIndex]!.monsters).get(`${captainRef.monsterIndex}`)
       : undefined
 
-  const candidateMonsters: { groupIndex: number; monsterIndex: number; name: string; ordinal: number; color: GroupColorId }[] = []
+  const candidateMonsters: {
+    groupIndex: number
+    monsterIndex: number
+    name: string
+    ordinal: number
+    color: GroupColorId
+    dead: boolean
+  }[] = []
   if (allGroups) {
     for (let gi = 0; gi < allGroups.length; gi++) {
       const g = allGroups[gi]!
@@ -249,6 +258,7 @@ export function MinionGroupRow({
           name: m.name,
           ordinal: ord,
           color: g.color,
+          dead: m.stamina[0] <= 0,
         })
       }
     }
@@ -258,13 +268,13 @@ export function MinionGroupRow({
     'flex h-full min-h-[3.75rem] items-center p-3 sm:min-h-[4rem] sm:p-3.5'
   const creatureNameColCell =
     'flex h-full min-h-[3.75rem] items-stretch px-2 py-2 sm:min-h-[4rem] sm:px-2.5 sm:py-2.5'
-  const combat = rosterCombatStats(monster)
-  const combatCaptainHighlights = rosterCombatStatsCaptainHighlights(monster)
+  const combat = rosterCombatStats(monster, captainEffectActive)
+  const combatCaptainHighlights = rosterCombatStatsCaptainHighlights(monster, captainEffectActive)
   const sbCaptain =
     lookupStatblock(monster.name) ??
     (monster.minions?.[0] ? lookupStatblock(monster.minions[0].name) : undefined)
   const captainWithCaptainLine =
-    captainRef && sbCaptain?.with_captain ? sbCaptain.with_captain : null
+    captainEffectActive && sbCaptain?.with_captain ? sbCaptain.with_captain : null
   const rowTone =
     'transition-opacity duration-200 ease-out motion-reduce:transition-none ' +
     (turnComplete ? 'opacity-[0.38]' : 'opacity-100')
@@ -390,7 +400,12 @@ export function MinionGroupRow({
                     >
                       {captainCreatureOrdinal ?? captainRef!.monsterIndex + 1}
                     </span>
-                    <span className="min-w-0 truncate text-zinc-800 dark:text-zinc-200">{captainMonster.name}</span>
+                    <span
+                      className={`min-w-0 truncate ${captainMonsterDead ? 'text-red-700 line-through dark:text-red-300' : 'text-zinc-800 dark:text-zinc-200'}`}
+                    >
+                      {captainMonster.name}
+                      {captainMonsterDead ? ' (dead)' : ''}
+                    </span>
                   </button>
                   <button
                     type="button"
@@ -518,6 +533,11 @@ export function MinionGroupRow({
                         </span>
                         <span className="min-w-0 flex-1">
                           <span className="block truncate">{c.name}</span>
+                          {c.dead ? (
+                            <span className="mt-0.5 block text-[0.6rem] uppercase tracking-wide text-red-500 dark:text-red-300">
+                              Dead
+                            </span>
+                          ) : null}
                           {captainAssignmentLine}
                         </span>
                       </button>
@@ -614,6 +634,7 @@ export function MinionGroupRow({
             creatureOrdinal={creatureOrdinalMap.get(`${monsterIndex}:${mi}`)!}
             totalCreatures={totalCreatures}
             parentMonster={monster}
+            captainEffectActive={captainEffectActive}
             gridRow={childRow}
             groupColor={groupColor}
             groupNumber={groupNumber}
@@ -663,6 +684,7 @@ function MinionChildRow({
   creatureOrdinal,
   totalCreatures,
   parentMonster,
+  captainEffectActive,
   gridRow,
   groupColor,
   groupNumber,
@@ -687,6 +709,7 @@ function MinionChildRow({
   creatureOrdinal: number
   totalCreatures: number
   parentMonster: Monster
+  captainEffectActive: boolean
   gridRow: number
   groupColor: GroupColorId
   groupNumber: number
@@ -737,8 +760,8 @@ function MinionChildRow({
       : []),
   ]
   const badge = GROUP_COLOR_BADGE[groupColor]
-  const childCombat = rosterCombatStats(parentMonster)
-  const childCaptainHighlights = rosterCombatStatsCaptainHighlights(parentMonster)
+  const childCombat = rosterCombatStats(parentMonster, captainEffectActive)
+  const childCaptainHighlights = rosterCombatStatsCaptainHighlights(parentMonster, captainEffectActive)
   const bodyCell =
     'flex h-full min-h-[3rem] items-center p-2 sm:min-h-[3.25rem] sm:p-2.5'
   const nameColCell =
