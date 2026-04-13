@@ -107,6 +107,43 @@ export const GROUP_COLOR_BADGE: Record<
 }
 
 /**
+ * Hover glow for the ordinal / group-color circle buttons, keyed to encounter group color.
+ * Kept separate from {@link GROUP_COLOR_BADGE} so we can tune visibility independently.
+ */
+export const GROUP_COLOR_ORDINAL_GLOW: Record<GroupColorId, { hoverGlow: string }> = {
+  red: {
+    hoverGlow: 'hover:shadow-[0_0_0_9px_rgba(239,68,68,0.62)] dark:hover:shadow-[0_0_0_9px_rgba(239,68,68,0.42)]',
+  },
+  orange: {
+    hoverGlow: 'hover:shadow-[0_0_0_9px_rgba(249,115,22,0.62)] dark:hover:shadow-[0_0_0_9px_rgba(249,115,22,0.42)]',
+  },
+  yellow: {
+    hoverGlow: 'hover:shadow-[0_0_0_9px_rgba(234,179,8,0.62)] dark:hover:shadow-[0_0_0_9px_rgba(234,179,8,0.42)]',
+  },
+  green: {
+    hoverGlow: 'hover:shadow-[0_0_0_9px_rgba(34,197,94,0.62)] dark:hover:shadow-[0_0_0_9px_rgba(34,197,94,0.42)]',
+  },
+  blue: {
+    hoverGlow: 'hover:shadow-[0_0_0_9px_rgba(14,165,233,0.62)] dark:hover:shadow-[0_0_0_9px_rgba(14,165,233,0.42)]',
+  },
+  purple: {
+    hoverGlow: 'hover:shadow-[0_0_0_9px_rgba(139,92,246,0.62)] dark:hover:shadow-[0_0_0_9px_rgba(139,92,246,0.42)]',
+  },
+  pink: {
+    hoverGlow: 'hover:shadow-[0_0_0_9px_rgba(236,72,153,0.62)] dark:hover:shadow-[0_0_0_9px_rgba(236,72,153,0.42)]',
+  },
+  white: {
+    hoverGlow: 'hover:shadow-[0_0_0_9px_rgba(161,161,170,0.62)] dark:hover:shadow-[0_0_0_9px_rgba(244,244,245,0.24)]',
+  },
+  grey: {
+    hoverGlow: 'hover:shadow-[0_0_0_9px_rgba(161,161,170,0.62)] dark:hover:shadow-[0_0_0_9px_rgba(161,161,170,0.32)]',
+  },
+  black: {
+    hoverGlow: 'hover:shadow-[0_0_0_9px_rgba(24,24,27,0.36)] dark:hover:shadow-[0_0_0_9px_rgba(113,113,122,0.24)]',
+  },
+}
+
+/**
  * Stat block card frame in the monster drawer: subtle perimeter + stronger left accent,
  * keyed to encounter group color (matches ordinal badge hue).
  */
@@ -1919,6 +1956,60 @@ export function staminaAfterHordeDemotedToSolo(parent: Monster): [number, number
 /** Stamina when a solo becomes a one-minion horde (carry over current, new max from roster). */
 export function staminaAfterConvertSoloToHorde(parent: Monster, minions: readonly MinionEntry[]): [number, number] {
   return nextHordePoolStamina(parent, minions)
+}
+
+/** When adding a minion-type creature from the roster picker, pre-build a squad with this many slots. */
+export const ADD_MINION_BESTIARY_SQUAD_SIZE = 4
+
+/** Matches UI eligibility for converting a solo row into a squad (see MonsterRowCells). */
+export function monsterSubtitleIndicatesMinion(monster: Monster): boolean {
+  return /\bminion\b/i.test(monster.subtitle)
+}
+
+/**
+ * Convert a solo monster into a squad parent with `minionCount` minion slots.
+ * Parent-level conditions are moved to the first minion only; the parent row clears conditions.
+ * If `parent` already has minions, returns `parent` unchanged.
+ *
+ * `stamina: 'fullPool'` sets the pool to max (current and ceiling equal); `'preserve'` carries over
+ * solo current and recomputes max from the roster (default).
+ */
+export function soloMinionMonsterToSquad(
+  parent: Monster,
+  minionCount: number,
+  opts?: { stamina?: 'preserve' | 'fullPool' },
+): Monster {
+  if (parent.minions && parent.minions.length > 0) return parent
+  if (!Number.isInteger(minionCount) || minionCount < 1) return parent
+
+  const monWithInterval =
+    parent.custom &&
+    (parent.custom.perMinionStamina ?? 0) <= 0 &&
+    parent.stamina[1] > 0
+      ? { ...parent, custom: { ...parent.custom, perMinionStamina: parent.stamina[1] } }
+      : parent
+
+  const minions: MinionEntry[] = Array.from({ length: minionCount }, (_, i) => ({
+    name: `${monWithInterval.name} ${i + 1}`,
+    initials: monWithInterval.initials,
+    conditions: i === 0 ? [...monWithInterval.conditions] : [],
+    dead: false,
+  }))
+
+  const stamina: [number, number] =
+    opts?.stamina === 'fullPool'
+      ? (() => {
+          const max = hordePoolMaxFromMinions(monWithInterval, minions)
+          return [max, max]
+        })()
+      : staminaAfterConvertSoloToHorde(monWithInterval, minions)
+
+  return {
+    ...monWithInterval,
+    conditions: [],
+    minions,
+    stamina,
+  }
 }
 
 export function applyStaminaDelta(current: number, max: number, delta: number): [number, number] {

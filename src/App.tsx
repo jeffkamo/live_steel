@@ -43,8 +43,10 @@ import {
   type MonsterDragPayload,
   nextHordePoolStamina,
   hordePoolStaminaAfterMinionDeadToggle,
-  staminaAfterConvertSoloToHorde,
   staminaAfterHordeDemotedToSolo,
+  ADD_MINION_BESTIARY_SQUAD_SIZE,
+  monsterSubtitleIndicatesMinion,
+  soloMinionMonsterToSquad,
   transferMinionBetweenHordes,
   remapEotConfirmedAfterMinionRemoved,
   remapEotConfirmedAfterMinionTransferBetweenHordes,
@@ -104,6 +106,7 @@ function initStateFromStorage(): {
   terrainRows: TerrainRowState[]
   groupTurnActed: boolean[]
   maliceRows: MaliceRowRef[]
+  squadsCollapsedByGroupId: Record<string, boolean>
   encounterIndex: PersistedEncounterIndex
   activeEncounterId: string
   encounterName: string
@@ -119,6 +122,7 @@ function initStateFromStorage(): {
           terrainRows: migrated.state.state.terrainRows,
           groupTurnActed: migrated.state.state.groupTurnActed,
           maliceRows: migrated.state.state.maliceRows,
+          squadsCollapsedByGroupId: migrated.state.state.squadsCollapsedByGroupId ?? {},
           encounterIndex: index,
           activeEncounterId: index.activeId,
           encounterName: index.encounters[0]?.name ?? 'Encounter 1',
@@ -136,6 +140,7 @@ function initStateFromStorage(): {
         terrainRows: loaded.state.terrainRows,
         groupTurnActed: loaded.state.groupTurnActed,
         maliceRows: loaded.state.maliceRows,
+        squadsCollapsedByGroupId: loaded.state.squadsCollapsedByGroupId ?? {},
         encounterIndex: { ...index, activeId: activeEntry.id },
         activeEncounterId: activeEntry.id,
         encounterName: activeEntry.name,
@@ -155,6 +160,7 @@ function initStateFromStorage(): {
     terrainRows: cloneTerrainRows(),
     groupTurnActed: [],
     maliceRows: ensureMaliceRows(undefined),
+    squadsCollapsedByGroupId: {},
     encounterIndex: newIndex,
     activeEncounterId: id,
     encounterName: name,
@@ -183,6 +189,7 @@ function App() {
     terrainRows: initTerrain,
     groupTurnActed: initTurns,
     maliceRows: initMaliceRows,
+    squadsCollapsedByGroupId: initSquadsCollapsedByGroupId,
     encounterIndex: initIndex,
     activeEncounterId: initEncId,
     encounterName: initEncName,
@@ -191,6 +198,9 @@ function App() {
   const [terrainRows, setTerrainRows] = useState(() => initTerrain)
   const [groupTurnActed, setGroupTurnActed] = useState(() => initTurns)
   const [maliceRows, setMaliceRows] = useState(() => initMaliceRows)
+  const [squadsCollapsedByGroupId, setSquadsCollapsedByGroupId] = useState(
+    () => initSquadsCollapsedByGroupId,
+  )
   const [uiLocked, setUiLocked] = useState(false)
   const canAddGroup = nextUnusedColor(encounterGroups.map((g) => g.color)) != null
   const [monsterCardDrawer, setMonsterCardDrawer] = useState<MonsterCardDrawerState | null>(null)
@@ -216,8 +226,28 @@ function App() {
   const prevDrawerForEnterRef = useRef<MonsterCardDrawerState | null>(null)
 
   useEffect(() => {
-    saveToLocalStorage(encounterGroups, terrainRows, groupTurnActed, activeEncounterId, maliceRows)
-  }, [encounterGroups, terrainRows, groupTurnActed, activeEncounterId, maliceRows])
+    saveToLocalStorage(
+      encounterGroups,
+      terrainRows,
+      groupTurnActed,
+      activeEncounterId,
+      maliceRows,
+      squadsCollapsedByGroupId,
+    )
+  }, [encounterGroups, terrainRows, groupTurnActed, activeEncounterId, maliceRows, squadsCollapsedByGroupId])
+
+  const setGroupSquadsCollapsed = useCallback((groupId: string, collapsed: boolean) => {
+    setSquadsCollapsedByGroupId((prev) => {
+      if (!collapsed) {
+        if (!(groupId in prev)) return prev
+        const next = { ...prev }
+        delete next[groupId]
+        return next
+      }
+      if (prev[groupId] === true) return prev
+      return { ...prev, [groupId]: true }
+    })
+  }, [])
 
   useEffect(() => {
     saveEncounterIndex(encounterIndex)
@@ -510,18 +540,26 @@ function App() {
 
   const addMonsterToGroup = useCallback(
     (groupIndex: number, monster: Monster) => {
+      let collapseSquadsForGroupId: string | undefined
       setEncounterGroups((prev) =>
         prev.map((g, gi) => {
           if (gi !== groupIndex) return g
-          const m =
+          let m =
             monster.encounterInstanceId != null && monster.encounterInstanceId !== ''
               ? monster
               : { ...monster, encounterInstanceId: newMonsterEncounterInstanceId() }
+          if (monsterSubtitleIndicatesMinion(m) && !(m.minions && m.minions.length > 0)) {
+            m = soloMinionMonsterToSquad(m, ADD_MINION_BESTIARY_SQUAD_SIZE, { stamina: 'fullPool' })
+            collapseSquadsForGroupId = g.id
+          }
           return { ...g, monsters: [...g.monsters, m] }
         }),
       )
+      if (collapseSquadsForGroupId) {
+        setGroupSquadsCollapsed(collapseSquadsForGroupId, true)
+      }
     },
-    [],
+    [setGroupSquadsCollapsed],
   )
 
   const duplicateMonster = useCallback(
@@ -637,32 +675,9 @@ function App() {
         if (gi !== groupIndex) return gr
         return {
           ...gr,
-          monsters: gr.monsters.map((mon, mi) => {
-            if (mi !== monsterIndex) return mon
-            const minions = [
-              {
-                name: `${mon.name} 1`,
-                initials: mon.initials,
-                conditions: [...mon.conditions],
-                dead: false,
-              },
-            ]
-            const monWithInterval =
-              mon.custom &&
-              (mon.custom.perMinionStamina ?? 0) <= 0 &&
-              mon.stamina[1] > 0
-                ? {
-                    ...mon,
-                    custom: { ...mon.custom, perMinionStamina: mon.stamina[1] },
-                  }
-                : mon
-            return {
-              ...monWithInterval,
-              conditions: [],
-              minions,
-              stamina: staminaAfterConvertSoloToHorde(monWithInterval, minions),
-            }
-          }),
+          monsters: gr.monsters.map((mon, mi) =>
+            mi === monsterIndex ? soloMinionMonsterToSquad(mon, 1) : mon,
+          ),
         }
       })
     })
@@ -1449,7 +1464,14 @@ function App() {
     const trimmed = name.trim()
     if (!trimmed) return
 
-    saveToLocalStorage(encounterGroups, terrainRows, groupTurnActed, activeEncounterId, maliceRows)
+    saveToLocalStorage(
+      encounterGroups,
+      terrainRows,
+      groupTurnActed,
+      activeEncounterId,
+      maliceRows,
+      squadsCollapsedByGroupId,
+    )
 
     const id = newEncounterId()
     const entry: EncounterIndexEntry = { id, name: trimmed }
@@ -1468,6 +1490,7 @@ function App() {
     setTerrainRows(newTerrain)
     setGroupTurnActed(newTurns)
     setMaliceRows(ensureMaliceRows(undefined))
+    setSquadsCollapsedByGroupId({})
     prevTurnActedRef.current = [...newTurns]
     setMonsterCardDrawer(null)
     setTerrainDrawerIndex(null)
@@ -1476,12 +1499,19 @@ function App() {
     eotTimersRef.current.clear()
     setEotConfirmed(() => new Map())
     setSeActWindowElapsedGroup(() => new Set())
-  }, [encounterGroups, terrainRows, groupTurnActed, activeEncounterId, maliceRows])
+  }, [encounterGroups, terrainRows, groupTurnActed, activeEncounterId, maliceRows, squadsCollapsedByGroupId])
 
   const switchToEncounter = useCallback((targetId: string) => {
     if (targetId === activeEncounterId) return
 
-    saveToLocalStorage(encounterGroups, terrainRows, groupTurnActed, activeEncounterId, maliceRows)
+    saveToLocalStorage(
+      encounterGroups,
+      terrainRows,
+      groupTurnActed,
+      activeEncounterId,
+      maliceRows,
+      squadsCollapsedByGroupId,
+    )
 
     const loaded = loadFromLocalStorage(targetId)
     const entry = encounterIndex.encounters.find((e) => e.id === targetId)
@@ -1492,6 +1522,7 @@ function App() {
       setTerrainRows(loaded.state.terrainRows)
       setGroupTurnActed(loaded.state.groupTurnActed)
       setMaliceRows(loaded.state.maliceRows)
+      setSquadsCollapsedByGroupId(loaded.state.squadsCollapsedByGroupId ?? {})
       prevTurnActedRef.current = [...loaded.state.groupTurnActed]
     } else {
       const newGroups = cloneEncounterGroups()
@@ -1501,6 +1532,7 @@ function App() {
       setTerrainRows(newTerrain)
       setGroupTurnActed(newTurns)
       setMaliceRows(ensureMaliceRows(undefined))
+      setSquadsCollapsedByGroupId({})
       prevTurnActedRef.current = [...newTurns]
     }
 
@@ -1515,7 +1547,15 @@ function App() {
     setEotConfirmed(() => new Map())
     setSeActWindowElapsedGroup(() => new Set())
     setShowEncounterSwitcher(false)
-  }, [encounterGroups, terrainRows, groupTurnActed, activeEncounterId, encounterIndex, maliceRows])
+  }, [
+    encounterGroups,
+    terrainRows,
+    groupTurnActed,
+    activeEncounterId,
+    encounterIndex,
+    maliceRows,
+    squadsCollapsedByGroupId,
+  ])
 
   const renameEncounter = useCallback((targetId: string, newName: string) => {
     const trimmed = newName.trim()
@@ -1550,6 +1590,7 @@ function App() {
         setTerrainRows(loaded.state.terrainRows)
         setGroupTurnActed(loaded.state.groupTurnActed)
         setMaliceRows(loaded.state.maliceRows)
+        setSquadsCollapsedByGroupId(loaded.state.squadsCollapsedByGroupId ?? {})
         prevTurnActedRef.current = [...loaded.state.groupTurnActed]
       } else {
         const newGroups = cloneEncounterGroups()
@@ -1559,6 +1600,7 @@ function App() {
         setTerrainRows(newTerrain)
         setGroupTurnActed(newTurns)
         setMaliceRows(ensureMaliceRows(undefined))
+        setSquadsCollapsedByGroupId({})
         prevTurnActedRef.current = [...newTurns]
       }
 
@@ -2422,6 +2464,10 @@ function App() {
                               <GroupSection
                                 group={group!}
                                 groupKey={`g${insertIndex}`}
+                                squadsCollapsed={squadsCollapsedByGroupId[group!.id] === true}
+                                onSquadsCollapsedChange={(collapsed) =>
+                                  setGroupSquadsCollapsed(group!.id, collapsed)
+                                }
                                 groupNumber={insertIndex + 1}
                                 thisGroupIndex={insertIndex}
                                 encounterGroupColors={encounterGroups.map((g) => g.color)}

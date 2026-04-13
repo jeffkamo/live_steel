@@ -52,6 +52,14 @@ async function addTrollWhelpToGroup(
   await user.click(within(option!).getByRole('button'))
 }
 
+async function expandSquadsInGroup(
+  user: ReturnType<typeof userEvent.setup>,
+  groupGrid: HTMLElement,
+) {
+  const btn = within(groupGrid).queryByRole('button', { name: /^Expand squads$/i })
+  if (btn) await user.click(btn)
+}
+
 /** Accessible names use `Encounter group ${n}: …`; avoid `/group 1/` matching `group 10`. */
 const turnButton = (n: number, state: 'pending' | 'acted') =>
   new RegExp(`^Encounter group ${n}: turn ${state}$`, 'i')
@@ -1363,15 +1371,25 @@ describe('App', () => {
     expect(screen.getByText('9 / 120')).toBeInTheDocument()
   })
 
-  it('solo creature reorder grip offers Convert to Squad and adds a minion row', async () => {
+  it('adding a minion from the bestiary creates a collapsed squad at full pool; expanding shows four minions', async () => {
     const user = userEvent.setup()
     render(<App />)
     const group1grid = screen.getByText('Goblin Assassin 1', { exact: true })
       .closest('div.grid.items-stretch.rounded-lg') as HTMLElement
     await addTrollWhelpToGroup(user, group1grid)
-    await user.click(screen.getByRole('button', { name: 'Reorder Troll Whelp within encounter' }))
-    await user.click(screen.getByTestId('grip-menu-convert-squad'))
-    expect(screen.getByText('Troll Whelp 1', { exact: true })).toBeInTheDocument()
+    const pool = within(group1grid).getByRole('group', { name: /Minion stamina pool/i })
+    const al = pool.getAttribute('aria-label') ?? ''
+    const pm = /^Minion stamina pool: (\d+) of (\d+)$/.exec(al)
+    expect(pm).not.toBeNull()
+    expect(pm![1]).toBe(pm![2])
+    expect(within(group1grid).getByRole('button', { name: /^Expand squads$/i })).toHaveAttribute(
+      'aria-expanded',
+      'false',
+    )
+    await expandSquadsInGroup(user, group1grid)
+    for (let i = 1; i <= 4; i++) {
+      expect(within(group1grid).getByText(`Troll Whelp ${i}`, { exact: true })).toBeInTheDocument()
+    }
   })
 
   it('Convert to Squad is disabled for non-Minion monster types', async () => {
@@ -1475,7 +1493,7 @@ describe('App', () => {
     ).toBeInTheDocument()
   })
 
-  it('added monster has correct ordinal and stamina from bestiary', async () => {
+  it('added minion bestiary entry yields a four-minion squad; ordinals include all four slots', async () => {
     const user = userEvent.setup()
     render(<App />)
     const group1grid = screen.getByText('Goblin Assassin 1', { exact: true })
@@ -1491,7 +1509,10 @@ describe('App', () => {
     )
     await user.click(within(option!).getByRole('button'))
 
-    expect(within(group1grid).getByRole('button', { name: /creature 3 of 3/i })).toBeInTheDocument()
+    await expandSquadsInGroup(user, group1grid)
+    expect(
+      within(group1grid).getByLabelText(/creature 6 of 6 in encounter group 1/i),
+    ).toBeInTheDocument()
   })
 
   it('added monster is fully functional (stamina, conditions)', async () => {
@@ -2391,8 +2412,7 @@ describe('App', () => {
     const group1grid = screen.getByText('Goblin Assassin 1', { exact: true })
       .closest('div.grid.items-stretch.rounded-lg') as HTMLElement
     await addTrollWhelpToGroup(user, group1grid)
-    await user.click(screen.getByRole('button', { name: 'Reorder Troll Whelp within encounter' }))
-    await user.click(screen.getByTestId('grip-menu-convert-squad'))
+    await expandSquadsInGroup(user, group1grid)
     const groups = screen.getAllByTestId('encounter-group-drop-target')
     const g0 = groups[0]!
     const g2 = groups[2]!

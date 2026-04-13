@@ -475,9 +475,16 @@ describe('Malice creatures stat card name control', () => {
 })
 
 function GroupSectionWithDrawerHarness(
-  props: Omit<ComponentProps<typeof GroupSection>, 'monsterCardDrawer' | 'onToggleMonsterCard'>,
+  props: Omit<
+    ComponentProps<typeof GroupSection>,
+    | 'monsterCardDrawer'
+    | 'onToggleMonsterCard'
+    | 'squadsCollapsed'
+    | 'onSquadsCollapsedChange'
+  >,
 ) {
   const [drawer, setDrawer] = useState<MonsterCardDrawerState | null>(null)
+  const [squadsCollapsed, setSquadsCollapsed] = useState(false)
   const { group, thisGroupIndex, ...rest } = props
   const toggle = (monsterIndex: number, view: MonsterCardDrawerView) => {
     const m = group.monsters[monsterIndex]
@@ -506,6 +513,8 @@ function GroupSectionWithDrawerHarness(
         {...rest}
         group={group}
         thisGroupIndex={thisGroupIndex}
+        squadsCollapsed={squadsCollapsed}
+        onSquadsCollapsedChange={setSquadsCollapsed}
         monsterCardDrawer={drawer}
         onToggleMonsterCard={toggle}
       />

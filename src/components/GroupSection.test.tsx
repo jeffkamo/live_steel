@@ -38,6 +38,8 @@ function makeGroup(overrides: Partial<EncounterGroup> = {}): EncounterGroup {
 
 const baseProps = {
   groupKey: 'g0',
+  squadsCollapsed: false,
+  onSquadsCollapsedChange: vi.fn(),
   groupNumber: 1,
   thisGroupIndex: 0,
   encounterGroupColors: ['red', 'blue'] as GroupColorId[],

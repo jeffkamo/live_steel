@@ -15,6 +15,9 @@ import {
   nextAvailableColor,
   randomUnusedColor,
   monsterFromBestiary,
+  ADD_MINION_BESTIARY_SQUAD_SIZE,
+  monsterSubtitleIndicatesMinion,
+  soloMinionMonsterToSquad,
   blankCustomMonster,
   formatCustomSubtitle,
   monsterHasStatCard,
@@ -952,6 +955,55 @@ describe('monsterFromBestiary', () => {
   it('derives initials from the monster name', () => {
     const m = monsterFromBestiary('Goblin Assassin')
     expect(m.initials).toBe('GA')
+  })
+})
+
+describe('monsterSubtitleIndicatesMinion / soloMinionMonsterToSquad', () => {
+  it('detects Minion from subtitle type line', () => {
+    const solo = monsterFromBestiary('Troll Whelp')
+    expect(monsterSubtitleIndicatesMinion(solo)).toBe(true)
+    const horde = monsterFromBestiary('Goblin Assassin')
+    expect(monsterSubtitleIndicatesMinion(horde)).toBe(false)
+  })
+
+  it('soloMinionMonsterToSquad with count 1 matches prior convert-to-squad shape', () => {
+    const solo = monsterFromBestiary('Troll Whelp')
+    solo.conditions = [{ label: 'Bleeding', state: 'neutral' as const }]
+    const squad = soloMinionMonsterToSquad(solo, 1)
+    expect(squad.minions).toHaveLength(1)
+    expect(squad.minions![0]).toMatchObject({
+      name: `${solo.name} 1`,
+      initials: solo.initials,
+      dead: false,
+      conditions: [{ label: 'Bleeding', state: 'neutral' }],
+    })
+    expect(squad.conditions).toEqual([])
+    expect(squad.stamina[1]).toBeGreaterThan(0)
+  })
+
+  it('soloMinionMonsterToSquad fullPool sets pool current and ceiling to the horde max', () => {
+    const solo = monsterFromBestiary('Troll Whelp')
+    solo.stamina = [3, 10]
+    const squad = soloMinionMonsterToSquad(solo, ADD_MINION_BESTIARY_SQUAD_SIZE, { stamina: 'fullPool' })
+    const max = hordePoolMaxFromMinions(squad, squad.minions!)
+    expect(squad.stamina).toEqual([max, max])
+  })
+
+  it('soloMinionMonsterToSquad with ADD_MINION_BESTIARY_SQUAD_SIZE names minions and clears parent conditions', () => {
+    const solo = monsterFromBestiary('Troll Whelp')
+    const squad = soloMinionMonsterToSquad(solo, ADD_MINION_BESTIARY_SQUAD_SIZE)
+    expect(squad.minions).toHaveLength(ADD_MINION_BESTIARY_SQUAD_SIZE)
+    for (let i = 0; i < ADD_MINION_BESTIARY_SQUAD_SIZE; i++) {
+      expect(squad.minions![i]!.name).toBe(`${solo.name} ${i + 1}`)
+      expect(squad.minions![i]!.conditions).toEqual([])
+    }
+    expect(squad.conditions).toEqual([])
+  })
+
+  it('returns parent unchanged when already a horde', () => {
+    const solo = monsterFromBestiary('Troll Whelp')
+    const squad = soloMinionMonsterToSquad(solo, ADD_MINION_BESTIARY_SQUAD_SIZE)
+    expect(soloMinionMonsterToSquad(squad, ADD_MINION_BESTIARY_SQUAD_SIZE)).toBe(squad)
   })
 })
 

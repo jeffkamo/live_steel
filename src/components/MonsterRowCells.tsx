@@ -1,7 +1,7 @@
 import { useRef, type DragEvent } from 'react'
 import type { ConditionState, GroupColorId, Monster } from '../types'
 import { rosterCombatStats } from '../bestiary'
-import { GROUP_COLOR_BADGE, GROUP_COLOR_LABEL } from '../data'
+import { GROUP_COLOR_BADGE, GROUP_COLOR_LABEL, GROUP_COLOR_ORDINAL_GLOW } from '../data'
 import { EditableStaminaCell } from './EditableStaminaCell'
 import { MaripCluster } from './MaripCluster'
 import { StatCluster } from './StatCluster'
@@ -85,6 +85,7 @@ export function MonsterRowCells({
   const deadDim = dead ? 'opacity-40' : ''
   const deadStrike = dead ? 'line-through' : ''
   const badge = GROUP_COLOR_BADGE[groupColor]
+  const glow = GROUP_COLOR_ORDINAL_GLOW[groupColor]
   const colorLabel = GROUP_COLOR_LABEL[groupColor]
   const hasStatBlock =
     (monster.features?.length ?? 0) > 0 || monster.custom != null
@@ -181,7 +182,7 @@ export function MonsterRowCells({
                 aria-label={`Encounter group ${groupNumber}: creature ${ordinal} of ${totalCreatures}. Group color ${colorLabel}. Activate to change group color.`}
                 aria-expanded={colorMenuOpen && colorMenuMonsterIndex === monsterIndex}
                 aria-haspopup="dialog"
-                className={`flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-full border-2 text-sm font-semibold tabular-nums leading-none outline-none transition-[filter,transform] duration-150 ease-out motion-reduce:transition-none hover:brightness-110 focus-visible:ring-2 focus-visible:ring-amber-500/45 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-50 dark:focus-visible:ring-offset-zinc-950 active:scale-[0.97] sm:size-10 sm:text-base ${badge.border} ${badge.bg} ${badge.text}`}
+                className={`flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-full border-2 text-sm font-semibold tabular-nums leading-none outline-none transition-[filter,transform,box-shadow] duration-150 ease-out motion-reduce:transition-none hover:brightness-110 ${glow.hoverGlow} focus-visible:ring-2 focus-visible:ring-amber-500/45 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-50 dark:focus-visible:ring-offset-zinc-950 active:scale-[0.97] sm:size-10 sm:text-base ${badge.border} ${badge.bg} ${badge.text}`}
                 onClick={(e) => onGroupColorOrdinalClick(monsterIndex, e.currentTarget)}
               >
                 {ordinal}

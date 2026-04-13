@@ -27,10 +27,28 @@ export type PersistedEncounterState = {
   groupTurnActed: boolean[]
   /** Encounter-wide malice dashboard rows; omitted in legacy payloads. */
   maliceRows: MaliceRowRef[]
+  /**
+   * Per encounter group: when true, squad minion rows are collapsed in the roster.
+   * Keys are `EncounterGroup.id`; omitted or empty when nothing is collapsed.
+   */
+  squadsCollapsedByGroupId?: Record<string, boolean>
 }
 
 function encounterStorageKey(encounterId: string): string {
   return `${STORAGE_KEY}-${encounterId}`
+}
+
+function squadsCollapsedForSerialize(
+  encounterGroups: EncounterGroup[],
+  squadsCollapsedByGroupId: Record<string, boolean> | undefined,
+): Record<string, boolean> | undefined {
+  if (squadsCollapsedByGroupId == null) return undefined
+  const ids = new Set(encounterGroups.map((g) => g.id))
+  const out: Record<string, boolean> = {}
+  for (const [id, v] of Object.entries(squadsCollapsedByGroupId)) {
+    if (ids.has(id) && v) out[id] = true
+  }
+  return Object.keys(out).length > 0 ? out : undefined
 }
 
 export function newEncounterId(): string {
@@ -42,6 +60,7 @@ export function serializeEncounterState(
   terrainRows: TerrainRowState[],
   groupTurnActed: boolean[],
   maliceRows: MaliceRowRef[] = ensureMaliceRows(undefined),
+  squadsCollapsedByGroupId?: Record<string, boolean>,
 ): string {
   const stripped: EncounterGroup[] = encounterGroups.map((g) => ({
     id: g.id,
@@ -51,12 +70,14 @@ export function serializeEncounterState(
       return rest as Monster
     }),
   }))
+  const squads = squadsCollapsedForSerialize(encounterGroups, squadsCollapsedByGroupId)
   const payload: PersistedEncounterState = {
     version: STORAGE_VERSION,
     encounterGroups: stripped,
     terrainRows,
     groupTurnActed,
     maliceRows: ensureMaliceRows(maliceRows),
+    ...(squads != null ? { squadsCollapsedByGroupId: squads } : {}),
   }
   return JSON.stringify(payload)
 }
@@ -122,6 +143,13 @@ function isValidPersistedState(o: unknown): boolean {
   if (!Array.isArray(obj.terrainRows)) return false
   if (!Array.isArray(obj.groupTurnActed)) return false
   if (obj.maliceRows != null && !Array.isArray(obj.maliceRows)) return false
+  if (obj.squadsCollapsedByGroupId != null) {
+    const m = obj.squadsCollapsedByGroupId
+    if (typeof m !== 'object' || Array.isArray(m)) return false
+    for (const v of Object.values(m)) {
+      if (typeof v !== 'boolean') return false
+    }
+  }
   for (const g of obj.encounterGroups) {
     if (g == null || typeof g !== 'object') return false
     const grp = g as Record<string, unknown>
@@ -153,6 +181,7 @@ export function deserializeEncounterState(raw: string | null): DeserializeResult
       terrainRows: TerrainRowState[]
       groupTurnActed: boolean[]
       maliceRows?: MaliceRowRef[]
+      squadsCollapsedByGroupId?: Record<string, boolean>
     }
     const hoisted = hoistLegacyMaliceFromParsedGroups(stored.encounterGroups as unknown[])
     const rootMalice = Array.isArray(stored.maliceRows) ? stored.maliceRows : []
@@ -162,6 +191,9 @@ export function deserializeEncounterState(raw: string | null): DeserializeResult
       rehydrateFeatures(stored.encounterGroups),
     )
     const maliceRows = ensureMaliceRows(normalizeMonsterMaliceRowRefs(merged, encounterGroups))
+    const squadsCollapsedByGroupId =
+      stored.squadsCollapsedByGroupId != null ? { ...stored.squadsCollapsedByGroupId } : {}
+
     return {
       ok: true,
       state: {
@@ -170,6 +202,7 @@ export function deserializeEncounterState(raw: string | null): DeserializeResult
         terrainRows: stored.terrainRows,
         groupTurnActed: stored.groupTurnActed,
         maliceRows,
+        squadsCollapsedByGroupId,
       },
     }
   } catch {
@@ -246,6 +279,7 @@ export function saveToLocalStorage(
   groupTurnActed: boolean[],
   encounterId?: string,
   maliceRows?: MaliceRowRef[],
+  squadsCollapsedByGroupId?: Record<string, boolean>,
 ): { ok: true } | { ok: false; error: unknown } {
   try {
     const json = serializeEncounterState(
@@ -253,6 +287,7 @@ export function saveToLocalStorage(
       terrainRows,
       groupTurnActed,
       maliceRows ?? ensureMaliceRows(undefined),
+      squadsCollapsedByGroupId,
     )
     const key = encounterId != null ? encounterStorageKey(encounterId) : STORAGE_KEY
     localStorage.setItem(key, json)

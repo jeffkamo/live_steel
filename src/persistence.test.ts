@@ -79,6 +79,23 @@ describe('serializeEncounterState', () => {
     const parsed = JSON.parse(json) as { groupTurnActed: boolean[] }
     expect(parsed.groupTurnActed).toEqual(turns)
   })
+
+  it('includes squadsCollapsedByGroupId only for known group ids with true', () => {
+    const groups = makeGroups()
+    const gid = groups[0]!.id
+    const json = serializeEncounterState(groups, makeTerrain(), makeTurnActed(), ensureMaliceRows(undefined), {
+      [gid]: true,
+      'unknown-group-id': true,
+    })
+    const parsed = JSON.parse(json) as { squadsCollapsedByGroupId?: Record<string, boolean> }
+    expect(parsed.squadsCollapsedByGroupId).toEqual({ [gid]: true })
+  })
+
+  it('omits squadsCollapsedByGroupId from JSON when nothing is collapsed', () => {
+    const json = serializeEncounterState(makeGroups(), makeTerrain(), makeTurnActed())
+    const parsed = JSON.parse(json) as { squadsCollapsedByGroupId?: Record<string, boolean> }
+    expect(parsed.squadsCollapsedByGroupId).toBeUndefined()
+  })
 })
 
 describe('deserializeEncounterState', () => {
@@ -141,6 +158,37 @@ describe('deserializeEncounterState', () => {
     expect(result.state.encounterGroups[0]!.id).toBe(groups[0]!.id)
     expect(result.state.encounterGroups[0]!.color).toBe(groups[0]!.color)
     expect(result.state.maliceRows).toEqual(ensureMaliceRows(undefined))
+    expect(result.state.squadsCollapsedByGroupId).toEqual({})
+  })
+
+  it('round-trips squadsCollapsedByGroupId', () => {
+    const groups = makeGroups()
+    const gid = groups[0]!.id
+    const json = serializeEncounterState(
+      groups,
+      makeTerrain(),
+      makeTurnActed(),
+      ensureMaliceRows(undefined),
+      { [gid]: true },
+    )
+    const result = deserializeEncounterState(json)
+    expect(result.ok).toBe(true)
+    if (!result.ok) return
+    expect(result.state.squadsCollapsedByGroupId).toEqual({ [gid]: true })
+  })
+
+  it('returns ok=false reason=corrupt when squadsCollapsedByGroupId has non-boolean values', () => {
+    const payload = {
+      version: STORAGE_VERSION,
+      encounterGroups: [{ id: 'g1', color: 'red', monsters: [] }],
+      terrainRows: [],
+      groupTurnActed: [],
+      squadsCollapsedByGroupId: { g1: 'yes' },
+    }
+    expect(deserializeEncounterState(JSON.stringify(payload))).toEqual({
+      ok: false,
+      reason: 'corrupt',
+    })
   })
 
   it('rehydrates features from bestiary on deserialize', () => {

@@ -15,7 +15,7 @@ import {
   rosterCombatStatsCaptainHighlights,
   suggestedDeadCount,
 } from '../bestiary'
-import { GROUP_COLOR_BADGE, GROUP_COLOR_LABEL, buildCreatureOrdinalMap } from '../data'
+import { GROUP_COLOR_BADGE, GROUP_COLOR_LABEL, GROUP_COLOR_ORDINAL_GLOW, buildCreatureOrdinalMap } from '../data'
 import { EditableStaminaCell } from './EditableStaminaCell'
 import { MinionStaminaDisplay } from './MinionStaminaDisplay'
 import { MinionStaminaEditor } from './MinionStaminaEditor'
@@ -169,6 +169,7 @@ export function MinionGroupRow({
 }) {
   const [sc, sm] = monster.stamina
   const badge = GROUP_COLOR_BADGE[groupColor]
+  const glow = GROUP_COLOR_ORDINAL_GLOW[groupColor]
   const colorLabel = GROUP_COLOR_LABEL[groupColor]
   const minions = monster.minions ?? []
   const hasStatBlock =
@@ -304,8 +305,6 @@ export function MinionGroupRow({
 
   const lockedOrdinalBalancePad = 'pl-1 sm:pl-1.5'
 
-  const squadOrdinal = creatureOrdinalMap.get(`${monsterIndex}`) ?? monsterIndex + 1
-
   return (
     <>
       {/* --- parent minion summary row --- */}
@@ -345,11 +344,9 @@ export function MinionGroupRow({
             aria-label={`Encounter group ${groupNumber}: Squad ${monster.name}, group color ${colorLabel}. Activate to change group color.`}
             aria-expanded={colorMenuOpen && colorMenuMonsterIndex === monsterIndex}
             aria-haspopup="dialog"
-            className={`flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-full border-2 text-sm font-semibold tabular-nums leading-none outline-none transition-[filter,transform] duration-150 ease-out motion-reduce:transition-none hover:brightness-110 focus-visible:ring-2 focus-visible:ring-amber-500/45 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-50 dark:focus-visible:ring-offset-zinc-950 active:scale-[0.97] sm:size-10 sm:text-base ${badge.border} ${badge.bg} ${badge.text}`}
+            className={`flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-full border-2 outline-none transition-[filter,transform,box-shadow] duration-150 ease-out motion-reduce:transition-none hover:brightness-110 ${glow.hoverGlow} focus-visible:ring-2 focus-visible:ring-amber-500/45 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-50 dark:focus-visible:ring-offset-zinc-950 active:scale-[0.97] sm:size-10 ${badge.border} ${badge.bg} ${badge.text}`}
             onClick={(e) => onGroupColorOrdinalClick(monsterIndex, e.currentTarget)}
-          >
-            {squadOrdinal}
-          </button>
+          />
           <div className="min-w-0 flex-1">
             {hasStatBlock && onStatCardToggle ? (
               <button

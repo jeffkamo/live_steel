@@ -21,6 +21,8 @@ import { AddMonsterButton } from './AddMonsterButton'
 export function GroupSection({
   group,
   groupKey,
+  squadsCollapsed,
+  onSquadsCollapsedChange,
   groupNumber,
   thisGroupIndex,
   encounterGroupColors,
@@ -59,6 +61,9 @@ export function GroupSection({
 }: {
   group: EncounterGroup
   groupKey: string
+  /** When true, squad minion rows are hidden (controlled; persisted in App). */
+  squadsCollapsed: boolean
+  onSquadsCollapsedChange: (collapsed: boolean) => void
   groupNumber: number
   thisGroupIndex: number
   encounterGroupColors: readonly GroupColorId[]
@@ -142,13 +147,12 @@ export function GroupSection({
     anchor: null,
     monsterIndex: null,
   })
-  const [squadsCollapsed, setSquadsCollapsed] = useState(false)
   const encounterCardDragImageRef = useRef<HTMLDivElement | null>(null)
 
   const hasSquads = group.monsters.some((m) => (m.minions?.length ?? 0) > 0)
   useEffect(() => {
-    if (!hasSquads) setSquadsCollapsed(false)
-  }, [hasSquads])
+    if (!hasSquads && squadsCollapsed) onSquadsCollapsedChange(false)
+  }, [hasSquads, squadsCollapsed, onSquadsCollapsedChange])
 
   const closeColorMenu = useCallback(() => {
     setColorMenu({ open: false, anchor: null, monsterIndex: null })
@@ -425,7 +429,7 @@ export function GroupSection({
           hasSquads
             ? {
                 collapsed: squadsCollapsed,
-                onToggle: () => setSquadsCollapsed((c) => !c),
+                onToggle: () => onSquadsCollapsedChange(!squadsCollapsed),
               }
             : undefined
         }
