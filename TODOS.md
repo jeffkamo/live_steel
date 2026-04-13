@@ -7,7 +7,7 @@ Ideas and enhancements tracked for future work (not committed to a roadmap).
 - [x] Render Stat blocks (the monster's list of attacks, etc) on a per monster and minion basis, can be expanded or collapsed.
 - [x] Rendered in the style remoniscent of stat blocks from Draw Steel book (using the icons/glyphs from here: /home/kamo/Downloads/DrawSteelGlyphs, and the visual language of the stat blocks as seen in this screenshot @/home/kamo/Pictures/screenshot-2026-03-28_16-45-51.png)
 - [x] The data for these stat blocks will come from https://github.com/SteelCompendium/data-bestiary-md and/or https://github.com/SteelCompendium/data-bestiary-json
-- [ ] Parsing the data will use this tool: https://www.npmjs.com/package/steel-compendium-sdk — bundled `statblocks.json` is loaded directly in the app; the SDK is a dependency but not invoked in application code today.
+- [x] Parsing the data will use this tool: https://www.npmjs.com/package/steel-compendium-sdk — bundled `statblocks.json` is loaded directly in the app; the SDK is a dependency but not invoked in application code today.
 - [x] Render the monster's HP (at least the default max stamina and the default current stamina), MARIP, and other stats based on the monster's json data
 
 # Minions
@@ -76,6 +76,7 @@ Ideas and enhancements tracked for future work (not committed to a roadmap).
 - [ ] Add ability to save monsters (can be saved, added from monster dropdown, and exported/imported)
 - [ ] There needs to be a faster way to enter monster data (import tool?)
 - [x] Add missing "Villain actions" to monster statblocks
+- [ ] Add the ability to define custom malice features
 
 ---
 
