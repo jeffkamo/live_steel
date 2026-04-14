@@ -92,3 +92,7 @@ Ideas and enhancements tracked for future work (not committed to a roadmap).
 # Ideas from filling out custom monster stat blocks
 
 - [ ] Add a way to add temporary Stamina to a monster, separate from normal stamina.
+- [ ] Add a feature to monster stat blocks that let's you filter their abilities by things like "action type (main, triggered, maneuver) and any keyword on an ability". So for example,
+      a Bugbear Channeler would have a row of pills for "Main, Maneuver, Triggered", then a row of pills for "magic, ranged, strike, area, melee" each of which can be activated or
+      deactivated to filter the list of actions. There should probably be a clear indicator that some abilities are hidden, or that filters are active, so the user doesn't forget ordinal
+      fails to remember to undo the filters in some way... maybe the filters turn off when the drawer is closed?
