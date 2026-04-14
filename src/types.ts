@@ -100,6 +100,17 @@ export type GroupColorId =
 /** Built-in encounter malice options (always available in the malice dashboard). */
 export type MaliceCoreId = 'brutal-effectiveness' | 'malicious-strike'
 
+/** User-authored malice row (not from the bestiary). */
+export type CustomMaliceFeatureData = {
+  name: string
+  cost: string
+  description: string
+  /** Optional power roll block (roll line, tiers, in-roll effect). */
+  powerRoll?: PowerRollEffect
+  /** Optional text after the power roll block (e.g. follow-up when not tiered). */
+  rollFollowUp?: string
+}
+
 /**
  * One row in the encounter malice dashboard: either a core rule or a creature malice feature
  * pulled from the bestiary for a monster on the roster (see encounter-level `maliceRows`).
@@ -108,6 +119,8 @@ export type MaliceRowRef =
   | { kind: 'core'; coreId: MaliceCoreId }
   /** Creature malice option: keyed by feature name + cost so any roster creature with that feature satisfies the row. */
   | { kind: 'monster'; id: string; featureOptionKey: string }
+  /** Custom malice: fully edited in the malice dashboard drawer. */
+  | { kind: 'custom'; id: string; custom: CustomMaliceFeatureData }
 
 export type EncounterGroup = {
   /** Stable key for React lists and future cross-index state (timers, etc.). */

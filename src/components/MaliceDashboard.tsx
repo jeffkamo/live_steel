@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react'
-import type { EncounterGroup, MaliceRowRef, PowerRollEffect } from '../types'
+import type { CustomMaliceFeatureData, EncounterGroup, MaliceRowRef, PowerRollEffect } from '../types'
 import {
   CORE_MALICE_FEATURES,
+  compactPowerRollEffect,
+  defaultCustomMaliceFeatureData,
   ensureMaliceRows,
   findMalicePickForFeatureKey,
   maliceCostSortKey,
@@ -17,12 +19,21 @@ const MALICE_DRAG_MIME = 'application/x-live-steel-malice-row-index'
 const MONSTER_TAG_CLASS =
   'inline-flex max-w-[min(16rem,100%)] shrink-0 truncate rounded-md border border-zinc-300/80 bg-zinc-100/90 px-1.5 py-0.5 font-sans text-[0.62rem] font-medium leading-none text-zinc-600 dark:border-zinc-600/70 dark:bg-zinc-800/80 dark:text-zinc-400'
 
+const FORM_LABEL_CLASS =
+  'mb-1 block text-[0.65rem] font-semibold uppercase tracking-wide text-zinc-700 dark:text-zinc-500'
+const FORM_INPUT_CLASS =
+  'w-full rounded border border-zinc-300/85 dark:border-zinc-700/80 bg-zinc-50 dark:bg-zinc-950/80 px-2 py-1.5 font-sans text-xs text-zinc-900 dark:text-zinc-100 outline-none transition-[border-color,box-shadow] placeholder:text-zinc-600 focus:border-amber-700/50 focus:ring-1 focus:ring-amber-500/35'
+
 
 /** Leading core rows (Brutal Effectiveness, Malicious Strike, …); monster rows may only reorder below this block. */
 function corePrefixLength(rows: readonly MaliceRowRef[]): number {
   let n = 0
   while (n < rows.length && rows[n]!.kind === 'core') n++
   return n
+}
+
+function isReorderableMaliceRow(row: MaliceRowRef | undefined): boolean {
+  return row?.kind === 'monster' || row?.kind === 'custom'
 }
 
 export function MaliceDashboard({
@@ -44,11 +55,7 @@ export function MaliceDashboard({
   const [maliceDropHoverInsert, setMaliceDropHoverInsert] = useState<number | null>(null)
   const [maliceDragging, setMaliceDragging] = useState(false)
   const maliceMonsterRowElsRef = useRef<Map<string, HTMLDivElement>>(new Map())
-
-  const totalCreatures = useMemo(
-    () => encounterGroups.reduce((n, g) => n + g.monsters.length, 0),
-    [encounterGroups],
-  )
+  const [customMaliceEditId, setCustomMaliceEditId] = useState<string | null>(null)
 
   const addOptions = useMemo(() => {
     const used = new Set<string>()
@@ -83,7 +90,7 @@ export function MaliceDashboard({
     return opts
   }, [encounterGroups, rows])
 
-  const addDisabled = uiLocked || totalCreatures === 0
+  const addDisabled = uiLocked
 
   const closeAddMenu = useCallback(() => setAddOpen(false), [])
 
@@ -98,19 +105,31 @@ export function MaliceDashboard({
   }, [addOpen, closeAddMenu])
 
   useEffect(() => {
-    if (totalCreatures === 0) setAddOpen(false)
-  }, [totalCreatures])
-
-  useEffect(() => {
     if (uiLocked) setAddOpen(false)
   }, [uiLocked])
+
+  useEffect(() => {
+    if (customMaliceEditId == null) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setCustomMaliceEditId(null)
+    }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [customMaliceEditId])
+
+  useEffect(() => {
+    if (customMaliceEditId == null) return
+    if (!rows.some((r) => r.kind === 'custom' && r.id === customMaliceEditId)) {
+      setCustomMaliceEditId(null)
+    }
+  }, [customMaliceEditId, rows])
 
   /** Move a monster malice row to insert before index `to` (in the pre-move array). Core prefix stays fixed. */
   const moveRow = useCallback(
     (from: number, to: number) => {
       if (from < 0 || from >= rows.length || to < 0 || to > rows.length) return
       const next = [...rows]
-      if (next[from]?.kind !== 'monster') return
+      if (!isReorderableMaliceRow(next[from])) return
       const prefix = corePrefixLength(next)
       const [x] = next.splice(from, 1)
       let insert = to
@@ -126,7 +145,7 @@ export function MaliceDashboard({
   const removeAt = useCallback(
     (index: number) => {
       const row = rows[index]
-      if (row == null || row.kind !== 'monster') return
+      if (row == null || !isReorderableMaliceRow(row)) return
       const next = rows.filter((_, i) => i !== index)
       onMaliceRowsChange(next)
     },
@@ -142,10 +161,38 @@ export function MaliceDashboard({
     [onMaliceRowsChange, rows],
   )
 
+  const addCustomMalice = useCallback(() => {
+    const id = globalThis.crypto?.randomUUID?.() ?? `malice-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
+    onMaliceRowsChange([...rows, { kind: 'custom', id, custom: defaultCustomMaliceFeatureData() }])
+    setAddOpen(false)
+    setCustomMaliceEditId(id)
+  }, [onMaliceRowsChange, rows])
+
+  const patchCustomMaliceRow = useCallback(
+    (id: string, patch: Partial<CustomMaliceFeatureData>) => {
+      onMaliceRowsChange(
+        rows.map((r) => {
+          if (r.kind !== 'custom' || r.id !== id) return r
+          const merged: CustomMaliceFeatureData = { ...r.custom, ...patch }
+          if (patch.powerRoll !== undefined) {
+            merged.powerRoll = compactPowerRollEffect({ ...r.custom.powerRoll, ...patch.powerRoll })
+          } else {
+            merged.powerRoll = compactPowerRollEffect(merged.powerRoll)
+          }
+          if (merged.rollFollowUp != null && merged.rollFollowUp.trim() === '') {
+            delete merged.rollFollowUp
+          }
+          return { ...r, custom: merged }
+        }),
+      )
+    },
+    [onMaliceRowsChange, rows],
+  )
+
   const onMaliceDragStart = useCallback(
     (index: number, e: React.DragEvent) => {
       if (uiLocked) return
-      if (rows[index]?.kind !== 'monster') return
+      if (!isReorderableMaliceRow(rows[index])) return
       e.dataTransfer.setData(MALICE_DRAG_MIME, String(index))
       e.dataTransfer.effectAllowed = 'move'
       setMaliceDragging(true)
@@ -167,7 +214,7 @@ export function MaliceDashboard({
       const raw = e.dataTransfer.getData(MALICE_DRAG_MIME)
       const from = Number.parseInt(raw, 10)
       if (Number.isNaN(from)) return
-      if (rows[from]?.kind !== 'monster') return
+      if (!isReorderableMaliceRow(rows[from])) return
       moveRow(from, insertIndex)
     },
     [moveRow, rows, uiLocked],
@@ -181,7 +228,7 @@ export function MaliceDashboard({
     (from: number, toInsert: number, e: React.DragEvent) => {
       const clampedTo = Math.max(toInsert, corePrefix)
       // Determine whether the drop would be a no-op after removal.
-      if (!Number.isNaN(from) && rows[from]?.kind === 'monster') {
+      if (!Number.isNaN(from) && isReorderableMaliceRow(rows[from])) {
         const nextLen = rows.length - 1
         let ins = clampedTo
         if (from < clampedTo) ins -= 1
@@ -207,7 +254,7 @@ export function MaliceDashboard({
       e.preventDefault()
       const raw = e.dataTransfer.getData(MALICE_DRAG_MIME)
       const from = Number.parseInt(raw, 10)
-      if (Number.isNaN(from) || rows[from]?.kind !== 'monster') return
+      if (Number.isNaN(from) || !isReorderableMaliceRow(rows[from])) return
       setHoverInsertFrom(from, insertIndex, e)
     },
     [canDragMaliceRowOver, rows, setHoverInsertFrom, uiLocked],
@@ -245,7 +292,7 @@ export function MaliceDashboard({
       e.preventDefault()
       const raw = e.dataTransfer.getData(MALICE_DRAG_MIME)
       const from = Number.parseInt(raw, 10)
-      if (Number.isNaN(from) || rows[from]?.kind !== 'monster') return
+      if (Number.isNaN(from) || !isReorderableMaliceRow(rows[from])) return
       // Keep dropEffect accurate even when dropping "outside" rows (e.g. beyond top/bottom edge).
       setHoverInsertFrom(from, maliceDropHoverInsert, e)
     },
@@ -265,7 +312,7 @@ export function MaliceDashboard({
   const onMonsterRowDragOver = useCallback(
     (index: number, e: React.DragEvent) => {
       if (uiLocked) return
-      if (rows[index]?.kind !== 'monster') return
+      if (!isReorderableMaliceRow(rows[index])) return
       if (!canDragMaliceRowOver(e)) return
       e.preventDefault()
       const raw = e.dataTransfer.getData(MALICE_DRAG_MIME)
@@ -277,7 +324,7 @@ export function MaliceDashboard({
       if (!(y >= rect.top && y <= rect.bottom)) return
       const to =
         rect.height > 0 && y < rect.top + rect.height / 2 ? index : index + 1
-      if (Number.isNaN(from) || rows[from]?.kind !== 'monster') return
+      if (Number.isNaN(from) || !isReorderableMaliceRow(rows[from])) return
       setHoverInsertFrom(from, to, e)
     },
     [canDragMaliceRowOver, rows, setHoverInsertFrom, uiLocked],
@@ -285,7 +332,7 @@ export function MaliceDashboard({
 
   const onMonsterRowDragLeave = useCallback(
     (index: number, e: React.DragEvent) => {
-      if (rows[index]?.kind !== 'monster') return
+      if (!isReorderableMaliceRow(rows[index])) return
       // During HTML5 drag, `relatedTarget` is frequently `null` (even when moving within the row),
       // which can cause the insert indicator to flicker/disappear right when you hover the line itself.
       // Use pointer position vs bounding box instead.
@@ -304,7 +351,7 @@ export function MaliceDashboard({
   const onMonsterRowDrop = useCallback(
     (index: number, e: React.DragEvent) => {
       if (uiLocked) return
-      if (rows[index]?.kind !== 'monster') return
+      if (!isReorderableMaliceRow(rows[index])) return
       const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
       const y = e.clientY
       const to =
@@ -316,7 +363,7 @@ export function MaliceDashboard({
       const clampedTo = Math.max(to, corePrefix)
       const raw = e.dataTransfer.getData(MALICE_DRAG_MIME)
       const from = Number.parseInt(raw, 10)
-      if (!Number.isNaN(from) && rows[from]?.kind === 'monster') {
+      if (!Number.isNaN(from) && isReorderableMaliceRow(rows[from])) {
         const nextLen = rows.length - 1
         let ins = clampedTo
         if (from < clampedTo) ins -= 1
@@ -332,7 +379,14 @@ export function MaliceDashboard({
     [corePrefix, onMaliceDropAtInsert, rows, uiLocked],
   )
 
+  const editingCustomMalice = useMemo(() => {
+    if (customMaliceEditId == null) return undefined
+    const r = rows.find((x) => x.kind === 'custom' && x.id === customMaliceEditId)
+    return r?.kind === 'custom' ? r : undefined
+  }, [customMaliceEditId, rows])
+
   return (
+    <>
     <div className="rounded-lg border border-zinc-200/95 bg-white font-sans shadow-sm dark:border-transparent dark:bg-zinc-900/80 dark:shadow-none">
       <div className="border-b border-zinc-200/90 bg-zinc-50/90 px-3 py-2.5 dark:border-zinc-800/90 dark:bg-zinc-950/40">
         <div className="mb-2">
@@ -372,6 +426,12 @@ export function MaliceDashboard({
                 name = c.name
                 cost = c.cost
                 effect = c.effect
+              } else if (row.kind === 'custom') {
+                const c = row.custom
+                name = c.name
+                cost = c.cost
+                effect = c.description
+                monsterTag = 'Custom'
               } else {
                 const resolved = findMalicePickForFeatureKey(encounterGroups, row.featureOptionKey)
                 if (!resolved) return null
@@ -382,9 +442,12 @@ export function MaliceDashboard({
                 monsterTag = resolved.pick.listTag ?? maliceMonsterFamilyTag(resolved.monster)
               }
 
-            const isMonsterRow = row.kind === 'monster'
+              const customPowerRoll =
+                row.kind === 'custom' ? compactPowerRollEffect(row.custom.powerRoll) : undefined
+
+            const isReorderableRow = isReorderableMaliceRow(row)
             const menuItems: ReorderGripMenuItem[] = []
-            if (!uiLocked && isMonsterRow) {
+            if (!uiLocked && isReorderableRow) {
               menuItems.push({
                 id: 'up',
                 label: 'Move up',
@@ -406,28 +469,28 @@ export function MaliceDashboard({
             }
 
             const rowLayoutClass = uiLocked ? 'grid grid-cols-1 gap-3' : 'grid grid-cols-1 items-stretch gap-2'
-            const showInsertTop = !uiLocked && isMonsterRow && maliceDropHoverInsert === index
+            const showInsertTop = !uiLocked && isReorderableRow && maliceDropHoverInsert === index
             const showInsertBottom =
-              !uiLocked && isMonsterRow && index === rows.length - 1 && maliceDropHoverInsert === rows.length
+              !uiLocked && isReorderableRow && index === rows.length - 1 && maliceDropHoverInsert === rows.length
 
               return (
                 <li key={row.kind === 'core' ? `core-${row.coreId}` : row.id}>
                   <div
                   ref={
-                    !uiLocked && isMonsterRow
+                    !uiLocked && isReorderableRow
                       ? (el) => {
-                          const id = row.kind === 'monster' ? row.id : ''
+                          const id = row.kind === 'monster' || row.kind === 'custom' ? row.id : ''
                           if (el) maliceMonsterRowElsRef.current.set(id, el)
                           else maliceMonsterRowElsRef.current.delete(id)
                         }
                       : undefined
                   }
                   className={`group/row-reorder relative ${rowLayoutClass} rounded-md border border-zinc-200/80 bg-white/90 px-2 py-2 transition-shadow dark:border-zinc-700/70 dark:bg-zinc-900/60 has-[[data-grip-menu-open]]:z-[200]`}
-                  onDragOver={uiLocked || !isMonsterRow ? undefined : (e) => onMonsterRowDragOver(index, e)}
-                  onDragLeave={uiLocked || !isMonsterRow ? undefined : (e) => onMonsterRowDragLeave(index, e)}
-                  onDrop={uiLocked || !isMonsterRow ? undefined : (e) => onMonsterRowDrop(index, e)}
+                  onDragOver={uiLocked || !isReorderableRow ? undefined : (e) => onMonsterRowDragOver(index, e)}
+                  onDragLeave={uiLocked || !isReorderableRow ? undefined : (e) => onMonsterRowDragLeave(index, e)}
+                  onDrop={uiLocked || !isReorderableRow ? undefined : (e) => onMonsterRowDrop(index, e)}
                 >
-                {!uiLocked && isMonsterRow && (
+                {!uiLocked && isReorderableRow && (
                   <>
                     {/* Insert target that extends into the inter-row gap so the line is a stable drop target. */}
                     <div
@@ -456,7 +519,7 @@ export function MaliceDashboard({
                     )}
                   </>
                 )}
-                {!uiLocked && isMonsterRow ? (
+                {!uiLocked && isReorderableRow ? (
                   <div className="pointer-events-none absolute top-0 left-0 z-[110] flex h-full items-center">
                     <div className="-translate-x-1/2">
                       <ReorderGripWithMenu
@@ -464,7 +527,9 @@ export function MaliceDashboard({
                         onDragStart={(e) => onMaliceDragStart(index, e)}
                         onDragEnd={onMaliceDragEnd}
                         getDragImageElement={() =>
-                          row.kind === 'monster' ? maliceMonsterRowElsRef.current.get(row.id) ?? null : null
+                          row.kind === 'monster' || row.kind === 'custom'
+                            ? maliceMonsterRowElsRef.current.get(row.id) ?? null
+                            : null
                         }
                         menuItems={menuItems}
                         className="h-9 shrink-0 cursor-grab touch-none select-none rounded-md sm:h-10"
@@ -473,7 +538,28 @@ export function MaliceDashboard({
                     </div>
                   </div>
                 ) : null}
-                <div className="min-w-0 w-full font-sans">
+                <div
+                  className={`min-w-0 w-full font-sans ${
+                    row.kind === 'custom' && !uiLocked
+                      ? 'cursor-pointer rounded-sm outline-none ring-offset-2 hover:bg-zinc-100/85 focus-visible:ring-2 focus-visible:ring-amber-500/45 dark:hover:bg-zinc-800/55'
+                      : ''
+                  }`}
+                  role={row.kind === 'custom' && !uiLocked ? 'button' : undefined}
+                  tabIndex={row.kind === 'custom' && !uiLocked ? 0 : undefined}
+                  onClick={
+                    row.kind === 'custom' && !uiLocked ? () => setCustomMaliceEditId(row.id) : undefined
+                  }
+                  onKeyDown={
+                    row.kind === 'custom' && !uiLocked
+                      ? (e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault()
+                            setCustomMaliceEditId(row.id)
+                          }
+                        }
+                      : undefined
+                  }
+                >
                   {monsterTag != null ? (
                     <>
                       <div className="flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-0.5">
@@ -500,7 +586,23 @@ export function MaliceDashboard({
                       </span>
                     </div>
                   )}
-                  {monsterEffectBlocks != null && monsterEffectBlocks.length > 0 ? (
+                  {row.kind === 'custom' ? (
+                    <>
+                      <p className="mt-1 font-sans text-[0.72rem] leading-snug text-zinc-600 dark:text-zinc-400">
+                        {row.custom.description}
+                      </p>
+                      {customPowerRoll != null && (
+                        <div className="mt-1 space-y-1">
+                          <EffectBlock eff={customPowerRoll} />
+                        </div>
+                      )}
+                      {(row.custom.rollFollowUp ?? '').trim() !== '' && (
+                        <p className="mt-1 font-sans text-[0.72rem] leading-snug text-zinc-600 dark:text-zinc-400">
+                          {row.custom.rollFollowUp}
+                        </p>
+                      )}
+                    </>
+                  ) : monsterEffectBlocks != null && monsterEffectBlocks.length > 0 ? (
                     <div className="mt-1 space-y-1">
                       {monsterEffectBlocks.map((eff, ei) => (
                         <EffectBlock key={ei} eff={eff} />
@@ -545,6 +647,14 @@ export function MaliceDashboard({
                 role="menu"
                 className="absolute left-0 right-0 top-full z-[120] mt-1 max-h-64 overflow-y-auto rounded-lg border border-zinc-300/85 bg-white py-1 shadow-xl dark:border-zinc-700/80 dark:bg-zinc-900"
               >
+                <button
+                  type="button"
+                  role="menuitem"
+                  className="flex w-full min-w-0 justify-start border-b border-zinc-200/90 px-3 py-2 text-left font-sans text-xs font-medium text-zinc-900 hover:bg-zinc-100 dark:border-zinc-800 dark:text-zinc-100 dark:hover:bg-zinc-800"
+                  onClick={addCustomMalice}
+                >
+                  Custom malice feature
+                </button>
                 {addOptions.length === 0 ? (
                   <div className="px-3 py-2 text-xs text-zinc-500 dark:text-zinc-400">
                     No creature malice features to add (or all are already listed).
@@ -578,5 +688,168 @@ export function MaliceDashboard({
         )}
       </div>
     </div>
+    {editingCustomMalice != null && (
+      <div className="fixed inset-0 z-[400] flex justify-end">
+        <button
+          type="button"
+          aria-label="Close custom malice editor"
+          className="absolute inset-0 bg-black/45 dark:bg-black/60"
+          onClick={() => setCustomMaliceEditId(null)}
+        />
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="custom-malice-edit-title"
+          className="relative z-[410] flex h-full w-full max-w-md flex-col border-l border-zinc-200/90 bg-white font-sans shadow-2xl dark:border-zinc-800 dark:bg-zinc-950"
+        >
+          <div className="flex items-center justify-between border-b border-zinc-200/90 px-4 py-3 dark:border-zinc-800">
+            <h2 id="custom-malice-edit-title" className="truncate text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+              {editingCustomMalice.custom.name.trim() !== ''
+                ? editingCustomMalice.custom.name
+                : 'Custom malice feature'}
+            </h2>
+            <button
+              type="button"
+              aria-label="Close"
+              className="rounded-md px-2 py-1 text-xs text-zinc-600 hover:bg-zinc-200/80 hover:text-zinc-950 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
+              onClick={() => setCustomMaliceEditId(null)}
+            >
+              Close
+            </button>
+          </div>
+          <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
+            <div className="space-y-4">
+              <div>
+                <label htmlFor="custom-malice-name" className={FORM_LABEL_CLASS}>
+                  Name
+                </label>
+                <input
+                  id="custom-malice-name"
+                  type="text"
+                  value={editingCustomMalice.custom.name}
+                  onChange={(e) =>
+                    patchCustomMaliceRow(editingCustomMalice.id, { name: e.target.value })
+                  }
+                  autoComplete="off"
+                  className={FORM_INPUT_CLASS}
+                />
+              </div>
+              <div>
+                <label htmlFor="custom-malice-cost" className={FORM_LABEL_CLASS}>
+                  Malice cost
+                </label>
+                <input
+                  id="custom-malice-cost"
+                  type="text"
+                  value={editingCustomMalice.custom.cost}
+                  onChange={(e) =>
+                    patchCustomMaliceRow(editingCustomMalice.id, { cost: e.target.value })
+                  }
+                  placeholder="e.g. 1 Malice"
+                  autoComplete="off"
+                  className={FORM_INPUT_CLASS}
+                />
+              </div>
+              <div>
+                <label htmlFor="custom-malice-desc" className={FORM_LABEL_CLASS}>
+                  Description
+                </label>
+                <textarea
+                  id="custom-malice-desc"
+                  value={editingCustomMalice.custom.description}
+                  onChange={(e) =>
+                    patchCustomMaliceRow(editingCustomMalice.id, { description: e.target.value })
+                  }
+                  rows={4}
+                  spellCheck
+                  className={`${FORM_INPUT_CLASS} min-h-[5rem] resize-y font-sans leading-relaxed`}
+                />
+              </div>
+              <fieldset className="rounded-md border border-zinc-200/85 px-3 py-3 dark:border-zinc-700/80">
+                <legend className="px-1 font-sans text-[0.65rem] font-semibold uppercase tracking-wide text-zinc-600 dark:text-zinc-400">
+                  Power roll (optional)
+                </legend>
+                <div className="space-y-3">
+                  <div>
+                    <label htmlFor="custom-malice-pr-roll" className={FORM_LABEL_CLASS}>
+                      Roll line
+                    </label>
+                    <input
+                      id="custom-malice-pr-roll"
+                      type="text"
+                      value={editingCustomMalice.custom.powerRoll?.roll ?? ''}
+                      onChange={(e) =>
+                        patchCustomMaliceRow(editingCustomMalice.id, {
+                          powerRoll: { ...editingCustomMalice.custom.powerRoll, roll: e.target.value },
+                        })
+                      }
+                      autoComplete="off"
+                      className={FORM_INPUT_CLASS}
+                    />
+                  </div>
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                    {(['tier1', 'tier2', 'tier3'] as const).map((tier) => (
+                      <div key={tier}>
+                        <label htmlFor={`custom-malice-pr-${tier}`} className={FORM_LABEL_CLASS}>
+                          {tier === 'tier1' ? 'Tier 1' : tier === 'tier2' ? 'Tier 2' : 'Tier 3'}
+                        </label>
+                        <textarea
+                          id={`custom-malice-pr-${tier}`}
+                          value={editingCustomMalice.custom.powerRoll?.[tier] ?? ''}
+                          onChange={(e) =>
+                            patchCustomMaliceRow(editingCustomMalice.id, {
+                              powerRoll: {
+                                ...editingCustomMalice.custom.powerRoll,
+                                [tier]: e.target.value,
+                              },
+                            })
+                          }
+                          rows={2}
+                          className={`${FORM_INPUT_CLASS} resize-y font-sans leading-snug`}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                  <div>
+                    <label htmlFor="custom-malice-pr-effect" className={FORM_LABEL_CLASS}>
+                      Effect within power roll
+                    </label>
+                    <textarea
+                      id="custom-malice-pr-effect"
+                      value={editingCustomMalice.custom.powerRoll?.effect ?? ''}
+                      onChange={(e) =>
+                        patchCustomMaliceRow(editingCustomMalice.id, {
+                          powerRoll: { ...editingCustomMalice.custom.powerRoll, effect: e.target.value },
+                        })
+                      }
+                      rows={3}
+                      spellCheck
+                      className={`${FORM_INPUT_CLASS} resize-y font-sans leading-relaxed`}
+                    />
+                  </div>
+                </div>
+              </fieldset>
+              <div>
+                <label htmlFor="custom-malice-follow" className={FORM_LABEL_CLASS}>
+                  Effect after roll (optional)
+                </label>
+                <textarea
+                  id="custom-malice-follow"
+                  value={editingCustomMalice.custom.rollFollowUp ?? ''}
+                  onChange={(e) =>
+                    patchCustomMaliceRow(editingCustomMalice.id, { rollFollowUp: e.target.value })
+                  }
+                  rows={3}
+                  spellCheck
+                  placeholder="e.g. follow-up text after resolving the roll"
+                  className={`${FORM_INPUT_CLASS} min-h-[4rem] resize-y font-sans leading-relaxed`}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    )}
+    </>
   )
 }

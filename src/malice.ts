@@ -1,9 +1,61 @@
-import type { EncounterGroup, MaliceCoreId, MaliceRowRef, Monster, PowerRollEffect } from './types'
+import type {
+  CustomMaliceFeatureData,
+  EncounterGroup,
+  MaliceCoreId,
+  MaliceRowRef,
+  Monster,
+  PowerRollEffect,
+} from './types'
 import { baseName, lookupStatblock, type BestiaryStatblock } from './bestiary'
 import { registeredMaliceFeatureblocks } from './maliceFeatureblockRegistry'
 
 function newMaliceRowId(): string {
   return globalThis.crypto?.randomUUID?.() ?? `malice-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
+}
+
+const POWER_ROLL_STRING_KEYS = ['roll', 'tier1', 'tier2', 'tier3', 'name', 'cost', 'effect'] as const
+
+/** Build a compact power-roll object from partial data; returns undefined if no fields set. */
+export function compactPowerRollEffect(raw: PowerRollEffect | undefined | null): PowerRollEffect | undefined {
+  if (raw == null || typeof raw !== 'object') return undefined
+  const eff: PowerRollEffect = {}
+  for (const k of POWER_ROLL_STRING_KEYS) {
+    const v = raw[k]
+    if (typeof v === 'string' && v.trim() !== '') eff[k] = v.trim()
+  }
+  return Object.keys(eff).length > 0 ? eff : undefined
+}
+
+function powerRollEffectFromUnknown(raw: unknown): PowerRollEffect | undefined {
+  if (raw == null || typeof raw !== 'object') return undefined
+  return compactPowerRollEffect(raw as PowerRollEffect)
+}
+
+/** Default text for a newly added custom malice row (editable in the drawer). */
+export function defaultCustomMaliceFeatureData(): CustomMaliceFeatureData {
+  return {
+    name: 'Custom malice feature',
+    cost: '1 Malice',
+    description: 'Describe when and how you use this malice feature at the table.',
+  }
+}
+
+export function normalizeCustomMaliceFeatureData(raw: unknown): CustomMaliceFeatureData {
+  const base = defaultCustomMaliceFeatureData()
+  if (raw == null || typeof raw !== 'object') return base
+  const r = raw as Record<string, unknown>
+  const name = typeof r.name === 'string' ? r.name : base.name
+  const cost = typeof r.cost === 'string' ? r.cost : base.cost
+  const description = typeof r.description === 'string' ? r.description : base.description
+  const powerRoll = powerRollEffectFromUnknown(r.powerRoll)
+  const rollFollowUp = typeof r.rollFollowUp === 'string' ? r.rollFollowUp : undefined
+  return {
+    name,
+    cost,
+    description,
+    ...(powerRoll != null ? { powerRoll } : {}),
+    ...(rollFollowUp != null && rollFollowUp.trim() !== '' ? { rollFollowUp } : {}),
+  }
 }
 
 type RawEffect = {
@@ -280,6 +332,15 @@ export function normalizeMonsterMaliceRowRefs(
       out.push({ kind: 'core', coreId: 'malicious-strike' })
       continue
     }
+    if (r.kind === 'custom') {
+      const rowId = typeof r.id === 'string' ? r.id : newMaliceRowId()
+      out.push({
+        kind: 'custom',
+        id: rowId,
+        custom: normalizeCustomMaliceFeatureData((r as { custom?: unknown }).custom),
+      })
+      continue
+    }
     if (r.kind !== 'monster') continue
     const rowId = typeof r.id === 'string' ? r.id : newMaliceRowId()
     const fk = r.featureOptionKey
@@ -331,6 +392,7 @@ export function pruneOrphanMaliceRows(
   }
   let removed = false
   const filtered = rows.filter((row) => {
+    if (row.kind === 'custom') return true
     if (row.kind !== 'monster') return true
     if (!findMalicePickForFeatureKey(groups, row.featureOptionKey)) {
       removed = true
@@ -391,6 +453,10 @@ export function ensureMaliceRows(rows: MaliceRowRef[] | undefined): MaliceRowRef
     if (r.kind === 'monster') {
       if (seenCreatureMaliceKeys.has(r.featureOptionKey)) continue
       seenCreatureMaliceKeys.add(r.featureOptionKey)
+    }
+    if (r.kind === 'custom') {
+      if (seenCreatureMaliceKeys.has(`custom:${r.id}`)) continue
+      seenCreatureMaliceKeys.add(`custom:${r.id}`)
     }
     out.push(r)
   }

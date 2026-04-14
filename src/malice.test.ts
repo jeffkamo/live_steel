@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  defaultCustomMaliceFeatureData,
   ensureMaliceRows,
   findMalicePickForFeatureKey,
   findMonsterSlotByEncounterInstanceId,
@@ -124,6 +125,18 @@ describe('ensureMaliceRows', () => {
     const next = ensureMaliceRows(rows)
     expect(next.filter((r) => r.kind === 'monster')).toHaveLength(1)
   })
+
+  it('preserves custom malice rows', () => {
+    const def = defaultCustomMaliceFeatureData()
+    const rows = [
+      { kind: 'core' as const, coreId: 'malicious-strike' as const },
+      { kind: 'custom' as const, id: 'cid', custom: def },
+    ]
+    const next = ensureMaliceRows(rows)
+    const c = next.find((r) => r.kind === 'custom')
+    expect(c?.kind).toBe('custom')
+    if (c?.kind === 'custom') expect(c.custom.name).toBe(def.name)
+  })
 })
 
 describe('findMalicePickForFeatureKey', () => {
@@ -158,6 +171,29 @@ describe('findMonsterSlotByEncounterInstanceId', () => {
 })
 
 describe('normalizeMonsterMaliceRowRefs', () => {
+  it('round-trips custom malice rows', () => {
+    const groups: EncounterGroup[] = [{ id: 'g0', color: 'red', monsters: [] }]
+    const raw = [
+      {
+        kind: 'custom',
+        id: 'cm1',
+        custom: { name: 'Test', cost: '2 Malice', description: 'Do a thing.' },
+      },
+    ]
+    const out = normalizeMonsterMaliceRowRefs(raw, groups)
+    expect(out).toEqual([
+      {
+        kind: 'custom',
+        id: 'cm1',
+        custom: expect.objectContaining({
+          name: 'Test',
+          cost: '2 Malice',
+          description: 'Do a thing.',
+        }),
+      },
+    ])
+  })
+
   it('maps legacy groupIndex/monsterIndex + sourceKey to featureOptionKey', () => {
     const groups: EncounterGroup[] = [
       {
@@ -204,6 +240,20 @@ describe('pruneOrphanMaliceRows', () => {
     ]
     const next = pruneOrphanMaliceRows(groups, rows)
     expect(next.some((r) => r.kind === 'monster')).toBe(false)
+  })
+
+  it('keeps custom malice rows even with an empty roster', () => {
+    const groups: EncounterGroup[] = []
+    const rows = [
+      { kind: 'core' as const, coreId: 'brutal-effectiveness' as const },
+      {
+        kind: 'custom' as const,
+        id: 'x',
+        custom: defaultCustomMaliceFeatureData(),
+      },
+    ]
+    const next = pruneOrphanMaliceRows(groups, rows)
+    expect(next.some((r) => r.kind === 'custom')).toBe(true)
   })
 
   it('keeps a row when another creature still provides the same feature', () => {
