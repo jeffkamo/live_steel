@@ -54,6 +54,7 @@ type AbilityCategory =
   | 'area_attack'
   | 'maneuver_self'
   | 'triggered'
+  | 'solo'
   | 'passive_trait'
   | 'special_ability'
 
@@ -66,6 +67,7 @@ const CATEGORY_META: Record<
   area_attack: { label: 'Area attack', icon: '🔳', feature_type: 'ability' },
   maneuver_self: { label: 'Maneuver / self', icon: '👤', feature_type: 'ability' },
   triggered: { label: 'Triggered / reaction', icon: '❗️', feature_type: 'ability' },
+  solo: { label: 'Solo', icon: '☠️', feature_type: 'ability' },
   passive_trait: { label: 'Passive trait', icon: '⭐️', feature_type: 'trait' },
   special_ability: { label: 'Special ability', icon: '❇', feature_type: 'ability' },
 }
@@ -82,6 +84,7 @@ function inferCategory(f: MonsterFeature): AbilityCategory {
   if (ic === '🔳') return 'area_attack'
   if (ic === '👤') return 'maneuver_self'
   if (ic === '❗' || ic === '❕') return 'triggered'
+  if (ic === '☠') return 'solo'
   if (ic === '❇' || ic === '🌀') return 'special_ability'
   return 'melee_attack'
 }
@@ -268,6 +271,25 @@ function parseOptionalNegInt(raw: string): number {
   return Number.isNaN(n) ? 0 : n
 }
 
+function CategoryIconPreview({ icon }: { icon: string }) {
+  const normalized = icon.trim().replace(/\uFE0F/g, '')
+  if (normalized !== '☠') {
+    return (
+      <span
+        className="ml-1.5 normal-case font-draw-steel text-sm tracking-normal text-zinc-700 dark:text-zinc-300"
+        aria-hidden
+      >
+        {normalized}
+      </span>
+    )
+  }
+  return (
+    <span className="ml-1.5 normal-case text-sm tracking-normal" aria-hidden>
+      {normalized}
+    </span>
+  )
+}
+
 function CustomAbilityCard({
   feature,
   index,
@@ -298,9 +320,7 @@ function CustomAbilityCard({
       <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
         <span className="text-[0.65rem] font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
           Ability {index + 1}
-          <span className="ml-1.5 font-draw-steel text-sm not-uppercase tracking-normal text-zinc-700 dark:text-zinc-300" aria-hidden>
-            {CATEGORY_META[u.category].icon.replace(/\uFE0F/g, '')}
-          </span>
+          <CategoryIconPreview icon={CATEGORY_META[u.category].icon} />
         </span>
         <button
           type="button"
@@ -314,7 +334,7 @@ function CustomAbilityCard({
       <div className="space-y-2">
         <div>
           <label className={labelClass} htmlFor={`custom-ab-cat-${index}`}>
-            Category
+            Category icon
           </label>
           <select
             id={`custom-ab-cat-${index}`}
@@ -903,8 +923,8 @@ export function CustomMonsterStatForm({
             </div>
             <p className="mb-2 text-[0.65rem] leading-snug text-zinc-600 dark:text-zinc-500">
               Matches bestiary stat blocks: category sets the Draw Steel icon (melee, ranged, area,
-              maneuver, triggered, trait, special). Attacks can include a power roll and tier lines;
-              add follow-up effect paragraphs when needed.
+              maneuver, triggered, solo, trait, special). Attacks can include a power
+              roll and tier lines; add follow-up effect paragraphs when needed.
             </p>
             <div className="space-y-2">
               {features.map((f, i) => (

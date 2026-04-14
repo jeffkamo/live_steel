@@ -46,10 +46,10 @@ describe('StatBlock', () => {
     expect(screen.getByText('Crafty')).toBeInTheDocument()
   })
 
-  it('renders Draw Steel glyphs in left margin when feature icon emoji maps', () => {
+  it('renders feature icon characters in Draw Steel font margin', () => {
     render(<StatBlock features={[sampleAbility, sampleTrait]} monsterName="Test Monster" />)
     const glyphs = screen.getAllByTestId('stat-block-feature-glyph')
-    expect(glyphs.map((el) => el.textContent).sort().join('')).toBe('*t')
+    expect(glyphs.map((el) => el.textContent).sort().join('')).toBe('⭐🗡')
     expect(screen.queryByTestId('stat-block-feature-fallback')).not.toBeInTheDocument()
   })
 

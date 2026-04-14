@@ -14,7 +14,6 @@ import {
   DRAW_STEEL_DISTANCE_RULER_GLYPH,
   DRAW_STEEL_TIER_GLYPHS,
   POTENCY_PATTERN,
-  featureIconToDrawSteelGlyph,
   keywordDrawSteelGlyph,
 } from '../drawSteelGlyphs'
 
@@ -450,14 +449,14 @@ export function EffectBlock({ eff, highlight }: { eff: PowerRollEffect; highligh
 
 function StatBlockFeatureIcon({ icon }: { icon?: string }) {
   if (!icon) return null
-  const g = featureIconToDrawSteelGlyph(icon)
-  if (g) {
+  const normalized = icon.trim().replace(/\uFE0F/g, '')
+  if (normalized !== '☠') {
     return (
       <span
         className="font-draw-steel text-lg leading-none text-zinc-700 dark:text-zinc-300"
         data-testid="stat-block-feature-glyph"
       >
-        {g}
+        {normalized}
       </span>
     )
   }
@@ -466,6 +465,24 @@ function StatBlockFeatureIcon({ icon }: { icon?: string }) {
       {icon}
     </span>
   )
+}
+
+function normalizedIcon(s: string | undefined): string {
+  return (s ?? '').trim().replace(/\uFE0F/g, '')
+}
+
+function displayIconForFeature(feature: MonsterFeature): string | undefined {
+  const raw = feature.icon
+  if (!raw) return undefined
+  const norm = normalizedIcon(raw)
+  if (
+    norm === '☠' &&
+    ((feature.trigger != null && feature.trigger.trim() !== '') ||
+      (feature.usage != null && /\btriggered\b/i.test(feature.usage)))
+  ) {
+    return '❗️'
+  }
+  return raw
 }
 
 function KeywordLine({ keywords }: { keywords: string[] }) {
@@ -480,11 +497,12 @@ function AbilityBlock({ feature }: { feature: MonsterFeature }) {
   const rollBonus = extractPowerRollBonus(feature.effects)
   const rangeG = feature.distance ? rangeGlyphForDistance(feature.distance) : undefined
   const targetG = keywordDrawSteelGlyph('targets')
+  const icon = displayIconForFeature(feature)
 
   return (
     <div className="grid grid-cols-[2rem_minmax(0,1fr)] gap-x-2 gap-y-0 sm:grid-cols-[2.25rem_minmax(0,1fr)]">
       <div className="flex justify-center pt-0.5 text-lg leading-none" aria-hidden>
-        <StatBlockFeatureIcon icon={feature.icon} />
+        <StatBlockFeatureIcon icon={icon} />
       </div>
       <div className="min-w-0 space-y-1">
         <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
