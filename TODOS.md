@@ -87,3 +87,8 @@ Ideas and enhancements tracked for future work (not committed to a roadmap).
 - [ ] Add ability to create sharable links (encodes local storage data in a URL param?)
 - [ ] Create an export/import data feature
 
+---
+
+# Ideas from filling out custom monster stat blocks
+
+- [ ] Add a way to add temporary Stamina to a monster, separate from normal stamina.
