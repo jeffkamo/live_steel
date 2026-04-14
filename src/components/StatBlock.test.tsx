@@ -46,18 +46,16 @@ describe('StatBlock', () => {
     expect(screen.getByText('Crafty')).toBeInTheDocument()
   })
 
-  it('renders feature icon characters in Draw Steel font margin', () => {
+  it('renders feature emoji icons in margin', () => {
     render(<StatBlock features={[sampleAbility, sampleTrait]} monsterName="Test Monster" />)
     const glyphs = screen.getAllByTestId('stat-block-feature-glyph')
-    expect(glyphs.map((el) => el.textContent).sort().join('')).toBe('⭐🗡')
-    expect(screen.queryByTestId('stat-block-feature-fallback')).not.toBeInTheDocument()
+    expect(glyphs.map((el) => el.textContent).sort().join('')).toBe('⭐️🗡')
   })
 
-  it('keeps emoji in margin when there is no glyph mapping', () => {
+  it('renders skull icon in margin for solo abilities', () => {
     const skull: MonsterFeature = { ...sampleAbility, icon: '☠️' }
     render(<StatBlock features={[skull]} monsterName="Test Monster" />)
-    expect(screen.getByTestId('stat-block-feature-fallback')).toHaveTextContent('☠️')
-    expect(screen.queryByTestId('stat-block-feature-glyph')).not.toBeInTheDocument()
+    expect(screen.getByTestId('stat-block-feature-glyph')).toHaveTextContent('☠️')
   })
 
   it('renders abilities and traits in one card without section titles', () => {

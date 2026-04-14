@@ -449,20 +449,10 @@ export function EffectBlock({ eff, highlight }: { eff: PowerRollEffect; highligh
 
 function StatBlockFeatureIcon({ icon }: { icon?: string }) {
   if (!icon) return null
-  const normalized = icon.trim().replace(/\uFE0F/g, '')
-  if (normalized !== '☠') {
-    return (
-      <span
-        className="font-draw-steel text-lg leading-none text-zinc-700 dark:text-zinc-300"
-        data-testid="stat-block-feature-glyph"
-      >
-        {normalized}
-      </span>
-    )
-  }
+  const normalized = icon.trim()
   return (
-    <span className="text-lg leading-none" data-testid="stat-block-feature-fallback">
-      {icon}
+    <span className="text-lg leading-none" data-testid="stat-block-feature-glyph">
+      {normalized}
     </span>
   )
 }

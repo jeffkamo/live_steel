@@ -51,12 +51,14 @@ function isEffectivelyBlank(s: string): boolean {
 type AbilityCategory =
   | 'melee_attack'
   | 'ranged_attack'
+  | 'versatile_attack'
   | 'area_attack'
+  | 'aura_burst_area'
   | 'maneuver_self'
   | 'triggered'
   | 'solo'
   | 'passive_trait'
-  | 'special_ability'
+  | 'special_distance'
 
 const CATEGORY_META: Record<
   AbilityCategory,
@@ -64,12 +66,14 @@ const CATEGORY_META: Record<
 > = {
   melee_attack: { label: 'Melee attack', icon: '🗡', feature_type: 'ability' },
   ranged_attack: { label: 'Ranged attack', icon: '🏹', feature_type: 'ability' },
+  versatile_attack: { label: 'Melee or ranged', icon: '⚔️', feature_type: 'ability' },
   area_attack: { label: 'Area attack', icon: '🔳', feature_type: 'ability' },
+  aura_burst_area: { label: 'Aura or burst area', icon: '❇️', feature_type: 'ability' },
   maneuver_self: { label: 'Maneuver / self', icon: '👤', feature_type: 'ability' },
   triggered: { label: 'Triggered / reaction', icon: '❗️', feature_type: 'ability' },
   solo: { label: 'Solo', icon: '☠️', feature_type: 'ability' },
   passive_trait: { label: 'Passive trait', icon: '⭐️', feature_type: 'trait' },
-  special_ability: { label: 'Special ability', icon: '❇', feature_type: 'ability' },
+  special_distance: { label: 'Special distance', icon: '🌀', feature_type: 'ability' },
 }
 
 function normIcon(s: string | undefined): string {
@@ -79,13 +83,15 @@ function normIcon(s: string | undefined): string {
 function inferCategory(f: MonsterFeature): AbilityCategory {
   if (f.feature_type === 'trait') return 'passive_trait'
   const ic = normIcon(f.icon)
-  if (ic === '🗡' || ic === '⚔') return 'melee_attack'
+  if (ic === '🗡') return 'melee_attack'
   if (ic === '🏹') return 'ranged_attack'
+  if (ic === '⚔') return 'versatile_attack'
   if (ic === '🔳') return 'area_attack'
+  if (ic === '❇') return 'aura_burst_area'
   if (ic === '👤') return 'maneuver_self'
   if (ic === '❗' || ic === '❕') return 'triggered'
   if (ic === '☠') return 'solo'
-  if (ic === '❇' || ic === '🌀') return 'special_ability'
+  if (ic === '🌀') return 'special_distance'
   return 'melee_attack'
 }
 
@@ -245,7 +251,10 @@ function defaultFeature(category: AbilityCategory): MonsterFeature {
         ? 'Triggered action'
         : 'Main action'
   const ability_type =
-    category === 'melee_attack' || category === 'ranged_attack' || category === 'area_attack'
+    category === 'melee_attack' ||
+    category === 'ranged_attack' ||
+    category === 'versatile_attack' ||
+    category === 'area_attack'
       ? 'Signature Ability'
       : ''
   return {
