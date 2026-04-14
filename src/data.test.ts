@@ -1094,7 +1094,7 @@ describe('custom monsters', () => {
         type: 'feature' as const,
         feature_type: 'ability' as const,
         name: 'Slam',
-        icon: '🗡',
+        icon: '🗡️',
         usage: 'Main action',
         effects: [{ roll: 'Power Roll + 2', tier1: '5 damage' }],
       },

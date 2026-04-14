@@ -30,7 +30,7 @@
       "type": "feature",
       "feature_type": "ability",
       "name": "Exsanguinating Bite",
-      "icon": "🗡",
+      "icon": "🗡️",
       "ability_type": "Signature Ability",
       "keywords": [
         "Melee",
@@ -57,7 +57,7 @@
       "type": "feature",
       "feature_type": "ability",
       "name": "Vicious Pursuit",
-      "icon": "🗡",
+      "icon": "🗡️",
       "cost": "3 Malice",
       "keywords": [
         "Melee",

@@ -35,7 +35,7 @@ describe('drawSteelGlyphs', () => {
 
 describe('featureIconToDrawSteelGlyph', () => {
   it('maps common bestiary emoji to chart characters (normalized VS16)', () => {
-    expect(featureIconToDrawSteelGlyph('🗡')).toBe('t')
+    expect(featureIconToDrawSteelGlyph('🗡️')).toBe('t')
     expect(featureIconToDrawSteelGlyph('🏹')).toBe('g')
     expect(featureIconToDrawSteelGlyph('⚔️')).toBe('t')
     expect(featureIconToDrawSteelGlyph('⭐️')).toBe('*')

@@ -25,7 +25,7 @@
       "type": "feature",
       "feature_type": "ability",
       "name": "Club Swing",
-      "icon": "🗡",
+      "icon": "🗡️",
       "ability_type": "Signature Ability",
       "keywords": [
         "Melee",
@@ -52,7 +52,7 @@
       "type": "feature",
       "feature_type": "ability",
       "name": "Grabby Hand",
-      "icon": "🗡",
+      "icon": "🗡️",
       "cost": "1 Malice",
       "keywords": [
         "Melee",

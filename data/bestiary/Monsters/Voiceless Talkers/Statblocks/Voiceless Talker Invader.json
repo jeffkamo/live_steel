@@ -29,7 +29,7 @@
       "type": "feature",
       "feature_type": "ability",
       "name": "Tentacle",
-      "icon": "🗡",
+      "icon": "🗡️",
       "ability_type": "Signature Ability",
       "keywords": [
         "Melee",
@@ -78,7 +78,7 @@
       "type": "feature",
       "feature_type": "ability",
       "name": "Tentacle Toss",
-      "icon": "🗡",
+      "icon": "🗡️",
       "keywords": [
         "Melee",
         "Psionic"

@@ -25,7 +25,7 @@
       "type": "feature",
       "feature_type": "ability",
       "name": "Flash Swipe",
-      "icon": "🗡",
+      "icon": "🗡️",
       "ability_type": "Signature Ability",
       "keywords": [
         "Melee",
@@ -52,7 +52,7 @@
       "type": "feature",
       "feature_type": "ability",
       "name": "Piercing Tails",
-      "icon": "🗡",
+      "icon": "🗡️",
       "keywords": [
         "Melee",
         "Strike",

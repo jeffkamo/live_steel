@@ -64,7 +64,7 @@ const CATEGORY_META: Record<
   AbilityCategory,
   { label: string; icon: string; feature_type: 'ability' | 'trait' }
 > = {
-  melee_attack: { label: 'Melee attack', icon: '🗡', feature_type: 'ability' },
+  melee_attack: { label: 'Melee attack', icon: '🗡️', feature_type: 'ability' },
   ranged_attack: { label: 'Ranged attack', icon: '🏹', feature_type: 'ability' },
   versatile_attack: { label: 'Melee or ranged', icon: '⚔️', feature_type: 'ability' },
   area_attack: { label: 'Area attack', icon: '🔳', feature_type: 'ability' },
@@ -82,16 +82,17 @@ function normIcon(s: string | undefined): string {
 
 function inferCategory(f: MonsterFeature): AbilityCategory {
   if (f.feature_type === 'trait') return 'passive_trait'
-  const ic = normIcon(f.icon)
-  if (ic === '🗡') return 'melee_attack'
-  if (ic === '🏹') return 'ranged_attack'
-  if (ic === '⚔') return 'versatile_attack'
-  if (ic === '🔳') return 'area_attack'
-  if (ic === '❇') return 'aura_burst_area'
-  if (ic === '👤') return 'maneuver_self'
-  if (ic === '❗' || ic === '❕') return 'triggered'
-  if (ic === '☠') return 'solo'
-  if (ic === '🌀') return 'special_distance'
+  const ic = (f.icon ?? '').trim()
+  const bare = normIcon(ic)
+  if (ic === '🗡️' || bare === '🗡') return 'melee_attack'
+  if (ic === '🏹' || bare === '🏹') return 'ranged_attack'
+  if (ic === '⚔️' || bare === '⚔') return 'versatile_attack'
+  if (ic === '🔳' || bare === '🔳') return 'area_attack'
+  if (ic === '❇️' || bare === '❇') return 'aura_burst_area'
+  if (ic === '👤' || bare === '👤') return 'maneuver_self'
+  if (ic === '❗️' || bare === '❗' || bare === '❕') return 'triggered'
+  if (ic === '☠️' || bare === '☠') return 'solo'
+  if (ic === '🌀' || bare === '🌀') return 'special_distance'
   return 'melee_attack'
 }
 
@@ -281,20 +282,21 @@ function parseOptionalNegInt(raw: string): number {
 }
 
 function CategoryIconPreview({ icon }: { icon: string }) {
-  const normalized = icon.trim().replace(/\uFE0F/g, '')
+  const trimmed = icon.trim()
+  const normalized = trimmed.replace(/\uFE0F/g, '')
   if (normalized !== '☠') {
     return (
       <span
         className="ml-1.5 normal-case font-draw-steel text-sm tracking-normal text-zinc-700 dark:text-zinc-300"
         aria-hidden
       >
-        {normalized}
+        {trimmed}
       </span>
     )
   }
   return (
     <span className="ml-1.5 normal-case text-sm tracking-normal" aria-hidden>
-      {normalized}
+      {trimmed}
     </span>
   )
 }

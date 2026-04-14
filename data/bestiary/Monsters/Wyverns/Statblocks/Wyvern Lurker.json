@@ -29,7 +29,7 @@
       "type": "feature",
       "feature_type": "ability",
       "name": "Agonizing Stinger",
-      "icon": "🗡",
+      "icon": "🗡️",
       "ability_type": "Signature Ability",
       "keywords": [
         "Magic",
@@ -56,7 +56,7 @@
       "type": "feature",
       "feature_type": "ability",
       "name": "Acidic Anguish",
-      "icon": "🗡",
+      "icon": "🗡️",
       "cost": "3 Malice",
       "keywords": [
         "Magic",

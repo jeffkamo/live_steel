@@ -25,7 +25,7 @@
       "type": "feature",
       "feature_type": "ability",
       "name": "Bonebreaker",
-      "icon": "🗡",
+      "icon": "🗡️",
       "ability_type": "Signature Ability",
       "keywords": [
         "Melee",
@@ -52,7 +52,7 @@
       "type": "feature",
       "feature_type": "ability",
       "name": "Steelfist",
-      "icon": "🗡",
+      "icon": "🗡️",
       "cost": "3 Malice",
       "keywords": [
         "Melee",

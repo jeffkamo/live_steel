@@ -25,7 +25,7 @@
       "type": "feature",
       "feature_type": "ability",
       "name": "Clawed Kick",
-      "icon": "🗡",
+      "icon": "🗡️",
       "ability_type": "Signature Ability",
       "keywords": [
         "Melee",
@@ -52,7 +52,7 @@
       "type": "feature",
       "feature_type": "ability",
       "name": "Whiptail",
-      "icon": "🗡",
+      "icon": "🗡️",
       "keywords": [
         "Melee",
         "Strike",

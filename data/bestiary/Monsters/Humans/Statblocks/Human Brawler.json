@@ -29,7 +29,7 @@
       "type": "feature",
       "feature_type": "ability",
       "name": "Haymaker",
-      "icon": "🗡",
+      "icon": "🗡️",
       "ability_type": "Signature Ability",
       "keywords": [
         "Melee",
@@ -56,7 +56,7 @@
       "type": "feature",
       "feature_type": "ability",
       "name": "Throw",
-      "icon": "🗡",
+      "icon": "🗡️",
       "cost": "1 Malice",
       "keywords": [
         "Melee"

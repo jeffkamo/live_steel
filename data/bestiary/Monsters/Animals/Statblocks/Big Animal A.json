@@ -24,7 +24,7 @@
       "type": "feature",
       "feature_type": "ability",
       "name": "Natural Weapon",
-      "icon": "🗡",
+      "icon": "🗡️",
       "ability_type": "Signature Ability",
       "keywords": [
         "Melee",
@@ -47,7 +47,7 @@
       "type": "feature",
       "feature_type": "ability",
       "name": "Toss",
-      "icon": "🗡",
+      "icon": "🗡️",
       "keywords": [
         "Melee"
       ],

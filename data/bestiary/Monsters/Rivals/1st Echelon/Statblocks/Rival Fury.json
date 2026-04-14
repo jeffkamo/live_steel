@@ -25,7 +25,7 @@
       "type": "feature",
       "feature_type": "ability",
       "name": "Brutal Impact",
-      "icon": "🗡",
+      "icon": "🗡️",
       "ability_type": "Signature Ability",
       "keywords": [
         "Melee",
@@ -52,7 +52,7 @@
       "type": "feature",
       "feature_type": "ability",
       "name": "Let's Tussle",
-      "icon": "🗡",
+      "icon": "🗡️",
       "cost": "2 Malice",
       "keywords": [
         "Melee",

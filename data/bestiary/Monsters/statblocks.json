@@ -64,7 +64,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Sand Slam",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -296,7 +296,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Jaws and Claws",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -358,7 +358,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Voracious Mastication",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -493,7 +493,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Charging Chomp",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Charge",
@@ -560,7 +560,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Savoring Bite",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -701,7 +701,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Dine and Dash",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -767,7 +767,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Arm and a Leg",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -829,7 +829,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Wide Axe",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -1220,7 +1220,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Concussive Maul",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -1532,7 +1532,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Maul",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Charge",
@@ -1585,7 +1585,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Grasping Claws",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Charge",
@@ -2084,7 +2084,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Fuse-Iron Lance",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Charge",
@@ -2116,7 +2116,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Blazing Charge",
-        "icon": "🗡",
+        "icon": "🗡️",
         "keywords": [
           "Melee",
           "Weapon"
@@ -2727,7 +2727,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Inspiring Strike",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -2864,7 +2864,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Chainsaw Whip",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -3730,7 +3730,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Houndaxe",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -3882,7 +3882,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Needle-Knife",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -4040,7 +4040,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Greatsword and Roar",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Charge",
@@ -4578,7 +4578,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Jumplance",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Charge",
@@ -5175,7 +5175,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Pile Bunker Gauntlet",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Charge",
@@ -5265,7 +5265,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Banded Dagger",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -5426,7 +5426,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Several Arms",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -5695,7 +5695,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Dive Bomb",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -5796,7 +5796,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Command Saber",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -6386,7 +6386,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Vine Lash",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -6438,7 +6438,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Engulf",
-        "icon": "🗡",
+        "icon": "🗡️",
         "cost": "2 Malice",
         "keywords": [
           "Melee"
@@ -6920,7 +6920,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Carnivorous Bite",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -6973,7 +6973,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Harrying Claws",
-        "icon": "🗡",
+        "icon": "🗡️",
         "keywords": [
           "Melee",
           "Strike",
@@ -7168,7 +7168,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Barbed Tail Swing",
-        "icon": "🗡",
+        "icon": "🗡️",
         "keywords": [
           "Charge",
           "Melee",
@@ -7470,7 +7470,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Spinous Tail Swing",
-        "icon": "🗡",
+        "icon": "🗡️",
         "keywords": [
           "Charge",
           "Melee",
@@ -7762,7 +7762,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Forge Hammer Tail Slam",
-        "icon": "🗡",
+        "icon": "🗡️",
         "keywords": [
           "Melee",
           "Strike",
@@ -8368,7 +8368,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Phantom Tail Swing",
-        "icon": "🗡",
+        "icon": "🗡️",
         "keywords": [
           "Charge",
           "Magic",
@@ -8603,7 +8603,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Killer Claws",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -8649,7 +8649,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Mindwipe",
-        "icon": "🗡",
+        "icon": "🗡️",
         "keywords": [
           "Melee",
           "Psionic",
@@ -8802,7 +8802,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Eager Claws",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -8879,7 +8879,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Four-Way Grasp",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -8910,7 +8910,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Cerebral Suplex",
-        "icon": "🗡",
+        "icon": "🗡️",
         "keywords": [
           "Melee",
           "Strike"
@@ -9349,7 +9349,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Tentacle",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -9398,7 +9398,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Tentacle Toss",
-        "icon": "🗡",
+        "icon": "🗡️",
         "keywords": [
           "Melee",
           "Psionic"
@@ -9528,7 +9528,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Accursed Bite",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Charge",
@@ -9556,7 +9556,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Ripping Claws",
-        "icon": "🗡",
+        "icon": "🗡️",
         "keywords": [
           "Melee",
           "Strike",
@@ -9741,7 +9741,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Prehensile Tongue",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -9886,7 +9886,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Noxious Bite",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -10020,7 +10020,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Pneumatic Punch",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -10189,7 +10189,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Valiar Axe",
-        "icon": "🗡",
+        "icon": "🗡️",
         "cost": "3 Malice",
         "keywords": [
           "Melee",
@@ -10316,7 +10316,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Blade Rake",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -10519,7 +10519,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Construction Arm",
-        "icon": "🗡",
+        "icon": "🗡️",
         "keywords": [
           "Melee",
           "Strike",
@@ -10668,7 +10668,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Drill Press",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -10950,7 +10950,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Slam Into Dirt",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -11187,7 +11187,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Water Wing",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Magic",
@@ -11798,7 +11798,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Toothful Thrashing",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -12072,7 +12072,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Axe",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -12131,7 +12131,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Swordplay",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -12280,7 +12280,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Spear Charge",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Charge",
@@ -12304,7 +12304,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Bury the Point",
-        "icon": "🗡",
+        "icon": "🗡️",
         "cost": "2 Malice",
         "keywords": [
           "Melee",
@@ -12614,7 +12614,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Bite",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Charge",
@@ -12705,7 +12705,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Club Charge",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Charge",
@@ -12765,7 +12765,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Sword Stab",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -12862,7 +12862,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Bite",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -12889,7 +12889,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Leg Blade",
-        "icon": "🗡",
+        "icon": "🗡️",
         "keywords": [
           "Melee",
           "Strike",
@@ -13105,7 +13105,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Claws",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -13160,7 +13160,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Quill Pushing",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -13376,7 +13376,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Litigation",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Charge",
@@ -13779,7 +13779,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Edge of the Law",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -13806,7 +13806,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Verdict",
-        "icon": "🗡",
+        "icon": "🗡️",
         "keywords": [
           "Melee",
           "Strike",
@@ -13923,7 +13923,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Infernal Pike",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -13950,7 +13950,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Writ of Execution",
-        "icon": "🗡",
+        "icon": "🗡️",
         "keywords": [
           "Charge",
           "Melee",
@@ -13977,7 +13977,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Law and Order",
-        "icon": "🗡",
+        "icon": "🗡️",
         "keywords": [
           "Melee"
         ],
@@ -14159,7 +14159,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Corrosive Claws",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -14365,7 +14365,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Haymaker",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -14392,7 +14392,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Leaping Fury",
-        "icon": "🗡",
+        "icon": "🗡️",
         "keywords": [
           "Melee",
           "Strike",
@@ -14418,7 +14418,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Drag Through Hell",
-        "icon": "🗡",
+        "icon": "🗡️",
         "cost": "3 Malice",
         "keywords": [
           "Melee"
@@ -14441,7 +14441,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Throw",
-        "icon": "🗡",
+        "icon": "🗡️",
         "keywords": [
           "Melee",
           "Strike"
@@ -14607,7 +14607,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Throw",
-        "icon": "🗡",
+        "icon": "🗡️",
         "keywords": [
           "Melee",
           "Strike"
@@ -14695,7 +14695,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Inspiring Swordplay",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -14759,7 +14759,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Throw",
-        "icon": "🗡",
+        "icon": "🗡️",
         "keywords": [
           "Melee",
           "Strike"
@@ -14838,7 +14838,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Sucker Punch",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -14916,7 +14916,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Throw",
-        "icon": "🗡",
+        "icon": "🗡️",
         "keywords": [
           "Melee",
           "Strike"
@@ -15005,7 +15005,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Corrosive Blade",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Magic",
@@ -15082,7 +15082,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Cut 'Em Low!",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Charge",
@@ -15137,7 +15137,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Mug and Tear",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -15296,7 +15296,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Vermilion Fangs",
-        "icon": "🗡",
+        "icon": "🗡️",
         "cost": "3 Malice",
         "keywords": [
           "Melee",
@@ -15822,7 +15822,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Emergent Horrors",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -15888,7 +15888,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Barbed Tongues",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -16049,7 +16049,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Hair Whip",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -16330,7 +16330,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Soul Prism",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Magic",
@@ -16415,7 +16415,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Greedy Hands",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Magic",
@@ -16604,7 +16604,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Barbed Stinger",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -16700,7 +16700,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Many Maws",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -16803,7 +16803,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Spinning Bone Blade",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Charge",
@@ -17221,7 +17221,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Flux Gnash",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -17317,7 +17317,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Barbed Tongues",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -17529,7 +17529,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Soul Stinger",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -17591,7 +17591,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Rip and Tear",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Charge",
@@ -18027,7 +18027,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Chitin Bash",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -18088,7 +18088,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Bloodletting Claws",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -18187,7 +18187,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Tooth! Tusk! Claw!",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -18297,7 +18297,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Gore Horn",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Charge",
@@ -18460,7 +18460,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Tail Bite",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -18537,7 +18537,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Abyssal Strike",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Magic",
@@ -18734,7 +18734,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Flurry",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -18824,7 +18824,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Natural Weapon",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -18920,7 +18920,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Natural Weapon",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -19025,7 +19025,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Natural Weapon",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -19048,7 +19048,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Toss",
-        "icon": "🗡",
+        "icon": "🗡️",
         "keywords": [
           "Melee"
         ],
@@ -19123,7 +19123,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Natural Weapon",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -19202,7 +19202,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Natural Weapon",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -19339,7 +19339,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Tongue Grab",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -19366,7 +19366,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Maw",
-        "icon": "🗡",
+        "icon": "🗡️",
         "keywords": [
           "Charge",
           "Melee",
@@ -19393,7 +19393,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Consume",
-        "icon": "🗡",
+        "icon": "🗡️",
         "cost": "2 Malice",
         "keywords": [
           "Melee"
@@ -19609,7 +19609,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Snake Bites",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -19997,7 +19997,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Tonguelash",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -20093,7 +20093,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Acid Grasp",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -20272,7 +20272,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Nip",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -20336,7 +20336,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Hookclaw",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -20469,7 +20469,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Hop and Chop",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -20570,7 +20570,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Bite",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -20597,7 +20597,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Claw Swing",
-        "icon": "🗡",
+        "icon": "🗡️",
         "keywords": [
           "Melee",
           "Strike",
@@ -20822,7 +20822,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Tentacle Grab",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -20875,7 +20875,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Mind Blown",
-        "icon": "🗡",
+        "icon": "🗡️",
         "cost": "7 Malice",
         "keywords": [
           "Melee",
@@ -21043,7 +21043,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Wodeblade",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Magic",
@@ -21404,7 +21404,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Gore",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Charge",
@@ -21945,7 +21945,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Growing Longsword",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -22263,7 +22263,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Gore",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Charge",
@@ -22357,7 +22357,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Crescent Sweep",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Charge",
@@ -22536,7 +22536,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Manifold Blade",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -22781,7 +22781,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Knife in the Dark",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -22864,7 +22864,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Vault",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -22990,7 +22990,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Stick and Poke",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -23225,7 +23225,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Dusk Cleave",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -23315,7 +23315,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Night Knife",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -23511,7 +23511,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Claw and Blade",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -23745,7 +23745,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Pounce",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Charge",
@@ -23879,7 +23879,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Flash Swipe",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -23906,7 +23906,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Piercing Tails",
-        "icon": "🗡",
+        "icon": "🗡️",
         "keywords": [
           "Melee",
           "Strike",
@@ -24076,7 +24076,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Lop",
-        "icon": "🗡",
+        "icon": "🗡️",
         "cost": "3 Malice",
         "keywords": [
           "Magic",
@@ -24266,7 +24266,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Buried in Sand",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Magic",
@@ -24411,7 +24411,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Cold Axe",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Charge",
@@ -24458,7 +24458,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Ice Dance",
-        "icon": "🗡",
+        "icon": "🗡️",
         "keywords": [
           "Melee"
         ],
@@ -24633,7 +24633,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Burning Kick",
-        "icon": "🗡",
+        "icon": "🗡️",
         "keywords": [
           "Charge",
           "Melee",
@@ -24797,7 +24797,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Clobberin' Club",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Charge",
@@ -24825,7 +24825,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Stomp",
-        "icon": "🗡",
+        "icon": "🗡️",
         "cost": "3 Malice",
         "keywords": [
           "Melee",
@@ -24950,7 +24950,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Rune-Signed Blade",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Magic",
@@ -25129,7 +25129,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Far Flung",
-        "icon": "🗡",
+        "icon": "🗡️",
         "cost": "3 Malice",
         "keywords": [
           "Melee",
@@ -25255,7 +25255,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Swing",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -25318,7 +25318,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Jagged Stone Club",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -25467,7 +25467,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Flamelash",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Magic",
@@ -25604,7 +25604,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Flaming Punch",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -25803,7 +25803,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Ice Dance",
-        "icon": "🗡",
+        "icon": "🗡️",
         "keywords": [
           "Melee"
         ],
@@ -25881,7 +25881,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Searing Grasp",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Magic",
@@ -25955,7 +25955,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Steely Skewer",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -25982,7 +25982,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Tail Stinger",
-        "icon": "🗡",
+        "icon": "🗡️",
         "cost": "3 Malice",
         "keywords": [
           "Melee",
@@ -26180,7 +26180,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Flyby Bite",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -26258,7 +26258,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Flaming Kick",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Charge",
@@ -26432,7 +26432,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Fire Flail",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -26518,7 +26518,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Tower Shield Smash",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -26958,7 +26958,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Blightblade",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Magic",
@@ -27060,7 +27060,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Soul Sword",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Magic",
@@ -27243,7 +27243,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Sword Lunge",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -27417,7 +27417,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Bull Rush",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Charge",
@@ -27482,7 +27482,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Horn Vault",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Charge",
@@ -27608,7 +27608,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Flail and Blade",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Charge",
@@ -27655,7 +27655,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Goring Horns",
-        "icon": "🗡",
+        "icon": "🗡️",
         "cost": "5 Malice",
         "keywords": [
           "Charge",
@@ -27738,7 +27738,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Spiked Maul",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Charge",
@@ -27791,7 +27791,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Disemboweling Horns",
-        "icon": "🗡",
+        "icon": "🗡️",
         "cost": "3 Malice",
         "keywords": [
           "Charge",
@@ -28496,7 +28496,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Rapier and Dagger",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -28580,7 +28580,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Haymaker",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -28607,7 +28607,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Throw",
-        "icon": "🗡",
+        "icon": "🗡️",
         "cost": "1 Malice",
         "keywords": [
           "Melee"
@@ -28677,7 +28677,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Handaxes",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Charge",
@@ -28741,7 +28741,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Talons",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -29004,7 +29004,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Whip and Magic Longsword",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Magic",
@@ -29036,7 +29036,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Kneel, Peasant!",
-        "icon": "🗡",
+        "icon": "🗡️",
         "keywords": [
           "Melee"
         ],
@@ -29187,7 +29187,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Halberd",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -29398,7 +29398,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Buckler Bash",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Charge",
@@ -29468,7 +29468,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Rapier Flunge",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -29536,7 +29536,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Lockjaw",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -29641,7 +29641,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "En Garde",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -29668,7 +29668,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Over Here, Thanks",
-        "icon": "🗡",
+        "icon": "🗡️",
         "keywords": [
           "Melee"
         ],
@@ -30105,7 +30105,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Brutal Flail",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -30167,7 +30167,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Repelling Psihander",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -30255,7 +30255,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Serrated Saber",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -30442,7 +30442,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Golden Scythe",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -30535,7 +30535,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Golden Sickles",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -30622,7 +30622,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Fifth Fist",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -30685,7 +30685,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Psionic Slam",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -30985,7 +30985,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Blade of the Gol King",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Charge",
@@ -31404,7 +31404,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Shield Bash",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -31508,7 +31508,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Mace Lariat",
-        "icon": "🗡",
+        "icon": "🗡️",
         "keywords": [
           "Melee",
           "Strike",
@@ -31674,7 +31674,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Haymaker Greataxe",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -31827,7 +31827,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Lugged Spear",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -31889,7 +31889,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Hook and Chain",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -31985,7 +31985,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Clawed Kick",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -32012,7 +32012,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Whiptail",
-        "icon": "🗡",
+        "icon": "🗡️",
         "keywords": [
           "Melee",
           "Strike",
@@ -32148,7 +32148,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Dagger Feint",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -32175,7 +32175,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Strangle",
-        "icon": "🗡",
+        "icon": "🗡️",
         "keywords": [
           "Melee",
           "Strike",
@@ -32360,7 +32360,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Earth Bump",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -32433,7 +32433,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "My Spear, My Foe",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -32763,7 +32763,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Agonizing Stinger",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Magic",
@@ -32790,7 +32790,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Acidic Anguish",
-        "icon": "🗡",
+        "icon": "🗡️",
         "cost": "3 Malice",
         "keywords": [
           "Magic",
@@ -32904,7 +32904,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Sedating Stinger",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Magic",
@@ -32956,7 +32956,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Grasping Jaws",
-        "icon": "🗡",
+        "icon": "🗡️",
         "cost": "2 Malice",
         "keywords": [
           "Magic",
@@ -33299,7 +33299,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Razor's Edge",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -33640,7 +33640,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Heckle",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -33795,7 +33795,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Kiss of Death",
-        "icon": "🗡",
+        "icon": "🗡️",
         "keywords": [
           "Magic",
           "Melee"
@@ -33850,7 +33850,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Sweeping Blade",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -33941,7 +33941,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Elemental Charge",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Charge",
@@ -34047,7 +34047,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Dweomer Plume",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Magic",
@@ -34251,7 +34251,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Devolving Tentacles",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -34647,7 +34647,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Skewer",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -34912,7 +34912,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Punishing Flail",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -35110,7 +35110,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Breaking Palm",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -35236,7 +35236,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Baneful Blade",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -35610,7 +35610,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Gladius",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -35637,7 +35637,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Shield Bash",
-        "icon": "🗡",
+        "icon": "🗡️",
         "keywords": [
           "Melee",
           "Strike",
@@ -35698,7 +35698,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Engulf",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -35848,7 +35848,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Fiery Claws",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -35966,7 +35966,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Dolabra and Net",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -36134,7 +36134,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Signum",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -36231,7 +36231,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Pugio",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -36383,7 +36383,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Hasta",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -36446,7 +36446,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Violent Thrashing",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -36586,7 +36586,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Claw Swipes",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Charge",
@@ -36739,7 +36739,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Bone Carvers",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -36998,7 +36998,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Hollow Grasp",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -37064,7 +37064,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Rotten Smash",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -37157,7 +37157,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Mudslide",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -37272,7 +37272,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Draining Rake",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -37337,7 +37337,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Soulstealer Longsword",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -37426,7 +37426,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Accursed Bindings",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -37616,7 +37616,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Exsanguinating Bite",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -37643,7 +37643,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Vicious Pursuit",
-        "icon": "🗡",
+        "icon": "🗡️",
         "cost": "3 Malice",
         "keywords": [
           "Melee",
@@ -37731,7 +37731,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Life Drain",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -37794,7 +37794,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Four Swords Swing",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -37869,7 +37869,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Fingernails",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -37936,7 +37936,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Exsanguinating Bite",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -38252,7 +38252,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Ribcage Chomp",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -38338,7 +38338,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Choking Grasp",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -38430,7 +38430,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Decaying Touch",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Magic",
@@ -38514,7 +38514,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Lash Out",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -38610,7 +38610,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Fetid Wrappings",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -38664,7 +38664,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Multiarm Strike",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -38771,7 +38771,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Rotting Fist",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -38833,7 +38833,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Chilling Gravetouch",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Magic",
@@ -38940,7 +38940,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Taste",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Charge",
@@ -39018,7 +39018,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Chilling Grasp",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Magic",
@@ -39127,7 +39127,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Accursed Slam",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -39316,7 +39316,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Razor Claws",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Charge",
@@ -39410,7 +39410,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Feeding Frenzy",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -39477,7 +39477,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Crimson Embrace",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -39754,7 +39754,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Clobber and Clutch",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -39846,7 +39846,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Rotten Kick",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -39987,7 +39987,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Razor Bite",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -40014,7 +40014,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Tail Whip",
-        "icon": "🗡",
+        "icon": "🗡️",
         "cost": "2 Malice",
         "keywords": [
           "Melee",
@@ -40074,7 +40074,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Tonguelash",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -40137,7 +40137,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Ripper Spear",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -40164,7 +40164,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Death Roll",
-        "icon": "🗡",
+        "icon": "🗡️",
         "cost": "3 Malice",
         "keywords": [
           "Melee",
@@ -40322,7 +40322,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Snap and Toss",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -40382,7 +40382,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Shield Smash",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -40445,7 +40445,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Glaive Rush",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -40645,7 +40645,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Wizard Ripper",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Magic",
@@ -40707,7 +40707,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Three-Tail Flail",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -40788,7 +40788,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Shrapnel Whip",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -41016,7 +41016,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Fury Flail",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -41098,7 +41098,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Gore",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Charge",
@@ -41193,7 +41193,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Snapjaw",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -41252,7 +41252,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Flail",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -41487,7 +41487,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Seismic Crush",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -41514,7 +41514,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Death Grip",
-        "icon": "🗡",
+        "icon": "🗡️",
         "cost": "4 Malice",
         "keywords": [
           "Melee",
@@ -41805,7 +41805,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "A Hush of Ash",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -41896,7 +41896,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Kinetic Danse",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -41919,7 +41919,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Incapacitate",
-        "icon": "🗡",
+        "icon": "🗡️",
         "cost": "5 Malice",
         "keywords": [
           "Melee",
@@ -42192,7 +42192,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Bonebreaker",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -42219,7 +42219,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Steelfist",
-        "icon": "🗡",
+        "icon": "🗡️",
         "cost": "3 Malice",
         "keywords": [
           "Melee",
@@ -42506,7 +42506,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Assail and Serrate",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -42597,7 +42597,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Inertial Flow",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -42620,7 +42620,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Stun",
-        "icon": "🗡",
+        "icon": "🗡️",
         "cost": "3 Malice",
         "keywords": [
           "Melee",
@@ -42895,7 +42895,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Thunderous Slam",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -42922,7 +42922,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Roughed Up",
-        "icon": "🗡",
+        "icon": "🗡️",
         "cost": "3 Malice",
         "keywords": [
           "Melee",
@@ -43205,7 +43205,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Ambuscade",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -43296,7 +43296,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Agile Stride",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -43319,7 +43319,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Deaden",
-        "icon": "🗡",
+        "icon": "🗡️",
         "cost": "2 Malice",
         "keywords": [
           "Melee",
@@ -43590,7 +43590,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Brutal Impact",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -43617,7 +43617,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Let's Tussle",
-        "icon": "🗡",
+        "icon": "🗡️",
         "cost": "2 Malice",
         "keywords": [
           "Melee",
@@ -43900,7 +43900,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Swift Serration",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -43991,7 +43991,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Nimble Step",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -44014,7 +44014,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Numb",
-        "icon": "🗡",
+        "icon": "🗡️",
         "cost": "2 Malice",
         "keywords": [
           "Melee",
@@ -44286,7 +44286,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Crush Underfoot",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -44359,7 +44359,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Club Swing",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -44386,7 +44386,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Grabby Hand",
-        "icon": "🗡",
+        "icon": "🗡️",
         "cost": "1 Malice",
         "keywords": [
           "Melee",
@@ -44555,7 +44555,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Pitchfork Catapult",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Charge",
@@ -44794,7 +44794,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Bite",
-        "icon": "🗡",
+        "icon": "🗡️",
         "ability_type": "Signature Ability",
         "keywords": [
           "Melee",
@@ -44866,7 +44866,7 @@
         "type": "feature",
         "feature_type": "ability",
         "name": "Lion's Toss",
-        "icon": "🗡",
+        "icon": "🗡️",
         "keywords": [
           "Melee",
           "Weapon"

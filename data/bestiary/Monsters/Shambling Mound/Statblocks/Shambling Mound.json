@@ -52,7 +52,7 @@
       "type": "feature",
       "feature_type": "ability",
       "name": "Vine Lash",
-      "icon": "🗡",
+      "icon": "🗡️",
       "ability_type": "Signature Ability",
       "keywords": [
         "Melee",
@@ -104,7 +104,7 @@
       "type": "feature",
       "feature_type": "ability",
       "name": "Engulf",
-      "icon": "🗡",
+      "icon": "🗡️",
       "cost": "2 Malice",
       "keywords": [
         "Melee"

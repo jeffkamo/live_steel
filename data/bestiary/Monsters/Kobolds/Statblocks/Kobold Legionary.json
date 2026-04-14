@@ -25,7 +25,7 @@
       "type": "feature",
       "feature_type": "ability",
       "name": "Gladius",
-      "icon": "🗡",
+      "icon": "🗡️",
       "ability_type": "Signature Ability",
       "keywords": [
         "Melee",
@@ -52,7 +52,7 @@
       "type": "feature",
       "feature_type": "ability",
       "name": "Shield Bash",
-      "icon": "🗡",
+      "icon": "🗡️",
       "keywords": [
         "Melee",
         "Strike",

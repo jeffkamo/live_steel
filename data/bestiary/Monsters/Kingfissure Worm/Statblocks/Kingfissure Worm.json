@@ -53,7 +53,7 @@
       "type": "feature",
       "feature_type": "ability",
       "name": "Tongue Grab",
-      "icon": "🗡",
+      "icon": "🗡️",
       "ability_type": "Signature Ability",
       "keywords": [
         "Melee",
@@ -80,7 +80,7 @@
       "type": "feature",
       "feature_type": "ability",
       "name": "Maw",
-      "icon": "🗡",
+      "icon": "🗡️",
       "keywords": [
         "Charge",
         "Melee",
@@ -107,7 +107,7 @@
       "type": "feature",
       "feature_type": "ability",
       "name": "Consume",
-      "icon": "🗡",
+      "icon": "🗡️",
       "cost": "2 Malice",
       "keywords": [
         "Melee"

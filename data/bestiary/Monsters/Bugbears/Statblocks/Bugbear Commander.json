@@ -27,7 +27,7 @@
       "type": "feature",
       "feature_type": "ability",
       "name": "Inspiring Swordplay",
-      "icon": "🗡",
+      "icon": "🗡️",
       "ability_type": "Signature Ability",
       "keywords": [
         "Melee",
@@ -91,7 +91,7 @@
       "type": "feature",
       "feature_type": "ability",
       "name": "Throw",
-      "icon": "🗡",
+      "icon": "🗡️",
       "keywords": [
         "Melee",
         "Strike"

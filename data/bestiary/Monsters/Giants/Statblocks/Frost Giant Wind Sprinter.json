@@ -28,7 +28,7 @@
       "type": "feature",
       "feature_type": "ability",
       "name": "Cold Axe",
-      "icon": "🗡",
+      "icon": "🗡️",
       "ability_type": "Signature Ability",
       "keywords": [
         "Charge",
@@ -75,7 +75,7 @@
       "type": "feature",
       "feature_type": "ability",
       "name": "Ice Dance",
-      "icon": "🗡",
+      "icon": "🗡️",
       "keywords": [
         "Melee"
       ],

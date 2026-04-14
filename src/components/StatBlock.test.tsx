@@ -19,7 +19,7 @@ const sampleAbility: MonsterFeature = {
   type: 'feature',
   feature_type: 'ability',
   name: 'Sword Stab',
-  icon: '🗡',
+  icon: '🗡️',
   ability_type: 'Signature Ability',
   keywords: ['Melee', 'Strike', 'Weapon'],
   usage: 'Main action',
@@ -49,7 +49,7 @@ describe('StatBlock', () => {
   it('renders feature emoji icons in margin', () => {
     render(<StatBlock features={[sampleAbility, sampleTrait]} monsterName="Test Monster" />)
     const glyphs = screen.getAllByTestId('stat-block-feature-glyph')
-    expect(glyphs.map((el) => el.textContent).sort().join('')).toBe('⭐️🗡')
+    expect(glyphs.map((el) => el.textContent).sort().join('')).toBe('⭐️🗡️')
   })
 
   it('renders skull icon in margin for solo abilities', () => {

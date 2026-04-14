@@ -56,7 +56,7 @@
       "type": "feature",
       "feature_type": "ability",
       "name": "Bite",
-      "icon": "🗡",
+      "icon": "🗡️",
       "ability_type": "Signature Ability",
       "keywords": [
         "Melee",
@@ -128,7 +128,7 @@
       "type": "feature",
       "feature_type": "ability",
       "name": "Lion's Toss",
-      "icon": "🗡",
+      "icon": "🗡️",
       "keywords": [
         "Melee",
         "Weapon"

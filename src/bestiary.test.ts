@@ -113,7 +113,7 @@ describe('mapFeatures', () => {
         type: 'feature',
         feature_type: 'ability',
         name: 'Test Strike',
-        icon: '🗡',
+        icon: '🗡️',
         ability_type: 'Signature Ability',
         keywords: ['Melee', 'Strike'],
         usage: 'Main action',
@@ -130,7 +130,7 @@ describe('mapFeatures', () => {
     expect(features[0]!.type).toBe('feature')
     expect(features[0]!.feature_type).toBe('ability')
     expect(features[0]!.name).toBe('Test Strike')
-    expect(features[0]!.icon).toBe('🗡')
+    expect(features[0]!.icon).toBe('🗡️')
     expect(features[0]!.ability_type).toBe('Signature Ability')
     expect(features[0]!.keywords).toEqual(['Melee', 'Strike'])
     expect(features[0]!.usage).toBe('Main action')

@@ -25,7 +25,7 @@
       "type": "feature",
       "feature_type": "ability",
       "name": "Seismic Crush",
-      "icon": "🗡",
+      "icon": "🗡️",
       "ability_type": "Signature Ability",
       "keywords": [
         "Melee",
@@ -52,7 +52,7 @@
       "type": "feature",
       "feature_type": "ability",
       "name": "Death Grip",
-      "icon": "🗡",
+      "icon": "🗡️",
       "cost": "4 Malice",
       "keywords": [
         "Melee",

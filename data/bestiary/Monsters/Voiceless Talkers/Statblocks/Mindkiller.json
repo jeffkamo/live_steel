@@ -40,7 +40,7 @@
       "type": "feature",
       "feature_type": "ability",
       "name": "Killer Claws",
-      "icon": "🗡",
+      "icon": "🗡️",
       "ability_type": "Signature Ability",
       "keywords": [
         "Melee",
@@ -86,7 +86,7 @@
       "type": "feature",
       "feature_type": "ability",
       "name": "Mindwipe",
-      "icon": "🗡",
+      "icon": "🗡️",
       "keywords": [
         "Melee",
         "Psionic",

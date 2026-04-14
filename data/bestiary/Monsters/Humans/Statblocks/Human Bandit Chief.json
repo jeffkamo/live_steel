@@ -29,7 +29,7 @@
       "type": "feature",
       "feature_type": "ability",
       "name": "Whip and Magic Longsword",
-      "icon": "🗡",
+      "icon": "🗡️",
       "ability_type": "Signature Ability",
       "keywords": [
         "Magic",
@@ -61,7 +61,7 @@
       "type": "feature",
       "feature_type": "ability",
       "name": "Kneel, Peasant!",
-      "icon": "🗡",
+      "icon": "🗡️",
       "keywords": [
         "Melee"
       ],

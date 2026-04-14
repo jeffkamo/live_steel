@@ -28,7 +28,7 @@
       "type": "feature",
       "feature_type": "ability",
       "name": "Infernal Pike",
-      "icon": "🗡",
+      "icon": "🗡️",
       "ability_type": "Signature Ability",
       "keywords": [
         "Melee",
@@ -55,7 +55,7 @@
       "type": "feature",
       "feature_type": "ability",
       "name": "Writ of Execution",
-      "icon": "🗡",
+      "icon": "🗡️",
       "keywords": [
         "Charge",
         "Melee",
@@ -82,7 +82,7 @@
       "type": "feature",
       "feature_type": "ability",
       "name": "Law and Order",
-      "icon": "🗡",
+      "icon": "🗡️",
       "keywords": [
         "Melee"
       ],

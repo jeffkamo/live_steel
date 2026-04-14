@@ -23,7 +23,7 @@
       "type": "feature",
       "feature_type": "trait",
       "name": "Emergency Meal",
-      "icon": "🗡",
+      "icon": "🗡️",
       "cost": "5 Malice",
       "effects": [
         {

@@ -29,7 +29,7 @@
       "type": "feature",
       "feature_type": "ability",
       "name": "Sedating Stinger",
-      "icon": "🗡",
+      "icon": "🗡️",
       "ability_type": "Signature Ability",
       "keywords": [
         "Magic",
@@ -81,7 +81,7 @@
       "type": "feature",
       "feature_type": "ability",
       "name": "Grasping Jaws",
-      "icon": "🗡",
+      "icon": "🗡️",
       "cost": "2 Malice",
       "keywords": [
         "Magic",

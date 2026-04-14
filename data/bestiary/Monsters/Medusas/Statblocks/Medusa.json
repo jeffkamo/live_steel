@@ -42,7 +42,7 @@
       "type": "feature",
       "feature_type": "ability",
       "name": "Snake Bites",
-      "icon": "🗡",
+      "icon": "🗡️",
       "ability_type": "Signature Ability",
       "keywords": [
         "Melee",

@@ -25,7 +25,7 @@
       "type": "feature",
       "feature_type": "ability",
       "name": "Fuse-Iron Lance",
-      "icon": "🗡",
+      "icon": "🗡️",
       "ability_type": "Signature Ability",
       "keywords": [
         "Charge",
@@ -57,7 +57,7 @@
       "type": "feature",
       "feature_type": "ability",
       "name": "Blazing Charge",
-      "icon": "🗡",
+      "icon": "🗡️",
       "keywords": [
         "Melee",
         "Weapon"

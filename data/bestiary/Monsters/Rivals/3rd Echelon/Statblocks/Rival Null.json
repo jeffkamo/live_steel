@@ -25,7 +25,7 @@
       "type": "feature",
       "feature_type": "ability",
       "name": "Inertial Flow",
-      "icon": "🗡",
+      "icon": "🗡️",
       "ability_type": "Signature Ability",
       "keywords": [
         "Melee",
@@ -48,7 +48,7 @@
       "type": "feature",
       "feature_type": "ability",
       "name": "Stun",
-      "icon": "🗡",
+      "icon": "🗡️",
       "cost": "3 Malice",
       "keywords": [
         "Melee",
