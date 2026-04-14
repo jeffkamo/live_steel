@@ -12,6 +12,8 @@ const INDEX_VERSION = 1
 export type EncounterIndexEntry = {
   id: string
   name: string
+  /** Per-encounter UI lock state for editing controls. */
+  locked?: boolean
 }
 
 export type PersistedEncounterIndex = {
@@ -66,6 +68,11 @@ export function serializeEncounterState(
     id: g.id,
     color: g.color,
     monsters: g.monsters.map((m) => {
+      // Keep custom monster abilities/features in storage, but strip bestiary-derived
+      // features for built-in monsters to keep payloads lean.
+      if (m.custom != null) {
+        return m
+      }
       const { features: _features, ...rest } = m
       return rest as Monster
     }),
@@ -88,7 +95,7 @@ function rehydrateFeatures(groups: EncounterGroup[]): EncounterGroup[] {
     color: g.color,
     monsters: g.monsters.map((m) => {
       if (m.custom != null) {
-        return { ...m, features: [] }
+        return { ...m, features: m.features ?? [] }
       }
       const fromName = featuresForMonster(m.name)
       if (fromName && fromName.length > 0) return { ...m, features: fromName }
@@ -220,6 +227,7 @@ function isValidIndex(o: unknown): o is PersistedEncounterIndex {
     if (e == null || typeof e !== 'object') return false
     const entry = e as Record<string, unknown>
     if (typeof entry.id !== 'string' || typeof entry.name !== 'string') return false
+    if (entry.locked != null && typeof entry.locked !== 'boolean') return false
   }
   return true
 }

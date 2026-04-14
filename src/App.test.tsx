@@ -3014,6 +3014,39 @@ describe('ADV-004 — switch between encounters', () => {
     expect(within(restoredCondCell).getByRole('button', { name: /bleeding/i })).toHaveAttribute('aria-pressed', 'true')
   })
 
+  it('persists lock state per encounter and restores on switch/reload', async () => {
+    const user = userEvent.setup()
+    const { unmount } = render(<App />)
+
+    const lockBtn = screen.getByRole('button', { name: /lock encounter editing controls/i })
+    await user.click(lockBtn)
+    expect(screen.getByRole('button', { name: /unlock encounter editing controls/i })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
+
+    await user.click(screen.getByRole('button', { name: /create new encounter/i }))
+    await user.type(screen.getByRole('textbox', { name: /encounter name/i }), 'Unlocked Encounter{Enter}')
+    expect(screen.getByRole('button', { name: /lock encounter editing controls/i })).toHaveAttribute(
+      'aria-pressed',
+      'false',
+    )
+
+    await user.click(screen.getByRole('button', { name: /switch encounter/i }))
+    await user.click(screen.getAllByRole('option')[0]!)
+    expect(screen.getByRole('button', { name: /unlock encounter editing controls/i })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
+
+    unmount()
+    render(<App />)
+    expect(screen.getByRole('button', { name: /unlock encounter editing controls/i })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
+  })
+
   it('persists switched state after page reload', async () => {
     const user = userEvent.setup()
     const { unmount } = render(<App />)

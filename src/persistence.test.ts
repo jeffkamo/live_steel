@@ -16,7 +16,7 @@ import {
   INDEX_KEY,
   type PersistedEncounterIndex,
 } from './persistence'
-import { cloneExampleEncounterGroups, cloneExampleTerrainRows, ENCOUNTER_GROUPS } from './data'
+import { cloneExampleEncounterGroups, cloneExampleTerrainRows, ENCOUNTER_GROUPS, blankCustomMonster } from './data'
 import { ensureMaliceRows } from './malice'
 
 function makeGroups(): EncounterGroup[] {
@@ -221,6 +221,28 @@ describe('deserializeEncounterState', () => {
     expect(parent!.features!.length).toBeGreaterThan(0)
   })
 
+  it('preserves custom monster features through serialize/deserialize', () => {
+    const groups = makeGroups()
+    const custom = blankCustomMonster()
+    custom.features = [
+      {
+        type: 'feature',
+        feature_type: 'ability',
+        name: 'Custom Slash',
+        effects: [{ roll: 'Power Roll + 2', tier1: '4 damage' }],
+      },
+    ]
+    groups[0]!.monsters.push(custom)
+
+    const json = serializeEncounterState(groups, makeTerrain(), makeTurnActed())
+    const result = deserializeEncounterState(json)
+    expect(result.ok).toBe(true)
+    if (!result.ok) return
+    const saved = result.state.encounterGroups[0]!.monsters.find((m) => m.encounterInstanceId === custom.encounterInstanceId)
+    expect(saved?.custom).toBeDefined()
+    expect(saved?.features).toEqual(custom.features)
+  })
+
   it('preserves captain references through round-trip', () => {
     const groups = makeGroups()
     groups[2]!.monsters[0]!.captainId = { groupIndex: 0, monsterIndex: 1 }
@@ -371,7 +393,7 @@ describe('encounter index persistence', () => {
   it('saves and loads encounter index', () => {
     const idx: PersistedEncounterIndex = {
       version: 1,
-      encounters: [{ id: 'a', name: 'Goblin Ambush' }],
+      encounters: [{ id: 'a', name: 'Goblin Ambush', locked: true }],
       activeId: 'a',
     }
     expect(saveEncounterIndex(idx).ok).toBe(true)
@@ -379,6 +401,18 @@ describe('encounter index persistence', () => {
     expect(loaded).not.toBeNull()
     expect(loaded!.encounters).toEqual(idx.encounters)
     expect(loaded!.activeId).toBe('a')
+  })
+
+  it('returns null when encounter entry locked is non-boolean', () => {
+    localStorage.setItem(
+      INDEX_KEY,
+      JSON.stringify({
+        version: 1,
+        encounters: [{ id: 'a', name: 'Goblin Ambush', locked: 'yes' }],
+        activeId: 'a',
+      }),
+    )
+    expect(loadEncounterIndex()).toBeNull()
   })
 
   it('returns null when no index exists', () => {

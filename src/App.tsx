@@ -110,6 +110,7 @@ function initStateFromStorage(): {
   encounterIndex: PersistedEncounterIndex
   activeEncounterId: string
   encounterName: string
+  uiLocked: boolean
 } {
   let index = loadEncounterIndex()
   if (!index) {
@@ -126,6 +127,7 @@ function initStateFromStorage(): {
           encounterIndex: index,
           activeEncounterId: index.activeId,
           encounterName: index.encounters[0]?.name ?? 'Encounter 1',
+          uiLocked: index.encounters[0]?.locked ?? false,
         }
       }
     }
@@ -144,6 +146,7 @@ function initStateFromStorage(): {
         encounterIndex: { ...index, activeId: activeEntry.id },
         activeEncounterId: activeEntry.id,
         encounterName: activeEntry.name,
+        uiLocked: activeEntry.locked ?? false,
       }
     }
   }
@@ -164,6 +167,7 @@ function initStateFromStorage(): {
     encounterIndex: newIndex,
     activeEncounterId: id,
     encounterName: name,
+    uiLocked: false,
   }
 }
 
@@ -200,6 +204,7 @@ function App() {
     encounterIndex: initIndex,
     activeEncounterId: initEncId,
     encounterName: initEncName,
+    uiLocked: initUiLocked,
   }] = useState(initStateFromStorage)
   const [encounterGroups, setEncounterGroups] = useState(() => initGroups)
   const [terrainRows, setTerrainRows] = useState(() => initTerrain)
@@ -208,7 +213,7 @@ function App() {
   const [squadsCollapsedByGroupId, setSquadsCollapsedByGroupId] = useState(
     () => initSquadsCollapsedByGroupId,
   )
-  const [uiLocked, setUiLocked] = useState(false)
+  const [uiLocked, setUiLocked] = useState(() => initUiLocked)
   const canAddGroup = nextUnusedColor(encounterGroups.map((g) => g.color)) != null
   const [monsterCardDrawer, setMonsterCardDrawer] = useState<MonsterCardDrawerState | null>(null)
   const [terrainDrawerIndex, setTerrainDrawerIndex] = useState<number | null>(null)
@@ -225,6 +230,19 @@ function App() {
   const newEncounterInputRef = useRef<HTMLInputElement>(null)
   const [showEncounterSwitcher, setShowEncounterSwitcher] = useState(false)
   const encounterSwitcherRef = useRef<HTMLDivElement>(null)
+
+  const toggleEncounterUiLocked = useCallback(() => {
+    setUiLocked((prev) => {
+      const next = !prev
+      setEncounterIndex((idx) => ({
+        ...idx,
+        encounters: idx.encounters.map((entry) =>
+          entry.id === activeEncounterId ? { ...entry, locked: next } : entry,
+        ),
+      }))
+      return next
+    })
+  }, [activeEncounterId])
 
   const monsterCardDrawerRef = useRef(monsterCardDrawer)
   monsterCardDrawerRef.current = monsterCardDrawer
@@ -1481,7 +1499,7 @@ function App() {
     )
 
     const id = newEncounterId()
-    const entry: EncounterIndexEntry = { id, name: trimmed }
+    const entry: EncounterIndexEntry = { id, name: trimmed, locked: false }
     const newGroups = cloneEncounterGroups()
     const newTerrain = cloneTerrainRows()
     const newTurns = newGroups.map(() => false)
@@ -1498,6 +1516,7 @@ function App() {
     setGroupTurnActed(newTurns)
     setMaliceRows(ensureMaliceRows(undefined))
     setSquadsCollapsedByGroupId({})
+    setUiLocked(false)
     prevTurnActedRef.current = [...newTurns]
     setMonsterCardDrawer(null)
     setTerrainDrawerIndex(null)
@@ -1530,6 +1549,7 @@ function App() {
       setGroupTurnActed(loaded.state.groupTurnActed)
       setMaliceRows(loaded.state.maliceRows)
       setSquadsCollapsedByGroupId(loaded.state.squadsCollapsedByGroupId ?? {})
+      setUiLocked(entry.locked ?? false)
       prevTurnActedRef.current = [...loaded.state.groupTurnActed]
     } else {
       const newGroups = cloneEncounterGroups()
@@ -1540,6 +1560,7 @@ function App() {
       setGroupTurnActed(newTurns)
       setMaliceRows(ensureMaliceRows(undefined))
       setSquadsCollapsedByGroupId({})
+      setUiLocked(entry.locked ?? false)
       prevTurnActedRef.current = [...newTurns]
     }
 
@@ -1598,6 +1619,7 @@ function App() {
         setGroupTurnActed(loaded.state.groupTurnActed)
         setMaliceRows(loaded.state.maliceRows)
         setSquadsCollapsedByGroupId(loaded.state.squadsCollapsedByGroupId ?? {})
+        setUiLocked(nextActive.locked ?? false)
         prevTurnActedRef.current = [...loaded.state.groupTurnActed]
       } else {
         const newGroups = cloneEncounterGroups()
@@ -1608,6 +1630,7 @@ function App() {
         setGroupTurnActed(newTurns)
         setMaliceRows(ensureMaliceRows(undefined))
         setSquadsCollapsedByGroupId({})
+        setUiLocked(nextActive.locked ?? false)
         prevTurnActedRef.current = [...newTurns]
       }
 
@@ -2364,7 +2387,7 @@ function App() {
                       <button
                         type="button"
                         aria-pressed={uiLocked}
-                        onClick={() => setUiLocked((v) => !v)}
+                        onClick={toggleEncounterUiLocked}
                         aria-label={
                           uiLocked
                             ? 'Unlock encounter editing controls'
