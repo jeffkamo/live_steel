@@ -21,7 +21,9 @@ export function compactPowerRollEffect(raw: PowerRollEffect | undefined | null):
   const eff: PowerRollEffect = {}
   for (const k of POWER_ROLL_STRING_KEYS) {
     const v = raw[k]
-    if (typeof v === 'string' && v.trim() !== '') eff[k] = v.trim()
+    // Use trim only to detect "empty"; keep the raw string so trailing spaces survive
+    // controlled-input updates (otherwise "word " becomes "word" and the next char glues on).
+    if (typeof v === 'string' && v.trim() !== '') eff[k] = v
   }
   return Object.keys(eff).length > 0 ? eff : undefined
 }

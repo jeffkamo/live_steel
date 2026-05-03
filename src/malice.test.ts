@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  compactPowerRollEffect,
   defaultCustomMaliceFeatureData,
   ensureMaliceRows,
   findMalicePickForFeatureKey,
@@ -31,6 +32,17 @@ function baseMonster(partial: Partial<Monster> & Pick<Monster, 'name'>): Monster
     ...('custom' in partial ? { custom: partial.custom } : {}),
   }
 }
+
+describe('compactPowerRollEffect', () => {
+  it('preserves internal and trailing spaces (controlled tier inputs)', () => {
+    expect(compactPowerRollEffect({ tier1: 'one two' })?.tier1).toBe('one two')
+    expect(compactPowerRollEffect({ tier1: 'one ' })?.tier1).toBe('one ')
+  })
+
+  it('drops whitespace-only strings', () => {
+    expect(compactPowerRollEffect({ tier1: '   ' })).toBeUndefined()
+  })
+})
 
 describe('maliceMonsterFamilyTag', () => {
   it('uses bestiary stat block name for numbered encounter copies', () => {

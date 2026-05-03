@@ -787,7 +787,7 @@ export function MaliceDashboard({
                       className={FORM_INPUT_CLASS}
                     />
                   </div>
-                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                  <div className="grid grid-cols-1 gap-3">
                     {(['tier1', 'tier2', 'tier3'] as const).map((tier) => (
                       <div key={tier}>
                         <label htmlFor={`custom-malice-pr-${tier}`} className={FORM_LABEL_CLASS}>
