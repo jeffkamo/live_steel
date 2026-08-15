@@ -96,3 +96,9 @@ Ideas and enhancements tracked for future work (not committed to a roadmap).
       a Bugbear Channeler would have a row of pills for "Main, Maneuver, Triggered", then a row of pills for "magic, ranged, strike, area, melee" each of which can be activated or
       deactivated to filter the list of actions. There should probably be a clear indicator that some abilities are hidden, or that filters are active, so the user doesn't forget ordinal
       fails to remember to undo the filters in some way... maybe the filters turn off when the drawer is closed?
+
+---
+
+- [ ] Feedback from today's session:
+  - [ ] Add missing monster type field to monster stat block and custom monster performed
+  - [ ] Move "New Turn" button to be directly above and beneath the monster group section for easier access (above malice features is too far away)
